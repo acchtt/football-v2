@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     web_origin: str = "http://localhost:3000"
     timezone: str = "Asia/Ho_Chi_Minh"
     model_version: str = "v0.2.47-R"
+    vision_provider: str = "demo"
+    vision_model: str = "gpt-5.6"
+    openai_api_key: str | None = None
+    upload_dir: str = "/data/uploads"
+    max_upload_bytes: int = 10 * 1024 * 1024
+    max_upload_files: int = 6
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

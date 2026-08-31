@@ -111,8 +111,16 @@ class LineupSubmissionModel(Base):
         ForeignKey("fixtures.id", ondelete="CASCADE"), index=True
     )
     uploaded_image: Mapped[str] = mapped_column(Text)
+    uploaded_images: Mapped[list[str]] = mapped_column(JSON, default=list)
+    original_filenames: Mapped[list[str]] = mapped_column(JSON, default=list)
     extracted_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     extraction_confidence: Mapped[float | None] = mapped_column(Float)
+    vision_provider: Mapped[str] = mapped_column(String(32), default="unknown")
+    manually_corrected: Mapped[bool] = mapped_column(Boolean, default=False)
+    supersedes_submission_id: Mapped[str | None] = mapped_column(
+        ForeignKey("lineup_submissions.id"), index=True
+    )
+    corrected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     submitted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -126,7 +134,16 @@ class OddsSubmissionModel(Base):
         ForeignKey("fixtures.id", ondelete="CASCADE"), index=True
     )
     uploaded_image: Mapped[str] = mapped_column(Text)
+    uploaded_images: Mapped[list[str]] = mapped_column(JSON, default=list)
+    original_filenames: Mapped[list[str]] = mapped_column(JSON, default=list)
     extracted_lines_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extraction_confidence: Mapped[float | None] = mapped_column(Float)
+    vision_provider: Mapped[str] = mapped_column(String(32), default="unknown")
+    manually_corrected: Mapped[bool] = mapped_column(Boolean, default=False)
+    supersedes_submission_id: Mapped[str | None] = mapped_column(
+        ForeignKey("odds_submissions.id"), index=True
+    )
+    corrected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     submitted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -134,6 +151,16 @@ class OddsSubmissionModel(Base):
 
 class DecisionStateModel(Base):
     __tablename__ = "decision_states"
+    __table_args__ = (
+        UniqueConstraint(
+            "fixture_id",
+            "model_version",
+            "period",
+            "source_lineup_submission_id",
+            "source_odds_submission_id",
+            name="uq_decision_source_state",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     fixture_id: Mapped[str] = mapped_column(
@@ -148,6 +175,12 @@ class DecisionStateModel(Base):
     selected_line: Mapped[float | None] = mapped_column(Float)
     selected_odds: Mapped[float | None] = mapped_column(Float)
     evidence_summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    source_lineup_submission_id: Mapped[str | None] = mapped_column(
+        ForeignKey("lineup_submissions.id"), index=True
+    )
+    source_odds_submission_id: Mapped[str | None] = mapped_column(
+        ForeignKey("odds_submissions.id"), index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -155,11 +188,16 @@ class DecisionStateModel(Base):
 
 class OfficialBetModel(Base):
     __tablename__ = "official_bets"
+    __table_args__ = (
+        UniqueConstraint("fixture_id", "model_version", name="uq_official_fixture_version"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     fixture_id: Mapped[str] = mapped_column(
         ForeignKey("fixtures.id", ondelete="CASCADE"), index=True
     )
+    model_version: Mapped[str] = mapped_column(String(32))
+    decision_state_id: Mapped[str] = mapped_column(ForeignKey("decision_states.id"), unique=True)
     selected_line: Mapped[float] = mapped_column(Float)
     selected_odds: Mapped[float] = mapped_column(Float)
     stake_units: Mapped[float] = mapped_column(Float, default=1.0)
@@ -174,6 +212,11 @@ def _reject_mutation(_mapper: Any, _connection: Any, target: Any) -> None:
     raise ValueError(f"{type(target).__name__} is append-only and cannot be changed")
 
 
-for immutable_model in (StructuralAssessmentModel, DecisionStateModel):
+for immutable_model in (
+    StructuralAssessmentModel,
+    LineupSubmissionModel,
+    OddsSubmissionModel,
+    DecisionStateModel,
+):
     event.listen(immutable_model, "before_update", _reject_mutation)
     event.listen(immutable_model, "before_delete", _reject_mutation)

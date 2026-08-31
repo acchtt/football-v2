@@ -58,8 +58,14 @@ CREATE TABLE IF NOT EXISTS lineup_submissions (
     id UUID PRIMARY KEY,
     fixture_id UUID NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE,
     uploaded_image TEXT NOT NULL,
+    uploaded_images JSONB NOT NULL DEFAULT '[]'::jsonb,
+    original_filenames JSONB NOT NULL DEFAULT '[]'::jsonb,
     extracted_json JSONB NOT NULL DEFAULT '{}'::jsonb,
     extraction_confidence DOUBLE PRECISION,
+    vision_provider TEXT NOT NULL DEFAULT 'unknown',
+    manually_corrected BOOLEAN NOT NULL DEFAULT false,
+    supersedes_submission_id UUID REFERENCES lineup_submissions(id),
+    corrected_at TIMESTAMPTZ,
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -67,7 +73,14 @@ CREATE TABLE IF NOT EXISTS odds_submissions (
     id UUID PRIMARY KEY,
     fixture_id UUID NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE,
     uploaded_image TEXT NOT NULL,
+    uploaded_images JSONB NOT NULL DEFAULT '[]'::jsonb,
+    original_filenames JSONB NOT NULL DEFAULT '[]'::jsonb,
     extracted_lines_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    extraction_confidence DOUBLE PRECISION,
+    vision_provider TEXT NOT NULL DEFAULT 'unknown',
+    manually_corrected BOOLEAN NOT NULL DEFAULT false,
+    supersedes_submission_id UUID REFERENCES odds_submissions(id),
+    corrected_at TIMESTAMPTZ,
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -83,18 +96,32 @@ CREATE TABLE IF NOT EXISTS decision_states (
     selected_line DOUBLE PRECISION,
     selected_odds DOUBLE PRECISION,
     evidence_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
+    source_lineup_submission_id UUID REFERENCES lineup_submissions(id),
+    source_odds_submission_id UUID REFERENCES odds_submissions(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_decision_source_state
+ON decision_states(
+    fixture_id,
+    model_version,
+    period,
+    source_lineup_submission_id,
+    source_odds_submission_id
 );
 
 CREATE TABLE IF NOT EXISTS official_bets (
     id UUID PRIMARY KEY,
     fixture_id UUID NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE,
+    model_version TEXT NOT NULL,
+    decision_state_id UUID UNIQUE NOT NULL REFERENCES decision_states(id),
     selected_line DOUBLE PRECISION NOT NULL,
     selected_odds DOUBLE PRECISION NOT NULL,
     stake_units DOUBLE PRECISION NOT NULL DEFAULT 1,
     locked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     settlement TEXT,
-    pnl_units DOUBLE PRECISION
+    pnl_units DOUBLE PRECISION,
+    UNIQUE(fixture_id, model_version)
 );
 
 CREATE OR REPLACE FUNCTION reject_frozen_mutation() RETURNS trigger AS $$
@@ -113,3 +140,12 @@ CREATE TRIGGER decision_states_append_only
 BEFORE UPDATE OR DELETE ON decision_states
 FOR EACH ROW EXECUTE FUNCTION reject_frozen_mutation();
 
+DROP TRIGGER IF EXISTS lineup_submissions_append_only ON lineup_submissions;
+CREATE TRIGGER lineup_submissions_append_only
+BEFORE UPDATE OR DELETE ON lineup_submissions
+FOR EACH ROW EXECUTE FUNCTION reject_frozen_mutation();
+
+DROP TRIGGER IF EXISTS odds_submissions_append_only ON odds_submissions;
+CREATE TRIGGER odds_submissions_append_only
+BEFORE UPDATE OR DELETE ON odds_submissions
+FOR EACH ROW EXECUTE FUNCTION reject_frozen_mutation();

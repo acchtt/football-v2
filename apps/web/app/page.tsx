@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { getDailyBoard } from "@/lib/api";
 import type { BoardMatch, DailyBoard } from "@/lib/types";
 
@@ -66,12 +68,14 @@ function BoardTable({ matches }: { matches: BoardMatch[] }) {
               </td>
               <td className="kickoff-cell">{kickoff(match.kickoff_ict)}</td>
               <td>
+                <Link href={`/match/${match.fixture_id}`} className="match-link">
                 <div className="match-name">
                   <strong>{match.home_team}</strong>
                   <span>vs</span>
                   <strong>{match.away_team}</strong>
                 </div>
                 <span className="competition">{match.competition}</span>
+                </Link>
               </td>
               <td>
                 <div className="assessment-cell">
@@ -186,4 +190,3 @@ export default async function Page({
     );
   }
 }
-

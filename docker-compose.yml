@@ -23,16 +23,23 @@ services:
       FIXTURE_PROVIDER: ${FIXTURE_PROVIDER:-demo}
       SEED_DEMO_ON_READ: ${SEED_DEMO_ON_READ:-true}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      VISION_PROVIDER: ${VISION_PROVIDER:-demo}
+      VISION_MODEL: ${VISION_MODEL:-gpt-5.6}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      UPLOAD_DIR: /data/uploads
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - football_uploads:/data/uploads
 
   web:
     build: ./apps/web
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://api:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     depends_on:
@@ -40,4 +47,4 @@ services:
 
 volumes:
   football_postgres:
-
+  football_uploads:
