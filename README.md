@@ -12,6 +12,9 @@ Implemented:
 - FastAPI board and daily-job endpoints
 - PostgreSQL data model and reference schema
 - swappable fixture and stats provider interfaces
+- production Sportmonks fixture/history adapter with paginated requests
+- deterministic provider-evidence normalization with sample and xG coverage gates
+- provider readiness endpoint that never exposes credentials or makes a billable call
 - ICT (`Asia/Ho_Chi_Minh`) date normalization
 - permanent K League 1/2 exclusion
 - versioned structural engine with Two-Sided and Elite Carrier peer routes
@@ -45,7 +48,7 @@ apps/
     │   │   └── versions/
     │   │       └── v0_2_47_R/  immutable model implementation
     │   ├── jobs/                daily scheduler entry point
-    │   ├── providers/           fixture/stats contracts and demo adapter
+    │   ├── providers/           contracts, demo/Sportmonks adapters, normalization
     │   ├── schemas/             typed API contracts
     │   ├── services/            ingestion, freezing, analysis, verdicts
     │   ├── storage/             private screenshot storage abstraction
@@ -55,7 +58,7 @@ infra/postgres/schema.sql         reference PostgreSQL schema + append-only trig
 docker-compose.yml                local database, API, and web stack
 ```
 
-The engine accepts normalized evidence rather than provider-specific payloads. A future API integration implements `FixtureProvider` and `StatsProvider`; it does not change grading rules or UI code.
+The engine accepts normalized evidence rather than provider-specific payloads. The Sportmonks adapter implements `FixtureProvider` and `StatsProvider` without changing grading rules or UI code.
 
 ## Run locally
 
@@ -73,6 +76,22 @@ Open:
 - health check: `http://localhost:8000/health`
 
 The default fixture and vision providers are both `demo`. The fixture provider seeds the requested ICT date the first time its board is read. The demo vision adapter returns neutral, clearly labelled extraction data so the full upload-to-lock workflow can be tested without credentials.
+
+## Enable real fixture and structural data
+
+Create a Sportmonks account and select the leagues the application should cover. The structural model requires expected-goals evidence, so the account must include xG coverage for those leagues. Then set:
+
+```dotenv
+FIXTURE_PROVIDER=sportmonks
+SEED_DEMO_ON_READ=false
+SPORTMONKS_API_TOKEN=your_token_here
+SPORTMONKS_HISTORY_MATCHES=10
+SPORTMONKS_LOOKBACK_DAYS=180
+```
+
+Keep the token on the API service only. `POST /api/v1/jobs/daily` fetches the ICT slate and each team’s completed pre-kickoff history. `GET /api/v1/board` only reads the frozen board in production and never initiates provider requests.
+
+The adapter requires at least five recent matches per team, three venue-specific matches per side, and 60% xG coverage for both teams. If those requirements are not met, the match freezes as `DATA_INCOMPLETE` and cannot appear on the board. Missing xG access is therefore visible and fails closed instead of falling back to goals-only assumptions.
 
 ## Enable real screenshot extraction
 
@@ -92,6 +111,12 @@ Read today’s ICT board:
 
 ```http
 GET /api/v1/board
+```
+
+Check provider configuration without contacting the provider:
+
+```http
+GET /api/v1/providers/status
 ```
 
 Read a specific ICT date:

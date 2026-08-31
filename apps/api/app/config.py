@@ -10,6 +10,11 @@ class Settings(BaseSettings):
         "postgresql+psycopg://football:football_local_only@localhost:5432/football_v2"
     )
     fixture_provider: str = "demo"
+    sportmonks_api_token: str | None = None
+    sportmonks_base_url: str = "https://api.sportmonks.com/v3/football"
+    sportmonks_timeout_seconds: float = 20.0
+    sportmonks_history_matches: int = 10
+    sportmonks_lookback_days: int = 180
     seed_demo_on_read: bool = True
     web_origin: str = "http://localhost:3000"
     timezone: str = "Asia/Ho_Chi_Minh"

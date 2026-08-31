@@ -15,6 +15,7 @@ class ProviderFixture:
     away_team: str
     kickoff_utc: datetime
     status: str = "SCHEDULED"
+    metadata: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

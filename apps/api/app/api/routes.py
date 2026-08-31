@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db.session import get_db
-from app.providers.factory import build_providers
+from app.providers.factory import build_providers, provider_status
 from app.schemas.analysis import (
     LineupCorrectionRequest,
     LineupSubmissionView,
@@ -77,6 +77,12 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.get("/api/v1/providers/status")
+def data_provider_status(settings: SettingsDependency) -> dict[str, str | bool]:
+    """Report readiness without making a billable provider request or exposing credentials."""
+    return provider_status(settings)
+
+
 @router.get("/api/v1/board", response_model=DailyBoardResponse)
 def daily_board(
     db: DatabaseDependency,
@@ -85,9 +91,16 @@ def daily_board(
 ) -> DailyBoardResponse:
     target_date = board_date or datetime.now(ZoneInfo(settings.timezone)).date()
     service = _service(db, settings)
-    if settings.seed_demo_on_read and not service.has_frozen_board(target_date):
-        service.ingest_and_freeze(target_date)
-    return service.get_board(target_date)
+    try:
+        if (
+            settings.fixture_provider == "demo"
+            and settings.seed_demo_on_read
+            and not service.has_frozen_board(target_date)
+        ):
+            service.ingest_and_freeze(target_date)
+        return service.get_board(target_date)
+    finally:
+        service.close()
 
 
 @router.post("/api/v1/jobs/daily", response_model=DailyJobResponse)
@@ -97,8 +110,11 @@ def run_daily_job(
     board_date: BoardDateQuery = None,
 ) -> DailyJobResponse:
     target_date = board_date or datetime.now(ZoneInfo(settings.timezone)).date()
-    result = _service(db, settings).ingest_and_freeze(target_date)
-    return to_job_response(result)
+    service = _service(db, settings)
+    try:
+        return to_job_response(service.ingest_and_freeze(target_date))
+    finally:
+        service.close()
 
 
 @router.get("/api/v1/matches/{fixture_id}", response_model=MatchDetailResponse)

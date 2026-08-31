@@ -37,6 +37,17 @@ class DailyBoardService:
         self.model_version = model_version
         self.timezone = ZoneInfo(timezone)
 
+    def close(self) -> None:
+        """Release provider transports after one request or scheduled job."""
+        closed: set[int] = set()
+        for provider in (self.fixture_provider, self.stats_provider):
+            if id(provider) in closed:
+                continue
+            closed.add(id(provider))
+            close = getattr(provider, "close", None)
+            if callable(close):
+                close()
+
     def ingest_and_freeze(self, target_date: date) -> DailyJobResult:
         fixtures = self.fixture_provider.fetch_fixtures(target_date)
         newly_frozen = 0
@@ -66,6 +77,11 @@ class DailyBoardService:
             assessment = assess_structural_fit(
                 self._to_engine_input(provider_fixture, metrics, profile is not None)
             )
+            provider_metadata = {
+                "provider_fixture_id": provider_fixture.provider_fixture_id,
+                "provider_name": provider_fixture.provider_name,
+                **(dict(metrics.source_metadata) if metrics is not None else {}),
+            }
             record = StructuralAssessmentModel(
                 fixture_id=fixture.id,
                 model_version=self.model_version,
@@ -76,7 +92,7 @@ class DailyBoardService:
                 display_on_board=assessment.display_on_board,
                 failure_modes=list(assessment.failure_modes),
                 evidence=dict(assessment.evidence),
-                source_metadata=dict(provider_fixture_id=provider_fixture.provider_fixture_id),
+                source_metadata=provider_metadata,
                 exclusion_reason=assessment.exclusion_reason,
                 frozen_at=datetime.now(UTC),
             )
