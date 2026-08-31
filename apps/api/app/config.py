@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     sportmonks_timeout_seconds: float = 20.0
     sportmonks_history_matches: int = 10
     sportmonks_lookback_days: int = 180
+    research_import_token: str | None = None
     seed_demo_on_read: bool = True
     web_origin: str = "http://localhost:3000"
     timezone: str = "Asia/Ho_Chi_Minh"

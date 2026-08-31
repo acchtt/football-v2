@@ -15,6 +15,7 @@ Implemented:
 - production Sportmonks fixture/history adapter with paginated requests
 - deterministic provider-evidence normalization with sample and xG coverage gates
 - provider readiness endpoint that never exposes credentials or makes a billable call
+- authenticated, source-backed research import for the normal daily web workflow
 - ICT (`Asia/Ho_Chi_Minh`) date normalization
 - permanent K League 1/2 exclusion
 - versioned structural engine with Two-Sided and Elite Carrier peer routes
@@ -77,9 +78,32 @@ Open:
 
 The default fixture and vision providers are both `demo`. The fixture provider seeds the requested ICT date the first time its board is read. The demo vision adapter returns neutral, clearly labelled extraction data so the full upload-to-lock workflow can be tested without credentials.
 
+## Use the normal web-research workflow
+
+Sportmonks is optional. For the private daily workflow, matches can be researched from public fixture and statistics pages exactly as before, converted into one sourced JSON batch, and submitted to the deterministic engine.
+
+Set a private import token:
+
+```dotenv
+RESEARCH_IMPORT_TOKEN=generate-a-long-random-secret
+```
+
+Copy `examples/research-import.json`, replace its demonstration values and URLs with the researched slate, then import it:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/imports/research \
+  -H "Content-Type: application/json" \
+  -H "X-Research-Import-Token: $RESEARCH_IMPORT_TOKEN" \
+  --data-binary @examples/research-import.json
+```
+
+Every fixture requires at least one source URL and timezone-aware source/kickoff timestamps. Scores are range-validated, the kickoff must fall on the requested ICT board date, and duplicate fixture identities are rejected. A missing GF/GA profile forces `DATA_INCOMPLETE`, regardless of the submitted structural scores. The normal K League hard exclusion and immutable `(fixture, model_version)` freeze still apply.
+
+The endpoint is disabled when `RESEARCH_IMPORT_TOKEN` is empty. The token belongs only in backend/deployment secrets and must never be put in an import file or committed.
+
 ## Enable real fixture and structural data
 
-Create a Sportmonks account and select the leagues the application should cover. The structural model requires expected-goals evidence, so the account must include xG coverage for those leagues. Then set:
+For fully automatic ingestion, create a Sportmonks account and select the leagues the application should cover. The structural model requires expected-goals evidence, so the account must include xG coverage for those leagues. Then set:
 
 ```dotenv
 FIXTURE_PROVIDER=sportmonks
@@ -129,6 +153,14 @@ Run idempotent ingestion/freezing explicitly:
 
 ```http
 POST /api/v1/jobs/daily?date=2026-08-31
+```
+
+Import a web-researched slate:
+
+```http
+POST /api/v1/imports/research
+X-Research-Import-Token: your-private-token
+Content-Type: application/json
 ```
 
 Match analysis endpoints:

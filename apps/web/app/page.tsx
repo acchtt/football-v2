@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import ResearchImporter from "@/components/ResearchImporter";
 import { getDailyBoard } from "@/lib/api";
 import type { BoardMatch, DailyBoard } from "@/lib/types";
 
@@ -156,6 +157,8 @@ function Dashboard({ board }: { board: DailyBoard }) {
         </div>
         {board.matches.length ? <BoardTable matches={board.matches} /> : <EmptyBoard />}
       </section>
+
+      <ResearchImporter />
 
       <footer>
         <p>Structure → profile → chance quality → failure modes → XI → goal burden → price</p>

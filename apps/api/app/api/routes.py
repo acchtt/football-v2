@@ -1,8 +1,9 @@
+import hmac
 from datetime import date, datetime
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
@@ -17,8 +18,10 @@ from app.schemas.analysis import (
     VerdictResponse,
 )
 from app.schemas.board import DailyBoardResponse, DailyJobResponse
+from app.schemas.research import ResearchImportRequest
 from app.services.daily_board import DailyBoardService, to_job_response
 from app.services.match_analysis import MatchAnalysisService
+from app.services.research_import import build_research_provider
 from app.storage import LocalUploadStorage
 from app.vision import ImagePayload, build_vision_adapter
 
@@ -27,6 +30,7 @@ DatabaseDependency = Annotated[Session, Depends(get_db)]
 SettingsDependency = Annotated[Settings, Depends(get_settings)]
 BoardDateQuery = Annotated[date | None, Query(alias="date")]
 UploadedFiles = Annotated[list[UploadFile], File(description="One or more screenshots")]
+ResearchImportToken = Annotated[str | None, Header(alias="X-Research-Import-Token")]
 
 
 def _service(db: Session, settings: Settings) -> DailyBoardService:
@@ -72,6 +76,14 @@ def _http_error(error: Exception) -> HTTPException:
     return HTTPException(status_code=503, detail=str(error))
 
 
+def _authorize_research_import(settings: Settings, supplied_token: str | None) -> None:
+    configured_token = settings.research_import_token
+    if not configured_token:
+        raise HTTPException(status_code=503, detail="Research import is not configured")
+    if not supplied_token or not hmac.compare_digest(supplied_token, configured_token):
+        raise HTTPException(status_code=401, detail="Invalid research import token")
+
+
 @router.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -113,6 +125,29 @@ def run_daily_job(
     service = _service(db, settings)
     try:
         return to_job_response(service.ingest_and_freeze(target_date))
+    finally:
+        service.close()
+
+
+@router.post("/api/v1/imports/research", response_model=DailyJobResponse)
+def import_researched_slate(
+    payload: ResearchImportRequest,
+    db: DatabaseDependency,
+    settings: SettingsDependency,
+    import_token: ResearchImportToken = None,
+) -> DailyJobResponse:
+    """Freeze a sourced slate assembled through the normal web-research workflow."""
+    _authorize_research_import(settings, import_token)
+    provider = build_research_provider(payload)
+    service = DailyBoardService(
+        session=db,
+        fixture_provider=provider,
+        stats_provider=provider,
+        model_version=settings.model_version,
+        timezone=settings.timezone,
+    )
+    try:
+        return to_job_response(service.ingest_and_freeze(payload.board_date_ict))
     finally:
         service.close()
 
