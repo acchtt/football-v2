@@ -10,6 +10,11 @@ class Settings(BaseSettings):
         "postgresql+psycopg://football:football_local_only@localhost:5432/football_v2"
     )
     fixture_provider: str = "demo"
+    bsd_api_token: str | None = None
+    bsd_base_url: str = "https://sports.bzzoiro.com/api/v2"
+    bsd_timeout_seconds: float = 20.0
+    bsd_history_matches: int = 10
+    bsd_lookback_days: int = 180
     sportmonks_api_token: str | None = None
     sportmonks_base_url: str = "https://api.sportmonks.com/v3/football"
     sportmonks_timeout_seconds: float = 20.0
