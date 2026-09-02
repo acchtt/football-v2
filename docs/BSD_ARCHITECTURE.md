@@ -36,7 +36,40 @@ The current database freezes structural assessments by fixture + model version. 
 1. deploy BSD together with the current new Football model version, or
 2. extend the freeze identity to include an explicit evidence/provider version.
 
-Until the deployed source is synced back into GitHub, option 1 is safer and smaller.
+The live Airtable schema now explicitly separates these concepts. New decision states should carry the Football model version plus provider/evidence metadata rather than encoding provider changes into `Model Version` strings.
+
+## Live Airtable mapping
+
+Base: `SlipTrace Football Decision Control` (`appWyZJjitSBATXAU`)
+
+Table: `Decision States` (`tblQmUpd5WjBLQ38X`)
+
+Existing website sync fields:
+
+- `Website Fixture ID` — `fld9Xd1TuQ8YgKHgc`
+- `Result` — `fldbj9hGDsFRoLqJD`
+- `P/L u` — `fldHsWSxgsttOLdSS`
+- `Stake u` — `fldQAfycHA2H7XLdw`
+
+BSD migration fields added on 2026-09-02:
+
+- `BSD Event ID` — `fldJkbO5Pux6n3qL8`
+- `Data Provider` — `fldMEPCDNDCY50A10`
+- `Evidence Version` — `fldDOcl4GcqpW6isQ`
+- `BSD Snapshot At` — `fldnkOQOd4i5E5b2J`
+
+Recommended identity for new frozen evidence:
+
+```text
+Website Fixture ID
++ Model Version
++ Data Provider
++ Evidence Version
+```
+
+`BSD Event ID` is the canonical external match identifier whenever BSD coverage exists. `BSD Snapshot At` must be the exact ISO-8601 evidence timestamp used for the decision state so lineup/odds/live evidence cannot be treated as synchronized when captured at different moments.
+
+Do not rewrite historical records just to backfill these fields. Populate them prospectively and only backfill when the source identity is authoritative.
 
 ## Backend settings
 
@@ -63,15 +96,17 @@ Use MCP for AI research/audits, not as the website's canonical feed.
 
 ## Migration order
 
-1. Sync the current deployed BSD/Airtable/picks-tracking source back into this repository.
-2. Rebase this branch onto that source.
-3. Verify BSD event/team/stat field shapes with the real account token in staging.
-4. Run provider parser tests and a one-day shadow board against the current production board.
-5. Compare fixture coverage, xG coverage, lineup availability and odds timestamps.
-6. Cut over the board ingestion provider only after the shadow board is stable.
-7. Replace screenshot lineup/odds ingestion with BSD REST data where the deployed source still uses screenshots.
-8. Add WebSocket live updates only after prematch ingestion is stable.
-9. Keep MCP separate as the AI analysis/audit layer.
+1. Treat the current ChatGPT-hosted site as production source of truth; the GitHub `main` branch is stale.
+2. Export/sync the current deployed BSD/Airtable/picks-tracking source back into this repository before merging this branch.
+3. Rebase this branch onto that source.
+4. Wire new Decision States to `BSD Event ID`, `Data Provider`, `Evidence Version`, and `BSD Snapshot At`.
+5. Verify BSD event/team/stat field shapes with the real account token in staging.
+6. Run provider parser tests and a one-day shadow board against the current production board.
+7. Compare fixture coverage, xG coverage, lineup availability and odds timestamps.
+8. Cut over the board ingestion provider only after the shadow board is stable.
+9. Replace screenshot lineup/odds ingestion with BSD REST data where the deployed source still uses screenshots.
+10. Add WebSocket live updates only after prematch ingestion is stable.
+11. Keep MCP separate as the AI analysis/audit layer.
 
 ## Fail-closed behavior
 
