@@ -80,12 +80,13 @@ def test_market_requires_explicit_verification_and_is_idempotent(tmp_path: objec
         assert first.verified is True
         assert first.verified_odds_submission_id == odds.id
         assert first.lock_engine_ready is False
-        assert first.blocker == "CANONICAL_FAIR_TOTAL_LOGIC_PENDING"
+        assert first.blocker == "SCORE_SCENARIO_PRODUCER_PENDING"
         assert second.verification_id == first.verification_id
         assert session.scalar(select(func.count()).select_from(MarketVerificationModel)) == 1
         stage = latest_stage(session, match_id)
         assert stage is not None
         assert stage.stage == "MARKET_RECEIVED"
+        assert stage.payload["blocker"] == "SCORE_SCENARIO_PRODUCER_PENDING"
 
 
 def test_correction_creates_new_unverified_market_version(tmp_path: object) -> None:
