@@ -86,23 +86,13 @@ class XIState(BaseModel):
     two_band_upgrade_requires_genuine_role_change: bool
 
 
-class ExtendedLineState(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    enabled: bool
-    minimum_structural_score: float
-    requires_positive_xi_delta: bool
-    maximum_line: float
-
-
 class MarketState(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     minimum_extraction_confidence: float = Field(ge=0.0, le=1.0)
     minimum_price: float
     maximum_price: float
-    maximum_line_by_grade: dict[str, float]
-    a1_extended_line: ExtendedLineState
+    grade_based_maximum_line_enabled: Literal[False]
 
 
 class ModelState(BaseModel):
@@ -119,6 +109,8 @@ class ModelState(BaseModel):
 
     @model_validator(mode="after")
     def validate_production_guardrails(self) -> ModelState:
+        if self.schema_version != 2:
+            raise ValueError("Canonical model-state schema must be version 2")
         if self.model.version != "v0.2.47-R":
             raise ValueError("Production model version must remain v0.2.47-R")
         if self.model.regime != "PRE-HARDENING":
@@ -140,6 +132,10 @@ class ModelState(BaseModel):
             raise ValueError("Price cannot promote structural quality")
         if self.rules.xi_names_can_create_unsupported_route:
             raise ValueError("XI names cannot create a route unsupported by the team profile")
+        if abs(self.market.minimum_price - 1.70) > 1e-9:
+            raise ValueError("Restored v0.2.47-R minimum Over price must remain 1.70")
+        if self.market.grade_based_maximum_line_enabled:
+            raise ValueError("Blanket grade-based maximum total lines are inactive")
         return self
 
     @property
