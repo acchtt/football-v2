@@ -5,6 +5,8 @@ from typing import Any
 from app.competition_scope import evaluate_competition
 
 from .base import (
+    ConfirmedLineupSnapshot,
+    FinalResultSnapshot,
     FixtureProvider,
     ProviderFixture,
     StatsProvider,
@@ -31,6 +33,14 @@ class CompetitionScopedProvider(FixtureProvider, StatsProvider):
                 fixture.metadata,
             ).eligible
         ]
+
+    def fetch_confirmed_lineup(
+        self, provider_fixture_id: str
+    ) -> ConfirmedLineupSnapshot | None:
+        return self.inner.fetch_confirmed_lineup(provider_fixture_id)
+
+    def fetch_final_result(self, provider_fixture_id: str) -> FinalResultSnapshot | None:
+        return self.inner.fetch_final_result(provider_fixture_id)
 
     def fetch_team_profile(self, fixture: ProviderFixture) -> TeamProfileSnapshot | None:
         return self.inner.fetch_team_profile(fixture)
