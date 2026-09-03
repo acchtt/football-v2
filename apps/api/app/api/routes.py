@@ -18,8 +18,10 @@ from app.schemas.analysis import (
     VerdictResponse,
 )
 from app.schemas.board import DailyBoardResponse, DailyJobResponse
+from app.schemas.market import MarketStatusView
 from app.schemas.research import ResearchImportRequest
 from app.services.daily_board import DailyBoardService, to_job_response
+from app.services.market_verification import MarketVerificationService
 from app.services.match_analysis import MatchAnalysisService
 from app.services.research_import import build_research_provider
 from app.storage import LocalUploadStorage
@@ -55,6 +57,10 @@ def _analysis_service(db: Session, settings: Settings) -> MatchAnalysisService:
         ),
         settings=settings,
     )
+
+
+def _market_service(db: Session, settings: Settings) -> MarketVerificationService:
+    return MarketVerificationService(session=db, settings=settings)
 
 
 def _image_payloads(files: list[UploadFile]) -> tuple[ImagePayload, ...]:
@@ -164,6 +170,18 @@ def match_detail(
         raise _http_error(error) from error
 
 
+@router.get("/api/v1/matches/{fixture_id}/market", response_model=MarketStatusView)
+def market_status(
+    fixture_id: str,
+    db: DatabaseDependency,
+    settings: SettingsDependency,
+) -> MarketStatusView:
+    try:
+        return _market_service(db, settings).status(fixture_id)
+    except (LookupError, ValueError, RuntimeError) as error:
+        raise _http_error(error) from error
+
+
 @router.post(
     "/api/v1/matches/{fixture_id}/lineup",
     response_model=LineupSubmissionView,
@@ -244,13 +262,34 @@ def correct_odds(
         raise _http_error(error) from error
 
 
+@router.post(
+    "/api/v1/matches/{fixture_id}/odds/{submission_id}/verify",
+    response_model=MarketStatusView,
+)
+def verify_odds(
+    fixture_id: str,
+    submission_id: str,
+    db: DatabaseDependency,
+    settings: SettingsDependency,
+) -> MarketStatusView:
+    try:
+        return _market_service(db, settings).verify(fixture_id, submission_id)
+    except (LookupError, ValueError, RuntimeError) as error:
+        raise _http_error(error) from error
+
+
 @router.post("/api/v1/matches/{fixture_id}/verdict", response_model=VerdictResponse)
 def issue_verdict(
     fixture_id: str,
     db: DatabaseDependency,
     settings: SettingsDependency,
 ) -> VerdictResponse:
-    try:
-        return _analysis_service(db, settings).decide(fixture_id)
-    except (LookupError, ValueError, RuntimeError) as error:
-        raise _http_error(error) from error
+    del fixture_id, db, settings
+    raise HTTPException(
+        status_code=503,
+        detail=(
+            "Final LOCK/HOLD engine is disabled until the canonical situational adjustment, "
+            "projected goal distribution, fair-total, and market-comparison logic is approved. "
+            "Verified markets stop at MARKET_RECEIVED."
+        ),
+    )
