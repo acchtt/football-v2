@@ -1,0 +1,18 @@
+[
+  {"case_id":"AME-MTY-20260903-ACCEPTANCE","anchor_goal":3,"posture":"PROTECTION_HEAVY","evidence_status":"acceptance_control"},
+  {"case_id":"THU-LAU-20260902","anchor_goal":3,"posture":"BALANCED","evidence_status":"historical_observation"},
+  {"case_id":"RBS-RAP-20260902","anchor_goal":4,"posture":"PROTECTION_HEAVY","evidence_status":"supporting_reconstruction"},
+  {"case_id":"GCZ-SG-20260902","anchor_goal":3,"posture":"PROTECTION_HEAVY","evidence_status":"supporting_reconstruction"},
+  {"case_id":"AUS-WSG-20260902","anchor_goal":3,"posture":"BALANCED","evidence_status":"audited_upstream_miss"},
+  {"case_id":"SAS-FRO-20260902","anchor_goal":3,"posture":"BALANCED","evidence_status":"historical_observation"},
+  {"case_id":"AVL-ARS-20260831","anchor_goal":3,"posture":"PROTECTION_HEAVY","evidence_status":"audited_upstream_miss"},
+  {"case_id":"LIV-NFO-20260829","anchor_goal":3,"posture":"PROTECTION_HEAVY","evidence_status":"supporting_reconstruction"},
+  {"case_id":"TOT-NEW-20260829","anchor_goal":3,"posture":"BALANCED","evidence_status":"audited_upstream_miss"},
+  {"case_id":"VIE-THA-20260826","anchor_goal":3,"posture":"BALANCED","evidence_status":"historical_observation"},
+  {"case_id":"DAE-ULS-20260826","anchor_goal":3,"posture":"PROTECTION_HEAVY","evidence_status":"historical_observation"},
+  {"case_id":"MAC-LUG-20260827","anchor_goal":3,"posture":"PROTECTION_HEAVY","evidence_status":"audited_upstream_miss"},
+  {"case_id":"TOL-AUS-20260827","anchor_goal":3,"posture":"BALANCED","evidence_status":"audited_upstream_miss"},
+  {"case_id":"TEL-AJA-20260830","anchor_goal":4,"posture":"BALANCED","evidence_status":"historical_observation"},
+  {"case_id":"BEN-EST-20260831","anchor_goal":4,"posture":"PROTECTION_HEAVY","evidence_status":"audited_burden_miss"},
+  {"case_id":"JPSV-JAJA-20260831","anchor_goal":4,"posture":"PROTECTION_HEAVY","evidence_status":"audited_burden_miss"}
+]
