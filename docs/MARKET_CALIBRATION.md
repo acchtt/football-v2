@@ -56,6 +56,39 @@ Examples recovered from the ledger include:
 
 This layer cannot create an `OFFICIAL LOCK` and has no access to the match state machine or official-bet table.
 
+## Projection reconstruction harness
+
+Historical records also preserve a smaller but useful set of prematch projections expressed as **goal ranges plus score bands**, for example:
+
+- Brentford–Tottenham: expected 2-3 goals; 1-1 / 2-1 / 1-2 with 2-2 upside.
+- Hiroshima–Kawasaki: expected 3-4 goals; 2-1 / 3-1 / 2-2 with 3-2 upside.
+- Okayama–Tokyo Verdy: expected 1-2 goals; 1-0 / 1-1 / 2-0 with 2-1 upside.
+- Kashima–Fukuoka: expected 2-3 goals; 1-0 / 2-0 / 2-1.
+- Hull–Manchester United: expected 2-4 goals; 0-2 / 1-2 / 0-3 / 1-3. This case was a failed carrier forecast and is retained deliberately as negative reconstruction evidence.
+
+Those records are pinned in:
+
+```text
+apps/api/tests/fixtures/projection_recovery_cases.json
+```
+
+The research-only adapter in:
+
+```text
+apps/api/app/football_engine/research/projection_reconstruction.py
+```
+
+can take caller-supplied weights for the recovered score scenarios, aggregate them into a discrete total-goal distribution, pass that distribution through `market_math.py`, and report how the historical selected offer ranks by exact expected P/L.
+
+Important constraints:
+
+- the ledger did **not** recover canonical scenario probabilities;
+- the harness therefore has **no default primary/upside weights**;
+- it does not add Poisson tails or smooth unobserved scorelines;
+- expected-P/L rank is diagnostic only and is not treated as the historical protection/risk policy;
+- production verdict code must not import the research package;
+- no candidate weighting scheme may be activated without golden-case testing and explicit approval.
+
 ## Remaining canonical gap
 
 The missing production rule is now narrower and explicit:
