@@ -5,12 +5,13 @@ from decimal import Decimal
 from statistics import mean
 from typing import Any, Iterable, Mapping, Sequence
 
+from app.football_engine.versions.v0_2_47_R.market_math import projected_mean_goals
+
 from .projection_reconstruction import (
     calibrate_candidate_against_market,
     distribution_from_weighted_scores,
     scenarios_from_recovered_scores,
 )
-from app.football_engine.versions.v0_2_47_R.market_math import projected_mean_goals
 
 
 @dataclass(frozen=True, slots=True)
