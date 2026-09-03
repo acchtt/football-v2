@@ -188,6 +188,9 @@ class AirtableSyncService:
                 else assessment.evidence
             )
 
+        # Explicit nulls clear stale values from an older Airtable projection. Airtable
+        # is a mirror, so it must never preserve an obsolete LOCK/HOLD or selection
+        # after canonical state says those fields are not present.
         fields: dict[str, Any] = {
             "Assessment ID": assessment.id,
             "Match": f"{fixture.home_team} vs {fixture.away_team}",
@@ -195,25 +198,26 @@ class AirtableSyncService:
             "Model Version": assessment.model_version,
             "Assessment Time": assessment.frozen_at.isoformat(),
             "Assessment Period": period,
+            "Verdict": verdict,
             "Candidate": assessment.structural_grade,
+            "Line": str(selected_line) if selected_line is not None else None,
+            "Odds": float(selected_odds) if selected_odds is not None else None,
+            "Stake u": float(bet.stake_units) if bet is not None else None,
+            "Result": settlement.settlement if settlement is not None else None,
+            "P/L u": (
+                float(Decimal(settlement.pnl_units)) if settlement is not None else None
+            ),
+            "Score": (
+                f"{settlement.home_goals_90}-{settlement.away_goals_90}"
+                if settlement is not None
+                else None
+            ),
             "Website Fixture ID": fixture.id,
             "BSD Event ID": self._bsd_event_id(fixture.provider_fixture_id),
             "Data Provider": fixture.provider_name,
             "Evidence Version": "canonical-pre-hardening-v1",
             "Evidence Summary": self._compact_evidence(evidence),
         }
-        if verdict is not None:
-            fields["Verdict"] = verdict
-        if selected_line is not None:
-            fields["Line"] = str(selected_line)
-        if selected_odds is not None:
-            fields["Odds"] = float(selected_odds)
-        if bet is not None:
-            fields["Stake u"] = float(bet.stake_units)
-        if settlement is not None:
-            fields["Result"] = settlement.settlement
-            fields["P/L u"] = float(Decimal(settlement.pnl_units))
-            fields["Score"] = f"{settlement.home_goals_90}-{settlement.away_goals_90}"
         return fields
 
     def _upsert_by_assessment_id(self, assessment_id: str, fields: dict[str, Any]) -> str:
