@@ -154,15 +154,22 @@ class ModelState(BaseModel):
 
 def _canonical_state_path() -> Path:
     source = Path(__file__).resolve()
-    candidates = (
-        source.parents[3] / "model" / "MODEL_STATE.json",
-        source.parents[1] / "model" / "MODEL_STATE.json",
-        Path.cwd() / "model" / "MODEL_STATE.json",
-    )
-    for candidate in candidates:
+    candidates: list[Path] = []
+
+    # Source checkout: <repo>/apps/api/app/model_state.py -> <repo>/model/...
+    if len(source.parents) > 3:
+        candidates.append(source.parents[3] / "model" / "MODEL_STATE.json")
+
+    # Container image: /app/app/model_state.py -> /app/model/...
+    if len(source.parents) > 1:
+        candidates.append(source.parents[1] / "model" / "MODEL_STATE.json")
+
+    candidates.append(Path.cwd() / "model" / "MODEL_STATE.json")
+
+    for candidate in dict.fromkeys(candidates):
         if candidate.is_file():
             return candidate
-    searched = ", ".join(str(candidate) for candidate in candidates)
+    searched = ", ".join(str(candidate) for candidate in dict.fromkeys(candidates))
     raise RuntimeError(f"Canonical MODEL_STATE.json not found. Searched: {searched}")
 
 
