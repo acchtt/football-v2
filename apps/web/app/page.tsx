@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import ResearchImporter from "@/components/ResearchImporter";
 import { getDailyBoard } from "@/lib/api";
+import { getModelControlState, type ModelControlState } from "@/lib/model-control";
 import type { BoardMatch, DailyBoard } from "@/lib/types";
 
 function kickoff(value: string): string {
@@ -70,12 +71,12 @@ function BoardTable({ matches }: { matches: BoardMatch[] }) {
               <td className="kickoff-cell">{kickoff(match.kickoff_ict)}</td>
               <td>
                 <Link href={`/match/${match.fixture_id}`} className="match-link">
-                <div className="match-name">
-                  <strong>{match.home_team}</strong>
-                  <span>vs</span>
-                  <strong>{match.away_team}</strong>
-                </div>
-                <span className="competition">{match.competition}</span>
+                  <div className="match-name">
+                    <strong>{match.home_team}</strong>
+                    <span>vs</span>
+                    <strong>{match.away_team}</strong>
+                  </div>
+                  <span className="competition">{match.competition}</span>
                 </Link>
               </td>
               <td>
@@ -96,7 +97,7 @@ function BoardTable({ matches }: { matches: BoardMatch[] }) {
   );
 }
 
-function Dashboard({ board }: { board: DailyBoard }) {
+function Dashboard({ board, model }: { board: DailyBoard; model: ModelControlState }) {
   const next = board.matches.find((match) => match.is_next);
   const aGradeCount = board.matches.filter((match) => match.frozen_grade !== "B+").length;
 
@@ -112,7 +113,7 @@ function Dashboard({ board }: { board: DailyBoard }) {
         </div>
         <div className="model-pill">
           <span className="live-dot" aria-hidden="true" />
-          Engine {board.model_version}
+          {model.model.version} · {model.model.regime}
         </div>
       </header>
 
@@ -121,7 +122,9 @@ function Dashboard({ board }: { board: DailyBoard }) {
           <p className="eyebrow">Frozen daily shortlist</p>
           <h2>{calendarDate(board.board_date_ict)}</h2>
           <p className="subhead">
-            Ranked by structural quality. Price cannot promote a weaker match.
+            Ranked by structural quality. Price cannot promote a weaker match. Recent-total
+            confirmation {model.rules.recent_total_leakage_confirmation ? "ACTIVE" : "INACTIVE"};
+            Sep-1 hardening {model.rules.sep1_hardening ? "ACTIVE" : "INACTIVE"}.
           </p>
         </div>
         <div className="summary-strip" aria-label="Board summary">
@@ -162,7 +165,7 @@ function Dashboard({ board }: { board: DailyBoard }) {
 
       <footer>
         <p>Structure → profile → chance quality → failure modes → XI → goal burden → price</p>
-        <span>Assessments are immutable after freeze.</span>
+        <span>Assessments are immutable after freeze. Audit history cannot change the model.</span>
       </footer>
     </main>
   );
@@ -175,8 +178,11 @@ export default async function Page({
 }) {
   const { date } = await searchParams;
   try {
-    const board = await getDailyBoard(date);
-    return <Dashboard board={board} />;
+    const [board, model] = await Promise.all([
+      getDailyBoard(date),
+      getModelControlState(),
+    ]);
+    return <Dashboard board={board} model={model} />;
   } catch {
     return (
       <main className="error-page">
@@ -186,7 +192,7 @@ export default async function Page({
         </div>
         <section className="error-card">
           <span>DATA UNAVAILABLE</span>
-          <h2>The frozen board could not be loaded.</h2>
+          <h2>The frozen board or canonical model state could not be loaded.</h2>
           <p>No assessment has been invented. Check the API and database, then reload.</p>
         </section>
       </main>
