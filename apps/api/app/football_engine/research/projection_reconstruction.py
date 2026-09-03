@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Iterable, Mapping, Sequence
+from typing import Iterable, Sequence
 
 from app.football_engine.versions.v0_2_47_R.goal_burden import OddsOffer
 from app.football_engine.versions.v0_2_47_R.market_math import (
@@ -144,7 +144,11 @@ def calibrate_candidate_against_market(
     selected_odds_decimal = Decimal(str(selected_odds))
 
     eligible_offers = tuple(
-        OddsOffer(line=Decimal(str(line)), over_odds=Decimal(str(odds)))
+        OddsOffer(
+            line=float(line),
+            over_odds=float(odds),
+            under_odds=0.0,
+        )
         for line, odds in offers
         if Decimal(str(odds)) >= minimum
     )
