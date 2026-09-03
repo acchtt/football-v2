@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from typing import Any
 from urllib.parse import quote
@@ -52,6 +53,20 @@ class AirtableSyncService:
 
     def close(self) -> None:
         self.client.close()
+
+    def sync_date(self, session: Session, target_date_ict: date) -> list[AirtableSyncResult]:
+        fixture_ids = list(
+            session.scalars(
+                select(FixtureModel.id)
+                .join(
+                    StructuralAssessmentModel,
+                    StructuralAssessmentModel.fixture_id == FixtureModel.id,
+                )
+                .where(FixtureModel.kickoff_ict_date == target_date_ict)
+                .order_by(FixtureModel.kickoff_utc.asc())
+            ).all()
+        )
+        return [self.sync_fixture(session, fixture_id) for fixture_id in fixture_ids]
 
     def sync_fixture(self, session: Session, fixture_id: str) -> AirtableSyncResult:
         assessment = session.scalar(
