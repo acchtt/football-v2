@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.model_control import router as model_control_router
 from app.api.routes import router
 from app.config import get_settings
 from app.db.models import Base
@@ -37,4 +38,5 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+app.include_router(model_control_router)
 app.include_router(router)
