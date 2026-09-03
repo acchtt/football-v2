@@ -20,19 +20,18 @@ def _cases() -> list[dict]:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 
-def test_staged_method_keeps_all_recovered_projection_means_inside_recorded_bands() -> None:
+def test_approved_method_keeps_all_recovered_projection_means_inside_recorded_bands() -> None:
     for case in _cases():
         result = build_scenario_distribution(
             case["primary_scores"],
             upside_scores=case["upside_scores"],
-            activation_approved=True,
         )
         mean = projected_mean_goals(result.distribution)
         lower, upper = (Decimal(str(value)) for value in case["expected_total_range"])
         assert lower <= mean <= upper, (case["case_id"], mean, lower, upper)
 
 
-def test_staged_method_reproduces_all_four_recovered_market_reference_top_ev_lines() -> None:
+def test_approved_method_reproduces_all_four_recovered_market_reference_top_ev_lines() -> None:
     market_cases = [case for case in _cases() if "market_reference" in case]
     assert len(market_cases) == 4
 
@@ -40,7 +39,6 @@ def test_staged_method_reproduces_all_four_recovered_market_reference_top_ev_lin
         result = build_scenario_distribution(
             case["primary_scores"],
             upside_scores=case["upside_scores"],
-            activation_approved=True,
         )
         market = case["market_reference"]
         offers = tuple(
@@ -59,9 +57,8 @@ def test_failed_hull_forecast_remains_reconstruction_evidence_not_validation() -
     result = build_scenario_distribution(
         hull["primary_scores"],
         upside_scores=hull["upside_scores"],
-        activation_approved=True,
     )
 
     assert set(result.distribution) == {2, 3, 4}
     assert "failed carrier forecast" in hull["evidence_note"].lower()
-    assert result.production_ready is False
+    assert result.production_ready is True
