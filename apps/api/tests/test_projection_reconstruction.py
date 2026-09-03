@@ -14,6 +14,7 @@ from app.model_state import get_model_state
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "projection_recovery_cases.json"
+APP_PATH = Path(__file__).parent.parent / "app"
 
 
 def load_recovery_cases() -> list[dict[str, object]]:
@@ -97,3 +98,16 @@ def test_calibration_rejects_historical_selection_below_price_floor() -> None:
             selected_odds=1.69,
             minimum_price=1.70,
         )
+
+
+def test_production_modules_do_not_import_research_projection_package() -> None:
+    offenders: list[str] = []
+
+    for path in APP_PATH.rglob("*.py"):
+        if "football_engine/research" in path.as_posix():
+            continue
+        source = path.read_text(encoding="utf-8")
+        if "football_engine.research" in source:
+            offenders.append(str(path.relative_to(APP_PATH)))
+
+    assert offenders == []
