@@ -2,13 +2,18 @@ from app.config import Settings
 
 from .base import FixtureProvider, StatsProvider
 from .demo import DemoProvider
+from .scoped import CompetitionScopedProvider
 from .sportmonks import SportmonksProvider
+
+
+def _scoped(provider: FixtureProvider) -> tuple[FixtureProvider, StatsProvider]:
+    scoped = CompetitionScopedProvider(provider)
+    return scoped, scoped
 
 
 def build_providers(settings: Settings) -> tuple[FixtureProvider, StatsProvider]:
     if settings.fixture_provider == "demo":
-        provider = DemoProvider()
-        return provider, provider
+        return _scoped(DemoProvider())
     if settings.fixture_provider == "sportmonks":
         if not settings.sportmonks_api_token:
             raise RuntimeError(
@@ -21,7 +26,7 @@ def build_providers(settings: Settings) -> tuple[FixtureProvider, StatsProvider]
             history_matches=settings.sportmonks_history_matches,
             lookback_days=settings.sportmonks_lookback_days,
         )
-        return provider, provider
+        return _scoped(provider)
     raise RuntimeError(
         f"Provider {settings.fixture_provider!r} is not configured; use 'demo' or 'sportmonks'"
     )
