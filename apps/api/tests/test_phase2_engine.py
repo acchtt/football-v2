@@ -62,9 +62,36 @@ def test_protected_line_wins_over_small_price_improvement() -> None:
         ),
     )
     assert result.selected == OddsOffer(2.75, 1.72, 2.02)
+    assert result.maximum_line is None
 
 
-def test_stretched_only_market_forces_hold() -> None:
+def test_america_monterrey_restored_floor_skips_o2_5_at_1_69() -> None:
+    result = select_protected_line(
+        StructuralGrade.A2,
+        structural_score=80,
+        xi_band_delta=0,
+        offers=(
+            OddsOffer(2.5, 1.69, 2.21),
+            OddsOffer(2.75, 1.89, 1.99),
+            OddsOffer(3.0, 2.16, 1.76),
+            OddsOffer(3.25, 2.42, 1.60),
+        ),
+    )
+    assert result.selected == OddsOffer(2.75, 1.89, 1.99)
+
+
+def test_o3_75_is_not_blanket_rejected_by_grade() -> None:
+    result = select_protected_line(
+        StructuralGrade.A2,
+        structural_score=78,
+        xi_band_delta=0,
+        offers=(OddsOffer(3.75, 1.79, 2.05),),
+    )
+    assert result.selected == OddsOffer(3.75, 1.79, 2.05)
+    assert result.maximum_line is None
+
+
+def test_below_floor_only_market_forces_hold() -> None:
     result = decide(
         VerdictInput(
             frozen_grade=StructuralGrade.A2,
@@ -76,7 +103,7 @@ def test_stretched_only_market_forces_hold() -> None:
             odds_confidence=0.95,
             screenshots_match_fixture=True,
             xi_signals=signals(),
-            odds_offers=(OddsOffer(3.25, 1.75, 2.05),),
+            odds_offers=(OddsOffer(3.25, 1.69, 2.05),),
         )
     )
     assert result.verdict == "NO BET — HOLD"
