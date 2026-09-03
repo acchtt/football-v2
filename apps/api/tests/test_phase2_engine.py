@@ -83,7 +83,7 @@ def test_stretched_only_market_forces_hold() -> None:
     assert result.selected_line is None
 
 
-def test_heavy_rotation_forces_hold_even_when_market_is_protected() -> None:
+def test_heavy_rotation_holds_through_xi_downgrade_not_blanket_prohibition() -> None:
     result = decide(
         VerdictInput(
             frozen_grade=StructuralGrade.A1,
@@ -99,5 +99,5 @@ def test_heavy_rotation_forces_hold_even_when_market_is_protected() -> None:
         )
     )
     assert result.verdict == "NO BET — HOLD"
-    assert not result.failure_modes_acceptable
-
+    assert result.xi_grade == StructuralGrade.B_PLUS
+    assert result.failure_modes_acceptable

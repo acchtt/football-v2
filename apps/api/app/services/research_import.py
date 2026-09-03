@@ -4,6 +4,7 @@ import hashlib
 import json
 from typing import Any
 
+from app.competition_scope import evaluate_competition
 from app.providers.base import ProviderFixture, StructuralMetrics, TeamProfileSnapshot
 from app.providers.research import ResearchFixtureRecord, ResearchImportProvider
 from app.schemas.research import ResearchFixtureInput, ResearchImportRequest
@@ -43,11 +44,27 @@ def _source_metadata(item: ResearchFixtureInput, batch_label: str) -> dict[str, 
     }
 
 
+def _mandatory_profile_complete(item: ResearchFixtureInput) -> bool:
+    profile = item.profile
+    return profile is not None and all(
+        value is not None
+        for value in (
+            profile.home_gf,
+            profile.home_ga,
+            profile.away_gf,
+            profile.away_ga,
+        )
+    )
+
+
 def build_research_provider(payload: ResearchImportRequest) -> ResearchImportProvider:
     records: list[ResearchFixtureRecord] = []
     for item in payload.fixtures:
         identity = _fixture_identity(item)
         metadata = _source_metadata(item, payload.batch_label)
+        if not evaluate_competition(item.competition, item.country_code, metadata).eligible:
+            continue
+
         provider_fixture = ProviderFixture(
             provider_fixture_id=f"research:{identity}",
             provider_name="research",
@@ -89,7 +106,9 @@ def build_research_provider(payload: ResearchImportRequest) -> ResearchImportPro
             failure_mode_resistance=structural.failure_mode_resistance,
             profile_gate=structural.profile_gate,
             chance_quality=structural.chance_quality,
-            data_complete=structural.data_complete,
+            # Do not trust a historical/import-side completeness flag to reactivate old
+            # sample/xG gates. Canonical PRE-HARDENING completeness is mandatory GF/GA.
+            data_complete=_mandatory_profile_complete(item),
             failure_modes=tuple(structural.failure_modes),
             evidence={
                 **structural.evidence,

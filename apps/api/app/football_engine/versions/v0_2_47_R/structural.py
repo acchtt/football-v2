@@ -1,4 +1,4 @@
-import re
+from app.model_state import get_model_state
 
 from .config import DEFAULT_CONFIG, StructuralConfig
 from .types import (
@@ -10,25 +10,13 @@ from .types import (
 )
 
 
-def _normalized(value: str) -> str:
-    return re.sub(r"[^A-Z0-9]+", " ", value.upper()).strip()
-
-
-def is_hard_excluded(competition: str, country_code: str) -> bool:
-    """K League 1/2 are permanently excluded and cannot be rescued downstream."""
-    normalized_competition = _normalized(competition)
-    normalized_country = _normalized(country_code)
-    return normalized_country in {"KR", "KOR", "SOUTH KOREA"} and normalized_competition.startswith(
-        "K LEAGUE"
-    )
-
-
-def _structural_type(candidate: StructuralInput) -> StructuralType:
-    if candidate.two_sided_strength >= 70 and (
-        candidate.two_sided_strength >= candidate.carrier_ceiling - 2
+def _structural_type(candidate: StructuralInput, config: StructuralConfig) -> StructuralType:
+    if candidate.two_sided_strength >= config.two_sided_route_threshold and (
+        candidate.two_sided_strength
+        >= candidate.carrier_ceiling - config.two_sided_carrier_tolerance
     ):
         return StructuralType.TWO_SIDED
-    if candidate.opponent_secondary_route >= 50:
+    if candidate.opponent_secondary_route >= config.secondary_route_threshold:
         return StructuralType.CARRIER_SECONDARY_ROUTE
     return StructuralType.ELITE_CARRIER
 
@@ -45,22 +33,12 @@ def _grade(score: float, config: StructuralConfig) -> StructuralGrade:
     return StructuralGrade.PASS
 
 
-def _cap_grade(grade: StructuralGrade, cap: StructuralGrade) -> StructuralGrade:
-    order = {
-        StructuralGrade.PASS: 0,
-        StructuralGrade.B: 1,
-        StructuralGrade.B_PLUS: 2,
-        StructuralGrade.A2: 3,
-        StructuralGrade.A1: 4,
-    }
-    return grade if order[grade] <= order[cap] else cap
-
-
 def assess_structural_fit(
     candidate: StructuralInput,
     config: StructuralConfig = DEFAULT_CONFIG,
 ) -> StructuralAssessment:
-    structural_type = _structural_type(candidate)
+    state = get_model_state()
+    structural_type = _structural_type(candidate, config)
     evidence = {
         **candidate.evidence,
         "inputs": {
@@ -72,19 +50,13 @@ def assess_structural_fit(
             "chance_quality": candidate.chance_quality,
         },
         "source_metadata": dict(candidate.source_metadata),
+        "model_control": {
+            "version": state.model.version,
+            "regime": state.model.regime,
+            "recent_total_leakage_confirmation": state.rules.recent_total_leakage_confirmation,
+            "sep1_hardening": state.rules.sep1_hardening,
+        },
     }
-
-    if is_hard_excluded(candidate.competition, candidate.country_code):
-        return StructuralAssessment(
-            grade=StructuralGrade.PASS,
-            structural_type=structural_type,
-            score=0.0,
-            status=AssessmentStatus.EXCLUDED,
-            display_on_board=False,
-            failure_modes=candidate.failure_modes,
-            evidence=evidence,
-            exclusion_reason="PERMANENT_COMPETITION_EXCLUSION",
-        )
 
     if not candidate.data_complete:
         return StructuralAssessment(
@@ -95,7 +67,7 @@ def assess_structural_fit(
             display_on_board=False,
             failure_modes=candidate.failure_modes,
             evidence=evidence,
-            exclusion_reason="REQUIRED_EVIDENCE_INCOMPLETE",
+            exclusion_reason="MANDATORY_GF_GA_PROFILE_INCOMPLETE",
         )
 
     primary_route = max(candidate.two_sided_strength, candidate.carrier_ceiling)
@@ -108,21 +80,9 @@ def assess_structural_fit(
     )
     grade = _grade(score, config)
 
-    mandatory_gates = (
-        candidate.profile_gate,
-        candidate.chance_quality,
-        candidate.failure_mode_resistance,
-    )
-    if min(mandatory_gates) < config.mandatory_gate_floor:
-        grade = _cap_grade(grade, StructuralGrade.B)
-    elif (
-        candidate.profile_gate < config.a1_min_profile
-        or candidate.chance_quality < config.a1_min_chance_quality
-        or candidate.failure_mode_resistance < config.a1_min_failure_resistance
-    ):
-        grade = _cap_grade(grade, StructuralGrade.A2)
-
-    display_on_board = grade in {
+    # PRE-HARDENING: chance quality, profile quality, and failure resistance are
+    # weighted evidence. They do not independently impose blanket grade caps.
+    display_on_board = score >= config.board_min_score and grade in {
         StructuralGrade.A1,
         StructuralGrade.A2,
         StructuralGrade.B_PLUS,

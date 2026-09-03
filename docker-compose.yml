@@ -16,7 +16,9 @@ services:
       retries: 10
 
   api:
-    build: ./apps/api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://football:football_local_only@db:5432/football_v2}
       APP_ENV: ${APP_ENV:-development}

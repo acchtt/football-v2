@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.model_state import get_model_state
+
 
 class Settings(BaseSettings):
     app_name: str = "Football v2"
@@ -18,8 +20,6 @@ class Settings(BaseSettings):
     research_import_token: str | None = None
     seed_demo_on_read: bool = True
     web_origin: str = "http://localhost:3000"
-    timezone: str = "Asia/Ho_Chi_Minh"
-    model_version: str = "v0.2.47-R"
     vision_provider: str = "demo"
     vision_model: str = "gpt-5.6"
     openai_api_key: str | None = None
@@ -28,6 +28,18 @@ class Settings(BaseSettings):
     max_upload_files: int = 6
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def model_version(self) -> str:
+        return get_model_state().model.version
+
+    @property
+    def model_regime(self) -> str:
+        return get_model_state().model.regime
+
+    @property
+    def timezone(self) -> str:
+        return get_model_state().model.timezone
 
 
 @lru_cache

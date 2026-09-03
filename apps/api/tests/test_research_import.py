@@ -130,7 +130,19 @@ def test_missing_profile_fails_closed_even_when_research_scores_are_high(
     assert result.excluded == 1
     assert assessment is not None
     assert assessment.assessment_status == "DATA_INCOMPLETE"
-    assert assessment.exclusion_reason == "REQUIRED_EVIDENCE_INCOMPLETE"
+    assert assessment.exclusion_reason == "MANDATORY_GF_GA_PROFILE_INCOMPLETE"
+
+
+def test_research_import_applies_canonical_competition_scope() -> None:
+    excluded = build_research_provider(
+        _request(external_id="excluded-cup", country_code="ES", competition="Copa del Rey")
+    )
+    leagues_cup = build_research_provider(
+        _request(external_id="leagues-cup", country_code="US", competition="Leagues Cup")
+    )
+
+    assert excluded.fetch_fixtures(date(2026, 8, 31)) == []
+    assert len(leagues_cup.fetch_fixtures(date(2026, 8, 31))) == 1
 
 
 def test_research_schema_rejects_wrong_ict_date_and_naive_times() -> None:

@@ -1,4 +1,4 @@
-from .structural import assess_structural_fit, is_hard_excluded
+from .structural import assess_structural_fit
 from .types import AssessmentStatus, StructuralAssessment, StructuralGrade, StructuralInput
 
 __all__ = [
@@ -7,5 +7,4 @@ __all__ = [
     "StructuralGrade",
     "StructuralInput",
     "assess_structural_fit",
-    "is_hard_excluded",
 ]
