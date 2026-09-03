@@ -7,6 +7,7 @@ from app.providers.normalization import normalize_structural_metrics
 
 def test_canonical_model_state_is_pre_hardening() -> None:
     state = get_model_state()
+    assert state.schema_version == 2
     assert state.model.version == "v0.2.47-R"
     assert state.model.regime == "PRE-HARDENING"
     assert state.rules.recent_total_leakage_confirmation is True
@@ -15,6 +16,8 @@ def test_canonical_model_state_is_pre_hardening() -> None:
     assert state.change_control.silent_rule_changes is False
     assert state.change_control.explicit_user_approval_required is True
     assert not any(state.rules.deprecated_restrictions.model_dump().values())
+    assert state.market.minimum_price == 1.70
+    assert state.market.grade_based_maximum_line_enabled is False
 
 
 def test_environment_cannot_override_model_identity(monkeypatch) -> None:
