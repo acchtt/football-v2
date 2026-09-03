@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 10 * 1024 * 1024
     max_upload_files: int = 6
 
+    # Airtable is a reporting/projection sink only. It is never model authority.
+    airtable_sync_enabled: bool = False
+    airtable_token: str | None = None
+    airtable_base_id: str = "appWyZJjitSBATXAU"
+    airtable_decision_states_table: str = "Decision States"
+    airtable_timeout_seconds: float = 15.0
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property
