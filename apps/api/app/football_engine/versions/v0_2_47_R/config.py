@@ -1,22 +1,44 @@
 from dataclasses import dataclass
 
+from app.model_state import get_model_state
+
 
 @dataclass(frozen=True, slots=True)
 class StructuralConfig:
-    a1_min_score: float = 85.0
-    a2_min_score: float = 72.0
-    b_plus_min_score: float = 60.0
-    b_min_score: float = 45.0
-    board_min_score: float = 60.0
-    a1_min_profile: float = 70.0
-    a1_min_chance_quality: float = 70.0
-    a1_min_failure_resistance: float = 65.0
-    mandatory_gate_floor: float = 55.0
+    a1_min_score: float
+    a2_min_score: float
+    b_plus_min_score: float
+    b_min_score: float
+    board_min_score: float
 
-    primary_route_weight: float = 0.38
-    profile_weight: float = 0.22
-    chance_quality_weight: float = 0.20
-    failure_resistance_weight: float = 0.20
+    primary_route_weight: float
+    profile_weight: float
+    chance_quality_weight: float
+    failure_resistance_weight: float
+
+    two_sided_route_threshold: float
+    two_sided_carrier_tolerance: float
+    secondary_route_threshold: float
 
 
-DEFAULT_CONFIG = StructuralConfig()
+def _from_model_state() -> StructuralConfig:
+    state = get_model_state().structural
+    grades = state.grade_thresholds
+    weights = state.weights
+    return StructuralConfig(
+        a1_min_score=grades["A1"],
+        a2_min_score=grades["A2"],
+        b_plus_min_score=grades["B+"],
+        b_min_score=grades["B"],
+        board_min_score=state.board_min_score,
+        primary_route_weight=weights["primary_route"],
+        profile_weight=weights["profile"],
+        chance_quality_weight=weights["chance_quality"],
+        failure_resistance_weight=weights["failure_resistance"],
+        two_sided_route_threshold=state.two_sided_route_threshold,
+        two_sided_carrier_tolerance=state.two_sided_carrier_tolerance,
+        secondary_route_threshold=state.secondary_route_threshold,
+    )
+
+
+DEFAULT_CONFIG = _from_model_state()
