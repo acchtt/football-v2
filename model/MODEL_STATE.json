@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "Football",
+    "version": "v0.2.47-R",
+    "regime": "PRE-HARDENING",
+    "timezone": "Asia/Ho_Chi_Minh"
+  },
+  "rules": {
+    "recent_total_leakage_confirmation": true,
+    "sep1_hardening": false,
+    "chance_quality_role": "supporting_modifier",
+    "h2h_role": "modifier_only",
+    "price_can_promote_structure": false,
+    "prefer_lowest_clean_asian_total_burden": true,
+    "xi_names_can_create_unsupported_route": false,
+    "deprecated_restrictions": {
+      "youth_reserve_blanket_caps": false,
+      "general_short_sample_caps": false,
+      "o3_75_hard_gates": false,
+      "blanket_a2_burden_prohibitions": false,
+      "xi_route_prohibitions": false,
+      "h2h_vetoes": false
+    }
+  },
+  "change_control": {
+    "audit_can_modify_model": false,
+    "silent_rule_changes": false,
+    "explicit_user_approval_required": true,
+    "production_requires_canonical_state": true
+  },
+  "competition_scope": {
+    "domestic_leagues": true,
+    "english_domestic_cups": true,
+    "dfb_pokal": true,
+    "north_american_leagues_cup": true,
+    "other_cups": false,
+    "legacy_k_league_exclusion": false,
+    "named_cup_exceptions": [
+      "FA Cup",
+      "EFL Cup",
+      "Carabao Cup",
+      "DFB-Pokal",
+      "Leagues Cup"
+    ]
+  },
+  "structural": {
+    "grade_thresholds": {
+      "A1": 85.0,
+      "A2": 72.0,
+      "B+": 60.0,
+      "B": 45.0
+    },
+    "board_min_score": 60.0,
+    "weights": {
+      "primary_route": 0.38,
+      "profile": 0.22,
+      "chance_quality": 0.20,
+      "failure_resistance": 0.20
+    },
+    "two_sided_route_threshold": 70.0,
+    "two_sided_carrier_tolerance": 2.0,
+    "secondary_route_threshold": 50.0
+  },
+  "xi": {
+    "rotation_penalty": 1.5,
+    "cohesion_penalty": 1.5,
+    "two_band_downgrade_threshold": -5.0,
+    "one_band_downgrade_threshold": -1.5,
+    "one_band_upgrade_threshold": 4.0,
+    "two_band_upgrade_threshold": 8.0,
+    "normal_promotion_cap_bands": 1,
+    "two_band_upgrade_requires_genuine_role_change": true
+  },
+  "market": {
+    "minimum_extraction_confidence": 0.70,
+    "minimum_price": 1.60,
+    "maximum_price": 2.30,
+    "maximum_line_by_grade": {
+      "A1": 3.0,
+      "A2": 3.0,
+      "B+": 2.75,
+      "B": 2.5,
+      "PASS": 2.5
+    },
+    "a1_extended_line": {
+      "enabled": true,
+      "minimum_structural_score": 92.0,
+      "requires_positive_xi_delta": true,
+      "maximum_line": 3.5
+    }
+  }
+}
