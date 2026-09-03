@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from app.model_state import get_model_state
+
 from .failure_modes import evaluate_xi_failure_modes
 from .goal_burden import OddsOffer, select_protected_line
 from .types import StructuralGrade
@@ -35,32 +37,35 @@ class VerdictResult:
 
 
 def decide(input_data: VerdictInput) -> VerdictResult:
+    state = get_model_state()
+    confidence_floor = state.market.minimum_extraction_confidence
     xi = rerank_xi(input_data.frozen_grade, input_data.xi_signals)
     failures = evaluate_xi_failure_modes(
         input_data.xi_signals,
         input_data.frozen_failure_modes,
     )
-    profile_pass = input_data.profile_gate_score >= 55
-    chance_pass = input_data.chance_quality_score >= 55
     reasons = list(xi.reasons) + list(failures.reasons)
 
-    if input_data.lineup_confidence < 0.70 or input_data.odds_confidence < 0.70:
-        reasons.append("screenshot extraction confidence is below 70%")
+    if input_data.lineup_confidence < confidence_floor or input_data.odds_confidence < confidence_floor:
+        reasons.append(
+            f"screenshot extraction confidence is below {confidence_floor:.0%}"
+        )
     if not input_data.screenshots_match_fixture:
         reasons.append("uploaded screenshots do not reliably match the frozen fixture")
-    if not profile_pass:
-        reasons.append("mandatory GF/GA profile gate failed")
-    if not chance_pass:
-        reasons.append("repeatable chance-quality gate failed")
+
+    # PRE-HARDENING: profile/chance quality already influenced the frozen structural score.
+    # They remain visible evidence here, but are not re-applied as blanket numeric vetoes.
+    if input_data.chance_quality_score < 55:
+        reasons.append("chance-quality support is weak; prefer protection or HOLD if burden stretches")
+    if input_data.profile_gate_score < 55:
+        reasons.append("underlying scoring profile is weak despite the frozen route score")
 
     eligible_grade = xi.xi_grade in {StructuralGrade.A1, StructuralGrade.A2}
     prerequisites_pass = all(
         (
-            input_data.lineup_confidence >= 0.70,
-            input_data.odds_confidence >= 0.70,
+            input_data.lineup_confidence >= confidence_floor,
+            input_data.odds_confidence >= confidence_floor,
             input_data.screenshots_match_fixture,
-            profile_pass,
-            chance_pass,
             failures.acceptable,
             eligible_grade,
         )
@@ -79,8 +84,8 @@ def decide(input_data: VerdictInput) -> VerdictResult:
     return VerdictResult(
         frozen_grade=input_data.frozen_grade,
         xi_grade=xi.xi_grade,
-        profile_gate="PASS" if profile_pass else "FAIL",
-        chance_quality_gate="PASS" if chance_pass else "FAIL",
+        profile_gate="WEIGHTED EVIDENCE",
+        chance_quality_gate="SUPPORTING MODIFIER",
         failure_modes_acceptable=failures.acceptable,
         selected_line=burden.selected.line if locked and burden.selected else None,
         selected_odds=burden.selected.over_odds if locked and burden.selected else None,
