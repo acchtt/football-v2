@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "model": {
     "name": "Football",
     "version": "v0.2.47-R",
@@ -74,20 +74,8 @@
   },
   "market": {
     "minimum_extraction_confidence": 0.70,
-    "minimum_price": 1.60,
+    "minimum_price": 1.70,
     "maximum_price": 2.30,
-    "maximum_line_by_grade": {
-      "A1": 3.0,
-      "A2": 3.0,
-      "B+": 2.75,
-      "B": 2.5,
-      "PASS": 2.5
-    },
-    "a1_extended_line": {
-      "enabled": true,
-      "minimum_structural_score": 92.0,
-      "requires_positive_xi_delta": true,
-      "maximum_line": 3.5
-    }
+    "grade_based_maximum_line_enabled": false
   }
 }
