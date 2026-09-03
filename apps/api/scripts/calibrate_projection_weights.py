@@ -2,21 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from dataclasses import asdict
 from decimal import Decimal
 from pathlib import Path
 
-from app.football_engine.research.calibration_search import (
-    ProjectionWeightCandidate,
-    evaluate_weight_candidates,
-    jointly_compatible_candidates,
-)
-from app.model_state import get_model_state
 
-
-DEFAULT_FIXTURE = (
-    Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "projection_recovery_cases.json"
-)
+API_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_FIXTURE = API_ROOT / "tests" / "fixtures" / "projection_recovery_cases.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,6 +34,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    if str(API_ROOT) not in sys.path:
+        sys.path.insert(0, str(API_ROOT))
+
+    from app.football_engine.research.calibration_search import (
+        ProjectionWeightCandidate,
+        evaluate_weight_candidates,
+        jointly_compatible_candidates,
+    )
+    from app.model_state import get_model_state
+
     args = parse_args()
     recovery_cases = json.loads(args.fixture.read_text(encoding="utf-8"))
     ratios = _parse_ratios(args.upside_ratios)
