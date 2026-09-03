@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -8,12 +9,17 @@ from app.api.routes import router
 from app.config import get_settings
 from app.db.models import Base
 from app.db.session import engine
+from app.model_state import get_model_state
 
 settings = get_settings()
+model_state = get_model_state()
+logger = logging.getLogger("football.model_control")
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    # Loading ModelState is intentionally fatal when canonical production guardrails fail.
+    logger.warning("ACTIVE MODEL: %s", model_state.banner)
     Base.metadata.create_all(bind=engine)
     yield
 
@@ -21,7 +27,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    description="Frozen daily board powered by Football v0.2.47-R",
+    description=f"Deterministic decision control — {model_state.banner}",
     lifespan=lifespan,
 )
 app.add_middleware(
