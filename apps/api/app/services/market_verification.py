@@ -140,7 +140,10 @@ class MarketVerificationService:
         return self.session.scalar(
             select(LineupSubmissionModel)
             .where(LineupSubmissionModel.fixture_id == fixture_id)
-            .order_by(LineupSubmissionModel.submitted_at.desc(), LineupSubmissionModel.id.desc())
+            .order_by(
+                LineupSubmissionModel.submitted_at.desc(),
+                LineupSubmissionModel.id.desc(),
+            )
             .limit(1)
         )
 
@@ -148,7 +151,10 @@ class MarketVerificationService:
         return self.session.scalar(
             select(OddsSubmissionModel)
             .where(OddsSubmissionModel.fixture_id == fixture_id)
-            .order_by(OddsSubmissionModel.submitted_at.desc(), OddsSubmissionModel.id.desc())
+            .order_by(
+                OddsSubmissionModel.submitted_at.desc(),
+                OddsSubmissionModel.id.desc(),
+            )
             .limit(1)
         )
 
