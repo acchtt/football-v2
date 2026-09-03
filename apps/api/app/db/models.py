@@ -1,4 +1,5 @@
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -9,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -149,6 +151,26 @@ class OddsSubmissionModel(Base):
     )
 
 
+class MarketVerificationModel(Base):
+    __tablename__ = "market_verifications"
+    __table_args__ = (
+        UniqueConstraint("odds_submission_id", name="uq_market_verified_submission"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    fixture_id: Mapped[str] = mapped_column(
+        ForeignKey("fixtures.id", ondelete="CASCADE"), index=True
+    )
+    odds_submission_id: Mapped[str] = mapped_column(
+        ForeignKey("odds_submissions.id", ondelete="CASCADE"), index=True
+    )
+    verified_by: Mapped[str] = mapped_column(String(32), default="user")
+    evidence: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    verified_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
 class DecisionStateModel(Base):
     __tablename__ = "decision_states"
     __table_args__ = (
@@ -204,8 +226,94 @@ class OfficialBetModel(Base):
     locked_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
+    # Legacy compatibility only. New settlement is written to result_settlements.
     settlement: Mapped[str | None] = mapped_column(String(32))
     pnl_units: Mapped[float | None] = mapped_column(Float)
+
+
+class MatchStageEventModel(Base):
+    __tablename__ = "match_stage_events"
+    __table_args__ = (
+        UniqueConstraint(
+            "fixture_id", "model_version", "event_key", name="uq_match_stage_event_key"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    fixture_id: Mapped[str] = mapped_column(
+        ForeignKey("fixtures.id", ondelete="CASCADE"), index=True
+    )
+    model_version: Mapped[str] = mapped_column(String(32), index=True)
+    model_regime: Mapped[str] = mapped_column(String(32), index=True)
+    stage: Mapped[str] = mapped_column(String(32), index=True)
+    event_key: Mapped[str] = mapped_column(String(160))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    source_kind: Mapped[str] = mapped_column(String(48), default="system")
+    source_reference: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+class ResultSettlementModel(Base):
+    __tablename__ = "result_settlements"
+    __table_args__ = (
+        UniqueConstraint("official_bet_id", name="uq_result_settlement_bet"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    fixture_id: Mapped[str] = mapped_column(
+        ForeignKey("fixtures.id", ondelete="CASCADE"), index=True
+    )
+    official_bet_id: Mapped[str] = mapped_column(
+        ForeignKey("official_bets.id", ondelete="CASCADE"), index=True
+    )
+    model_version: Mapped[str] = mapped_column(String(32), index=True)
+    model_regime: Mapped[str] = mapped_column(String(32))
+    home_goals_90: Mapped[int]
+    away_goals_90: Mapped[int]
+    total_goals_90: Mapped[int]
+    settlement: Mapped[str] = mapped_column(String(32), index=True)
+    stake_units: Mapped[Decimal] = mapped_column(Numeric(12, 6))
+    pnl_units: Mapped[Decimal] = mapped_column(Numeric(12, 6))
+    provider_name: Mapped[str] = mapped_column(String(64))
+    provider_result_reference: Mapped[str] = mapped_column(Text)
+    result_payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    settled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+class AuditObservationModel(Base):
+    __tablename__ = "audit_observations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    fixture_id: Mapped[str | None] = mapped_column(
+        ForeignKey("fixtures.id", ondelete="SET NULL"), index=True
+    )
+    model_version: Mapped[str] = mapped_column(String(32), index=True)
+    classification: Mapped[str | None] = mapped_column(String(64))
+    notes: Mapped[str] = mapped_column(Text)
+    evidence: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+class ProposedModelChangeModel(Base):
+    __tablename__ = "proposed_model_changes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    audit_observation_id: Mapped[str | None] = mapped_column(
+        ForeignKey("audit_observations.id", ondelete="SET NULL"), index=True
+    )
+    proposed_change: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    rationale: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(32), default="PROPOSED", index=True)
+    approval_reference: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
 
 def _reject_mutation(_mapper: Any, _connection: Any, target: Any) -> None:
@@ -216,7 +324,13 @@ for immutable_model in (
     StructuralAssessmentModel,
     LineupSubmissionModel,
     OddsSubmissionModel,
+    MarketVerificationModel,
     DecisionStateModel,
+    OfficialBetModel,
+    MatchStageEventModel,
+    ResultSettlementModel,
+    AuditObservationModel,
+    ProposedModelChangeModel,
 ):
     event.listen(immutable_model, "before_update", _reject_mutation)
     event.listen(immutable_model, "before_delete", _reject_mutation)
