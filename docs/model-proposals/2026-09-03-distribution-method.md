@@ -1,64 +1,18 @@
-# PROPOSED — canonical recovered-score distribution method
+# APPROVED — canonical recovered-score distribution method
 
-**Status:** PROPOSED — NOT ACTIVE
+**Status:** APPROVED AND ACTIVE ON `v1/automatic-xi-results`
 
 **Model:** Football v0.2.47-R PRE-HARDENING
 
+**Approval:** User explicitly approved **Method C** on 2026-09-03.
+
 **Production authority:** `/model/MODEL_STATE.json`
 
-This proposal does not change model state, enable `/verdict`, or create official bets.
+This document is the change-control evidence for activating the scenario-to-distribution transform. It does **not** enable `/verdict`, create official bets, or invent an upstream score-scenario producer.
 
-## Problem
+## Approved Method C
 
-The downstream market chain is now reconstructed:
-
-```text
-structure / routes / XI / situation
-→ goal band / central anchor
-→ categorical settlement-protection envelope
-→ goal probability distribution
-→ exact Asian fair odds / EV
-→ market comparison
-```
-
-The unresolved step has been the conversion of recovered score scenarios into a probability distribution. Historical records preserved examples such as:
-
-```text
-primary: 2-1 / 3-1 / 2-2
-upside: 3-2
-```
-
-but did not preserve explicit scenario probabilities.
-
-Pure Poisson and a max-EV-only selector are not authorized because they conflict with recovered model behavior.
-
-## Benchmark
-
-The research benchmark compares six non-Poisson candidate methods against five explicit historical projection cases and four recovered market-reference boards.
-
-Proposal criteria are intentionally stricter than market fit alone:
-
-1. retain positive mass on every recorded score scenario;
-2. use no tuned numeric hyperparameter;
-3. keep every projected mean inside its recovered historical goal range;
-4. rank all four recovered market references first under exact Asian expected-P/L math.
-
-### Results
-
-| Candidate | Range | Market refs | Preserves upside | Parameter-free | Proposal eligible |
-| --- | ---: | ---: | --- | --- | --- |
-| Equal all scenarios | 5/5 | 3/4 | yes | yes | no |
-| Half-weight upside | 5/5 | 3/4 | yes | no | no |
-| 1 / primary-count upside | 5/5 | 3/4 | yes | yes | no |
-| **1 / total-scenario-count upside** | **5/5** | **4/4** | **yes** | **yes** | **yes** |
-| Fixed 0.10 upside | 5/5 | 4/4 | yes | no | no |
-| Primary-only control | 5/5 | 4/4 | no | yes | no |
-
-The heavier tail candidates all change the Hiroshima–Kawasaki benchmark from O3.25 to O3.5. The fixed 0.10 tail fits but is a free fitted constant. The primary-only control fits but discards recorded evidence.
-
-## Proposed method
-
-For every explicitly recovered/generated score-scenario set:
+For every explicitly generated primary/upside score-scenario set:
 
 ```text
 primary scoreline weight = 1
@@ -73,36 +27,76 @@ Then:
 4. do not apply Poisson smoothing;
 5. pass the distribution to the existing exact Asian market math.
 
-Example with three primary scenarios and one upside scenario:
+Canonical method ID:
 
 ```text
-primary weight = 1 each
-upside weight = 1 / 4
+RECIPROCAL_TOTAL_SCENARIO_COUNT_V1
 ```
 
-The resulting `0.25` is derived from the recovered scenario count, not an activated fixed tail coefficient.
+For a common three-primary plus one-upside scenario set, the upside weight is `1/4`. The value `0.25` is derived from scenario count and is not a fixed model coefficient.
 
-If there are no recorded upside scenarios, primary scenarios remain equally weighted.
+## Evidence benchmark
 
-## Why this is preferred to the earlier 0.10 / 0.25 calibration
+The research benchmark compared six non-Poisson candidates against five explicit historical projection cases and four recovered market-reference boards.
 
-The earlier search showed that multiple light fixed tail ratios could fit the small overlap sample. That established non-identifiability.
+Approval criteria were:
 
-This proposal does not claim the data uniquely identify a numerical tail probability. Instead it applies a simplicity constraint: among tested methods that fit the evidence, prefer the one that preserves all evidence and derives its tail attenuation mechanically from the scenario set rather than adding a fitted constant.
+1. retain positive mass on every recorded score scenario;
+2. use no tuned numeric hyperparameter;
+3. keep every projected mean inside its recovered historical goal range;
+4. rank all four recovered market references first under exact Asian expected-P/L math.
+
+| Candidate | Range | Market refs | Preserves upside | Parameter-free | Proposal eligible |
+| --- | ---: | ---: | --- | --- | --- |
+| Equal all scenarios | 5/5 | 3/4 | yes | yes | no |
+| Half-weight upside | 5/5 | 3/4 | yes | no | no |
+| 1 / primary-count upside | 5/5 | 3/4 | yes | yes | no |
+| **1 / total-scenario-count upside** | **5/5** | **4/4** | **yes** | **yes** | **yes** |
+| Fixed 0.10 upside | 5/5 | 4/4 | yes | no | no |
+| Primary-only control | 5/5 | 4/4 | no | yes | no |
+
+The heavier-tail candidates changed the Hiroshima–Kawasaki market benchmark from O3.25 to O3.5. The fixed 0.10 tail fit but introduced a free fitted constant. The primary-only control fit but discarded recorded upside evidence.
+
+This approval therefore selects the simplest tested survivor. It does not claim that historical records uniquely encoded this mathematical formula.
+
+## Canonical activation
+
+`MODEL_STATE.json` schema is now version 3 and contains:
+
+```json
+"projection": {
+  "distribution_method": "RECIPROCAL_TOTAL_SCENARIO_COUNT_V1",
+  "distribution_method_approved": true,
+  "score_scenario_source": "EXPLICIT_PRIMARY_UPSIDE_SCENARIOS",
+  "upstream_scenario_producer_status": "PENDING_IMPLEMENTATION",
+  "synthetic_scorelines_allowed": false,
+  "poisson_fallback_allowed": false
+}
+```
+
+The runtime model-state validator pins these guardrails.
+
+The production-shaped adapter at:
+
+`apps/api/app/football_engine/versions/v0_2_47_R/scenario_distribution.py`
+
+now reads activation authority directly from canonical model state. The previous staging-only `activation_approved=True` bypass has been removed.
 
 ## Golden-board safety boundary
 
-Most active v0.2.47-R golden boards do not preserve explicit score scenarios. We will not invent distributions for them merely to force an EV backtest.
-
-The market architecture therefore remains:
+The market architecture remains:
 
 ```text
-price floor
-→ recovered categorical protection envelope
-→ distribution-based EV ranking within the envelope only
+structure / XI / situation
+→ explicit score scenarios
+→ approved Method C distribution
+→ recovered central anchor / protection posture
+→ eligible market envelope
+→ exact Asian fair odds / EV
+→ final market comparison
 ```
 
-The distribution layer cannot resurrect a rejected burden.
+The distribution layer cannot resurrect a burden already removed by the protection envelope.
 
 Club América–Monterrey remains the mandatory acceptance control:
 
@@ -113,38 +107,78 @@ O3.0  @2.16  -> rejected by PROTECTION_HEAVY anchor envelope
 O3.25 @2.42  -> above active maximum price and/or outside envelope
 ```
 
-Thus O2.75 @1.89 is the only surviving candidate before EV ranking.
+Thus O2.75 @1.89 remains the only surviving candidate before probability ranking.
 
-## What approval would authorize
+## What Method C approval activates
 
-Approval of this proposal would authorize implementation of the **scenario-to-distribution adapter** in production, subject to the following conditions:
-
-- score scenarios must come from an approved upstream projection/template layer;
-- missing scenarios fail closed; no synthetic tails or Poisson fallback;
-- the existing 1.70 minimum price floor remains active;
-- the categorical protection envelope remains upstream of EV ranking;
-- exact Asian settlement math remains unchanged;
-- top EV alone still cannot override HOLD/structure requirements;
-- audited historical mistakes remain negative controls, not positive training examples;
-- Sep-1 hardening rules remain inactive unless separately approved.
-
-Approval would **not** by itself merge the branch or silently enable official betting. Runtime wiring and acceptance tests would still be committed and reviewed before `/verdict` is enabled.
-
-## Remaining engineering after approval
-
-1. promote the approved scenario-distribution adapter out of research code;
-2. connect approved upstream score-scenario generation to it;
-3. run the full post-XI shadow chain through golden and acceptance tests;
-4. replace the current `/verdict` 503 guard only after those checks are available;
-5. keep OFFICIAL_LOCK/HOLD state transitions append-only and auditable.
-
-## Current state
-
-Until explicit approval:
+It activates only the deterministic transform:
 
 ```text
-proposal status = NOT ACTIVE
-MODEL_STATE change = none
-/verdict = disabled
-production selection = none
+explicit primary/upside score scenarios
+→ total-goal probability distribution
 ```
+
+It also authorizes production code to call that adapter **once an approved upstream score-scenario producer supplies those scenarios**.
+
+## What remains blocked
+
+Method C approval does **not** define:
+
+- how structure/XI/situation creates primary score scenarios;
+- how structure/XI/situation creates upside score scenarios;
+- a grade-to-goals lookup;
+- Poisson fallback;
+- synthetic tail generation;
+- a fixed price-step threshold;
+- a top-EV-equals-LOCK rule;
+- automatic HOLD/LOCK behavior.
+
+Canonical state therefore explicitly records:
+
+```text
+upstream_scenario_producer_status = PENDING_IMPLEMENTATION
+```
+
+`AutomatedMatchUpdateService` still records projected distribution and fair total as pending because it has no approved score-scenario source.
+
+`/verdict` remains disabled until that upstream seam and final decision integration are implemented and validated.
+
+## Preserved v0.2.47-R guardrails
+
+This approval does not alter:
+
+- model version `v0.2.47-R`;
+- `PRE-HARDENING` regime;
+- Sep-1 hardening = inactive;
+- recent-total/leakage confirmation = active;
+- minimum Over price = 1.70;
+- no blanket grade-based maximum total;
+- no O3.75 hard gate;
+- no youth/reserve blanket cap;
+- H2H remains modifier only;
+- XI names cannot create an unsupported route.
+
+## Completed change-control sequence
+
+```text
+RECOVERED EVIDENCE
+→ DISTRIBUTION CANDIDATE BENCHMARK
+→ METHOD C PROPOSAL
+→ PRODUCTION-SHAPED FAIL-CLOSED STAGING
+→ EXPLICIT USER APPROVAL (C)
+→ MODEL_STATE SCHEMA V3 + METHOD ID ACTIVATION
+→ ADAPTER BOUND TO CANONICAL STATE
+```
+
+## Next engineering task
+
+Build and persist the canonical upstream representation:
+
+```text
+structure + XI + situation
+→ primary score scenarios + upside score scenarios
+```
+
+Only after that representation is explicit and acceptance-tested should runtime call Method C automatically and proceed to fair-total/market comparison.
+
+Production merge and `/verdict` activation remain separate actions and require their normal validation gates.
