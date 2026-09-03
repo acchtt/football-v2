@@ -10,6 +10,7 @@ from app.football_engine.versions.v0_2_47_R import StructuralInput, assess_struc
 from app.football_engine.versions.v0_2_47_R.types import AssessmentStatus
 from app.providers.base import FixtureProvider, ProviderFixture, StatsProvider, StructuralMetrics
 from app.schemas.board import BoardMatch, DailyBoardResponse, DailyJobResponse
+from app.services.stage_events import append_stage_event
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +70,29 @@ class DailyBoardService:
                 excluded += int(not existing.display_on_board)
                 continue
 
+            append_stage_event(
+                self.session,
+                fixture_id=fixture.id,
+                stage="DISCOVERED",
+                event_key=f"DISCOVERED:{provider_fixture.provider_fixture_id}",
+                payload={
+                    "competition": provider_fixture.competition,
+                    "home_team": provider_fixture.home_team,
+                    "away_team": provider_fixture.away_team,
+                    "kickoff_utc": provider_fixture.kickoff_utc.isoformat(),
+                },
+                source_kind=provider_fixture.provider_name,
+                source_reference=provider_fixture.provider_fixture_id,
+            )
+            append_stage_event(
+                self.session,
+                fixture_id=fixture.id,
+                stage="PRE_SCREENED",
+                event_key=f"PRE_SCREENED:{provider_fixture.provider_fixture_id}",
+                payload={"competition_scope_passed": True},
+                source_kind="model",
+            )
+
             profile = self.stats_provider.fetch_team_profile(provider_fixture)
             metrics = self.stats_provider.fetch_structural_metrics(provider_fixture)
             if profile is not None:
@@ -97,6 +121,34 @@ class DailyBoardService:
                 frozen_at=datetime.now(UTC),
             )
             self.session.add(record)
+            self.session.flush()
+            append_stage_event(
+                self.session,
+                fixture_id=fixture.id,
+                stage="PRE_FROZEN",
+                event_key=f"PRE_FROZEN:{record.id}",
+                payload={
+                    "assessment_id": record.id,
+                    "grade": record.structural_grade,
+                    "structural_type": record.structural_type,
+                    "structural_score": record.structural_score,
+                    "display_on_board": record.display_on_board,
+                    "failure_modes": list(record.failure_modes),
+                    "evidence": dict(record.evidence),
+                },
+                source_kind="model",
+                source_reference=record.id,
+            )
+            if assessment.display_on_board:
+                append_stage_event(
+                    self.session,
+                    fixture_id=fixture.id,
+                    stage="WAITING_XI",
+                    event_key=f"WAITING_XI:{record.id}",
+                    payload={"assessment_id": record.id},
+                    source_kind="system",
+                )
+
             newly_frozen += 1
             displayed += int(assessment.display_on_board)
             excluded += int(not assessment.display_on_board)
