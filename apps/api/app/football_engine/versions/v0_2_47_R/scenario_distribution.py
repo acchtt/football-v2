@@ -3,14 +3,16 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Iterable, Sequence
+from typing import Sequence
+
+from app.model_state import get_model_state
 
 from .market_math import normalize_goal_distribution
 
 
 METHOD_ID = "RECIPROCAL_TOTAL_SCENARIO_COUNT_V1"
-METHOD_STATUS = "PROPOSED_NOT_ACTIVE"
-ACTIVATION_BLOCKER = "EXPLICIT_USER_APPROVAL_REQUIRED_FOR_DISTRIBUTION_METHOD_C"
+METHOD_STATUS = "APPROVED_ACTIVE"
+CANONICAL_METHOD_MISMATCH = "CANONICAL_DISTRIBUTION_METHOD_MISMATCH"
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,31 +32,33 @@ class ScenarioDistributionResult:
     method_id: str
     scenarios: tuple[ScoreScenarioEvidence, ...]
     distribution: dict[int, Decimal]
-    production_ready: bool = False
-    blocker: str = ACTIVATION_BLOCKER
+    production_ready: bool = True
+    blocker: None = None
 
 
 def build_scenario_distribution(
     primary_scores: Sequence[Sequence[int]],
     *,
     upside_scores: Sequence[Sequence[int]] = (),
-    activation_approved: bool = False,
 ) -> ScenarioDistributionResult:
-    """Build the proposed non-Poisson distribution from explicit score scenarios.
+    """Build the approved non-Poisson distribution from explicit score scenarios.
 
-    Proposed Method C:
+    Approved Method C:
       - every primary scoreline has weight 1;
       - every upside scoreline has weight 1 / total recorded scenario count;
       - aggregate identical total-goal outcomes and normalize;
       - never invent scorelines, smoothing mass, or Poisson tails.
 
-    The adapter is deliberately fail-closed until explicit user approval is recorded in
-    canonical model state and runtime integration is completed. The boolean exists only
-    so staging/acceptance tests can exercise the proposed algorithm before activation.
-    Production callers must not pass True without the approved canonical-state gate.
+    Activation authority comes only from canonical MODEL_STATE.json. This adapter does
+    not generate score scenarios; runtime must supply explicit primary/upside scenarios
+    from the separately approved upstream producer once that producer exists.
     """
-    if not activation_approved:
-        raise RuntimeError(ACTIVATION_BLOCKER)
+    state = get_model_state()
+    if (
+        not state.projection.distribution_method_approved
+        or state.projection.distribution_method != METHOD_ID
+    ):
+        raise RuntimeError(CANONICAL_METHOD_MISMATCH)
 
     if not primary_scores:
         raise ValueError("At least one primary score scenario is required")
