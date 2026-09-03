@@ -1,0 +1,162 @@
+[
+  {
+    "case_id": "AME-MTY-20260903-ACCEPTANCE",
+    "match": "Club América–Monterrey",
+    "grade": "A1/A2 Two-Sided",
+    "source": "project_acceptance",
+    "offers": [[2.5, 1.69], [2.75, 1.89], [3.0, 2.16], [3.25, 2.42]],
+    "selected_line": 2.75,
+    "selected_odds": 1.89,
+    "reason": "Production acceptance case; O2.75 must beat the lowest-line shortcut."
+  },
+  {
+    "case_id": "THU-LAU-20260902",
+    "match": "Thun–Lausanne-Sport",
+    "grade": "A1/A2 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.75, 1.71], [3.0, 1.92], [3.25, 2.20]],
+    "selected_line": 3.0,
+    "selected_odds": 1.92,
+    "reason": "O3 push protection preferred after XI ceiling downgrade."
+  },
+  {
+    "case_id": "RBS-RAP-20260902",
+    "match": "Red Bull Salzburg–Rapid Wien",
+    "grade": "A1 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[3.25, 1.84], [3.5, 2.08], [3.75, 2.33]],
+    "selected_line": 3.25,
+    "selected_odds": 1.84,
+    "reason": "Both attacks supported; defensive suppression made the next quarter too costly."
+  },
+  {
+    "case_id": "GCZ-SG-20260902",
+    "match": "Grasshopper–St. Gallen",
+    "grade": "A1 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[3.25, 1.79], [3.5, 1.99], [3.75, 2.25]],
+    "selected_line": 3.25,
+    "selected_odds": 1.79,
+    "reason": "Exactly three remained meaningful; +0.20 did not justify full-loss exposure at O3.5."
+  },
+  {
+    "case_id": "AUS-WSG-20260902",
+    "match": "Austria Wien–WSG Tirol",
+    "grade": "A2 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.5, 1.77], [2.75, 1.99], [3.0, 2.32]],
+    "selected_line": 2.75,
+    "selected_odds": 1.99,
+    "reason": "Observed production choice; later process audit flagged the upstream structural promotion, not settlement math."
+  },
+  {
+    "case_id": "SAS-FRO-20260902",
+    "match": "Sassuolo–Frosinone",
+    "grade": "A2 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.75, 1.78], [3.0, 2.01], [3.25, 2.27]],
+    "selected_line": 3.0,
+    "selected_odds": 2.01,
+    "reason": "O3 retained push at exactly three while paying above even money."
+  },
+  {
+    "case_id": "AVL-ARS-20260831",
+    "match": "Aston Villa–Arsenal",
+    "grade": "A2+ Elite Carrier",
+    "source": "airtable_lock",
+    "offers": [[2.25, 1.51], [2.5, 1.72], [2.75, 1.92], [3.0, 2.20], [3.25, 2.49]],
+    "selected_line": 2.5,
+    "selected_odds": 1.72,
+    "reason": "Suppression risk made full-win protection at exactly three worth more than +0.20."
+  },
+  {
+    "case_id": "LIV-NFO-20260829",
+    "match": "Liverpool–Nottingham Forest",
+    "grade": "A1/A2 Carrier Hybrid",
+    "source": "airtable_lock",
+    "offers": [[2.5, 1.54], [2.75, 1.66], [3.0, 1.86], [3.25, 2.12], [3.5, 2.37]],
+    "selected_line": 3.0,
+    "selected_odds": 1.86,
+    "reason": "O3 balanced push protection and price; O2.75 compressed and O3.25 stretched."
+  },
+  {
+    "case_id": "TOT-NEW-20260829",
+    "match": "Tottenham–Newcastle United",
+    "grade": "A1 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.75, 1.80], [3.0, 2.05], [3.25, 2.30]],
+    "selected_line": 3.0,
+    "selected_odds": 2.05,
+    "reason": "O3 push protection selected over compressed O2.75 and stretched O3.25."
+  },
+  {
+    "case_id": "VIE-THA-20260826",
+    "match": "Vietnam–Thailand",
+    "grade": "Chase-state Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.25, 1.72], [2.5, 1.97], [2.75, 2.20]],
+    "selected_line": 2.5,
+    "selected_odds": 1.97,
+    "reason": "O2.25 too compressed; O2.75 surrendered too much protection at exactly three."
+  },
+  {
+    "case_id": "DAE-ULS-20260826",
+    "match": "Daejeon Hana Citizen–Ulsan HD",
+    "grade": "A- Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.25, 1.45], [2.5, 1.64], [2.75, 1.80], [3.0, 2.05], [3.25, 2.31]],
+    "selected_line": 2.75,
+    "selected_odds": 1.80,
+    "reason": "O2.75 retained half-win at exactly three; O3 rejected after XI downgrade."
+  },
+  {
+    "case_id": "MAC-LUG-20260827",
+    "match": "Maccabi Tel Aviv–Lugano",
+    "grade": "A1 Chase-State",
+    "source": "airtable_lock",
+    "offers": [[2.5, 1.60], [2.75, 1.76], [3.0, 2.02]],
+    "selected_line": 2.75,
+    "selected_odds": 1.76,
+    "reason": "O3 gave up the half-win at exactly three for only +0.26."
+  },
+  {
+    "case_id": "TOL-AUS-20260827",
+    "match": "Toluca–Austin FC",
+    "grade": "A- Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[2.5, 1.72], [2.75, 1.91], [3.0, 2.20], [3.25, 2.47]],
+    "selected_line": 2.75,
+    "selected_odds": 1.91,
+    "reason": "Observed production burden choice; later audit corrected the upstream PRE grade."
+  },
+  {
+    "case_id": "TEL-AJA-20260830",
+    "match": "Telstar–Ajax",
+    "grade": "A2+/A1 Borderline",
+    "source": "airtable_lock",
+    "offers": [[3.25, 1.74], [3.5, 1.95], [3.75, 2.19]],
+    "selected_line": 3.5,
+    "selected_odds": 1.95,
+    "reason": "O3.5 retained full win at exactly four while improving price materially."
+  },
+  {
+    "case_id": "BEN-EST-20260831",
+    "match": "Benfica–Estoril",
+    "grade": "A1/A2 Elite Carrier",
+    "source": "airtable_lock",
+    "offers": [[3.5, 1.77], [3.75, 1.96], [4.0, 2.25]],
+    "selected_line": 3.5,
+    "selected_odds": 1.77,
+    "reason": "Moving down from O3.75 made exactly four a full win; protection outweighed price."
+  },
+  {
+    "case_id": "JPSV-JAJA-20260831",
+    "match": "Jong PSV–Jong Ajax",
+    "grade": "A1 Two-Sided",
+    "source": "airtable_lock",
+    "offers": [[3.75, 1.79], [4.0, 1.99], [4.25, 2.22]],
+    "selected_line": 3.75,
+    "selected_odds": 1.79,
+    "reason": "Exactly four half-win protection retained; +0.20 was insufficient to move to O4."
+  }
+]
