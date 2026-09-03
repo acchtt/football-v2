@@ -5,7 +5,6 @@ from app.football_engine.versions.v0_2_47_R import (
     StructuralGrade,
     StructuralInput,
     assess_structural_fit,
-    is_hard_excluded,
 )
 
 
@@ -29,14 +28,13 @@ def candidate(**overrides: object) -> StructuralInput:
     return StructuralInput(**values)  # type: ignore[arg-type]
 
 
-def test_k_league_is_always_excluded_even_with_elite_inputs() -> None:
+def test_k_league_is_not_silently_hard_excluded() -> None:
     assessment = assess_structural_fit(
         candidate(competition="K-League 1", country_code="KR", carrier_ceiling=100)
     )
-    assert is_hard_excluded("K League 2", "KOR")
-    assert assessment.status == AssessmentStatus.EXCLUDED
-    assert assessment.grade == StructuralGrade.PASS
-    assert not assessment.display_on_board
+    assert assessment.status == AssessmentStatus.FROZEN
+    assert assessment.grade in {StructuralGrade.A1, StructuralGrade.A2}
+    assert assessment.display_on_board
 
 
 def test_elite_carrier_can_be_a1_peer_without_opponent_scoring() -> None:
@@ -54,16 +52,31 @@ def test_elite_carrier_can_be_a1_peer_without_opponent_scoring() -> None:
     assert assessment.structural_type.value == "ELITE_CARRIER"
 
 
-def test_weak_mandatory_profile_gate_caps_an_attractive_match() -> None:
+def test_weak_chance_quality_is_a_modifier_not_a_blanket_grade_cap() -> None:
     assessment = assess_structural_fit(
-        candidate(profile_gate=50, two_sided_strength=100, chance_quality=98)
+        candidate(
+            two_sided_strength=100,
+            carrier_ceiling=95,
+            profile_gate=95,
+            chance_quality=50,
+            failure_mode_resistance=95,
+        )
     )
-    assert assessment.grade == StructuralGrade.B
-    assert not assessment.display_on_board
+    assert assessment.grade == StructuralGrade.A1
+    assert assessment.display_on_board
 
 
-def test_incomplete_required_data_returns_hold_equivalent() -> None:
+def test_incomplete_mandatory_profile_returns_hold_equivalent() -> None:
     assessment = assess_structural_fit(candidate(data_complete=False))
     assert assessment.status == AssessmentStatus.DATA_INCOMPLETE
-    assert assessment.exclusion_reason == "REQUIRED_EVIDENCE_INCOMPLETE"
+    assert assessment.exclusion_reason == "MANDATORY_GF_GA_PROFILE_INCOMPLETE"
     assert assessment.grade == StructuralGrade.PASS
+
+
+def test_frozen_evidence_records_active_pre_hardening_regime() -> None:
+    assessment = assess_structural_fit(candidate())
+    control = assessment.evidence["model_control"]
+    assert control["version"] == "v0.2.47-R"
+    assert control["regime"] == "PRE-HARDENING"
+    assert control["recent_total_leakage_confirmation"] is True
+    assert control["sep1_hardening"] is False
