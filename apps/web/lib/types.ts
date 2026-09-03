@@ -89,6 +89,18 @@ export type OddsSubmission = {
   submitted_at: string;
 };
 
+export type MarketStatus = {
+  fixture_id: string;
+  latest_odds_submission_id: string | null;
+  verified_odds_submission_id: string | null;
+  verification_id: string | null;
+  verified: boolean;
+  ready_for_verification: boolean;
+  verified_at: string | null;
+  lock_engine_ready: boolean;
+  blocker: string | null;
+};
+
 export type DecisionState = {
   id: string;
   period: string;
