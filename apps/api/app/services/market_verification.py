@@ -104,7 +104,7 @@ class MarketVerificationService:
                     "verified_by": "user",
                     "totals": [item.model_dump(mode="json") for item in extraction.totals],
                     "lock_engine_ready": False,
-                    "blocker": "SCORE_SCENARIO_PRODUCER_PENDING",
+                    "blocker": "TOTAL_GOAL_SCENARIO_PRODUCER_PENDING",
                 },
                 source_kind="user",
                 source_reference=submission_id,
