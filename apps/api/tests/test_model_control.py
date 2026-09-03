@@ -7,7 +7,7 @@ from app.providers.normalization import normalize_structural_metrics
 
 def test_canonical_model_state_is_pre_hardening() -> None:
     state = get_model_state()
-    assert state.schema_version == 2
+    assert state.schema_version == 3
     assert state.model.version == "v0.2.47-R"
     assert state.model.regime == "PRE-HARDENING"
     assert state.rules.recent_total_leakage_confirmation is True
@@ -16,6 +16,11 @@ def test_canonical_model_state_is_pre_hardening() -> None:
     assert state.change_control.silent_rule_changes is False
     assert state.change_control.explicit_user_approval_required is True
     assert not any(state.rules.deprecated_restrictions.model_dump().values())
+    assert state.projection.distribution_method == "RECIPROCAL_TOTAL_SCENARIO_COUNT_V1"
+    assert state.projection.distribution_method_approved is True
+    assert state.projection.upstream_scenario_producer_status == "PENDING_IMPLEMENTATION"
+    assert state.projection.synthetic_scorelines_allowed is False
+    assert state.projection.poisson_fallback_allowed is False
     assert state.market.minimum_price == 1.70
     assert state.market.grade_based_maximum_line_enabled is False
 
