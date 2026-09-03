@@ -149,14 +149,16 @@ class AirtableSyncService:
         bet: OfficialBetModel | None,
         settlement: ResultSettlementModel | None,
     ) -> dict[str, Any]:
+        verdict: str | None = None
         if bet is not None:
-            verdict = latest_state.verdict if latest_state is not None else "OFFICIAL LOCK"
+            verdict = "OFFICIAL BET"
             period = latest_state.period if latest_state is not None else "MARKET"
+        elif latest_state is not None and "HOLD" in latest_state.verdict.upper():
+            verdict = "NO BET — HOLD"
+            period = latest_state.period
         elif market_verification is not None:
-            verdict = "MARKET_RECEIVED"
             period = "MARKET"
         else:
-            verdict = latest_state.verdict if latest_state is not None else "PRE_FROZEN"
             period = latest_state.period if latest_state is not None else "PRE"
 
         selected_line = (
@@ -193,7 +195,6 @@ class AirtableSyncService:
             "Model Version": assessment.model_version,
             "Assessment Time": assessment.frozen_at.isoformat(),
             "Assessment Period": period,
-            "Verdict": verdict,
             "Candidate": assessment.structural_grade,
             "Website Fixture ID": fixture.id,
             "BSD Event ID": self._bsd_event_id(fixture.provider_fixture_id),
@@ -201,6 +202,8 @@ class AirtableSyncService:
             "Evidence Version": "canonical-pre-hardening-v1",
             "Evidence Summary": self._compact_evidence(evidence),
         }
+        if verdict is not None:
+            fields["Verdict"] = verdict
         if selected_line is not None:
             fields["Line"] = str(selected_line)
         if selected_odds is not None:
