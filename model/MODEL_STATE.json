@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "model": {
     "name": "Football",
     "version": "v0.2.47-R",
@@ -71,6 +71,14 @@
     "two_band_upgrade_threshold": 8.0,
     "normal_promotion_cap_bands": 1,
     "two_band_upgrade_requires_genuine_role_change": true
+  },
+  "projection": {
+    "distribution_method": "RECIPROCAL_TOTAL_SCENARIO_COUNT_V1",
+    "distribution_method_approved": true,
+    "score_scenario_source": "EXPLICIT_PRIMARY_UPSIDE_SCENARIOS",
+    "upstream_scenario_producer_status": "PENDING_IMPLEMENTATION",
+    "synthetic_scorelines_allowed": false,
+    "poisson_fallback_allowed": false
   },
   "market": {
     "minimum_extraction_confidence": 0.70,
