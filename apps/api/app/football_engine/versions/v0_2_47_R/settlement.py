@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
@@ -8,6 +9,12 @@ class AsianTotalSettlement(StrEnum):
     PUSH = "PUSH"
     HALF_LOSS = "HALF_LOSS"
     FULL_LOSS = "FULL_LOSS"
+
+
+@dataclass(frozen=True, slots=True)
+class AsianTotalResult:
+    settlement: AsianTotalSettlement
+    pnl_units: Decimal
 
 
 def settle_over(total_goals_90: int, line: Decimal | float | str) -> AsianTotalSettlement:
@@ -42,3 +49,32 @@ def settle_over(total_goals_90: int, line: Decimal | float | str) -> AsianTotalS
     if pair == {AsianTotalSettlement.FULL_WIN}:
         return AsianTotalSettlement.FULL_WIN
     return AsianTotalSettlement.FULL_LOSS
+
+
+def settle_over_with_pnl(
+    total_goals_90: int,
+    line: Decimal | float | str,
+    decimal_odds: Decimal | float | str,
+    stake_units: Decimal | float | str = Decimal("1"),
+) -> AsianTotalResult:
+    """Return settlement classification and net P/L for the quoted full stake."""
+    odds = Decimal(str(decimal_odds))
+    stake = Decimal(str(stake_units))
+    if odds <= 1:
+        raise ValueError("Decimal odds must be greater than 1.00")
+    if stake <= 0:
+        raise ValueError("Stake units must be positive")
+
+    settlement = settle_over(total_goals_90, line)
+    full_profit = stake * (odds - Decimal("1"))
+    pnl_by_result = {
+        AsianTotalSettlement.FULL_WIN: full_profit,
+        AsianTotalSettlement.HALF_WIN: full_profit / Decimal("2"),
+        AsianTotalSettlement.PUSH: Decimal("0"),
+        AsianTotalSettlement.HALF_LOSS: -stake / Decimal("2"),
+        AsianTotalSettlement.FULL_LOSS: -stake,
+    }
+    return AsianTotalResult(
+        settlement=settlement,
+        pnl_units=pnl_by_result[settlement],
+    )
