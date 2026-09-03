@@ -21,4 +21,4 @@ class MarketStatusView(BaseModel):
     ready_for_verification: bool
     verified_at: datetime | None
     lock_engine_ready: bool = False
-    blocker: str | None = "SCORE_SCENARIO_PRODUCER_PENDING"
+    blocker: str | None = "TOTAL_GOAL_SCENARIO_PRODUCER_PENDING"
