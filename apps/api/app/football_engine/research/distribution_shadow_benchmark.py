@@ -92,6 +92,8 @@ class ShadowCaseEvaluation:
 @dataclass(frozen=True, slots=True)
 class CandidateShadowSummary:
     policy: str
+    assumed_total_range: tuple[int, int]
+    anchor_goal: int
     fair_total: Decimal
     projected_mean_goals: Decimal
     clean_support_count: int
@@ -105,7 +107,8 @@ class CandidateShadowSummary:
     acceptance_holdout_count: int
     acceptance_exact_rank_match_count: int
     acceptance_positive_selected_ev_count: int
-    zero_probability_below_band: bool
+    probability_below_band: Decimal
+    probability_above_band: Decimal
     production_ready: bool = False
     blocker: str = BENCHMARK_BLOCKER
 
@@ -113,6 +116,8 @@ class CandidateShadowSummary:
 @dataclass(frozen=True, slots=True)
 class DistributionShadowBenchmarkReport:
     case_count: int
+    assumed_total_range: tuple[int, int]
+    anchor_goal: int
     minimum_price: Decimal
     maximum_price: Decimal
     comparison_status: str
@@ -148,6 +153,15 @@ def run_distribution_shadow_benchmark(
     if not normalized:
         raise ValueError("At least one shadow benchmark case is required")
 
+    band_anchor_pairs = {
+        (case.assumed_total_range, case.anchor_goal) for case in normalized
+    }
+    if len(band_anchor_pairs) != 1:
+        raise ValueError(
+            "One shadow benchmark run must use one common assumed band and anchor"
+        )
+    assumed_total_range, anchor_goal = next(iter(band_anchor_pairs))
+
     minimum = Decimal(str(minimum_price))
     maximum = Decimal(str(maximum_price))
     if minimum <= Decimal("1") or maximum < minimum:
@@ -173,10 +187,19 @@ def run_distribution_shadow_benchmark(
             for case in normalized
         )
         evaluations.extend(policy_evaluations)
-        summaries.append(_summarize_policy(policy, policy_evaluations, normalized))
+        summaries.append(
+            _summarize_policy(
+                policy,
+                policy_evaluations,
+                assumed_total_range=assumed_total_range,
+                anchor_goal=anchor_goal,
+            )
+        )
 
     return DistributionShadowBenchmarkReport(
         case_count=len(normalized),
+        assumed_total_range=assumed_total_range,
+        anchor_goal=anchor_goal,
         minimum_price=minimum,
         maximum_price=maximum,
         comparison_status=BENCHMARK_STATUS,
@@ -254,7 +277,9 @@ def _evaluate_case(
 def _summarize_policy(
     policy: str,
     evaluations: Sequence[ShadowCaseEvaluation],
-    cases: Sequence[ShadowBenchmarkCase],
+    *,
+    assumed_total_range: tuple[int, int],
+    anchor_goal: int,
 ) -> CandidateShadowSummary:
     clean = tuple(item for item in evaluations if item.evidence_tier == CLEAN_SUPPORT)
     caution = tuple(item for item in evaluations if item.evidence_tier == CAUTION)
@@ -270,16 +295,16 @@ def _summarize_policy(
         raise ValueError("Shadow benchmark requires at least one clean-support case")
 
     candidate = build_band_anchor_candidate(
-        clean[0].anchor_goal and next(
-            case.assumed_total_range for case in cases if case.case_id == clean[0].case_id
-        ),
-        clean[0].anchor_goal,
+        assumed_total_range,
+        anchor_goal,
         policy=policy,
     )
-    low = candidate.expected_total_range[0]
+    low, high = assumed_total_range
 
     return CandidateShadowSummary(
         policy=policy,
+        assumed_total_range=assumed_total_range,
+        anchor_goal=anchor_goal,
         fair_total=candidate.even_money_fair_total,
         projected_mean_goals=candidate.projected_mean_goals,
         clean_support_count=len(clean),
@@ -304,8 +329,13 @@ def _summarize_policy(
         acceptance_positive_selected_ev_count=sum(
             item.selected_expected_pnl > 0 for item in holdout
         ),
-        zero_probability_below_band=all(
-            total >= low for total in candidate.distribution
+        probability_below_band=sum(
+            (probability for total, probability in candidate.distribution.items() if total < low),
+            Decimal("0"),
+        ),
+        probability_above_band=sum(
+            (probability for total, probability in candidate.distribution.items() if total > high),
+            Decimal("0"),
         ),
     )
 
