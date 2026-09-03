@@ -19,6 +19,38 @@ class ProviderFixture:
 
 
 @dataclass(frozen=True, slots=True)
+class LineupPlayer:
+    player_id: int | str | None
+    name: str
+    position: str | None = None
+    jersey_number: int | None = None
+    captain: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ConfirmedLineupSnapshot:
+    provider_fixture_id: str
+    home_starting_xi: tuple[LineupPlayer, ...]
+    away_starting_xi: tuple[LineupPlayer, ...]
+    home_substitutes: tuple[LineupPlayer, ...] = ()
+    away_substitutes: tuple[LineupPlayer, ...] = ()
+    home_formation: str | None = None
+    away_formation: str | None = None
+    captured_at: datetime | None = None
+    source_metadata: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class FinalResultSnapshot:
+    provider_fixture_id: str
+    status: str
+    home_goals_90: int
+    away_goals_90: int
+    captured_at: datetime | None = None
+    source_metadata: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
 class TeamProfileSnapshot:
     source_key: str
     home_gf: float | None
@@ -56,6 +88,16 @@ class FixtureProvider(ABC):
     @abstractmethod
     def fetch_fixtures(self, target_date_ict: date) -> list[ProviderFixture]:
         """Fetch the full slate for one ICT calendar date."""
+
+    def fetch_confirmed_lineup(
+        self, provider_fixture_id: str
+    ) -> ConfirmedLineupSnapshot | None:
+        """Return only an official confirmed teamsheet; predicted XI must return None."""
+        return None
+
+    def fetch_final_result(self, provider_fixture_id: str) -> FinalResultSnapshot | None:
+        """Return the regulation-time final score when the provider marks it final."""
+        return None
 
 
 class StatsProvider(ABC):
