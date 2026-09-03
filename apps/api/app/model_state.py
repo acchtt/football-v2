@@ -86,6 +86,17 @@ class XIState(BaseModel):
     two_band_upgrade_requires_genuine_role_change: bool
 
 
+class ProjectionState(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    distribution_method: Literal["RECIPROCAL_TOTAL_SCENARIO_COUNT_V1"]
+    distribution_method_approved: Literal[True]
+    score_scenario_source: Literal["EXPLICIT_PRIMARY_UPSIDE_SCENARIOS"]
+    upstream_scenario_producer_status: Literal["PENDING_IMPLEMENTATION"]
+    synthetic_scorelines_allowed: Literal[False]
+    poisson_fallback_allowed: Literal[False]
+
+
 class MarketState(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -105,12 +116,13 @@ class ModelState(BaseModel):
     competition_scope: CompetitionScopeState
     structural: StructuralState
     xi: XIState
+    projection: ProjectionState
     market: MarketState
 
     @model_validator(mode="after")
     def validate_production_guardrails(self) -> ModelState:
-        if self.schema_version != 2:
-            raise ValueError("Canonical model-state schema must be version 2")
+        if self.schema_version != 3:
+            raise ValueError("Canonical model-state schema must be version 3")
         if self.model.version != "v0.2.47-R":
             raise ValueError("Production model version must remain v0.2.47-R")
         if self.model.regime != "PRE-HARDENING":
@@ -132,6 +144,12 @@ class ModelState(BaseModel):
             raise ValueError("Price cannot promote structural quality")
         if self.rules.xi_names_can_create_unsupported_route:
             raise ValueError("XI names cannot create a route unsupported by the team profile")
+        if not self.projection.distribution_method_approved:
+            raise ValueError("Approved Method C distribution must remain explicitly active")
+        if self.projection.synthetic_scorelines_allowed:
+            raise ValueError("Synthetic scorelines are not allowed in Method C")
+        if self.projection.poisson_fallback_allowed:
+            raise ValueError("Poisson fallback is not allowed in Method C")
         if abs(self.market.minimum_price - 1.70) > 1e-9:
             raise ValueError("Restored v0.2.47-R minimum Over price must remain 1.70")
         if self.market.grade_based_maximum_line_enabled:
@@ -144,7 +162,8 @@ class ModelState(BaseModel):
         sep1 = "ACTIVE" if self.rules.sep1_hardening else "INACTIVE"
         return (
             f"{self.model.name} {self.model.version} | {self.model.regime} | "
-            f"Recent-total confirmation: {recent} | Sep-1 hardening: {sep1}"
+            f"Recent-total confirmation: {recent} | Sep-1 hardening: {sep1} | "
+            f"Distribution: {self.projection.distribution_method}"
         )
 
 
