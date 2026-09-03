@@ -1,7 +1,7 @@
 from app.config import Settings
 
 from .base import FixtureProvider, StatsProvider
-from .bsd import BsdProvider
+from .bsd_automation import BsdAutomationProvider
 from .demo import DemoProvider
 from .scoped import CompetitionScopedProvider
 from .sportmonks import SportmonksProvider
@@ -18,7 +18,7 @@ def build_providers(settings: Settings) -> tuple[FixtureProvider, StatsProvider]
     if settings.fixture_provider == "bsd":
         if not settings.bsd_api_token:
             raise RuntimeError("BSD_API_TOKEN is required when FIXTURE_PROVIDER=bsd")
-        provider = BsdProvider(
+        provider = BsdAutomationProvider(
             api_token=settings.bsd_api_token,
             base_url=settings.bsd_base_url,
             timeout_seconds=settings.bsd_timeout_seconds,
