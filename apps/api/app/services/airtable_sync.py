@@ -15,6 +15,8 @@ from app.config import Settings
 from app.db.models import (
     DecisionStateModel,
     FixtureModel,
+    MarketVerificationModel,
+    OddsSubmissionModel,
     OfficialBetModel,
     ResultSettlementModel,
     StructuralAssessmentModel,
@@ -94,6 +96,16 @@ class AirtableSyncService:
             .order_by(DecisionStateModel.created_at.desc())
             .limit(1)
         )
+        market_verification = session.scalar(
+            select(MarketVerificationModel)
+            .where(MarketVerificationModel.fixture_id == fixture_id)
+            .order_by(MarketVerificationModel.verified_at.desc())
+            .limit(1)
+        )
+        market_odds = None
+        if market_verification is not None:
+            market_odds = session.get(OddsSubmissionModel, market_verification.odds_submission_id)
+
         bet = session.scalar(
             select(OfficialBetModel).where(
                 OfficialBetModel.fixture_id == fixture_id,
@@ -106,7 +118,15 @@ class AirtableSyncService:
                 select(ResultSettlementModel).where(ResultSettlementModel.official_bet_id == bet.id)
             )
 
-        fields = self._build_fields(fixture, assessment, latest_state, bet, settlement)
+        fields = self._build_fields(
+            fixture,
+            assessment,
+            latest_state,
+            market_verification,
+            market_odds,
+            bet,
+            settlement,
+        )
         try:
             record_id = self._upsert_by_assessment_id(assessment.id, fields)
         except Exception as exc:  # sync must never corrupt or block the canonical transaction
@@ -124,10 +144,21 @@ class AirtableSyncService:
         fixture: FixtureModel,
         assessment: StructuralAssessmentModel,
         latest_state: DecisionStateModel | None,
+        market_verification: MarketVerificationModel | None,
+        market_odds: OddsSubmissionModel | None,
         bet: OfficialBetModel | None,
         settlement: ResultSettlementModel | None,
     ) -> dict[str, Any]:
-        verdict = latest_state.verdict if latest_state is not None else "PRE_FROZEN"
+        if bet is not None:
+            verdict = latest_state.verdict if latest_state is not None else "OFFICIAL LOCK"
+            period = latest_state.period if latest_state is not None else "MARKET"
+        elif market_verification is not None:
+            verdict = "MARKET_RECEIVED"
+            period = "MARKET"
+        else:
+            verdict = latest_state.verdict if latest_state is not None else "PRE_FROZEN"
+            period = latest_state.period if latest_state is not None else "PRE"
+
         selected_line = (
             bet.selected_line
             if bet is not None
@@ -138,11 +169,22 @@ class AirtableSyncService:
             if bet is not None
             else (latest_state.selected_odds if latest_state is not None else None)
         )
-        evidence = (
-            latest_state.evidence_summary
-            if latest_state is not None
-            else assessment.evidence
-        )
+
+        if market_verification is not None and market_odds is not None and bet is None:
+            evidence = {
+                "status": "MARKET_RECEIVED",
+                "verification_id": market_verification.id,
+                "verified_at": market_verification.verified_at.isoformat(),
+                "odds_snapshot": dict(market_odds.extracted_lines_json),
+                "lock_engine_ready": False,
+                "blocker": "CANONICAL_FAIR_TOTAL_LOGIC_PENDING",
+            }
+        else:
+            evidence = (
+                latest_state.evidence_summary
+                if latest_state is not None
+                else assessment.evidence
+            )
 
         fields: dict[str, Any] = {
             "Assessment ID": assessment.id,
@@ -150,7 +192,7 @@ class AirtableSyncService:
             "Competition": fixture.competition,
             "Model Version": assessment.model_version,
             "Assessment Time": assessment.frozen_at.isoformat(),
-            "Assessment Period": latest_state.period if latest_state is not None else "PRE",
+            "Assessment Period": period,
             "Verdict": verdict,
             "Candidate": assessment.structural_grade,
             "Website Fixture ID": fixture.id,
