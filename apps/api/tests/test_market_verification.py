@@ -44,7 +44,11 @@ def screenshot() -> tuple[ImagePayload, ...]:
     return (ImagePayload("screen.png", "image/png", b"\x89PNG\r\n\x1a\ndemo"),)
 
 
-def analysis_service(session: Session, upload_dir: str, cfg: Settings) -> MatchAnalysisService:
+def analysis_service(
+    session: Session,
+    upload_dir: str,
+    cfg: Settings,
+) -> MatchAnalysisService:
     return MatchAnalysisService(
         session,
         DemoVisionAdapter(),
@@ -79,7 +83,9 @@ def test_market_requires_explicit_verification_and_is_idempotent(tmp_path: objec
         assert first.blocker == "CANONICAL_FAIR_TOTAL_LOGIC_PENDING"
         assert second.verification_id == first.verification_id
         assert session.scalar(select(func.count()).select_from(MarketVerificationModel)) == 1
-        assert latest_stage(session, match_id).stage == "MARKET_RECEIVED"  # type: ignore[union-attr]
+        stage = latest_stage(session, match_id)
+        assert stage is not None
+        assert stage.stage == "MARKET_RECEIVED"
 
 
 def test_correction_creates_new_unverified_market_version(tmp_path: object) -> None:
