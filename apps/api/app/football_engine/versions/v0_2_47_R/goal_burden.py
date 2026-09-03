@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from app.model_state import get_model_state
+
 from .types import StructuralGrade
 
 
@@ -22,23 +24,23 @@ def select_protected_line(
     structural_score: float,
     xi_band_delta: int,
     offers: tuple[OddsOffer, ...],
-    minimum_price: float = 1.60,
-    maximum_price: float = 2.30,
 ) -> GoalBurdenResult:
-    maximum_line = {
-        StructuralGrade.A1: 3.0,
-        StructuralGrade.A2: 3.0,
-        StructuralGrade.B_PLUS: 2.75,
-        StructuralGrade.B: 2.5,
-        StructuralGrade.PASS: 2.5,
-    }[grade]
-    if grade is StructuralGrade.A1 and structural_score >= 92 and xi_band_delta > 0:
-        maximum_line = 3.5
+    state = get_model_state().market
+    maximum_line = state.maximum_line_by_grade[grade.value]
+    extension = state.a1_extended_line
+    if (
+        grade is StructuralGrade.A1
+        and extension.enabled
+        and structural_score >= extension.minimum_structural_score
+        and (not extension.requires_positive_xi_delta or xi_band_delta > 0)
+    ):
+        maximum_line = extension.maximum_line
 
     acceptable = [
         offer
         for offer in offers
-        if offer.line <= maximum_line and minimum_price <= offer.over_odds <= maximum_price
+        if offer.line <= maximum_line
+        and state.minimum_price <= offer.over_odds <= state.maximum_price
     ]
     if not acceptable:
         return GoalBurdenResult(
