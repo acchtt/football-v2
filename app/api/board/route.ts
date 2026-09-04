@@ -14,10 +14,9 @@ export async function GET(request: NextRequest) {
       date: data.date,
       scannedCount: data.scannedCount,
       candidateCount: data.candidateCount,
-      modelReady: data.modelReady,
       rankingEngine: data.rankingEngine,
-      rankingError: data.rankingError,
-      matches: data.matches
+      officialPreShortlist: [],
+      candidates: data.candidates
     },
     { headers: { "Cache-Control": "no-store" } }
   );
