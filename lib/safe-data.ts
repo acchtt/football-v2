@@ -14,7 +14,8 @@ import {
   fetchBsdLineup,
   isBsdConfigured,
   type BsdEvent,
-  type BsdLeagueDirectory
+  type BsdLeagueDirectory,
+  type BsdLineup
 } from "@/lib/bsd";
 import { fetchCanonicalBsdProfiles } from "@/lib/bsd-canonical-profiles";
 import { assessStructure } from "@/lib/structural";
@@ -104,8 +105,6 @@ export function resolveCompetitionSafely(event: BsdEvent, directory?: BsdLeagueD
     };
   }
 
-  // Only a real BSD league_id may resolve through /leagues/. Numeric competition/tournament
-  // identifiers are different namespaces and must never be treated as league IDs.
   const leagueId = realLeagueId(event);
   const league = leagueId === undefined ? undefined : directory?.get(leagueId);
   if (league) {
@@ -148,7 +147,6 @@ function looksContinental(competition: string): boolean {
 function eligibleCompetition(identity: CompetitionIdentity): boolean {
   const value = normalized(identity.name);
   if (!identity.resolved || !value || value === "UNKNOWN COMPETITION") return false;
-
   if (value === "LEAGUES CUP" || value.endsWith(" LEAGUES CUP")) return true;
   if (value.includes("DFB POKAL")) return true;
   if (countryIsEngland(identity.countryCode) && looksLikeCup(identity.name)) return true;
@@ -218,10 +216,12 @@ async function buildLiveMatch(event: BsdEvent, competition: CompetitionIdentity,
   const away = eventTeamName(event, "away");
   const profiles = await fetchCanonicalBsdProfiles(event).catch(() => undefined);
   const assessment = profiles ? assessStructure(profiles.home, profiles.away, home, away) : undefined;
-  const lineup = includeLineup ? await fetchBsdLineup(event.id).catch(() => ({
-    status: "unavailable" as const,
-    homeStarting: [], awayStarting: [], homeBench: [], awayBench: []
-  })) : undefined;
+  const lineup: BsdLineup | undefined = includeLineup
+    ? await fetchBsdLineup(event.id).catch((): BsdLineup => ({
+        status: "unavailable",
+        homeStarting: [], awayStarting: [], homeBench: [], awayBench: []
+      }))
+    : undefined;
   const status = String(event.status || "").trim().toLowerCase();
   const homeScore = eventScore(event, "home");
   const awayScore = eventScore(event, "away");
