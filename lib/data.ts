@@ -1,25 +1,22 @@
-import { z } from "zod";
-import type { MatchRecord } from "@/lib/types";
-
-const matchSchema = z.object({
-  id: z.string(), kickoff: z.string(), competition: z.string(), home: z.string(), away: z.string(),
-  focus: z.enum(["TOP FOCUS", "STRONG FOCUS", "SECONDARY", "HOLD", "PASS-FIRST"]),
-  preRank: z.number(), preScore: z.number(), structuralFamily: z.string(), carrier: z.string(),
-  secondaryRoute: z.string(), failureModeResistance: z.string(), evidenceSummary: z.string(), stage: z.string(),
-  homeProfile: z.object({ gf: z.number(), ga: z.number(), scoringTwoPlusRate: z.number(), concedingTwoPlusRate: z.number() }),
-  awayProfile: z.object({ gf: z.number(), ga: z.number(), scoringTwoPlusRate: z.number(), concedingTwoPlusRate: z.number() }),
-  lineupStatus: z.enum(["confirmed", "predicted", "unavailable"]),
-  homeXI: z.array(z.string()), awayXI: z.array(z.string()), xiNote: z.string(),
-  offers: z.array(z.object({ line: z.number(), odds: z.number() })),
-  verdict: z.enum(["LOCK", "HOLD", "PENDING"]), preferredLine: z.number().optional(), preferredOdds: z.number().optional(),
-  verdictReason: z.string(), result: z.string().optional(), pnl: z.number().optional()
-});
-
-const payloadSchema = z.object({ matches: z.array(matchSchema) });
+import type { MatchRecord, TeamProfile } from "@/lib/types";
+import { MODEL } from "@/lib/model";
+import {
+  eventCompetition,
+  eventTeamId,
+  eventTeamName,
+  fetchBsdEvent,
+  fetchBsdEvents,
+  fetchBsdLineup,
+  fetchBsdProfiles,
+  isBsdConfigured,
+  type BsdEvent
+} from "@/lib/bsd";
+import { assessStructure } from "@/lib/structural";
 
 const demoMatches: MatchRecord[] = [
   {
     id: "ame-mty-acceptance",
+    provider: "demo",
     kickoff: "2026-09-03T20:00:00-05:00",
     competition: "Leagues Cup",
     home: "Club América",
@@ -49,6 +46,7 @@ const demoMatches: MatchRecord[] = [
   },
   {
     id: "koe-hof-control",
+    provider: "demo",
     kickoff: "2026-08-29T18:30:00+02:00",
     competition: "Bundesliga",
     home: "Köln",
@@ -76,6 +74,7 @@ const demoMatches: MatchRecord[] = [
   },
   {
     id: "ips-lei-control",
+    provider: "demo",
     kickoff: "2026-08-26T19:45:00+01:00",
     competition: "EFL Cup",
     home: "Ipswich Town",
@@ -103,22 +102,142 @@ const demoMatches: MatchRecord[] = [
   }
 ];
 
-export type DataMode = "LIVE" | "DEMO";
+export type DataMode = "BSD" | "DEMO";
 
-export async function getMatches(): Promise<{ mode: DataMode; matches: MatchRecord[] }> {
-  const url = process.env.FOOTBALL_FIXTURES_JSON_URL;
-  if (!url) return { mode: "DEMO", matches: demoMatches };
+function partsForIct(value: Date): Record<string, string> {
+  return Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+    timeZone: MODEL.timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(value).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+}
 
-  const response = await fetch(url, {
-    headers: process.env.FOOTBALL_API_TOKEN ? { Authorization: `Bearer ${process.env.FOOTBALL_API_TOKEN}` } : {},
-    cache: "no-store"
-  });
-  if (!response.ok) throw new Error(`Fixture provider returned ${response.status}`);
-  const parsed = payloadSchema.parse(await response.json());
-  return { mode: "LIVE", matches: parsed.matches as MatchRecord[] };
+export function currentIctDate(): string {
+  const parts = partsForIct(new Date());
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function ictDateOf(timestamp: string): string {
+  const parts = partsForIct(new Date(timestamp));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function shiftDate(date: string, days: number): string {
+  const value = new Date(`${date}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function eligibleCompetition(name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+  if (MODEL.competitionScope.namedCupExceptions.some((item) => normalized.includes(item.toLowerCase()))) return true;
+  const excludedContinental = [
+    "champions league", "europa league", "conference league", "libertadores", "sudamericana",
+    "afc champions", "concacaf champions", "club world cup", "fifa club world", "recopa"
+  ];
+  if (excludedContinental.some((token) => normalized.includes(token))) return false;
+  if (/\bcup\b|\bpokal\b|\btrophy\b|super cup|supercup|coupe|copa/i.test(name)) return false;
+  return true;
+}
+
+function emptyProfile(): TeamProfile {
+  return {};
+}
+
+async function mapWithConcurrency<T, R>(items: T[], concurrency: number, mapper: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  async function worker() {
+    for (;;) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
+
+async function buildBsdMatch(event: BsdEvent, includeLineup = false): Promise<MatchRecord> {
+  const home = eventTeamName(event, "home");
+  const away = eventTeamName(event, "away");
+  const competition = eventCompetition(event);
+  const profiles = await fetchBsdProfiles(event).catch(() => undefined);
+  const assessment = profiles ? assessStructure(profiles.home, profiles.away, home, away) : undefined;
+  const lineup = includeLineup ? await fetchBsdLineup(event.id).catch(() => ({
+    status: "unavailable" as const,
+    homeStarting: [], awayStarting: [], homeBench: [], awayBench: []
+  })) : undefined;
+  const finished = String(event.status || "").toLowerCase() === "finished";
+  const homeScore = typeof event.home_score === "number" ? event.home_score : undefined;
+  const awayScore = typeof event.away_score === "number" ? event.away_score : undefined;
+
+  return {
+    id: `bsd-${event.id}`,
+    provider: "bsd",
+    providerEventId: event.id,
+    kickoff: event.event_date,
+    competition: competition.name,
+    countryCode: competition.countryCode,
+    home,
+    away,
+    homeTeamId: eventTeamId(event, "home"),
+    awayTeamId: eventTeamId(event, "away"),
+    homeLogoUrl: eventTeamId(event, "home") ? `https://sports.bzzoiro.com/img/team/${eventTeamId(event, "home")}/` : undefined,
+    awayLogoUrl: eventTeamId(event, "away") ? `https://sports.bzzoiro.com/img/team/${eventTeamId(event, "away")}/` : undefined,
+    focus: assessment?.focus || "PASS-FIRST",
+    preRank: 0,
+    preScore: assessment?.score || 0,
+    structuralGrade: assessment?.grade,
+    structuralFamily: assessment?.family || "Profile incomplete",
+    carrier: assessment?.carrier || "Pending mandatory GF/GA evidence",
+    secondaryRoute: assessment?.secondaryRoute || "Pending mandatory GF/GA evidence",
+    failureModeResistance: assessment?.failureModeResistance || "Unresolved",
+    failureModes: assessment?.failureModes || ["Mandatory GF/GA history unavailable"],
+    evidenceSummary: assessment?.evidenceSummary || "BSD fixture loaded, but the mandatory pre-kickoff team profile is incomplete. No structural promotion is allowed.",
+    stage: assessment ? "WAITING_XI" : "PRE_SCREENED",
+    homeProfile: profiles?.home || emptyProfile(),
+    awayProfile: profiles?.away || emptyProfile(),
+    lineupStatus: lineup?.status || "unavailable",
+    homeXI: lineup?.status === "confirmed" ? lineup.homeStarting : [],
+    awayXI: lineup?.status === "confirmed" ? lineup.awayStarting : [],
+    homeBench: lineup?.status === "confirmed" ? lineup.homeBench : [],
+    awayBench: lineup?.status === "confirmed" ? lineup.awayBench : [],
+    homeFormation: lineup?.status === "confirmed" ? lineup.homeFormation : undefined,
+    awayFormation: lineup?.status === "confirmed" ? lineup.awayFormation : undefined,
+    xiNote: lineup?.status === "confirmed"
+      ? "Official BSD teamsheet loaded. Player names cannot create an unsupported route by themselves."
+      : lineup?.status === "predicted"
+        ? "BSD has a predicted XI, but the model ignores predicted lineups and waits for lineup_status=confirmed."
+        : "Waiting for an official confirmed BSD teamsheet.",
+    offers: [],
+    verdict: "PENDING",
+    verdictReason: "Bookmaker market is screenshot-only. Upload and visibly verify the odds before a LOCK/HOLD decision.",
+    result: finished && homeScore !== undefined && awayScore !== undefined ? `${homeScore}-${awayScore}` : undefined
+  };
+}
+
+export async function getMatches(targetDateIct = currentIctDate()): Promise<{ mode: DataMode; matches: MatchRecord[]; date: string }> {
+  if (!isBsdConfigured() || process.env.DATA_PROVIDER === "demo") {
+    return { mode: "DEMO", matches: demoMatches, date: targetDateIct };
+  }
+
+  const events = await fetchBsdEvents(shiftDate(targetDateIct, -1), shiftDate(targetDateIct, 1));
+  const eligible = events.filter((event) => ictDateOf(event.event_date) === targetDateIct && eligibleCompetition(eventCompetition(event).name));
+  const matches = await mapWithConcurrency(eligible, 8, (event) => buildBsdMatch(event));
+  matches.sort((a, b) => b.preScore - a.preScore || new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+  matches.forEach((match, index) => { match.preRank = index + 1; });
+  return { mode: "BSD", matches, date: targetDateIct };
 }
 
 export async function getMatch(id: string): Promise<{ mode: DataMode; match: MatchRecord | undefined }> {
-  const data = await getMatches();
-  return { mode: data.mode, match: data.matches.find((item) => item.id === id) };
+  if (id.startsWith("bsd-") && isBsdConfigured()) {
+    const eventId = Number(id.slice(4));
+    if (!Number.isFinite(eventId)) return { mode: "BSD", match: undefined };
+    const event = await fetchBsdEvent(eventId);
+    const match = await buildBsdMatch(event, true);
+    return { mode: "BSD", match: { ...match, preRank: 1 } };
+  }
+  return { mode: "DEMO", match: demoMatches.find((item) => item.id === id) };
 }
