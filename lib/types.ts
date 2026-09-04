@@ -7,12 +7,12 @@ export type AsianTotalOffer = {
 };
 
 export type TeamProfile = {
-  gf: number;
-  ga: number;
+  gf?: number;
+  ga?: number;
   recentGf?: number;
   recentGa?: number;
-  scoringTwoPlusRate: number;
-  concedingTwoPlusRate: number;
+  scoringTwoPlusRate?: number;
+  concedingTwoPlusRate?: number;
   cleanSheetRate?: number;
   xgFor?: number;
   bigChancesFor?: number;
