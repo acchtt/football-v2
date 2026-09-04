@@ -16,10 +16,10 @@ function kickoff(value: string) {
 export default async function Home({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const params = await searchParams;
   const date = params.date || currentIctDate();
-  const { mode, matches } = await getMatches(date);
+  const { mode, matches, scannedCount } = await getMatches(date);
   const ranked = [...matches].sort((a, b) => b.preScore - a.preScore || new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+  const topStrong = ranked.filter((match) => match.structuralGrade === "A1" || match.structuralGrade === "A2").length;
   const locked = ranked.filter((match) => match.verdict === "LOCK").length;
-  const actionable = ranked.filter((match) => ["TOP FOCUS", "STRONG FOCUS", "SECONDARY"].includes(match.focus)).length;
 
   return (
     <main className="shell">
@@ -42,7 +42,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <span className="eyebrow">Daily ranked slate · ICT</span>
           <h2>Find the matches worth opening before looking at price.</h2>
           <p>
-            BSD supplies fixtures and historical team evidence. The current model ranks structure first; confirmed XI and your bookmaker screenshot come later. BSD odds are not used for the verdict.
+            BSD supplies fixtures and historical team evidence. The provider scan can be large, but the ranked board only displays fixtures that clear the current model&apos;s frozen PRE board gate. Confirmed XI and your bookmaker screenshot come later. BSD odds are not used for the verdict.
           </p>
           <form className="date-form" method="get">
             <label>Board date <input type="date" name="date" defaultValue={date} /></label>
@@ -50,9 +50,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           </form>
         </div>
         <div className="summary">
-          <div><span>Eligible</span><strong>{ranked.length}</strong></div>
-          <div><span>Focus</span><strong>{actionable}</strong></div>
-          <div><span>Locks</span><strong>{locked}</strong></div>
+          <div><span>Scanned</span><strong>{scannedCount}</strong></div>
+          <div><span>Board</span><strong>{ranked.length}</strong></div>
+          <div><span>A1 / A2</span><strong>{topStrong}</strong></div>
           <div><span>Min price</span><strong>{MODEL.minimumOverPrice.toFixed(2)}</strong></div>
         </div>
       </section>
@@ -60,7 +60,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
       <div className="section-head">
         <div>
           <h3>Structural board · {date}</h3>
-          <p>Strongest over-friendly structures first. Missing mandatory profile evidence stays PASS-FIRST.</p>
+          <p>Canonical PRE board only: A1 / A2 / B+ with structural score ≥ {MODEL.structural.boardMinScore}. Lower grades and incomplete profiles are scanned but excluded from this list.</p>
         </div>
         <span className="status-pill">PRE → XI → SCREENSHOT → VERDICT</span>
       </div>
@@ -84,7 +84,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
             </div>
           </Link>
         )) : (
-          <div className="notice">No eligible fixtures were returned for this ICT date.</div>
+          <div className="notice">No fixtures cleared the current model&apos;s PRE board threshold for this ICT date.</div>
         )}
       </section>
 
