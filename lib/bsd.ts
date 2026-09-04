@@ -136,17 +136,15 @@ export function eventTeamName(event: BsdEvent, side: "home" | "away"): string {
 }
 
 export function eventLeagueId(event: BsdEvent): number | undefined {
-  const direct = numberValue(event.league_id ?? event.competition_id ?? event.tournament_id);
+  const direct = numberValue(event.league_id);
   if (direct !== undefined) return direct;
-  for (const candidate of [event.league, event.competition, event.tournament]) {
-    if (candidate && typeof candidate === "object") {
-      const nested = numberValue((candidate as Record<string, unknown>).id);
-      if (nested !== undefined) return nested;
-    }
-    const scalar = numberValue(candidate);
-    if (scalar !== undefined) return scalar;
+
+  const candidate = event.league;
+  if (candidate && typeof candidate === "object") {
+    const nested = numberValue((candidate as Record<string, unknown>).id);
+    if (nested !== undefined) return nested;
   }
-  return undefined;
+  return numberValue(candidate);
 }
 
 export async function fetchBsdLeagueDirectory(): Promise<BsdLeagueDirectory> {
