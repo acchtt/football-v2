@@ -1,18 +1,24 @@
 import { MODEL } from "@/lib/model";
 import {
   currentIctDate,
-  getMatch as getBaseMatch,
-  getMatches as getBaseMatches,
+  getMatch as getDemoMatch,
+  getMatches as getDemoMatches,
   type DataMode
 } from "@/lib/data";
 import {
+  eventTeamId,
+  eventTeamName,
   fetchBsdEvent,
   fetchBsdEvents,
   fetchBsdLeagueDirectory,
+  fetchBsdLineup,
+  isBsdConfigured,
   type BsdEvent,
   type BsdLeagueDirectory
 } from "@/lib/bsd";
-import type { MatchRecord } from "@/lib/types";
+import { fetchCanonicalBsdProfiles } from "@/lib/bsd-canonical-profiles";
+import { assessStructure } from "@/lib/structural";
+import type { MatchRecord, TeamProfile } from "@/lib/types";
 
 export { currentIctDate };
 export type { DataMode };
@@ -29,6 +35,8 @@ export type BoardData = {
   date: string;
   scannedCount: number;
 };
+
+const FINISHED_STATES = new Set(["finished", "ft", "aet", "after_extra_time", "after_penalties"]);
 
 function numberValue(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -60,19 +68,14 @@ function scalarName(value: unknown): string {
 function realLeagueId(event: BsdEvent): number | undefined {
   const direct = numberValue(event.league_id);
   if (direct !== undefined) return direct;
-
   if (event.league && typeof event.league === "object" && !Array.isArray(event.league)) {
     const nested = numberValue((event.league as Record<string, unknown>).id);
     if (nested !== undefined) return nested;
   }
-
   return numberValue(event.league);
 }
 
-export function resolveCompetitionSafely(
-  event: BsdEvent,
-  directory?: BsdLeagueDirectory
-): CompetitionIdentity {
+export function resolveCompetitionSafely(event: BsdEvent, directory?: BsdLeagueDirectory): CompetitionIdentity {
   for (const candidate of [event.league, event.competition, event.tournament]) {
     const objectName = explicitObjectName(candidate);
     if (objectName) {
@@ -82,7 +85,6 @@ export function resolveCompetitionSafely(
         resolved: true
       };
     }
-
     const name = scalarName(candidate);
     if (name) {
       return {
@@ -102,9 +104,8 @@ export function resolveCompetitionSafely(
     };
   }
 
-  // Critical namespace rule: only a real BSD league_id may be resolved against /leagues/.
-  // competition_id and tournament_id belong to different namespaces and must never be
-  // interpreted as league IDs merely because their numeric values happen to collide.
+  // Only a real BSD league_id may resolve through /leagues/. Numeric competition/tournament
+  // identifiers are different namespaces and must never be treated as league IDs.
   const leagueId = realLeagueId(event);
   const league = leagueId === undefined ? undefined : directory?.get(leagueId);
   if (league) {
@@ -122,42 +123,37 @@ export function resolveCompetitionSafely(
   };
 }
 
-function normalizeCompetition(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+function normalized(value: string): string {
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
 }
 
-function eligibleCompetition(name: string): boolean {
-  const normalized = normalizeCompetition(name);
-  if (!normalized || normalized === "unknown competition") return false;
+function countryIsEngland(countryCode: string): boolean {
+  return new Set(["GB ENG", "ENG", "ENGLAND", "GB", "UK", "UNITED KINGDOM"]).has(normalized(countryCode));
+}
 
-  if (MODEL.competitionScope.namedCupExceptions.some((item) => normalized.includes(normalizeCompetition(item)))) {
-    return true;
-  }
+function looksLikeCup(competition: string): boolean {
+  const value = normalized(competition);
+  return [" CUP", "CUP ", "POKAL", "COPA", "COPPA", "TACA", "TROPHY", "SHIELD"].some((token) => value.includes(token)) || value.endsWith("CUP");
+}
 
-  const excludedNonDomestic = [
-    "champions league",
-    "europa league",
-    "conference league",
-    "libertadores",
-    "sudamericana",
-    "afc champions",
-    "concacaf champions",
-    "club world cup",
-    "fifa club world",
-    "recopa",
-    "world cup",
-    "nations league",
-    "international friendly",
-    "friendlies",
-    "friendly"
-  ];
-  if (excludedNonDomestic.some((token) => normalized.includes(token))) return false;
-  if (/\bcup\b|\bpokal\b|\btrophy\b|super cup|supercup|coupe|copa/.test(normalized)) return false;
+function looksContinental(competition: string): boolean {
+  const value = normalized(competition);
+  return [
+    "UEFA", "CONMEBOL", "CONCACAF", "AFC CHAMPIONS", "CAF CHAMPIONS",
+    "LIBERTADORES", "SUDAMERICANA", "CHAMPIONS LEAGUE", "EUROPA LEAGUE",
+    "CONFERENCE LEAGUE", "CLUB WORLD CUP"
+  ].some((token) => value.includes(token));
+}
+
+function eligibleCompetition(identity: CompetitionIdentity): boolean {
+  const value = normalized(identity.name);
+  if (!identity.resolved || !value || value === "UNKNOWN COMPETITION") return false;
+
+  if (value === "LEAGUES CUP" || value.endsWith(" LEAGUES CUP")) return true;
+  if (value.includes("DFB POKAL")) return true;
+  if (countryIsEngland(identity.countryCode) && looksLikeCup(identity.name)) return true;
+  if (looksContinental(identity.name)) return false;
+  if (looksLikeCup(identity.name)) return false;
   return true;
 }
 
@@ -166,56 +162,152 @@ function displayOnCanonicalBoard(match: MatchRecord): boolean {
   return match.structuralGrade === "A1" || match.structuralGrade === "A2" || match.structuralGrade === "B+";
 }
 
+function partsForIct(value: Date): Record<string, string> {
+  return Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+    timeZone: MODEL.timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(value).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+}
+
+function ictDateOf(timestamp: string): string {
+  const parts = partsForIct(new Date(timestamp));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 function shiftDate(date: string, days: number): string {
   const value = new Date(`${date}T12:00:00Z`);
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
 }
 
+function emptyProfile(): TeamProfile {
+  return {};
+}
+
+function eventScore(event: BsdEvent, side: "home" | "away"): number | undefined {
+  const raw = event as unknown as Record<string, unknown>;
+  for (const key of [`${side}_score`, `${side}_goals`, `score_${side}`]) {
+    const value = numberValue(raw[key]);
+    if (value !== undefined) return value;
+  }
+  const score = raw.score;
+  if (score && typeof score === "object" && !Array.isArray(score)) {
+    return numberValue((score as Record<string, unknown>)[side]);
+  }
+  return undefined;
+}
+
+async function mapWithConcurrency<T, R>(items: T[], concurrency: number, mapper: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  async function worker() {
+    for (;;) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
+
+async function buildLiveMatch(event: BsdEvent, competition: CompetitionIdentity, includeLineup: boolean): Promise<MatchRecord> {
+  const home = eventTeamName(event, "home");
+  const away = eventTeamName(event, "away");
+  const profiles = await fetchCanonicalBsdProfiles(event).catch(() => undefined);
+  const assessment = profiles ? assessStructure(profiles.home, profiles.away, home, away) : undefined;
+  const lineup = includeLineup ? await fetchBsdLineup(event.id).catch(() => ({
+    status: "unavailable" as const,
+    homeStarting: [], awayStarting: [], homeBench: [], awayBench: []
+  })) : undefined;
+  const status = String(event.status || "").trim().toLowerCase();
+  const homeScore = eventScore(event, "home");
+  const awayScore = eventScore(event, "away");
+  const lineupStatus = lineup?.status || "unavailable";
+
+  return {
+    id: `bsd-${event.id}`,
+    provider: "bsd",
+    providerEventId: event.id,
+    kickoff: event.event_date,
+    competition: competition.name,
+    countryCode: competition.countryCode,
+    home,
+    away,
+    homeTeamId: eventTeamId(event, "home"),
+    awayTeamId: eventTeamId(event, "away"),
+    homeLogoUrl: eventTeamId(event, "home") ? `https://sports.bzzoiro.com/img/team/${eventTeamId(event, "home")}/` : undefined,
+    awayLogoUrl: eventTeamId(event, "away") ? `https://sports.bzzoiro.com/img/team/${eventTeamId(event, "away")}/` : undefined,
+    focus: assessment?.focus || "PASS-FIRST",
+    preRank: 0,
+    preScore: assessment?.score || 0,
+    structuralGrade: assessment?.grade,
+    structuralFamily: assessment?.family || "Profile incomplete",
+    carrier: assessment?.carrier || "Pending mandatory GF/GA evidence",
+    secondaryRoute: assessment?.secondaryRoute || "Pending mandatory GF/GA evidence",
+    failureModeResistance: assessment?.failureModeResistance || "Unresolved",
+    failureModes: assessment?.failureModes || ["Mandatory GF/GA history unavailable"],
+    evidenceSummary: assessment?.evidenceSummary || "BSD fixture loaded, but the mandatory pre-kickoff team profile is incomplete. No structural promotion is allowed.",
+    stage: lineupStatus === "confirmed" ? "XI_CONFIRMED" : assessment ? "WAITING_XI" : "PRE_SCREENED",
+    homeProfile: profiles?.home || emptyProfile(),
+    awayProfile: profiles?.away || emptyProfile(),
+    lineupStatus,
+    homeXI: lineupStatus === "confirmed" ? lineup?.homeStarting || [] : [],
+    awayXI: lineupStatus === "confirmed" ? lineup?.awayStarting || [] : [],
+    homeBench: lineupStatus === "confirmed" ? lineup?.homeBench || [] : [],
+    awayBench: lineupStatus === "confirmed" ? lineup?.awayBench || [] : [],
+    homeFormation: lineupStatus === "confirmed" ? lineup?.homeFormation : undefined,
+    awayFormation: lineupStatus === "confirmed" ? lineup?.awayFormation : undefined,
+    xiNote: lineupStatus === "confirmed"
+      ? "Official BSD teamsheet loaded. Player names cannot create an unsupported route by themselves."
+      : lineupStatus === "predicted"
+        ? "BSD has a predicted XI, but v0.2.47-R ignores predicted lineups and waits for lineup_status=confirmed."
+        : "Waiting for an official confirmed BSD teamsheet.",
+    offers: [],
+    verdict: "PENDING",
+    verdictReason: "Bookmaker market is screenshot-only. Upload and visibly verify the odds before a LOCK/HOLD decision.",
+    result: FINISHED_STATES.has(status) && homeScore !== undefined && awayScore !== undefined ? `${homeScore}-${awayScore}` : undefined
+  };
+}
+
 export async function getMatches(targetDateIct = currentIctDate()): Promise<BoardData> {
-  const base = await getBaseMatches(targetDateIct);
-  if (base.mode !== "BSD") {
-    return { ...base, scannedCount: base.matches.length };
+  if (!isBsdConfigured() || process.env.DATA_PROVIDER === "demo") {
+    const demo = await getDemoMatches(targetDateIct);
+    return { ...demo, scannedCount: demo.matches.length };
   }
 
   const [events, directory] = await Promise.all([
     fetchBsdEvents(shiftDate(targetDateIct, -1), shiftDate(targetDateIct, 1)),
     fetchBsdLeagueDirectory()
   ]);
-  const byId = new Map(events.map((event) => [event.id, event]));
 
-  const scopedMatches = base.matches.flatMap((match): MatchRecord[] => {
-    if (match.providerEventId === undefined) return [];
-    const event = byId.get(match.providerEventId);
-    if (!event) return [];
+  const scoped = events.flatMap((event): Array<{ event: BsdEvent; competition: CompetitionIdentity }> => {
+    if (ictDateOf(event.event_date) !== targetDateIct) return [];
     const competition = resolveCompetitionSafely(event, directory);
-    if (!competition.resolved || !eligibleCompetition(competition.name)) return [];
-    return [{ ...match, competition: competition.name, countryCode: competition.countryCode }];
+    if (!eligibleCompetition(competition)) return [];
+    return [{ event, competition }];
   });
 
-  // Canonical v0.2.47-R board behavior: the provider may scan many eligible fixtures,
-  // but only frozen B+ / A2 / A1 structural assessments at or above board_min_score
-  // are displayed on the ranked board.
-  const matches = scopedMatches.filter(displayOnCanonicalBoard);
+  const assessed = await mapWithConcurrency(scoped, 6, ({ event, competition }) => buildLiveMatch(event, competition, false));
+  const matches = assessed.filter(displayOnCanonicalBoard);
   matches.sort((a, b) => b.preScore - a.preScore || new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
   matches.forEach((match, index) => { match.preRank = index + 1; });
-  return { mode: "BSD", matches, date: base.date, scannedCount: scopedMatches.length };
+
+  return { mode: "BSD", matches, date: targetDateIct, scannedCount: scoped.length };
 }
 
 export async function getMatch(id: string): Promise<{ mode: DataMode; match: MatchRecord | undefined }> {
-  const base = await getBaseMatch(id);
-  if (base.mode !== "BSD" || !base.match?.providerEventId) return base;
-
-  const [event, directory] = await Promise.all([
-    fetchBsdEvent(base.match.providerEventId),
-    fetchBsdLeagueDirectory()
-  ]);
-  const competition = resolveCompetitionSafely(event, directory);
-  if (!competition.resolved || !eligibleCompetition(competition.name)) {
-    return { mode: "BSD", match: undefined };
+  if (!id.startsWith("bsd-") || !isBsdConfigured() || process.env.DATA_PROVIDER === "demo") {
+    return getDemoMatch(id);
   }
-  return {
-    mode: "BSD",
-    match: { ...base.match, competition: competition.name, countryCode: competition.countryCode }
-  };
+
+  const eventId = Number(id.slice(4));
+  if (!Number.isFinite(eventId)) return { mode: "BSD", match: undefined };
+  const [event, directory] = await Promise.all([fetchBsdEvent(eventId), fetchBsdLeagueDirectory()]);
+  const competition = resolveCompetitionSafely(event, directory);
+  if (!eligibleCompetition(competition)) return { mode: "BSD", match: undefined };
+  const match = await buildLiveMatch(event, competition, true);
+  return { mode: "BSD", match: { ...match, preRank: 1 } };
 }
