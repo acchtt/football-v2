@@ -6,10 +6,12 @@ import {
   eventTeamName,
   fetchBsdEvent,
   fetchBsdEvents,
+  fetchBsdLeagueDirectory,
   fetchBsdLineup,
   fetchBsdProfiles,
   isBsdConfigured,
-  type BsdEvent
+  type BsdEvent,
+  type BsdLeagueDirectory
 } from "@/lib/bsd";
 import { assessStructure } from "@/lib/structural";
 
@@ -129,15 +131,43 @@ function shiftDate(date: string, days: number): string {
   return value.toISOString().slice(0, 10);
 }
 
+function normalizeCompetition(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 function eligibleCompetition(name: string): boolean {
-  const normalized = name.trim().toLowerCase();
-  if (MODEL.competitionScope.namedCupExceptions.some((item) => normalized.includes(item.toLowerCase()))) return true;
-  const excludedContinental = [
-    "champions league", "europa league", "conference league", "libertadores", "sudamericana",
-    "afc champions", "concacaf champions", "club world cup", "fifa club world", "recopa"
+  const normalized = normalizeCompetition(name);
+  if (!normalized || normalized === "unknown competition") return false;
+
+  if (MODEL.competitionScope.namedCupExceptions.some((item) => normalized.includes(normalizeCompetition(item)))) {
+    return true;
+  }
+
+  const excludedNonDomestic = [
+    "champions league",
+    "europa league",
+    "conference league",
+    "libertadores",
+    "sudamericana",
+    "afc champions",
+    "concacaf champions",
+    "club world cup",
+    "fifa club world",
+    "recopa",
+    "world cup",
+    "nations league",
+    "international friendly",
+    "friendlies",
+    "friendly"
   ];
-  if (excludedContinental.some((token) => normalized.includes(token))) return false;
-  if (/\bcup\b|\bpokal\b|\btrophy\b|super cup|supercup|coupe|copa/i.test(name)) return false;
+  if (excludedNonDomestic.some((token) => normalized.includes(token))) return false;
+
+  if (/\bcup\b|\bpokal\b|\btrophy\b|super cup|supercup|coupe|copa/.test(normalized)) return false;
   return true;
 }
 
@@ -159,10 +189,14 @@ async function mapWithConcurrency<T, R>(items: T[], concurrency: number, mapper:
   return results;
 }
 
-async function buildBsdMatch(event: BsdEvent, includeLineup = false): Promise<MatchRecord> {
+async function buildBsdMatch(
+  event: BsdEvent,
+  includeLineup = false,
+  leagueDirectory?: BsdLeagueDirectory
+): Promise<MatchRecord> {
   const home = eventTeamName(event, "home");
   const away = eventTeamName(event, "away");
-  const competition = eventCompetition(event);
+  const competition = eventCompetition(event, leagueDirectory);
   const profiles = await fetchBsdProfiles(event).catch(() => undefined);
   const assessment = profiles ? assessStructure(profiles.home, profiles.away, home, away) : undefined;
   const lineup = includeLineup ? await fetchBsdLineup(event.id).catch(() => ({
@@ -223,9 +257,18 @@ export async function getMatches(targetDateIct = currentIctDate()): Promise<{ mo
     return { mode: "DEMO", matches: demoMatches, date: targetDateIct };
   }
 
-  const events = await fetchBsdEvents(shiftDate(targetDateIct, -1), shiftDate(targetDateIct, 1));
-  const eligible = events.filter((event) => ictDateOf(event.event_date) === targetDateIct && eligibleCompetition(eventCompetition(event).name));
-  const matches = await mapWithConcurrency(eligible, 8, (event) => buildBsdMatch(event));
+  const [events, leagueDirectory] = await Promise.all([
+    fetchBsdEvents(shiftDate(targetDateIct, -1), shiftDate(targetDateIct, 1)),
+    fetchBsdLeagueDirectory()
+  ]);
+
+  const eligible = events.filter((event) => {
+    if (ictDateOf(event.event_date) !== targetDateIct) return false;
+    const competition = eventCompetition(event, leagueDirectory);
+    return competition.resolved && eligibleCompetition(competition.name);
+  });
+
+  const matches = await mapWithConcurrency(eligible, 8, (event) => buildBsdMatch(event, false, leagueDirectory));
   matches.sort((a, b) => b.preScore - a.preScore || new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
   matches.forEach((match, index) => { match.preRank = index + 1; });
   return { mode: "BSD", matches, date: targetDateIct };
@@ -235,8 +278,12 @@ export async function getMatch(id: string): Promise<{ mode: DataMode; match: Mat
   if (id.startsWith("bsd-") && isBsdConfigured()) {
     const eventId = Number(id.slice(4));
     if (!Number.isFinite(eventId)) return { mode: "BSD", match: undefined };
-    const event = await fetchBsdEvent(eventId);
-    const match = await buildBsdMatch(event, true);
+    const [event, leagueDirectory] = await Promise.all([fetchBsdEvent(eventId), fetchBsdLeagueDirectory()]);
+    const competition = eventCompetition(event, leagueDirectory);
+    if (!competition.resolved || !eligibleCompetition(competition.name)) {
+      return { mode: "BSD", match: undefined };
+    }
+    const match = await buildBsdMatch(event, true, leagueDirectory);
     return { mode: "BSD", match: { ...match, preRank: 1 } };
   }
   return { mode: "DEMO", match: demoMatches.find((item) => item.id === id) };
