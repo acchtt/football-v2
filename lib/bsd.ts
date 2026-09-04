@@ -4,6 +4,15 @@ const BSD_BASE_URL = (process.env.BSD_API_BASE_URL || "https://sports.bzzoiro.co
 const HISTORY_MATCHES = Math.max(5, Number(process.env.BSD_HISTORY_MATCHES || 10));
 const LOOKBACK_DAYS = Math.max(30, Number(process.env.BSD_LOOKBACK_DAYS || 180));
 
+export type BsdLeague = {
+  id: number;
+  name: string;
+  country_code?: string;
+  country?: string;
+};
+
+export type BsdLeagueDirectory = Map<number, BsdLeague>;
+
 export type BsdEvent = {
   id: number;
   event_date: string;
@@ -12,8 +21,16 @@ export type BsdEvent = {
   away_team?: { id?: number; name?: string; short_name?: string } | string;
   home_team_id?: number;
   away_team_id?: number;
-  league?: { id?: number; name?: string; country_code?: string; country?: string } | string;
+  league?: { id?: number; name?: string; country_code?: string; country?: string } | string | number;
+  league_id?: number;
   league_name?: string;
+  competition?: { id?: number; name?: string; country_code?: string; country?: string } | string | number;
+  competition_id?: number;
+  competition_name?: string;
+  tournament?: { id?: number; name?: string; country_code?: string; country?: string } | string | number;
+  tournament_id?: number;
+  tournament_name?: string;
+  country?: string;
   country_code?: string;
   home_score?: number | null;
   away_score?: number | null;
@@ -68,7 +85,9 @@ async function bsdGetAll(path: string, params: Record<string, string | number | 
 
   for (;;) {
     const payload = await bsdGet(path, { ...params, limit, offset });
-    if (Array.isArray(payload)) return payload.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"));
+    if (Array.isArray(payload)) {
+      return payload.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"));
+    }
     if (!payload || typeof payload !== "object") throw new Error(`BSD ${path} returned an invalid envelope`);
     const envelope = payload as Record<string, unknown>;
     const batch = [envelope.results, envelope.events, envelope.data].find(Array.isArray) as unknown[] | undefined;
@@ -90,11 +109,18 @@ function numberValue(value: unknown): number | undefined {
 
 function objectName(value: unknown, fallback: string): string {
   if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return fallback;
   if (value && typeof value === "object") {
     const item = value as Record<string, unknown>;
-    return String(item.name || item.short_name || item.id || fallback);
+    return String(item.name || item.short_name || fallback);
   }
   return fallback;
+}
+
+function objectCountry(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+  const item = value as Record<string, unknown>;
+  return String(item.country_code || item.country || "");
 }
 
 export function eventTeamId(event: BsdEvent, side: "home" | "away"): number | undefined {
@@ -109,14 +135,83 @@ export function eventTeamName(event: BsdEvent, side: "home" | "away"): string {
   return objectName(event[`${side}_team` as keyof BsdEvent], side === "home" ? "Home team" : "Away team");
 }
 
-export function eventCompetition(event: BsdEvent): { name: string; countryCode: string } {
-  if (event.league && typeof event.league === "object") {
+export function eventLeagueId(event: BsdEvent): number | undefined {
+  const direct = numberValue(event.league_id ?? event.competition_id ?? event.tournament_id);
+  if (direct !== undefined) return direct;
+  for (const candidate of [event.league, event.competition, event.tournament]) {
+    if (candidate && typeof candidate === "object") {
+      const nested = numberValue((candidate as Record<string, unknown>).id);
+      if (nested !== undefined) return nested;
+    }
+    const scalar = numberValue(candidate);
+    if (scalar !== undefined) return scalar;
+  }
+  return undefined;
+}
+
+export async function fetchBsdLeagueDirectory(): Promise<BsdLeagueDirectory> {
+  const rows = await bsdGetAll("leagues/");
+  const directory: BsdLeagueDirectory = new Map();
+  for (const row of rows) {
+    const id = numberValue(row.id);
+    const name = typeof row.name === "string" ? row.name.trim() : "";
+    if (id === undefined || !name) continue;
+    directory.set(id, {
+      id,
+      name,
+      country_code: typeof row.country_code === "string" ? row.country_code : undefined,
+      country: typeof row.country === "string" ? row.country : undefined
+    });
+  }
+  return directory;
+}
+
+export function eventCompetition(
+  event: BsdEvent,
+  directory?: BsdLeagueDirectory
+): { name: string; countryCode: string; leagueId?: number; resolved: boolean } {
+  const leagueId = eventLeagueId(event);
+
+  for (const candidate of [event.league, event.competition, event.tournament]) {
+    const name = objectName(candidate, "").trim();
+    if (name) {
+      return {
+        name,
+        countryCode: objectCountry(candidate) || String(event.country_code || event.country || ""),
+        leagueId,
+        resolved: true
+      };
+    }
+  }
+
+  const flatName = String(event.league_name || event.competition_name || event.tournament_name || "").trim();
+  if (flatName) {
     return {
-      name: objectName(event.league, "Unknown competition"),
-      countryCode: String(event.league.country_code || event.league.country || "")
+      name: flatName,
+      countryCode: String(event.country_code || event.country || ""),
+      leagueId,
+      resolved: true
     };
   }
-  return { name: String(event.league_name || event.league || "Unknown competition"), countryCode: String(event.country_code || "") };
+
+  if (leagueId !== undefined) {
+    const league = directory?.get(leagueId);
+    if (league) {
+      return {
+        name: league.name,
+        countryCode: String(league.country_code || league.country || event.country_code || event.country || ""),
+        leagueId,
+        resolved: true
+      };
+    }
+  }
+
+  return {
+    name: "Unknown competition",
+    countryCode: String(event.country_code || event.country || ""),
+    leagueId,
+    resolved: false
+  };
 }
 
 export async function fetchBsdEvents(dateFrom: string, dateTo = dateFrom): Promise<BsdEvent[]> {
@@ -264,7 +359,9 @@ function parseSide(block: Record<string, unknown> | undefined): { starting: stri
 
 export async function fetchBsdLineup(eventId: number): Promise<BsdLineup> {
   const payload = await bsdGet(`events/${eventId}/lineups/`);
-  if (!payload || typeof payload !== "object") return { status: "unavailable", homeStarting: [], awayStarting: [], homeBench: [], awayBench: [] };
+  if (!payload || typeof payload !== "object") {
+    return { status: "unavailable", homeStarting: [], awayStarting: [], homeBench: [], awayBench: [] };
+  }
   const root = payload as Record<string, unknown>;
   const statusValue = String(root.lineup_status || "unavailable").toLowerCase();
   const status: BsdLineup["status"] = statusValue === "confirmed" ? "confirmed" : statusValue === "predicted" ? "predicted" : "unavailable";
@@ -283,8 +380,23 @@ export async function fetchBsdLineup(eventId: number): Promise<BsdLineup> {
   };
 }
 
-export async function testBsdConnection(targetDate: string): Promise<{ configured: boolean; eventCount: number; baseUrl: string }> {
-  if (!isBsdConfigured()) return { configured: false, eventCount: 0, baseUrl: BSD_BASE_URL };
-  const events = await fetchBsdEvents(targetDate);
-  return { configured: true, eventCount: events.length, baseUrl: BSD_BASE_URL };
+export async function testBsdConnection(targetDate: string): Promise<{
+  configured: boolean;
+  eventCount: number;
+  leagueCount: number;
+  unresolvedCompetitionCount: number;
+  baseUrl: string;
+}> {
+  if (!isBsdConfigured()) {
+    return { configured: false, eventCount: 0, leagueCount: 0, unresolvedCompetitionCount: 0, baseUrl: BSD_BASE_URL };
+  }
+  const [events, directory] = await Promise.all([fetchBsdEvents(targetDate), fetchBsdLeagueDirectory()]);
+  const unresolvedCompetitionCount = events.filter((event) => !eventCompetition(event, directory).resolved).length;
+  return {
+    configured: true,
+    eventCount: events.length,
+    leagueCount: directory.size,
+    unresolvedCompetitionCount,
+    baseUrl: BSD_BASE_URL
+  };
 }
