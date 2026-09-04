@@ -114,6 +114,41 @@
   opacity: .35;
   cursor: not-allowed;
 }
+.handoff-card { margin-top: 14px; }
+.handoff-card h3, .handoff-inline h3 { margin-bottom: 8px; }
+.packet-details { margin-top: 14px; color: var(--muted); }
+.packet-details summary { cursor: pointer; font-size: 12px; }
+.handoff-textarea {
+  width: 100%;
+  min-height: 220px;
+  margin-top: 10px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  background: #06100c;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.result-input { min-height: 150px; }
+.manual-shortlist { margin-top: 16px; }
+.handoff-inline {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.manual-verdict {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.manual-verdict span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+.manual-verdict strong { display: block; margin-top: 6px; font-size: 22px; }
+.manual-verdict.lock strong { color: var(--green); }
+.manual-verdict.hold strong { color: var(--amber); }
+.manual-verdict p { margin-bottom: 0; color: var(--muted); line-height: 1.5; }
 @media (max-width: 620px) {
   .editable-offer { grid-template-columns: 1fr 1fr; }
   .editable-offer button { grid-column: 1 / -1; }
