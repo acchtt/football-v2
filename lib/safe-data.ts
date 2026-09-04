@@ -23,6 +23,13 @@ type CompetitionIdentity = {
   resolved: boolean;
 };
 
+export type BoardData = {
+  mode: DataMode;
+  matches: MatchRecord[];
+  date: string;
+  scannedCount: number;
+};
+
 function numberValue(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
@@ -154,19 +161,22 @@ function eligibleCompetition(name: string): boolean {
   return true;
 }
 
+function displayOnCanonicalBoard(match: MatchRecord): boolean {
+  if (match.preScore < MODEL.structural.boardMinScore) return false;
+  return match.structuralGrade === "A1" || match.structuralGrade === "A2" || match.structuralGrade === "B+";
+}
+
 function shiftDate(date: string, days: number): string {
   const value = new Date(`${date}T12:00:00Z`);
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
 }
 
-export async function getMatches(targetDateIct = currentIctDate()): Promise<{
-  mode: DataMode;
-  matches: MatchRecord[];
-  date: string;
-}> {
+export async function getMatches(targetDateIct = currentIctDate()): Promise<BoardData> {
   const base = await getBaseMatches(targetDateIct);
-  if (base.mode !== "BSD") return base;
+  if (base.mode !== "BSD") {
+    return { ...base, scannedCount: base.matches.length };
+  }
 
   const [events, directory] = await Promise.all([
     fetchBsdEvents(shiftDate(targetDateIct, -1), shiftDate(targetDateIct, 1)),
@@ -174,7 +184,7 @@ export async function getMatches(targetDateIct = currentIctDate()): Promise<{
   ]);
   const byId = new Map(events.map((event) => [event.id, event]));
 
-  const matches = base.matches.flatMap((match): MatchRecord[] => {
+  const scopedMatches = base.matches.flatMap((match): MatchRecord[] => {
     if (match.providerEventId === undefined) return [];
     const event = byId.get(match.providerEventId);
     if (!event) return [];
@@ -183,9 +193,13 @@ export async function getMatches(targetDateIct = currentIctDate()): Promise<{
     return [{ ...match, competition: competition.name, countryCode: competition.countryCode }];
   });
 
+  // Canonical v0.2.47-R board behavior: the provider may scan many eligible fixtures,
+  // but only frozen B+ / A2 / A1 structural assessments at or above board_min_score
+  // are displayed on the ranked board.
+  const matches = scopedMatches.filter(displayOnCanonicalBoard);
   matches.sort((a, b) => b.preScore - a.preScore || new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
   matches.forEach((match, index) => { match.preRank = index + 1; });
-  return { mode: "BSD", matches, date: base.date };
+  return { mode: "BSD", matches, date: base.date, scannedCount: scopedMatches.length };
 }
 
 export async function getMatch(id: string): Promise<{ mode: DataMode; match: MatchRecord | undefined }> {
