@@ -38,14 +38,14 @@ Explicitly inactive rules that must NOT be revived:
 - no Sep-1 hardening rules.
 
 Task:
-Review the supplied full competition-eligible slate using only the supplied PRE evidence. Return a selective ranked shortlist of matches genuinely worth opening for the next XI/market stage.
+Review the supplied broad retrieval candidate set from the already competition-scoped slate. The retrieval score/grade is only a recall aid. It is not an official model decision and cannot promote a match by itself. Return a selective ranked shortlist of matches genuinely worth opening for the next XI/market stage.
 
 Allowed statuses in the shortlist:
 - TOP FOCUS
 - STRONG FOCUS
 - SECONDARY
 
-Do not return HOLD or PASS-FIRST matches. There is no quota and no requirement to fill the shortlist. A large provider slate should still produce a selective board. A high mechanical/retrieval score is not sufficient by itself.
+Do not return HOLD or PASS-FIRST matches. There is no quota and no requirement to fill the shortlist. A large provider slate should still produce a selective board.
 
 For each shortlisted match, state the structural family, carrier view, secondary-route view, failure-mode resistance, and a concise reason grounded in the supplied evidence.
 `.trim();
