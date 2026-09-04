@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { currentIctDate, getMatches } from "@/lib/data";
+import { currentIctDate, getMatches } from "@/lib/safe-data";
 import { MODEL } from "@/lib/model";
 
 function kickoff(value: string) {
