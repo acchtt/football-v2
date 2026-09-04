@@ -16,8 +16,12 @@ function kickoff(value: string) {
   }).format(new Date(value));
 }
 
-function percent(value: number) {
-  return `${Math.round(value * 100)}%`;
+function number(value: number | undefined) {
+  return value === undefined ? "—" : value.toFixed(2);
+}
+
+function percent(value: number | undefined) {
+  return value === undefined ? "—" : `${Math.round(value * 100)}%`;
 }
 
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,6 +51,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           <div>
             <span className="eyebrow">{match.competition} · {kickoff(match.kickoff)} ICT</span>
             <h2>{match.home}<br />{match.away}</h2>
+            {match.providerEventId && <p className="muted">BSD event #{match.providerEventId}</p>}
           </div>
           <div className={`verdict ${match.verdict.toLowerCase()}`}>
             <span>Current verdict</span>
@@ -73,35 +78,44 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               <div className="metric"><span>Carrier route</span><strong>{match.carrier}</strong></div>
               <div className="metric"><span>Secondary route</span><strong>{match.secondaryRoute}</strong></div>
               <div className="metric"><span>Failure-mode resistance</span><strong>{match.failureModeResistance}</strong></div>
-              <div className="metric"><span>Structural score</span><strong>{match.preScore.toFixed(1)}</strong></div>
+              <div className="metric"><span>Structural score</span><strong>{match.preScore.toFixed(1)}{match.structuralGrade ? ` · ${match.structuralGrade}` : ""}</strong></div>
             </div>
             <p className="reason">{match.evidenceSummary}</p>
+            {match.failureModes?.length ? <ul className="reason">{match.failureModes.map((mode) => <li key={mode}>{mode}</li>)}</ul> : null}
           </section>
 
           <section className="card">
             <span className="kicker">XI stage</span>
             <h3>Confirmed lineup check</h3>
             <div className="xi">
-              <div className="metric"><span>{match.home}</span><ul>{match.homeXI.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div className="metric"><span>{match.away}</span><ul>{match.awayXI.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div className="metric">
+                <span>{match.home}{match.homeFormation ? ` · ${match.homeFormation}` : ""}</span>
+                {match.homeXI.length ? <ul>{match.homeXI.map((item) => <li key={item}>{item}</li>)}</ul> : <strong>Waiting for confirmed XI</strong>}
+              </div>
+              <div className="metric">
+                <span>{match.away}{match.awayFormation ? ` · ${match.awayFormation}` : ""}</span>
+                {match.awayXI.length ? <ul>{match.awayXI.map((item) => <li key={item}>{item}</li>)}</ul> : <strong>Waiting for confirmed XI</strong>}
+              </div>
             </div>
             <p className="reason">Status: <strong>{match.lineupStatus.toUpperCase()}</strong>. {match.xiNote}</p>
           </section>
 
           <section className="card">
             <span className="kicker">Market</span>
-            <h3>Asian-total board</h3>
-            <table className="odds-table">
-              <thead><tr><th>Line</th><th>Over price</th><th>Model</th></tr></thead>
-              <tbody>
-                {match.offers.map((offer) => {
-                  const preferred = offer.line === match.preferredLine && offer.odds === match.preferredOdds;
-                  return <tr key={`${offer.line}-${offer.odds}`}><td>O{offer.line}</td><td>{offer.odds.toFixed(2)}</td><td className={preferred ? "preferred" : ""}>{preferred ? "PREFERRED" : "—"}</td></tr>;
-                })}
-              </tbody>
-            </table>
+            <h3>Asian-total screenshot</h3>
+            {match.offers.length ? (
+              <table className="odds-table">
+                <thead><tr><th>Line</th><th>Over price</th><th>Model</th></tr></thead>
+                <tbody>
+                  {match.offers.map((offer) => {
+                    const preferred = offer.line === match.preferredLine && offer.odds === match.preferredOdds;
+                    return <tr key={`${offer.line}-${offer.odds}`}><td>O{offer.line}</td><td>{offer.odds.toFixed(2)}</td><td className={preferred ? "preferred" : ""}>{preferred ? "PREFERRED" : "—"}</td></tr>;
+                  })}
+                </tbody>
+              </table>
+            ) : <p className="reason">No bookmaker prices are imported from BSD. Market input starts from the screenshot below.</p>}
             <p className="reason">{match.verdictReason}</p>
-            <OddsWorkspace />
+            <OddsWorkspace matchHome={match.home} matchAway={match.away} />
           </section>
         </div>
 
@@ -110,12 +124,14 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             <span className="kicker">Team profile</span>
             <h3>Mandatory GF / GA</h3>
             <div className="profile-grid">
-              <div className="metric"><span>{match.home} GF</span><strong>{match.homeProfile.gf.toFixed(2)}</strong></div>
-              <div className="metric"><span>{match.home} GA</span><strong>{match.homeProfile.ga.toFixed(2)}</strong></div>
-              <div className="metric"><span>{match.away} GF</span><strong>{match.awayProfile.gf.toFixed(2)}</strong></div>
-              <div className="metric"><span>{match.away} GA</span><strong>{match.awayProfile.ga.toFixed(2)}</strong></div>
+              <div className="metric"><span>{match.home} GF</span><strong>{number(match.homeProfile.gf)}</strong></div>
+              <div className="metric"><span>{match.home} GA</span><strong>{number(match.homeProfile.ga)}</strong></div>
+              <div className="metric"><span>{match.away} GF</span><strong>{number(match.awayProfile.gf)}</strong></div>
+              <div className="metric"><span>{match.away} GA</span><strong>{number(match.awayProfile.ga)}</strong></div>
               <div className="metric"><span>{match.home} scores 2+</span><strong>{percent(match.homeProfile.scoringTwoPlusRate)}</strong></div>
               <div className="metric"><span>{match.away} scores 2+</span><strong>{percent(match.awayProfile.scoringTwoPlusRate)}</strong></div>
+              <div className="metric"><span>Home history</span><strong>{match.homeProfile.sampleCount ?? "—"}</strong></div>
+              <div className="metric"><span>Away history</span><strong>{match.awayProfile.sampleCount ?? "—"}</strong></div>
             </div>
           </section>
 
@@ -129,9 +145,9 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
           {match.result && (
             <section className="card">
-              <span className="kicker">Settlement</span>
+              <span className="kicker">Regulation result</span>
               <h3>{match.result}</h3>
-              <p className="reason">P/L: <strong className={match.pnl && match.pnl > 0 ? "preferred" : ""}>{match.pnl?.toFixed(2)}u</strong></p>
+              {match.pnl !== undefined && <p className="reason">P/L: <strong className={match.pnl > 0 ? "preferred" : ""}>{match.pnl.toFixed(2)}u</strong></p>}
             </section>
           )}
         </aside>
@@ -139,7 +155,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
       <footer>
         <span>{MODEL.version} · {MODEL.regime}</span>
-        <span>Immutable PRE → XI → MARKET → VERDICT → SETTLEMENT workflow</span>
+        <span>PRE → confirmed XI → screenshot market → verdict → settlement</span>
       </footer>
     </main>
   );
