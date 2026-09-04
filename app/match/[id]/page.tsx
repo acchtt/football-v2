@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OddsWorkspace } from "@/components/OddsWorkspace";
 import { getMatch } from "@/lib/safe-data";
+import { buildMatchDecisionBase } from "@/lib/manual-handoff";
 import { MODEL } from "@/lib/model";
 
 function kickoff(value: string) {
@@ -28,6 +29,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const { mode, match } = await getMatch(id);
   if (!match) notFound();
+  const decisionBase = buildMatchDecisionBase(match);
 
   const stageOrder = ["PRE", "XI", "MARKET", "VERDICT", "SETTLED"];
   const doneThrough = match.stage === "SETTLED" ? 5 : match.stage.includes("LOCK") ? 4 : match.lineupStatus === "confirmed" ? 2 : 1;
@@ -46,7 +48,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
       </header>
 
       <section className="match-header">
-        <Link href="/" className="back">← Daily board</Link>
+        <Link href="/" className="back">← Daily handoff</Link>
         <div className="match-title">
           <div>
             <span className="eyebrow">{match.competition} · {kickoff(match.kickoff)} ICT</span>
@@ -54,7 +56,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             {match.providerEventId && <p className="muted">BSD event #{match.providerEventId}</p>}
           </div>
           <div className={`verdict ${match.verdict.toLowerCase()}`}>
-            <span>Current verdict</span>
+            <span>Website state</span>
             <strong>{match.verdict}{match.preferredLine ? ` · O${match.preferredLine}` : ""}</strong>
             {match.preferredOdds && <p className="muted">@ {match.preferredOdds.toFixed(2)}</p>}
           </div>
@@ -72,13 +74,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
       <div className="detail-grid">
         <div>
           <section className="card">
-            <span className="kicker">PRE freeze</span>
+            <span className="kicker">PRE evidence</span>
             <h3>{match.structuralFamily}</h3>
             <div className="route-grid">
-              <div className="metric"><span>Carrier route</span><strong>{match.carrier}</strong></div>
-              <div className="metric"><span>Secondary route</span><strong>{match.secondaryRoute}</strong></div>
-              <div className="metric"><span>Failure-mode resistance</span><strong>{match.failureModeResistance}</strong></div>
-              <div className="metric"><span>Structural score</span><strong>{match.preScore.toFixed(1)}{match.structuralGrade ? ` · ${match.structuralGrade}` : ""}</strong></div>
+              <div className="metric"><span>Carrier retrieval view</span><strong>{match.carrier}</strong></div>
+              <div className="metric"><span>Secondary retrieval view</span><strong>{match.secondaryRoute}</strong></div>
+              <div className="metric"><span>Failure-mode retrieval view</span><strong>{match.failureModeResistance}</strong></div>
+              <div className="metric"><span>Retrieval score · not official PRE</span><strong>{match.preScore.toFixed(1)}{match.structuralGrade ? ` · ${match.structuralGrade}` : ""}</strong></div>
             </div>
             <p className="reason">{match.evidenceSummary}</p>
             {match.failureModes?.length ? <ul className="reason">{match.failureModes.map((mode) => <li key={mode}>{mode}</li>)}</ul> : null}
@@ -103,19 +105,8 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           <section className="card">
             <span className="kicker">Market</span>
             <h3>Asian-total screenshot</h3>
-            {match.offers.length ? (
-              <table className="odds-table">
-                <thead><tr><th>Line</th><th>Over price</th><th>Model</th></tr></thead>
-                <tbody>
-                  {match.offers.map((offer) => {
-                    const preferred = offer.line === match.preferredLine && offer.odds === match.preferredOdds;
-                    return <tr key={`${offer.line}-${offer.odds}`}><td>O{offer.line}</td><td>{offer.odds.toFixed(2)}</td><td className={preferred ? "preferred" : ""}>{preferred ? "PREFERRED" : "—"}</td></tr>;
-                  })}
-                </tbody>
-              </table>
-            ) : <p className="reason">No bookmaker prices are imported from BSD. Market input starts from the screenshot below.</p>}
-            <p className="reason">{match.verdictReason}</p>
-            <OddsWorkspace matchHome={match.home} matchAway={match.away} />
+            <p className="reason">BSD odds are never used. Verify only the rows visible in your bookmaker screenshot, then copy the generated ChatGPT decision packet.</p>
+            <OddsWorkspace matchHome={match.home} matchAway={match.away} decisionBase={decisionBase} />
           </section>
         </div>
 
@@ -155,7 +146,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
       <footer>
         <span>{MODEL.version} · {MODEL.regime}</span>
-        <span>PRE → confirmed XI → screenshot market → verdict → settlement</span>
+        <span>BSD evidence → manual ChatGPT PRE/XI/market reasoning → verdict</span>
       </footer>
     </main>
   );
