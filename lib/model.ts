@@ -7,6 +7,33 @@ export const MODEL = {
   minimumOverPrice: 1.7,
   maximumOverPrice: 2.3,
   gradeBasedMaximumLineEnabled: false,
+  structural: {
+    gradeThresholds: { A1: 85, A2: 72, "B+": 60, B: 45 },
+    boardMinScore: 60,
+    weights: {
+      primaryRoute: 0.38,
+      profile: 0.22,
+      chanceQuality: 0.2,
+      failureResistance: 0.2
+    },
+    twoSidedRouteThreshold: 70,
+    twoSidedCarrierTolerance: 2,
+    secondaryRouteThreshold: 50
+  },
+  competitionScope: {
+    domesticLeagues: true,
+    namedCupExceptions: ["FA Cup", "EFL Cup", "Carabao Cup", "DFB-Pokal", "Leagues Cup"],
+    otherCups: false,
+    legacyKLeagueExclusion: false
+  },
+  projection: {
+    distributionMethod: "RECIPROCAL_TOTAL_SCENARIO_COUNT_V1",
+    distributionMethodApproved: true,
+    scoreScenarioSource: "EXPLICIT_PRIMARY_UPSIDE_SCENARIOS",
+    upstreamScenarioProducerStatus: "PENDING_IMPLEMENTATION",
+    syntheticScorelinesAllowed: false,
+    poissonFallbackAllowed: false
+  },
   principles: [
     "Structure before price",
     "Missing confirmation lowers priority",
