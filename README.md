@@ -94,3 +94,5 @@ The daily board supports an ICT date parameter, for example:
 ## Build gate
 
 GitHub Actions runs `npm install` and `npm run build` on every push to `main`.
+
+Vercel production is connected to GitHub and should deploy every push to the `main` branch automatically.
