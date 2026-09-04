@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentIctDate, getMatches } from "@/lib/data";
+import { currentIctDate, getMatches } from "@/lib/safe-data";
 import { MODEL } from "@/lib/model";
 
 export async function GET(request: NextRequest) {
