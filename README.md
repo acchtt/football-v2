@@ -1,6 +1,6 @@
 # Football v1.0 Website
 
-Fresh rebuild of the football decision-control website.
+Fresh website-first rebuild of the football decision-control workflow.
 
 ## Current model
 
@@ -12,19 +12,68 @@ Fresh rebuild of the football decision-control website.
 - Minimum Over price: 1.70
 - Maximum Over price: 2.30
 - No blanket grade-based maximum-total ceiling
+- Approved distribution adapter: `RECIPROCAL_TOTAL_SCENARIO_COUNT_V1`
+- Upstream total-goal scenario producer: still pending; no Poisson fallback
 
 ## Product flow
 
-1. Daily eligible slate
-2. Structural ranking before price
-3. Mandatory team GF/GA profile
-4. PRE freeze
-5. Confirmed XI ingestion / rerank
-6. Odds screenshot upload
-7. Visible market verification
+1. BSD daily eligible slate
+2. Mandatory pre-kickoff GF/GA history
+3. Structural ranking before price
+4. PRE freeze / PASS-FIRST when mandatory evidence is missing
+5. Confirmed XI from BSD only (`lineup_status=confirmed`)
+6. Bookmaker odds screenshot
+7. Visible line/price verification
 8. LOCK or HOLD
-9. Automatic result settlement
-10. P/L ledger
+9. Regulation-time result settlement
+
+BSD's own odds endpoints are deliberately not used in the V1 verdict path.
+
+## BSD setup
+
+```bash
+cp .env.example .env.local
+```
+
+Set:
+
+```env
+DATA_PROVIDER=bsd
+BSD_API_BASE_URL=https://sports.bzzoiro.com/api/v2
+BSD_API_TOKEN=YOUR_BSD_API_KEY
+BSD_HISTORY_MATCHES=10
+BSD_LOOKBACK_DAYS=180
+```
+
+BSD authentication is `Authorization: Token YOUR_BSD_API_KEY`.
+
+The website uses:
+
+- `GET /api/v2/events/` for the ICT daily slate and finished team history;
+- `GET /api/v2/events/{id}/` for match detail and regulation-time scores;
+- `GET /api/v2/events/{id}/lineups/` for the teamsheet.
+
+Predicted lineups are ignored. Only `lineup_status=confirmed` populates the XI stage.
+
+You can check the configured connection at:
+
+```text
+/api/bsd/status
+```
+
+Without `BSD_API_TOKEN`, the app stays in DEMO mode using three canonical model controls rather than silently fabricating live data.
+
+## Example odds images
+
+Every match workbench contains three built-in bookmaker-style example screenshots:
+
+- Club América–Monterrey
+- Köln–Hoffenheim
+- Ipswich–Leicester
+
+Selecting an example displays the actual local image and preloads only the values visibly shown in it. Those values remain editable and require **Verify visible odds** before the UI marks the market as received.
+
+Custom screenshots can also be uploaded and previewed. Until server-side image extraction is connected, their visible rows are entered manually; no hidden OCR values can reach the model.
 
 ## Run locally
 
@@ -35,58 +84,13 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-The app runs in **DEMO** mode until a live normalized fixture endpoint is configured.
+The daily board supports an ICT date parameter, for example:
 
-```bash
-cp .env.example .env.local
+```text
+/?date=2026-09-04
+/api/board?date=2026-09-04
 ```
 
-Set `FOOTBALL_FIXTURES_JSON_URL` to a server that returns:
+## Build gate
 
-```json
-{
-  "matches": [
-    {
-      "id": "...",
-      "kickoff": "2026-09-04T19:00:00+07:00",
-      "competition": "...",
-      "home": "...",
-      "away": "...",
-      "focus": "TOP FOCUS",
-      "preRank": 1,
-      "preScore": 9.1,
-      "structuralFamily": "Two independent routes",
-      "carrier": "...",
-      "secondaryRoute": "...",
-      "failureModeResistance": "High",
-      "evidenceSummary": "...",
-      "stage": "XI_CONFIRMED",
-      "homeProfile": { "gf": 1.9, "ga": 1.2, "scoringTwoPlusRate": 0.6, "concedingTwoPlusRate": 0.3 },
-      "awayProfile": { "gf": 1.8, "ga": 1.4, "scoringTwoPlusRate": 0.55, "concedingTwoPlusRate": 0.4 },
-      "lineupStatus": "confirmed",
-      "homeXI": [],
-      "awayXI": [],
-      "xiNote": "...",
-      "offers": [],
-      "verdict": "PENDING",
-      "verdictReason": "Waiting for market"
-    }
-  ]
-}
-```
-
-## Current build status
-
-The visible website is now the priority. The first clean slice contains:
-
-- ranked daily board;
-- current-model banner and guardrails;
-- match detail workbench;
-- PRE structure and GF/GA profile;
-- XI section;
-- Asian-total market table;
-- odds screenshot preview;
-- verdict and settlement display;
-- a normalized live-provider seam.
-
-Next implementation work is to connect the existing football API directly, then connect server-side screenshot extraction and automated result settlement.
+GitHub Actions runs `npm install` and `npm run build` on every push to `main`.
