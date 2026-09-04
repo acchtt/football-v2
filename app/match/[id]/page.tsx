@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OddsWorkspace } from "@/components/OddsWorkspace";
-import { getMatch } from "@/lib/data";
+import { getMatch } from "@/lib/safe-data";
 import { MODEL } from "@/lib/model";
 
 function kickoff(value: string) {
