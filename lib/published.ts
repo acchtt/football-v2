@@ -1,8 +1,23 @@
 import state from "@/data/published-matches.json";
+import marketOverrides from "@/data/market-overrides.json";
 import type { PublishedMatch, PublishedState } from "@/lib/types";
 
+const overrides = marketOverrides as Record<string, PublishedMatch["market_policy"]>;
+
+function withMarketOverrides(source: PublishedState): PublishedState {
+  return {
+    ...source,
+    matches: source.matches.map((match) => ({
+      ...match,
+      market_policy: overrides[match.slug] ?? match.market_policy
+    }))
+  };
+}
+
+const publishedState = withMarketOverrides(state as PublishedState);
+
 export function getPublishedState(): PublishedState {
-  return state as PublishedState;
+  return publishedState;
 }
 
 export function getPublishedMatches(): PublishedMatch[] {
