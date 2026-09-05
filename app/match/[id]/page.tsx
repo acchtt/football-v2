@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { OddsVerdict } from "@/components/OddsVerdict";
 import { fetchPublishedMatchLineup, isBsdConfigured } from "@/lib/bsd";
 import { getPublishedMatch, getPublishedState } from "@/lib/published";
+import type { BsdLineup } from "@/lib/types";
 import { evaluateXi } from "@/lib/verdict";
 
 export const dynamic = "force-dynamic";
@@ -25,9 +26,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const match = getPublishedMatch(id);
   if (!match) notFound();
   const state = getPublishedState();
-  const lineup = isBsdConfigured()
-    ? await fetchPublishedMatchLineup(match).catch(() => ({ status: "unavailable" as const, homeStarting: [], awayStarting: [] }))
-    : { status: "unavailable" as const, homeStarting: [], awayStarting: [] };
+  const unavailable: BsdLineup = { status: "unavailable", homeStarting: [], awayStarting: [] };
+  const lineup: BsdLineup = isBsdConfigured()
+    ? await fetchPublishedMatchLineup(match).catch(() => unavailable)
+    : unavailable;
   const xi = evaluateXi(match, lineup);
 
   return (
