@@ -1,0 +1,34 @@
+{
+  "hoffenheim-dortmund-2026-09-05": {
+    "min_price": 1.01,
+    "max_price": 3.5,
+    "choices": [
+      {
+        "line": 3.25,
+        "min_odds": 1.9,
+        "priority": 1,
+        "note": "Market-stage preferred expression. With confirmed XI preserving both routes, O3.25 is acceptable from 1.90: exactly three goals is a half-loss, while four or more is a full win."
+      },
+      {
+        "line": 2.75,
+        "min_odds": 1.7,
+        "priority": 2,
+        "note": "Protective lower burden if its verified price reaches the published value floor."
+      },
+      {
+        "line": 2.5,
+        "min_odds": 1.6,
+        "priority": 3,
+        "note": "Lower burden remains structurally valid if fairly priced."
+      },
+      {
+        "line": 3.0,
+        "min_odds": 1.95,
+        "priority": 4,
+        "note": "Three goals push; requires a stronger verified price than the currently shown market."
+      }
+    ],
+    "hold_if_no_choice": true,
+    "note": "HOLD only if no verified visible line/price fits this market-stage policy."
+  }
+}
