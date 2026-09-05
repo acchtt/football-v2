@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { PublishedMatch } from "@/lib/types";
+import styles from "./NextMatch.module.css";
 
 function formatKickoff(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -47,8 +48,8 @@ export default function NextMatch({ matches }: { matches: PublishedMatch[] }) {
     : sortedMatches.find((match) => new Date(match.kickoff).getTime() > now);
 
   return (
-    <section className="next-match-section">
-      <div className="section-head next-match-head">
+    <section className={styles.section}>
+      <div className={`section-head ${styles.head}`}>
         <div>
           <span className="eyebrow">Next match</span>
           <h3>Next published kickoff</h3>
@@ -57,8 +58,8 @@ export default function NextMatch({ matches }: { matches: PublishedMatch[] }) {
       </div>
 
       {next ? (
-        <Link className="next-match-card" href={`/match/${next.slug}`}>
-          <div className="next-match-main">
+        <Link className={styles.card} href={`/match/${next.slug}`}>
+          <div className={styles.main}>
             <div className="card-top">
               <span className={`focus ${next.focus.toLowerCase().replaceAll(" ", "-")}`}>{next.focus}</span>
               <span className="kickoff">{formatKickoff(next.kickoff)} ICT</span>
@@ -66,14 +67,14 @@ export default function NextMatch({ matches }: { matches: PublishedMatch[] }) {
             <h3>{next.home} <span>vs</span> {next.away}</h3>
             <p className="competition">{next.competition}</p>
           </div>
-          <div className="next-match-countdown">
+          <div className={styles.countdown}>
             <span>Kickoff in</span>
             <strong>{now === null ? "—" : formatCountdown(new Date(next.kickoff).getTime() - now)}</strong>
             <small>Changes automatically at kickoff</small>
           </div>
         </Link>
       ) : (
-        <div className="next-match-empty">
+        <div className={styles.empty}>
           <span className="eyebrow">Board complete</span>
           <h3>No future published matches.</h3>
           <p>Publish the next researched slate to populate this section.</p>
