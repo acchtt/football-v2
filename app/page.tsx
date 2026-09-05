@@ -30,6 +30,7 @@ export default function Home() {
           <h1>Football Decision Control</h1>
         </div>
         <div className="header-pills">
+          <Link className="pill" href="/picks">Picks</Link>
           <span className="pill">{state.model.version}</span>
           <span className="pill live">BSD XI LIVE</span>
         </div>
@@ -39,7 +40,7 @@ export default function Home() {
         <div>
           <span className="eyebrow">Published PRE slate</span>
           <h2>Research-backed matches, ready for execution.</h2>
-          <p>ChatGPT owns slate research and PRE structure. The site takes over at confirmed XI, verified Asian-total odds, and the final LOCK / HOLD decision.</p>
+          <p>ChatGPT owns slate research and PRE structure. The site takes over at confirmed XI, verified Asian-total odds, and the final LOCK / HOLD decision. Every official LOCK is recorded in the Picks ledger.</p>
         </div>
         <div className="hero-stats">
           <div className="summary-card primary-stat">
@@ -68,6 +69,7 @@ export default function Home() {
       <div className="section-head board-head">
         <div><span className="eyebrow">Active board</span><h3>Upcoming published matches</h3></div>
         <div className="board-meta">
+          <Link className="pill" href="/picks">View Picks →</Link>
           <span>{matches.length} matches</span>
           <span className="pill">{state.model.regime}</span>
         </div>
@@ -115,7 +117,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <span>ChatGPT publishes PRE · BSD supplies confirmed XI · Browser OCR reads odds</span>
+        <span>ChatGPT publishes PRE · BSD supplies confirmed XI · Browser OCR reads odds · LOCKs enter Picks</span>
         <span>{state.model.version} · {state.model.regime}</span>
       </footer>
     </main>
