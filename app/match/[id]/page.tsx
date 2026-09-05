@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import BrandLogo from "@/components/BrandLogo";
 import { OddsVerdict } from "@/components/OddsVerdict";
 import { fetchPublishedMatchLineup, isBsdConfigured } from "@/lib/bsd";
 import { getPublishedMatch, getPublishedState } from "@/lib/published";
@@ -41,8 +42,24 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
       <section className="match-hero">
         <div>
-          <span className="eyebrow">{match.focus} · {match.competition}</span>
-          <h2>{match.home}<br /><span>vs</span> {match.away}</h2>
+          <div className="match-league-row">
+            <BrandLogo kind="league" name={match.competition} className="match-league-logo" />
+            <div>
+              <span className="eyebrow">{match.focus}</span>
+              <div className="match-league-name">{match.competition}</div>
+            </div>
+          </div>
+          <div className="match-hero-teams">
+            <div className="match-hero-team">
+              <BrandLogo kind="team" name={match.home} className="match-hero-team-logo" />
+              <h2>{match.home}</h2>
+            </div>
+            <div className="match-hero-vs">vs</div>
+            <div className="match-hero-team">
+              <BrandLogo kind="team" name={match.away} className="match-hero-team-logo" />
+              <h2>{match.away}</h2>
+            </div>
+          </div>
           <p>{kickoff(match.kickoff)} ICT</p>
         </div>
         <div className="stage-card">
@@ -71,8 +88,14 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           <section className="panel">
             <div className="panel-head"><div><span className="eyebrow">BSD lineup</span><h3>Confirmed XI check</h3></div><a className="refresh" href={`/match/${match.slug}`}>Refresh XI</a></div>
             <div className="lineup-grid">
-              <div><span>{match.home}{lineup.homeFormation ? ` · ${lineup.homeFormation}` : ""}</span>{lineup.homeStarting.length ? <ol>{lineup.homeStarting.map((name) => <li key={name}>{name}</li>)}</ol> : <p>Waiting for confirmed XI.</p>}</div>
-              <div><span>{match.away}{lineup.awayFormation ? ` · ${lineup.awayFormation}` : ""}</span>{lineup.awayStarting.length ? <ol>{lineup.awayStarting.map((name) => <li key={name}>{name}</li>)}</ol> : <p>Waiting for confirmed XI.</p>}</div>
+              <div>
+                <div className="lineup-team-head"><BrandLogo kind="team" name={match.home} className="lineup-team-logo" /><span>{match.home}{lineup.homeFormation ? ` · ${lineup.homeFormation}` : ""}</span></div>
+                {lineup.homeStarting.length ? <ol>{lineup.homeStarting.map((name) => <li key={name}>{name}</li>)}</ol> : <p>Waiting for confirmed XI.</p>}
+              </div>
+              <div>
+                <div className="lineup-team-head"><BrandLogo kind="team" name={match.away} className="lineup-team-logo" /><span>{match.away}{lineup.awayFormation ? ` · ${lineup.awayFormation}` : ""}</span></div>
+                {lineup.awayStarting.length ? <ol>{lineup.awayStarting.map((name) => <li key={name}>{name}</li>)}</ol> : <p>Waiting for confirmed XI.</p>}
+              </div>
             </div>
             <div className="requirements">
               <span>Published XI requirements</span>
