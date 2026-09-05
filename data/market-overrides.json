@@ -5,9 +5,9 @@
     "choices": [
       {
         "line": 3.25,
-        "min_odds": 1.9,
+        "min_odds": 1.89,
         "priority": 1,
-        "note": "Market-stage preferred expression. With confirmed XI preserving both routes, O3.25 is acceptable from 1.90: exactly three goals is a half-loss, while four or more is a full win."
+        "note": "Final market-stage expression: with confirmed XI preserving both routes, O3.25 is a LOCK from the verified 1.89 market snapshot. Exactly three goals is a half-loss; four or more is a full win."
       },
       {
         "line": 2.75,
@@ -29,6 +29,6 @@
       }
     ],
     "hold_if_no_choice": true,
-    "note": "HOLD only if no verified visible line/price fits this market-stage policy."
+    "note": "HOLD only if no verified visible line/price fits this final market-stage policy."
   }
 }
