@@ -2,9 +2,597 @@
   "schema": 1,
   "model": {
     "version": "Football v0.2.47",
-    "regime": "CURRENT · v0.2.47-R PRE-HARDENING ON HOLD",
+    "regime": "CURRENT · v0.2.47 · v0.2.47-R PRE-HARDENING ON HOLD",
     "timezone": "Asia/Ho_Chi_Minh"
   },
-  "published_at": null,
-  "matches": []
+  "published_at": "2026-09-05T19:00:57+07:00",
+  "matches": [
+    {
+      "slug": "nec-feyenoord-2026-09-05",
+      "kickoff": "2026-09-05T21:30:00+07:00",
+      "competition": "Eredivisie",
+      "home": "NEC Nijmegen",
+      "away": "Feyenoord",
+      "focus": "TOP FOCUS",
+      "research": {
+        "summary": "A2+ PRE. Two-sided route with a strong Feyenoord carrier: independent pre-match goal expectation around 1.5 for NEC and 2.57 for Feyenoord, with both BTTS and O2.5 profiles supporting escalation rather than creating the thesis.",
+        "carrier": "Feyenoord — strong 2–3+ goal carrier ceiling.",
+        "secondary_route": "NEC — credible independent route; the matchup does not require a Feyenoord-only over.",
+        "failure_mode_resistance": "HIGH-MEDIUM. Main risk is Feyenoord controlling the game while suppressing NEC rather than a lack of attacking routes.",
+        "recent_confirmation": "Current-season goal model and BTTS/O2.5 rates confirm both routes; supporting evidence only.",
+        "sources": [
+          {
+            "label": "CompactStats NEC v Feyenoord",
+            "url": "https://compactstats.com/match/2026-09-05/nec-nijmegen-v-feyenoord/"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.75,
+            "min_odds": 1.7,
+            "priority": 1,
+            "note": "Preferred burden: two-sided route plus Feyenoord carrier supports 3-goal protection."
+          },
+          {
+            "line": 2.5,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "Protective expression if O2.75 is not acceptably priced."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 1.95,
+            "priority": 3,
+            "note": "Only at a stronger verified price because 3 goals merely push."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "HOLD if the verified market only offers a materially heavier burden."
+      }
+    },
+    {
+      "slug": "dordrecht-jong-az-2026-09-05",
+      "kickoff": "2026-09-05T21:30:00+07:00",
+      "competition": "Eerste Divisie",
+      "home": "Dordrecht",
+      "away": "Jong AZ",
+      "focus": "TOP FOCUS",
+      "research": {
+        "summary": "A2+ PRE. Clean two-sided structure: Dordrecht and Jong AZ both show repeatable scoring/conceding profiles, with independent goal expectations around 1.66 and 1.92.",
+        "carrier": "No single dependency — Jong AZ has the slightly higher carrier ceiling, but the thesis is genuinely two-sided.",
+        "secondary_route": "Dordrecht — strong enough to contribute independently rather than serving only as leakage.",
+        "failure_mode_resistance": "HIGH. Primary risk is normal finishing variance rather than route absence.",
+        "recent_confirmation": "Early-season O2.5 and BTTS rates are high for both teams; used as confirmation, not as the structural basis.",
+        "sources": [
+          {
+            "label": "CompactStats Dordrecht v Jong AZ",
+            "url": "https://compactstats.com/match/2026-09-05/dordrecht-v-jong-az/"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.75,
+            "min_odds": 1.7,
+            "priority": 1,
+            "note": "Preferred expression for the two-sided PRE route."
+          },
+          {
+            "line": 2.5,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "Lower burden remains structurally valid."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 1.95,
+            "priority": 3,
+            "note": "Accept only when the verified price compensates for the push at exactly three."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Do not chase a 3.25+ burden from league reputation alone."
+      }
+    },
+    {
+      "slug": "hoffenheim-dortmund-2026-09-05",
+      "kickoff": "2026-09-05T20:30:00+07:00",
+      "competition": "Bundesliga",
+      "home": "Hoffenheim",
+      "away": "Borussia Dortmund",
+      "focus": "TOP FOCUS",
+      "research": {
+        "summary": "A2+ PRE. Hoffenheim have shown an independent goal route (4-0 cup win, then two goals in the league opener) while Dortmund supply the stronger carrier route. This is more robust than a one-team over.",
+        "carrier": "Borussia Dortmund — strong 2–3 goal carrier ceiling.",
+        "secondary_route": "Hoffenheim — demonstrated route survives even after the opening 3-2 defeat.",
+        "failure_mode_resistance": "HIGH-MEDIUM. Main risk is Dortmund game control reducing transition volume.",
+        "recent_confirmation": "Hoffenheim's 4-0 cup win and 3-2 league opener support the route; Dortmund opened the league with a controlled win.",
+        "sources": [
+          {
+            "label": "Sports Mole Hoffenheim v Dortmund preview",
+            "url": "https://www.sportsmole.co.uk/football/hoffenheim/preview/hoffenheim-vs-dortmund-prediction-team-news-lineups_604424.html"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.75,
+            "min_odds": 1.7,
+            "priority": 1,
+            "note": "Preferred balance of two-route support and protection at three goals."
+          },
+          {
+            "line": 2.5,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "Protective lower burden if priced fairly."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 1.95,
+            "priority": 3,
+            "note": "Requires stronger price because a three-goal game pushes."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "HOLD rather than automatically wait for live decay."
+      }
+    },
+    {
+      "slug": "young-boys-luzern-2026-09-05",
+      "kickoff": "2026-09-05T23:00:00+07:00",
+      "competition": "Swiss Super League",
+      "home": "Young Boys",
+      "away": "Luzern",
+      "focus": "TOP FOCUS",
+      "research": {
+        "summary": "A2+ PRE. Young Boys provide an elite carrier and Luzern retain a credible secondary route. Independent estimates place the expected-goal environment above four combined, with both teams' current scoring environments supporting the structural thesis.",
+        "carrier": "Young Boys — elite home carrier with a realistic 2–3+ ceiling.",
+        "secondary_route": "Luzern — acceptable; not required to carry the match but capable of contributing.",
+        "failure_mode_resistance": "HIGH-MEDIUM. Main risk is Luzern's away route failing and leaving Young Boys to clear a heavier total alone.",
+        "recent_confirmation": "Young Boys' first six league matches have all cleared O2.5 in the referenced dataset; this confirms rather than creates the route.",
+        "sources": [
+          {
+            "label": "CompactStats Young Boys v Luzern",
+            "url": "https://compactstats.com/match/2026-09-05/bsc-young-boys-v-fc-luzern/"
+          },
+          {
+            "label": "Forebet Young Boys v Luzern preview",
+            "url": "https://www.forebet.com/en/football-match-previews/30433-young-boys-firm-at-wankdorf-luzern-face-tough-challenge-in-bern"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 3.0,
+            "min_odds": 1.75,
+            "priority": 1,
+            "note": "Preferred burden: three goals push while the carrier ceiling remains strong."
+          },
+          {
+            "line": 2.75,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "More protective expression if the price remains acceptable."
+          },
+          {
+            "line": 3.25,
+            "min_odds": 1.95,
+            "priority": 3,
+            "note": "Only at a stronger price; full win needs four."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Do not allow the high-scoring league profile to justify an excessive burden."
+      }
+    },
+    {
+      "slug": "brighton-leeds-2026-09-05",
+      "kickoff": "2026-09-05T21:00:00+07:00",
+      "competition": "Premier League",
+      "home": "Brighton & Hove Albion",
+      "away": "Leeds United",
+      "focus": "STRONG FOCUS",
+      "research": {
+        "summary": "A2 PRE. Brighton's route is strong and repeatable after four goals against Aston Villa and three at Chelsea; Leeds are unbeaten and have shown enough attacking mechanism to keep the secondary route alive.",
+        "carrier": "Brighton — strong 2–3 goal carrier ceiling at home.",
+        "secondary_route": "Leeds — acceptable, but weaker than Brighton's route and the reason this sits below the TOP group.",
+        "failure_mode_resistance": "MEDIUM-HIGH. Main risk is Leeds' away attack failing and Brighton controlling a lower-event game.",
+        "recent_confirmation": "Brighton have seven league goals from their opening two matches; a separate model estimates roughly 3.6 combined goal expectancy.",
+        "sources": [
+          {
+            "label": "Brighton official match preview",
+            "url": "https://www.brightonandhovealbion.com/media-article/mft-match-preview-bha-leeds-united-pl-september-2026"
+          },
+          {
+            "label": "Leeds official match preview",
+            "url": "https://www.leedsunited.com/en/news/preview-brighton-and-hove-albion-vs-leeds-united-2026"
+          },
+          {
+            "label": "FootyCheck Brighton v Leeds",
+            "url": "https://footycheck.com/football/match/brighton-vs-leeds-2026-09-05/1557389/"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.75,
+            "min_odds": 1.75,
+            "priority": 1,
+            "note": "Preferred expression if Leeds' secondary route survives XI."
+          },
+          {
+            "line": 2.5,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "Lower burden is structurally valid."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 2.0,
+            "priority": 3,
+            "note": "Heavier burden needs a materially stronger verified price."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Confirmed XI is important because Brighton have multiple attacking absences/doubts."
+      }
+    },
+    {
+      "slug": "werder-bremen-rb-leipzig-2026-09-05",
+      "kickoff": "2026-09-05T20:30:00+07:00",
+      "competition": "Bundesliga",
+      "home": "Werder Bremen",
+      "away": "RB Leipzig",
+      "focus": "STRONG FOCUS",
+      "research": {
+        "summary": "A2 PRE after downgrade from initial TOP. Leipzig's carrier route is very strong (opening-match xG above four with 20+ shots), but Werder's secondary route carries meaningful availability risk with several attackers/creators unavailable.",
+        "carrier": "RB Leipzig — strong 2–3+ goal carrier ceiling.",
+        "secondary_route": "Werder Bremen — PARTIAL pre-XI because attacking availability is weakened.",
+        "failure_mode_resistance": "MEDIUM. Main risk is a Leipzig-only total with Werder unable to contribute.",
+        "recent_confirmation": "Leipzig's opening performance showed dominant chance volume; Werder's team news materially lowers secondary-route confidence.",
+        "sources": [
+          {
+            "label": "Werder official preview",
+            "url": "https://www.werder.de/en/news/first-team/2026-2027/preview-svwrbl-04092026"
+          },
+          {
+            "label": "Bundesliga Werder v Leipzig",
+            "url": "https://www.bundesliga.com/en/bundesliga/matchday/2026-2027/2/sv-werder-bremen-vs-rb-leipzig/accessibility"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.5,
+            "min_odds": 1.7,
+            "priority": 1,
+            "note": "Preferred because Werder's secondary route is not strong enough to justify an aggressive burden."
+          },
+          {
+            "line": 2.75,
+            "min_odds": 1.9,
+            "priority": 2,
+            "note": "Only at a better price after confirmed XI preserves Werder's route."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 2.15,
+            "priority": 3,
+            "note": "High burden; requires strong compensation and intact XI routes."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "If Werder's attacking mechanism weakens further at XI, HOLD."
+      }
+    },
+    {
+      "slug": "monchengladbach-elversberg-2026-09-05",
+      "kickoff": "2026-09-05T20:30:00+07:00",
+      "competition": "Bundesliga",
+      "home": "Borussia Monchengladbach",
+      "away": "Elversberg",
+      "focus": "STRONG FOCUS",
+      "research": {
+        "summary": "A2-low PRE. Elversberg demonstrated a real scoring route in the 3-2 win at Leverkusen. Gladbach failed to score at Leipzig but still generated 10 box shots and hit the woodwork, so the home mechanism is PARTIAL rather than broken.",
+        "carrier": "No elite carrier; Elversberg currently has the clearer demonstrated route.",
+        "secondary_route": "Gladbach — acceptable/partial based on chance access rather than recent finishing.",
+        "failure_mode_resistance": "MEDIUM. Main risk is Gladbach's finishing failure persisting, leaving Elversberg unable to carry a high line alone.",
+        "recent_confirmation": "The opening scorelines support the matchup, but the selection is based on route access and opponent defensive weakness rather than the 3-2 result itself.",
+        "sources": [
+          {
+            "label": "Sports Mole Gladbach v Elversberg preview",
+            "url": "https://www.sportsmole.co.uk/football/borussia-monchengladbach/preview/borussia-mbach-vs-elversberg-prediction-team-news-lineups_604373.html"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.5,
+            "min_odds": 1.7,
+            "priority": 1,
+            "note": "Preferred lower burden while Gladbach's scoring route remains only partial."
+          },
+          {
+            "line": 2.75,
+            "min_odds": 1.95,
+            "priority": 2,
+            "note": "Requires stronger price because three goals only give partial protection."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Avoid 3.0+ unless XI materially upgrades the home route."
+      }
+    },
+    {
+      "slug": "schalke-bayern-2026-09-05",
+      "kickoff": "2026-09-05T23:30:00+07:00",
+      "competition": "Bundesliga",
+      "home": "Schalke 04",
+      "away": "Bayern Munich",
+      "focus": "SECONDARY",
+      "research": {
+        "summary": "A2-low PRE, carrier-heavy. Bayern have started with 5-1 in the league and 4-1 in the cup, giving them the board's clearest one-team ceiling. Schalke's independent route is weak after a 3-0 opening loss, so this cannot be treated like a two-sided over.",
+        "carrier": "Bayern Munich — elite 3–4+ goal carrier ceiling.",
+        "secondary_route": "Schalke — weak/partial; contribution is a bonus, not the base thesis.",
+        "failure_mode_resistance": "MEDIUM. Main risk is a professional Bayern 2-0/3-0 win that fails a heavy total.",
+        "recent_confirmation": "Bayern's early scoring output confirms the carrier mechanism; Schalke's scoreless opener limits the secondary route.",
+        "sources": [
+          {
+            "label": "Bundesliga Schalke v Bayern",
+            "url": "https://www.bundesliga.com/en/bundesliga/matchday/2026-2027/2/fc-schalke-04-vs-fc-bayern-muenchen/accessibility"
+          },
+          {
+            "label": "Bavarian Football Works preview",
+            "url": "https://www.bavarianfootballworks.com/bayern-munich-bundesliga/251824/bundesliga-matchday-preview-schalke-vs-bayern-munich"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 3.0,
+            "min_odds": 1.75,
+            "priority": 1,
+            "note": "Carrier-aware expression: three Bayern goals can at least protect the stake."
+          },
+          {
+            "line": 2.75,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "Safer burden if the market offers it at a usable price."
+          },
+          {
+            "line": 3.25,
+            "min_odds": 2.0,
+            "priority": 3,
+            "note": "Only at strong price because a full win needs four goals."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Do not let Bayern's name promote 3.5+ automatically."
+      }
+    },
+    {
+      "slug": "man-city-coventry-2026-09-05",
+      "kickoff": "2026-09-05T21:00:00+07:00",
+      "competition": "Premier League",
+      "home": "Manchester City",
+      "away": "Coventry City",
+      "focus": "SECONDARY",
+      "research": {
+        "summary": "A2-low PRE, carrier-heavy. City scored six across their first two league wins and have the clear elite route; Coventry have zero league goals through two matches and several attacking/defensive absences, leaving the secondary route weak.",
+        "carrier": "Manchester City — elite 3+ goal carrier ceiling.",
+        "secondary_route": "Coventry — weak at PRE; the selection lives or dies on City's ability to carry.",
+        "failure_mode_resistance": "MEDIUM. Main risk is a controlled 2-0/3-0 City win against a low-contributing opponent.",
+        "recent_confirmation": "City improved to a 4-1 win at Crystal Palace; Coventry remain scoreless in the league. These confirm the carrier imbalance.",
+        "sources": [
+          {
+            "label": "Manchester City official preview",
+            "url": "https://live.mancity.com/news/mens/city-v-coventry-match-preview-pl-5-sept-63923520"
+          },
+          {
+            "label": "The Stats Zone preview",
+            "url": "https://www.thestatszone.com/man-city-vs-coventry-preview-team-news-prediction-221971"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 3.0,
+            "min_odds": 1.75,
+            "priority": 1,
+            "note": "Preferred carrier-aware burden with push protection at three."
+          },
+          {
+            "line": 2.75,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "More protective if available at a reasonable verified price."
+          },
+          {
+            "line": 3.25,
+            "min_odds": 2.0,
+            "priority": 3,
+            "note": "Only at strong price because Coventry's route is weak."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "HOLD if only an aggressive 3.5+ total is available."
+      }
+    },
+    {
+      "slug": "rosenborg-hamkam-2026-09-05",
+      "kickoff": "2026-09-05T21:00:00+07:00",
+      "competition": "Eliteserien",
+      "home": "Rosenborg",
+      "away": "HamKam",
+      "focus": "SECONDARY",
+      "research": {
+        "summary": "B+/A2-low PRE. Rosenborg have the stronger home route and recent scoring form, while HamKam's season profile shows a credible but less reliable secondary route. Conflicting model estimates keep this below the stronger two-sided matches.",
+        "carrier": "Rosenborg — normal-to-strong 2–3 goal home carrier ceiling.",
+        "secondary_route": "HamKam — acceptable but inconsistent.",
+        "failure_mode_resistance": "MEDIUM. Main risk is HamKam failing to score and Rosenborg settling around two goals.",
+        "recent_confirmation": "Rosenborg's recent scoring run is strong; HamKam's O2.5/BTTS season rates support contribution but are not sufficient by themselves.",
+        "sources": [
+          {
+            "label": "KickLeak Rosenborg v HamKam",
+            "url": "https://kickleak.com/en/match/6204"
+          },
+          {
+            "label": "CompactStats Rosenborg v HamKam",
+            "url": "https://compactstats.com/match/2026-09-05/rosenborg-v-ham-kam/"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.5,
+            "min_odds": 1.65,
+            "priority": 1,
+            "note": "Preferred burden given the secondary-route uncertainty."
+          },
+          {
+            "line": 2.75,
+            "min_odds": 1.85,
+            "priority": 2,
+            "note": "Needs improved price because a three-goal game only partly clears the burden."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 2.05,
+            "priority": 3,
+            "note": "Only at strong price; three goals push."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Do not promote this match solely from Eliteserien scoring rates."
+      }
+    },
+    {
+      "slug": "leverkusen-union-berlin-2026-09-05",
+      "kickoff": "2026-09-05T20:30:00+07:00",
+      "competition": "Bundesliga",
+      "home": "Bayer Leverkusen",
+      "away": "Union Berlin",
+      "focus": "SECONDARY",
+      "research": {
+        "summary": "A2-low PRE. Leverkusen retain the stronger attacking route despite the opening defeat; Union showed an independent route in a 3-3 opener. One-match scorelines are only confirmation, so this stays secondary rather than being promoted on recent totals alone.",
+        "carrier": "Bayer Leverkusen — strong 2–3 goal carrier ceiling.",
+        "secondary_route": "Union Berlin — acceptable, but less repeatable than the carrier.",
+        "failure_mode_resistance": "MEDIUM. Main risk is Leverkusen restoring defensive control and suppressing Union.",
+        "recent_confirmation": "Leverkusen lost 3-2 to Elversberg and Union drew 3-3 with Frankfurt; supporting evidence only.",
+        "sources": [
+          {
+            "label": "Sports Mole Leverkusen v Union preview",
+            "url": "https://www.sportsmole.co.uk/football/bayer-leverkusen/preview/b-leverkusen-vs-union-berlin-prediction-team-news-lineups_604381.html"
+          },
+          {
+            "label": "CompactStats Leverkusen v Union",
+            "url": "https://compactstats.com/match/2026-09-05/bayer-leverkusen-v-union-berlin/"
+          }
+        ]
+      },
+      "xi_policy": {
+        "require_confirmed": true,
+        "requirements": []
+      },
+      "market_policy": {
+        "min_price": 1.01,
+        "max_price": 3.5,
+        "choices": [
+          {
+            "line": 2.75,
+            "min_odds": 1.75,
+            "priority": 1,
+            "note": "Preferred expression if both routes survive XI."
+          },
+          {
+            "line": 2.5,
+            "min_odds": 1.6,
+            "priority": 2,
+            "note": "Protective lower burden remains structurally valid."
+          },
+          {
+            "line": 3.0,
+            "min_odds": 2.0,
+            "priority": 3,
+            "note": "Heavier burden requires stronger compensation."
+          }
+        ],
+        "hold_if_no_choice": true,
+        "note": "Do not promote based solely on both teams' opening six-goal matches."
+      }
+    }
+  ]
 }
