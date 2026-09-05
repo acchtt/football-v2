@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "model": {
-    "version": "Football v0.2.47-R",
-    "regime": "PRE-HARDENING",
+    "version": "Football v0.2.47",
+    "regime": "CURRENT · v0.2.47-R PRE-HARDENING ON HOLD",
     "timezone": "Asia/Ho_Chi_Minh"
   },
   "published_at": null,
