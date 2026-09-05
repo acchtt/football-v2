@@ -1,65 +1,90 @@
-export type FocusStatus = "TOP FOCUS" | "STRONG FOCUS" | "SECONDARY" | "HOLD" | "PASS-FIRST";
-export type Verdict = "LOCK" | "HOLD" | "PENDING";
+export type FocusStatus = "TOP FOCUS" | "STRONG FOCUS" | "SECONDARY";
 
-export type AsianTotalOffer = {
+export type ResearchSource = {
+  label: string;
+  url: string;
+};
+
+export type XiRequirement = {
+  side: "home" | "away";
+  player: string;
+  required: boolean;
+  reason: string;
+};
+
+export type MarketChoice = {
   line: number;
-  odds: number;
+  min_odds: number;
+  max_odds?: number;
+  priority: number;
+  note?: string;
 };
 
-export type TeamProfile = {
-  gf?: number;
-  ga?: number;
-  recentGf?: number;
-  recentGa?: number;
-  scoringTwoPlusRate?: number;
-  concedingTwoPlusRate?: number;
-  cleanSheetRate?: number;
-  xgFor?: number;
-  bigChancesFor?: number;
-  sampleCount?: number;
-  venueSampleCount?: number;
-  xgCoverage?: number;
-};
-
-export type MatchRecord = {
-  id: string;
-  provider: "bsd" | "demo";
-  providerEventId?: number;
+export type PublishedMatch = {
+  slug: string;
   kickoff: string;
   competition: string;
-  countryCode?: string;
   home: string;
   away: string;
-  homeTeamId?: number;
-  awayTeamId?: number;
-  homeLogoUrl?: string;
-  awayLogoUrl?: string;
   focus: FocusStatus;
-  preRank: number;
-  preScore: number;
-  structuralGrade?: "A1" | "A2" | "B+" | "B" | "PASS";
-  structuralFamily: string;
-  carrier: string;
-  secondaryRoute: string;
-  failureModeResistance: string;
-  failureModes?: string[];
-  evidenceSummary: string;
-  stage: string;
-  homeProfile: TeamProfile;
-  awayProfile: TeamProfile;
-  lineupStatus: "confirmed" | "predicted" | "unavailable";
-  homeXI: string[];
-  awayXI: string[];
-  homeBench?: string[];
-  awayBench?: string[];
+  research: {
+    summary: string;
+    carrier: string;
+    secondary_route: string;
+    failure_mode_resistance: string;
+    recent_confirmation: string;
+    sources: ResearchSource[];
+  };
+  xi_policy: {
+    require_confirmed: boolean;
+    requirements: XiRequirement[];
+  };
+  market_policy: {
+    min_price: number;
+    max_price: number;
+    choices: MarketChoice[];
+    hold_if_no_choice: boolean;
+    note?: string;
+  };
+};
+
+export type PublishedState = {
+  schema: 1;
+  model: {
+    version: string;
+    regime: string;
+    timezone: string;
+  };
+  published_at: string | null;
+  matches: PublishedMatch[];
+};
+
+export type BsdLineup = {
+  status: "confirmed" | "predicted" | "unavailable";
+  eventId?: number;
+  homeStarting: string[];
+  awayStarting: string[];
   homeFormation?: string;
   awayFormation?: string;
-  xiNote: string;
-  offers: AsianTotalOffer[];
-  verdict: Verdict;
-  preferredLine?: number;
-  preferredOdds?: number;
-  verdictReason: string;
-  result?: string;
-  pnl?: number;
+};
+
+export type XiEvaluation = {
+  ready: boolean;
+  status: "WAITING_XI" | "XI_CONFIRMED" | "XI_HOLD";
+  missingRequired: XiRequirement[];
+  requirements: Array<XiRequirement & { present: boolean }>;
+};
+
+export type VerifiedOffer = {
+  line: number;
+  rawOdds: number;
+  decimalOdds: number;
+  oddsFormat: "DECIMAL" | "HK";
+};
+
+export type FinalVerdict = {
+  verdict: "LOCK" | "HOLD" | "WAIT";
+  line?: number;
+  odds?: number;
+  reason: string;
 };
