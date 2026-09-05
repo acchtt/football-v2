@@ -1,4 +1,5 @@
 import Link from "next/link";
+import NextMatch from "@/components/NextMatch";
 import { getPublishedMatches, getPublishedState } from "@/lib/published";
 
 function formatKickoff(value: string) {
@@ -50,6 +51,8 @@ export default function Home() {
         <div><b>04</b><span>Your odds image</span></div>
         <div><b>05</b><span>LOCK / HOLD</span></div>
       </section>
+
+      <NextMatch matches={matches} />
 
       <div className="section-head">
         <div><span className="eyebrow">Active board</span><h3>Upcoming published matches</h3></div>
