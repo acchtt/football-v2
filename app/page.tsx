@@ -18,6 +18,9 @@ function formatKickoff(value: string) {
 export default function Home() {
   const state = getPublishedState();
   const matches = getPublishedMatches();
+  const topCount = matches.filter((match) => match.focus === "TOP FOCUS").length;
+  const strongCount = matches.filter((match) => match.focus === "STRONG FOCUS").length;
+  const secondaryCount = matches.filter((match) => match.focus === "SECONDARY").length;
 
   return (
     <main className="shell">
@@ -32,40 +35,50 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="hero">
+      <section className="hero hero-compact">
         <div>
-          <span className="eyebrow">Published slate</span>
-          <h2>Only matches researched and approved in chat appear here.</h2>
-          <p>ChatGPT researches the upcoming slate and publishes the PRE decision packet. The website does not scan or rank matches. It waits for confirmed BSD lineups, accepts your odds image, verifies the market, then executes the published decision policy.</p>
+          <span className="eyebrow">Published PRE slate</span>
+          <h2>Research-backed matches, ready for execution.</h2>
+          <p>ChatGPT owns slate research and PRE structure. The site takes over at confirmed XI, verified Asian-total odds, and the final LOCK / HOLD decision.</p>
         </div>
-        <div className="summary-card">
-          <span>Published matches</span>
-          <strong>{matches.length}</strong>
-          <small>{state.published_at ? `Last publish ${new Date(state.published_at).toLocaleString("en-GB", { timeZone: "Asia/Ho_Chi_Minh" })} ICT` : "Waiting for first chat publish"}</small>
+        <div className="hero-stats">
+          <div className="summary-card primary-stat">
+            <span>Published</span>
+            <strong>{matches.length}</strong>
+            <small>{state.published_at ? `Updated ${new Date(state.published_at).toLocaleString("en-GB", { timeZone: "Asia/Ho_Chi_Minh" })} ICT` : "Waiting for first chat publish"}</small>
+          </div>
+          <div className="focus-summary" aria-label="Published focus breakdown">
+            <div><b>{topCount}</b><span>Top</span></div>
+            <div><b>{strongCount}</b><span>Strong</span></div>
+            <div><b>{secondaryCount}</b><span>Secondary</span></div>
+          </div>
         </div>
       </section>
 
       <section className="flow-strip">
-        <div><b>01</b><span>Chat research</span></div>
-        <div><b>02</b><span>Publish PRE</span></div>
-        <div><b>03</b><span>BSD confirmed XI</span></div>
-        <div><b>04</b><span>Your odds image</span></div>
+        <div><b>01</b><span>Research</span></div>
+        <div><b>02</b><span>PRE publish</span></div>
+        <div><b>03</b><span>Confirmed XI</span></div>
+        <div><b>04</b><span>Verified odds</span></div>
         <div><b>05</b><span>LOCK / HOLD</span></div>
       </section>
 
       <NextMatch matches={matches} />
 
-      <div className="section-head">
+      <div className="section-head board-head">
         <div><span className="eyebrow">Active board</span><h3>Upcoming published matches</h3></div>
-        <span className="pill">{state.model.regime}</span>
+        <div className="board-meta">
+          <span>{matches.length} matches</span>
+          <span className="pill">{state.model.regime}</span>
+        </div>
       </div>
 
       <section className="published-grid">
         {matches.map((match) => (
           <Link className="published-card" href={`/match/${match.slug}`} key={match.slug}>
             <div className="card-top">
-              <span className={`focus ${match.focus.toLowerCase().replaceAll(" ", "-")}`}>{match.focus}</span>
-              <span className="kickoff">{formatKickoff(match.kickoff)} ICT</span>
+              <span className={`focus focus-pill ${match.focus.toLowerCase().replaceAll(" ", "-")}`}>{match.focus}</span>
+              <span className="kickoff kickoff-pill">{formatKickoff(match.kickoff)} ICT</span>
             </div>
 
             <div className="league-row">
@@ -78,17 +91,17 @@ export default function Home() {
                 <BrandLogo kind="team" name={match.home} className="team-logo" />
                 <h3>{match.home}</h3>
               </div>
-              <div className="versus">vs</div>
+              <div className="versus">VS</div>
               <div className="team-row">
                 <BrandLogo kind="team" name={match.away} className="team-logo" />
                 <h3>{match.away}</h3>
               </div>
             </div>
 
-            <p>{match.research.summary}</p>
+            <p className="research-summary">{match.research.summary}</p>
             <div className="card-bottom">
               <span>Published PRE</span>
-              <strong>Open match →</strong>
+              <strong>Open match <span aria-hidden="true">→</span></strong>
             </div>
           </Link>
         ))}
