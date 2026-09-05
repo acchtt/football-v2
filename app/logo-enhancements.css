@@ -1,0 +1,183 @@
+.brand-logo,
+.team-logo,
+.league-logo,
+.match-league-logo,
+.match-hero-team-logo,
+.lineup-team-logo {
+  display: block;
+  object-fit: contain;
+}
+
+.league-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 8px;
+}
+
+.league-logo {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+}
+
+.league-name {
+  color: var(--text);
+  font-size: 17px !important;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -.015em;
+}
+
+.card-matchup {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+
+.team-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.team-logo {
+  width: 46px;
+  height: 46px;
+}
+
+.published-card .team-row h3 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+}
+
+.versus {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding-left: 58px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+.match-league-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.match-league-logo {
+  width: 48px;
+  height: 48px;
+}
+
+.match-league-name {
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: -.02em;
+}
+
+.match-hero-teams {
+  display: grid;
+  gap: 10px;
+}
+
+.match-hero-team {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.match-hero-team-logo {
+  width: 74px;
+  height: 74px;
+}
+
+.match-hero .match-hero-team h2 {
+  margin: 0;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: .95;
+}
+
+.match-hero-vs {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  padding-left: 90px;
+  text-transform: uppercase;
+}
+
+.lineup-team-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.lineup-team-logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 620px) {
+  .league-name {
+    font-size: 16px !important;
+  }
+
+  .team-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .team-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .published-card .team-row h3 {
+    font-size: 23px;
+  }
+
+  .versus {
+    padding-left: 52px;
+  }
+
+  .match-league-logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .match-league-name {
+    font-size: 18px;
+  }
+
+  .match-hero-team {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .match-hero-team-logo {
+    width: 58px;
+    height: 58px;
+  }
+
+  .match-hero .match-hero-team h2 {
+    font-size: clamp(32px, 10vw, 48px);
+  }
+
+  .match-hero-vs {
+    padding-left: 70px;
+  }
+}
