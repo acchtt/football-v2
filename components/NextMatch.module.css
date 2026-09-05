@@ -1,21 +1,22 @@
 .section {
-  margin: 8px 0 38px;
+  margin: 6px 0 30px;
 }
 
 .head {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 20px;
   align-items: stretch;
-  border: 1px solid #2f6147;
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(18, 36, 27, .98), rgba(13, 25, 20, .78));
-  padding: 22px;
-  transition: .15s ease;
+  border: 1px solid #315a45;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(18, 36, 27, .98), rgba(10, 20, 15, .9));
+  padding: 18px 20px;
+  transition: transform .15s ease, border-color .15s ease;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, .1);
 }
 
 .card:hover {
@@ -30,36 +31,36 @@
 .leagueRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 9px;
+  margin-top: 13px;
 }
 
 .leagueLogo {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  flex: 0 0 auto;
+  flex: 0 0 30px;
 }
 
 .leagueName {
-  color: #eef8f2;
-  font-size: 18px;
-  font-weight: 800;
+  color: #dcece3;
+  font-size: 15px;
+  font-weight: 850;
   letter-spacing: -.015em;
 }
 
 .matchup {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  gap: 12px;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .team {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   min-width: 0;
 }
 
@@ -69,28 +70,32 @@
 }
 
 .teamLogo {
-  width: 64px;
-  height: 64px;
+  width: 54px;
+  height: 54px;
   object-fit: contain;
-  flex: 0 0 auto;
+  flex: 0 0 54px;
 }
 
 .team strong {
-  font-size: clamp(25px, 3.4vw, 43px);
-  line-height: 1;
-  letter-spacing: -.04em;
+  min-width: 0;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: .98;
+  letter-spacing: -.042em;
+  overflow-wrap: anywhere;
 }
 
 .vs {
-  color: #91a79b;
-  font-size: 16px;
-  font-weight: 700;
+  color: #789084;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-align: center;
 }
 
 .countdown {
-  min-width: 210px;
+  min-width: 0;
   border-left: 1px solid #20382c;
-  padding-left: 24px;
+  padding-left: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -100,26 +105,27 @@
 .countdown span,
 .countdown small {
   color: #91a79b;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .countdown strong {
-  margin: 6px 0;
+  margin: 4px 0;
   color: #68f0a0;
-  font-size: 32px;
-  letter-spacing: -.03em;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -.035em;
 }
 
 .empty {
   border: 1px dashed #365b48;
-  border-radius: 22px;
+  border-radius: 18px;
   background: rgba(255,255,255,.015);
-  padding: 28px;
+  padding: 24px;
 }
 
 .empty h3 {
   margin: 7px 0;
-  font-size: 24px;
+  font-size: 23px;
 }
 
 .empty p {
@@ -133,17 +139,20 @@
   }
 
   .countdown {
-    min-width: 0;
     border-left: 0;
     border-top: 1px solid #20382c;
-    padding: 16px 0 0;
+    padding: 14px 0 0;
   }
 }
 
 @media (max-width: 620px) {
+  .card {
+    padding: 16px;
+  }
+
   .matchup {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 7px;
   }
 
   .team:last-child {
@@ -152,11 +161,17 @@
   }
 
   .vs {
-    padding-left: 76px;
+    padding-left: 65px;
+    text-align: left;
   }
 
   .teamLogo {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .team strong {
+    font-size: 25px;
   }
 }
