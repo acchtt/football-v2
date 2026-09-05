@@ -1,0 +1,139 @@
+.image-intake-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.image-intake-head h3 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  letter-spacing: -.025em;
+}
+
+.paste-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.paste-shortcut kbd {
+  border: 1px solid var(--line-strong);
+  border-bottom-color: #416e56;
+  border-radius: 7px;
+  background: var(--panel2);
+  color: var(--text);
+  padding: 5px 7px;
+  font: 700 10px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  box-shadow: inset 0 -1px rgba(255,255,255,.035);
+}
+
+.paste-zone {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px dashed #315a45;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(104,240,160,.035), rgba(255,255,255,.012));
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.paste-zone:hover,
+.paste-zone.has-image {
+  border-color: #4f8a69;
+  background: linear-gradient(135deg, rgba(104,240,160,.055), rgba(255,255,255,.016));
+}
+
+.file-picker {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--panel2);
+  color: var(--text) !important;
+  font-size: 12px !important;
+  font-weight: 750;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.file-picker:hover {
+  border-color: #4f8a69;
+}
+
+.file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.paste-button {
+  min-height: 40px;
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: rgba(104,240,160,.1);
+  color: var(--green);
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.paste-button:hover {
+  background: rgba(104,240,160,.16);
+}
+
+.paste-help {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.paste-notice {
+  margin: 9px 0 0;
+  color: #bfe9cf;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .image-intake-head {
+    align-items: flex-start;
+  }
+
+  .paste-zone {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .paste-help {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .paste-shortcut {
+    display: none;
+  }
+
+  .paste-zone {
+    grid-template-columns: 1fr;
+  }
+
+  .paste-help {
+    grid-column: 1;
+  }
+
+  .file-picker,
+  .paste-button {
+    width: 100%;
+  }
+}
