@@ -44,9 +44,9 @@ const FINAL_MARKET_OVERRIDES: Record<string, FinalMarketOverride[]> = {
   "hoffenheim-dortmund-2026-09-05": [
     {
       line: 3.25,
-      minOdds: 1.9,
+      minOdds: 1.89,
       maxOdds: 3.5,
-      reason: "Final market-stage decision: confirmed XI preserves both scoring routes and O3.25 is approved from 1.90. Exactly three goals is a half-loss; four or more is a full win."
+      reason: "Final market-stage decision: confirmed XI preserves both scoring routes and the verified O3.25 @1.89 market snapshot is an approved LOCK. Exactly three goals is a half-loss; four or more is a full win."
     }
   ]
 };
