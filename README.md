@@ -1,105 +1,58 @@
-# Football v1.0 Website
+# Football Decision Control
 
-Website-first rebuild of the football decision-control workflow.
+A deliberately narrow workflow:
 
-## Current model
+1. ChatGPT researches upcoming matches using Football v0.2.47-R PRE-HARDENING.
+2. ChatGPT publishes only approved PRE matches by updating `data/published-matches.json`.
+3. Vercel deploys the publication automatically from `main`.
+4. The website resolves each published match against BSD and waits for `lineup_status=confirmed`.
+5. Published XI requirements are checked against the confirmed starters.
+6. The user uploads an Asian-total odds screenshot.
+7. Browser-side OCR extracts candidate line/price rows; the user verifies them.
+8. The website returns LOCK / HOLD / WAIT using only the published XI and market policy.
 
-- Football v0.2.47-R
-- PRE-HARDENING
-- ICT / Asia/Ho_Chi_Minh
-- Recent-total / defensive-leakage confirmation: active
-- Sep-1 hardening framework: inactive
-- Minimum Over price: 1.70
-- Maximum Over price: 2.30
-- No blanket grade-based maximum-total ceiling
+The website does **not** research the slate, rank fixtures, create scoring routes, or invent a market burden. ChatGPT is the research/publishing control plane; the site is the execution plane.
 
-## V1 architecture — no OpenAI API required
+## Published match contract
 
-The website automates data collection and market verification, while current-model reasoning is handed off manually to the Football ChatGPT project.
+Each match contains:
 
-1. BSD daily competition-scoped slate
-2. Mandatory pre-kickoff GF/GA + xG/chance evidence
-3. Broad mechanical retrieval pass only
-4. Website generates a PRE analysis packet
-5. User copies packet into the Football ChatGPT project
-6. ChatGPT returns JSON TOP FOCUS / STRONG FOCUS / SECONDARY shortlist
-7. User pastes JSON back into the website
-8. Match page loads confirmed BSD XI only (`lineup_status=confirmed`)
-9. User uploads bookmaker odds screenshot and verifies visible rows
-10. Website generates an XI + market decision packet
-11. User copies packet into the Football ChatGPT project
-12. ChatGPT returns JSON LOCK/HOLD + preferred line/price
-13. User pastes the result back into the website
+- kickoff / competition / teams
+- focus status
+- research summary and source links
+- carrier / secondary route / failure resistance / recent confirmation
+- player-specific XI requirements when relevant
+- an ordered Asian-total line/price ladder
 
-The mechanical 0–100 retrieval score is not an official model decision. It exists only to reduce the evidence set handed to ChatGPT. The website fails closed instead of treating retrieval candidates as official picks.
+If no match is published, the website board is intentionally empty.
 
-BSD's own odds endpoints are deliberately not used in the V1 verdict path.
-
-## BSD setup
-
-```bash
-cp .env.example .env.local
-```
-
-Set:
+## Runtime configuration
 
 ```env
-DATA_PROVIDER=bsd
 BSD_API_BASE_URL=https://sports.bzzoiro.com/api/v2
-BSD_API_TOKEN=YOUR_BSD_API_KEY
-BSD_HISTORY_MATCHES=10
-BSD_LOOKBACK_DAYS=180
+BSD_API_TOKEN=YOUR_BSD_TOKEN
 ```
 
-No `OPENAI_API_KEY` is needed.
+No OpenAI API key or database is required.
 
-BSD authentication is `Authorization: Token YOUR_BSD_API_KEY`.
+## Market execution
 
-The website uses:
+The site supports decimal prices and Hong Kong prices. Prices below 1.20 are interpreted as HK and normalized to decimal by adding 1.00. The user must verify OCR results before a verdict is allowed.
 
-- `GET /api/v2/events/` for the ICT daily slate and finished team history;
-- `GET /api/v2/events/{id}/` for match detail and regulation-time scores;
-- `GET /api/v2/events/{id}/stats/` when historical xG/chance fields are missing;
-- `GET /api/v2/events/{id}/lineups/` for the teamsheet.
+A LOCK is possible only when:
 
-Predicted lineups are ignored. Only `lineup_status=confirmed` populates the XI stage.
+- confirmed BSD XI is available when required;
+- every required published starter is present;
+- a verified offered total exactly matches a published market choice;
+- the normalized price is inside both the match-specific and global published range.
 
-You can check the BSD connection at:
+Otherwise the site returns HOLD or WAIT.
 
-```text
-/api/bsd/status
-```
-
-## Example odds images
-
-Every match workbench contains three built-in bookmaker-style example screenshots:
-
-- Club América–Monterrey
-- Köln–Hoffenheim
-- Ipswich–Leicester
-
-Selecting an example displays the local image and preloads only the values visibly shown in it. Those values remain editable and require **Verify visible odds** before the final ChatGPT decision packet becomes available.
-
-Custom screenshots can also be uploaded and previewed. Until server-side extraction is connected, their visible rows are entered manually.
-
-## Run locally
+## Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
-
-The daily board supports an ICT date parameter, for example:
-
-```text
-/?date=2026-09-04
-/api/board?date=2026-09-04
-```
-
-## Build and deploy
-
-GitHub Actions runs `npm install` and `npm run build` on every push to `main`.
-
-Vercel production is connected to GitHub and deploys `main` automatically.
+GitHub Actions runs `npm install` and `npm run build`. Vercel production is connected to `main`.
