@@ -1,0 +1,19 @@
+[
+  {
+    "pickId": "hoffenheim-dortmund-2026-09-05|O3.25|1.89",
+    "slug": "hoffenheim-dortmund-2026-09-05",
+    "match": "Hoffenheim – Borussia Dortmund",
+    "competition": "Bundesliga",
+    "kickoff": "2026-09-05T20:30:00+07:00",
+    "modelVersion": "Football v0.2.47",
+    "verdict": "LOCK",
+    "line": 3.25,
+    "odds": 1.89,
+    "stake": 1,
+    "result": "PENDING",
+    "pl": 0,
+    "recordedAt": "2026-09-05T19:52:00+07:00",
+    "reason": "Final market-stage LOCK. Confirmed XI preserves both scoring routes; O3.25 accepted at 1.89.",
+    "synced": true
+  }
+]
