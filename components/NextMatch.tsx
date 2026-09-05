@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import BrandLogo from "@/components/BrandLogo";
 import type { PublishedMatch } from "@/lib/types";
 import styles from "./NextMatch.module.css";
 
@@ -64,8 +65,23 @@ export default function NextMatch({ matches }: { matches: PublishedMatch[] }) {
               <span className={`focus ${next.focus.toLowerCase().replaceAll(" ", "-")}`}>{next.focus}</span>
               <span className="kickoff">{formatKickoff(next.kickoff)} ICT</span>
             </div>
-            <h3>{next.home} <span>vs</span> {next.away}</h3>
-            <p className="competition">{next.competition}</p>
+
+            <div className={styles.leagueRow}>
+              <BrandLogo kind="league" name={next.competition} className={styles.leagueLogo} />
+              <span className={styles.leagueName}>{next.competition}</span>
+            </div>
+
+            <div className={styles.matchup}>
+              <div className={styles.team}>
+                <BrandLogo kind="team" name={next.home} className={styles.teamLogo} />
+                <strong>{next.home}</strong>
+              </div>
+              <span className={styles.vs}>vs</span>
+              <div className={styles.team}>
+                <BrandLogo kind="team" name={next.away} className={styles.teamLogo} />
+                <strong>{next.away}</strong>
+              </div>
+            </div>
           </div>
           <div className={styles.countdown}>
             <span>Kickoff in</span>
