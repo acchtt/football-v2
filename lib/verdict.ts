@@ -33,12 +33,57 @@ export function normalizeOffer(line: number, rawOdds: number): VerifiedOffer | u
   return { line, rawOdds, decimalOdds: Number(decimalOdds.toFixed(3)), oddsFormat };
 }
 
+type FinalMarketOverride = {
+  line: number;
+  minOdds: number;
+  maxOdds?: number;
+  reason: string;
+};
+
+const FINAL_MARKET_OVERRIDES: Record<string, FinalMarketOverride[]> = {
+  "hoffenheim-dortmund-2026-09-05": [
+    {
+      line: 3.25,
+      minOdds: 1.9,
+      maxOdds: 3.5,
+      reason: "Final market-stage decision: confirmed XI preserves both scoring routes and O3.25 is approved from 1.90. Exactly three goals is a half-loss; four or more is a full win."
+    }
+  ]
+};
+
+function finalMarketOverride(match: PublishedMatch, offers: VerifiedOffer[]): FinalVerdict | undefined {
+  const rules = FINAL_MARKET_OVERRIDES[match.slug];
+  if (!rules?.length) return undefined;
+
+  for (const rule of rules) {
+    const matching = offers
+      .filter((offer) => Math.abs(offer.line - rule.line) < 0.001)
+      .filter((offer) => offer.decimalOdds >= rule.minOdds && offer.decimalOdds <= (rule.maxOdds ?? Number.POSITIVE_INFINITY))
+      .sort((a, b) => b.decimalOdds - a.decimalOdds);
+
+    const selected = matching[0];
+    if (selected) {
+      return {
+        verdict: "LOCK",
+        line: selected.line,
+        odds: selected.decimalOdds,
+        reason: rule.reason
+      };
+    }
+  }
+
+  return undefined;
+}
+
 export function decide(match: PublishedMatch, xi: XiEvaluation, offers: VerifiedOffer[]): FinalVerdict {
   if (xi.status === "WAITING_XI") return { verdict: "WAIT", reason: "Waiting for BSD lineup_status=confirmed." };
   if (xi.status === "XI_HOLD") {
     return { verdict: "HOLD", reason: `Required XI condition failed: ${xi.missingRequired.map((item) => item.player).join(", ")}.` };
   }
   if (!offers.length) return { verdict: "WAIT", reason: "Upload and verify an odds image first." };
+
+  const override = finalMarketOverride(match, offers);
+  if (override) return override;
 
   const eligible = match.market_policy.choices.flatMap((choice) => {
     const matching = offers.filter((offer) => Math.abs(offer.line - choice.line) < 0.001);
@@ -52,9 +97,14 @@ export function decide(match: PublishedMatch, xi: XiEvaluation, offers: Verified
 
   const selected = eligible[0];
   if (!selected) {
+    const visible = offers
+      .slice()
+      .sort((a, b) => a.line - b.line)
+      .map((offer) => `O${offer.line}@${offer.decimalOdds.toFixed(2)}`)
+      .join(", ");
     return {
       verdict: "HOLD",
-      reason: match.market_policy.note || "No verified offer fits the published line/price policy for this match."
+      reason: `${match.market_policy.note || "No verified offer fits the published line/price policy for this match."}${visible ? ` Verified offers: ${visible}.` : ""}`
     };
   }
 
