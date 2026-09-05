@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { OddsWorkspace } from "@/components/OddsWorkspace";
-import { getMatch } from "@/lib/safe-data";
-import { buildMatchDecisionBase } from "@/lib/manual-handoff";
-import { MODEL } from "@/lib/model";
+import { OddsVerdict } from "@/components/OddsVerdict";
+import { fetchPublishedMatchLineup, isBsdConfigured } from "@/lib/bsd";
+import { getPublishedMatch, getPublishedState } from "@/lib/published";
+import { evaluateXi } from "@/lib/verdict";
+
+export const dynamic = "force-dynamic";
 
 function kickoff(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
-    timeZone: MODEL.timezone,
+    timeZone: "Asia/Ho_Chi_Minh",
+    weekday: "short",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -17,137 +20,89 @@ function kickoff(value: string) {
   }).format(new Date(value));
 }
 
-function number(value: number | undefined) {
-  return value === undefined ? "—" : value.toFixed(2);
-}
-
-function percent(value: number | undefined) {
-  return value === undefined ? "—" : `${Math.round(value * 100)}%`;
-}
-
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { mode, match } = await getMatch(id);
+  const match = getPublishedMatch(id);
   if (!match) notFound();
-  const decisionBase = buildMatchDecisionBase(match);
-
-  const stageOrder = ["PRE", "XI", "MARKET", "VERDICT", "SETTLED"];
-  const doneThrough = match.stage === "SETTLED" ? 5 : match.stage.includes("LOCK") ? 4 : match.lineupStatus === "confirmed" ? 2 : 1;
+  const state = getPublishedState();
+  const lineup = isBsdConfigured()
+    ? await fetchPublishedMatchLineup(match).catch(() => ({ status: "unavailable" as const, homeStarting: [], awayStarting: [] }))
+    : { status: "unavailable" as const, homeStarting: [], awayStarting: [] };
+  const xi = evaluateXi(match, lineup);
 
   return (
     <main className="shell">
       <header className="topbar">
-        <div className="brand">
-          <div className="brand-mark">F1</div>
-          <div><small>Decision control</small><h1>Football v1.0</h1></div>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span className="mode-pill">{mode} PROVIDER</span>
-          <span className="model-pill"><i className="live-dot" />{MODEL.version} · {MODEL.regime}</span>
-        </div>
+        <div><Link href="/" className="back">← Published board</Link><h1>Match execution</h1></div>
+        <div className="header-pills"><span className="pill">{state.model.version}</span><span className={`pill ${xi.ready ? "live" : ""}`}>{xi.status.replaceAll("_", " ")}</span></div>
       </header>
 
-      <section className="match-header">
-        <Link href="/" className="back">← Daily handoff</Link>
-        <div className="match-title">
-          <div>
-            <span className="eyebrow">{match.competition} · {kickoff(match.kickoff)} ICT</span>
-            <h2>{match.home}<br />{match.away}</h2>
-            {match.providerEventId && <p className="muted">BSD event #{match.providerEventId}</p>}
-          </div>
-          <div className={`verdict ${match.verdict.toLowerCase()}`}>
-            <span>Website state</span>
-            <strong>{match.verdict}{match.preferredLine ? ` · O${match.preferredLine}` : ""}</strong>
-            {match.preferredOdds && <p className="muted">@ {match.preferredOdds.toFixed(2)}</p>}
-          </div>
+      <section className="match-hero">
+        <div>
+          <span className="eyebrow">{match.focus} · {match.competition}</span>
+          <h2>{match.home}<br /><span>vs</span> {match.away}</h2>
+          <p>{kickoff(match.kickoff)} ICT</p>
+        </div>
+        <div className="stage-card">
+          <span>Current stage</span>
+          <strong>{xi.status === "WAITING_XI" ? "WAITING FOR XI" : xi.status === "XI_HOLD" ? "XI HOLD" : "READY FOR ODDS"}</strong>
+          <small>{lineup.eventId ? `BSD event #${lineup.eventId}` : "BSD match resolution pending"}</small>
         </div>
       </section>
 
-      <nav className="process">
-        {stageOrder.map((stage, index) => (
-          <div className={index < doneThrough ? "done" : ""} key={stage}>
-            <span>0{index + 1}</span><strong>{stage}</strong>
-          </div>
-        ))}
-      </nav>
-
-      <div className="detail-grid">
-        <div>
-          <section className="card">
-            <span className="kicker">PRE evidence</span>
-            <h3>{match.structuralFamily}</h3>
-            <div className="route-grid">
-              <div className="metric"><span>Carrier retrieval view</span><strong>{match.carrier}</strong></div>
-              <div className="metric"><span>Secondary retrieval view</span><strong>{match.secondaryRoute}</strong></div>
-              <div className="metric"><span>Failure-mode retrieval view</span><strong>{match.failureModeResistance}</strong></div>
-              <div className="metric"><span>Retrieval score · not official PRE</span><strong>{match.preScore.toFixed(1)}{match.structuralGrade ? ` · ${match.structuralGrade}` : ""}</strong></div>
+      <section className="detail-grid">
+        <div className="stack">
+          <section className="panel">
+            <span className="eyebrow">Published PRE packet</span>
+            <h3>{match.research.summary}</h3>
+            <div className="research-grid">
+              <div><span>Carrier</span><strong>{match.research.carrier}</strong></div>
+              <div><span>Secondary route</span><strong>{match.research.secondary_route}</strong></div>
+              <div><span>Failure resistance</span><strong>{match.research.failure_mode_resistance}</strong></div>
+              <div><span>Recent confirmation</span><strong>{match.research.recent_confirmation}</strong></div>
             </div>
-            <p className="reason">{match.evidenceSummary}</p>
-            {match.failureModes?.length ? <ul className="reason">{match.failureModes.map((mode) => <li key={mode}>{mode}</li>)}</ul> : null}
+            {match.research.sources.length > 0 && (
+              <div className="sources"><span>Research sources</span>{match.research.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.label}</a>)}</div>
+            )}
           </section>
 
-          <section className="card">
-            <span className="kicker">XI stage</span>
-            <h3>Confirmed lineup check</h3>
-            <div className="xi">
-              <div className="metric">
-                <span>{match.home}{match.homeFormation ? ` · ${match.homeFormation}` : ""}</span>
-                {match.homeXI.length ? <ul>{match.homeXI.map((item) => <li key={item}>{item}</li>)}</ul> : <strong>Waiting for confirmed XI</strong>}
-              </div>
-              <div className="metric">
-                <span>{match.away}{match.awayFormation ? ` · ${match.awayFormation}` : ""}</span>
-                {match.awayXI.length ? <ul>{match.awayXI.map((item) => <li key={item}>{item}</li>)}</ul> : <strong>Waiting for confirmed XI</strong>}
-              </div>
+          <section className="panel">
+            <div className="panel-head"><div><span className="eyebrow">BSD lineup</span><h3>Confirmed XI check</h3></div><a className="refresh" href={`/match/${match.slug}`}>Refresh XI</a></div>
+            <div className="lineup-grid">
+              <div><span>{match.home}{lineup.homeFormation ? ` · ${lineup.homeFormation}` : ""}</span>{lineup.homeStarting.length ? <ol>{lineup.homeStarting.map((name) => <li key={name}>{name}</li>)}</ol> : <p>Waiting for confirmed XI.</p>}</div>
+              <div><span>{match.away}{lineup.awayFormation ? ` · ${lineup.awayFormation}` : ""}</span>{lineup.awayStarting.length ? <ol>{lineup.awayStarting.map((name) => <li key={name}>{name}</li>)}</ol> : <p>Waiting for confirmed XI.</p>}</div>
             </div>
-            <p className="reason">Status: <strong>{match.lineupStatus.toUpperCase()}</strong>. {match.xiNote}</p>
+            <div className="requirements">
+              <span>Published XI requirements</span>
+              {xi.requirements.length ? xi.requirements.map((rule) => (
+                <div className={rule.present ? "requirement pass" : rule.required ? "requirement fail" : "requirement"} key={`${rule.side}-${rule.player}`}>
+                  <b>{rule.present ? "✓" : rule.required ? "×" : "○"}</b><span>{rule.side.toUpperCase()} · {rule.player}</span><small>{rule.reason}</small>
+                </div>
+              )) : <p>No player-specific requirement was published; confirmed XI is the gate.</p>}
+            </div>
           </section>
 
-          <section className="card">
-            <span className="kicker">Market</span>
-            <h3>Asian-total screenshot</h3>
-            <p className="reason">BSD odds are never used. Verify only the rows visible in your bookmaker screenshot, then copy the generated ChatGPT decision packet.</p>
-            <OddsWorkspace matchHome={match.home} matchAway={match.away} decisionBase={decisionBase} />
+          <section className="panel">
+            <span className="eyebrow">Market policy</span>
+            <h3>Published line / price ladder</h3>
+            <div className="policy-table">
+              {match.market_policy.choices.slice().sort((a, b) => a.priority - b.priority).map((choice) => (
+                <div key={`${choice.line}-${choice.priority}`}><b>#{choice.priority}</b><strong>O{choice.line}</strong><span>{choice.min_odds.toFixed(2)}–{(choice.max_odds ?? match.market_policy.max_price).toFixed(2)}</span><small>{choice.note || "Eligible published burden"}</small></div>
+              ))}
+            </div>
+            <p className="muted">Global price window {match.market_policy.min_price.toFixed(2)}–{match.market_policy.max_price.toFixed(2)}. The website cannot choose a line that ChatGPT did not publish here.</p>
           </section>
+
+          <OddsVerdict match={match} xi={xi} />
         </div>
 
-        <aside>
-          <section className="card">
-            <span className="kicker">Team profile</span>
-            <h3>Mandatory GF / GA</h3>
-            <div className="profile-grid">
-              <div className="metric"><span>{match.home} GF</span><strong>{number(match.homeProfile.gf)}</strong></div>
-              <div className="metric"><span>{match.home} GA</span><strong>{number(match.homeProfile.ga)}</strong></div>
-              <div className="metric"><span>{match.away} GF</span><strong>{number(match.awayProfile.gf)}</strong></div>
-              <div className="metric"><span>{match.away} GA</span><strong>{number(match.awayProfile.ga)}</strong></div>
-              <div className="metric"><span>{match.home} scores 2+</span><strong>{percent(match.homeProfile.scoringTwoPlusRate)}</strong></div>
-              <div className="metric"><span>{match.away} scores 2+</span><strong>{percent(match.awayProfile.scoringTwoPlusRate)}</strong></div>
-              <div className="metric"><span>Home history</span><strong>{match.homeProfile.sampleCount ?? "—"}</strong></div>
-              <div className="metric"><span>Away history</span><strong>{match.awayProfile.sampleCount ?? "—"}</strong></div>
-            </div>
-          </section>
-
-          <section className="card">
-            <span className="kicker">Model guardrails</span>
-            <h3>Current rules</h3>
-            <ul className="reason">
-              {MODEL.principles.map((rule) => <li key={rule}>{rule}</li>)}
-            </ul>
-          </section>
-
-          {match.result && (
-            <section className="card">
-              <span className="kicker">Regulation result</span>
-              <h3>{match.result}</h3>
-              {match.pnl !== undefined && <p className="reason">P/L: <strong className={match.pnl > 0 ? "preferred" : ""}>{match.pnl.toFixed(2)}u</strong></p>}
-            </section>
-          )}
+        <aside className="stack">
+          <section className="panel compact"><span className="eyebrow">Control</span><h3>Immutable flow</h3><ol className="flow-list"><li className="done">Chat research</li><li className="done">PRE published</li><li className={lineup.status === "confirmed" ? "done" : ""}>BSD confirmed XI</li><li>Your odds image</li><li>Website LOCK / HOLD</li></ol></section>
+          <section className="panel compact"><span className="eyebrow">Model</span><h3>{state.model.version}</h3><p>{state.model.regime}. Structure is decided in chat before publication. Website execution cannot promote structure or invent a market burden.</p></section>
         </aside>
-      </div>
+      </section>
 
-      <footer>
-        <span>{MODEL.version} · {MODEL.regime}</span>
-        <span>BSD evidence → manual ChatGPT PRE/XI/market reasoning → verdict</span>
-      </footer>
+      <footer><span>Published from chat · Executed on website</span><span>{state.model.version} · {state.model.regime}</span></footer>
     </main>
   );
 }
