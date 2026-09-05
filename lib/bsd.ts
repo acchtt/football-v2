@@ -1,53 +1,14 @@
-import type { TeamProfile } from "@/lib/types";
+import type { BsdLineup, PublishedMatch } from "@/lib/types";
 
 const BSD_BASE_URL = (process.env.BSD_API_BASE_URL || "https://sports.bzzoiro.com/api/v2").replace(/\/$/, "");
-const HISTORY_MATCHES = Math.max(5, Number(process.env.BSD_HISTORY_MATCHES || 10));
-const LOOKBACK_DAYS = Math.max(30, Number(process.env.BSD_LOOKBACK_DAYS || 180));
 
-export type BsdLeague = {
-  id: number;
-  name: string;
-  country_code?: string;
-  country?: string;
-};
-
-export type BsdLeagueDirectory = Map<number, BsdLeague>;
-
-export type BsdEvent = {
+type BsdEvent = {
   id: number;
   event_date: string;
-  status?: string;
-  home_team?: { id?: number; name?: string; short_name?: string } | string;
-  away_team?: { id?: number; name?: string; short_name?: string } | string;
-  home_team_id?: number;
-  away_team_id?: number;
-  league?: { id?: number; name?: string; country_code?: string; country?: string } | string | number;
-  league_id?: number;
-  league_name?: string;
-  competition?: { id?: number; name?: string; country_code?: string; country?: string } | string | number;
-  competition_id?: number;
-  competition_name?: string;
-  tournament?: { id?: number; name?: string; country_code?: string; country?: string } | string | number;
-  tournament_id?: number;
-  tournament_name?: string;
-  country?: string;
-  country_code?: string;
-  home_score?: number | null;
-  away_score?: number | null;
-  home_xg?: number | null;
-  away_xg?: number | null;
-  home_big_chances?: number | null;
-  away_big_chances?: number | null;
-};
-
-export type BsdLineup = {
-  status: "confirmed" | "predicted" | "unavailable";
-  homeStarting: string[];
-  awayStarting: string[];
-  homeBench: string[];
-  awayBench: string[];
-  homeFormation?: string;
-  awayFormation?: string;
+  home_team?: unknown;
+  away_team?: unknown;
+  home_team_name?: string;
+  away_team_name?: string;
 };
 
 function token(): string {
@@ -62,263 +23,113 @@ export function isBsdConfigured(): boolean {
 
 async function bsdGet(path: string, params: Record<string, string | number | undefined> = {}): Promise<unknown> {
   const url = new URL(`${BSD_BASE_URL}/${path.replace(/^\//, "")}`);
-  Object.entries(params).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) url.searchParams.set(key, String(value));
-  });
-
+  }
   const response = await fetch(url, {
     headers: { Authorization: `Token ${token()}` },
-    next: { revalidate: 300 },
+    cache: "no-store",
     signal: AbortSignal.timeout(20_000)
   });
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`BSD ${path} returned ${response.status}${text ? `: ${text.slice(0, 180)}` : ""}`);
-  }
+  if (!response.ok) throw new Error(`BSD ${path} returned ${response.status}`);
   return response.json();
 }
 
 async function bsdGetAll(path: string, params: Record<string, string | number | undefined> = {}): Promise<Record<string, unknown>[]> {
-  const items: Record<string, unknown>[] = [];
+  const results: Record<string, unknown>[] = [];
   let offset = 0;
   const limit = 200;
-
   for (;;) {
     const payload = await bsdGet(path, { ...params, limit, offset });
-    if (Array.isArray(payload)) {
-      return payload.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"));
-    }
-    if (!payload || typeof payload !== "object") throw new Error(`BSD ${path} returned an invalid envelope`);
-    const envelope = payload as Record<string, unknown>;
-    const batch = [envelope.results, envelope.events, envelope.data].find(Array.isArray) as unknown[] | undefined;
-    if (!batch) throw new Error(`BSD ${path} returned no results array`);
-    items.push(...batch.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object")));
-    const count = typeof envelope.count === "number" ? envelope.count : undefined;
-    const next = envelope.next;
+    if (Array.isArray(payload)) return payload.filter(isRecord);
+    if (!isRecord(payload)) return results;
+    const batch = [payload.results, payload.events, payload.data].find(Array.isArray) as unknown[] | undefined;
+    if (!batch) return results;
+    results.push(...batch.filter(isRecord));
     offset += limit;
-    if (!next || batch.length < limit || (count !== undefined && offset >= count)) break;
+    if (!payload.next || batch.length < limit) break;
   }
-  return items;
+  return results;
 }
 
-function numberValue(value: unknown): number | undefined {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function numeric(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
   return undefined;
 }
 
-function objectName(value: unknown, fallback: string): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number" && Number.isFinite(value)) return fallback;
-  if (value && typeof value === "object") {
-    const item = value as Record<string, unknown>;
-    return String(item.name || item.short_name || fallback);
+function teamName(value: unknown, flat?: unknown): string {
+  if (typeof flat === "string" && flat.trim()) return flat.trim();
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (isRecord(value)) {
+    const name = value.name ?? value.short_name;
+    if (typeof name === "string" && name.trim()) return name.trim();
   }
-  return fallback;
+  return "";
 }
 
-function objectCountry(value: unknown): string {
-  if (!value || typeof value !== "object") return "";
-  const item = value as Record<string, unknown>;
-  return String(item.country_code || item.country || "");
+function normalize(value: string): string {
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b(fc|cf|afc|sc|ac|club)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-export function eventTeamId(event: BsdEvent, side: "home" | "away"): number | undefined {
-  const direct = numberValue(event[`${side}_team_id` as keyof BsdEvent]);
-  if (direct !== undefined) return direct;
-  const nested = event[`${side}_team` as keyof BsdEvent];
-  if (nested && typeof nested === "object") return numberValue((nested as Record<string, unknown>).id);
-  return undefined;
-}
-
-export function eventTeamName(event: BsdEvent, side: "home" | "away"): string {
-  return objectName(event[`${side}_team` as keyof BsdEvent], side === "home" ? "Home team" : "Away team");
-}
-
-export function eventLeagueId(event: BsdEvent): number | undefined {
-  const direct = numberValue(event.league_id);
-  if (direct !== undefined) return direct;
-
-  const candidate = event.league;
-  if (candidate && typeof candidate === "object") {
-    const nested = numberValue((candidate as Record<string, unknown>).id);
-    if (nested !== undefined) return nested;
-  }
-  return numberValue(candidate);
-}
-
-export async function fetchBsdLeagueDirectory(): Promise<BsdLeagueDirectory> {
-  const rows = await bsdGetAll("leagues/");
-  const directory: BsdLeagueDirectory = new Map();
-  for (const row of rows) {
-    const id = numberValue(row.id);
-    const name = typeof row.name === "string" ? row.name.trim() : "";
-    if (id === undefined || !name) continue;
-    directory.set(id, {
-      id,
-      name,
-      country_code: typeof row.country_code === "string" ? row.country_code : undefined,
-      country: typeof row.country === "string" ? row.country : undefined
-    });
-  }
-  return directory;
-}
-
-export function eventCompetition(
-  event: BsdEvent,
-  directory?: BsdLeagueDirectory
-): { name: string; countryCode: string; leagueId?: number; resolved: boolean } {
-  const leagueId = eventLeagueId(event);
-
-  for (const candidate of [event.league, event.competition, event.tournament]) {
-    const name = objectName(candidate, "").trim();
-    if (name) {
-      return {
-        name,
-        countryCode: objectCountry(candidate) || String(event.country_code || event.country || ""),
-        leagueId,
-        resolved: true
-      };
-    }
-  }
-
-  const flatName = String(event.league_name || event.competition_name || event.tournament_name || "").trim();
-  if (flatName) {
-    return {
-      name: flatName,
-      countryCode: String(event.country_code || event.country || ""),
-      leagueId,
-      resolved: true
-    };
-  }
-
-  if (leagueId !== undefined) {
-    const league = directory?.get(leagueId);
-    if (league) {
-      return {
-        name: league.name,
-        countryCode: String(league.country_code || league.country || event.country_code || event.country || ""),
-        leagueId,
-        resolved: true
-      };
-    }
-  }
-
-  return {
-    name: "Unknown competition",
-    countryCode: String(event.country_code || event.country || ""),
-    leagueId,
-    resolved: false
-  };
-}
-
-export async function fetchBsdEvents(dateFrom: string, dateTo = dateFrom): Promise<BsdEvent[]> {
-  const rows = await bsdGetAll("events/", { date_from: dateFrom, date_to: dateTo });
-  return rows
-    .map((row) => row as BsdEvent)
-    .filter((row) => numberValue(row.id) !== undefined && typeof row.event_date === "string")
-    .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
-}
-
-export async function fetchBsdEvent(eventId: number): Promise<BsdEvent> {
-  const payload = await bsdGet(`events/${eventId}/`);
-  if (!payload || typeof payload !== "object") throw new Error("BSD event detail was invalid");
-  return payload as BsdEvent;
-}
-
-type HistorySample = {
-  venue: "home" | "away";
-  gf: number;
-  ga: number;
-  xgFor?: number;
-  bigChancesFor?: number;
-};
-
-function dateOnly(value: Date): string {
+function day(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
-async function fetchHistory(teamId: number, kickoff: Date): Promise<HistorySample[]> {
-  const end = new Date(kickoff.getTime() - 86_400_000);
-  const start = new Date(end.getTime() - LOOKBACK_DAYS * 86_400_000);
+function shiftDay(value: string, delta: number): string {
+  const date = new Date(`${value}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + delta);
+  return day(date);
+}
+
+function eventSimilarity(match: PublishedMatch, event: BsdEvent): number {
+  const eventHome = normalize(teamName(event.home_team, event.home_team_name));
+  const eventAway = normalize(teamName(event.away_team, event.away_team_name));
+  const home = normalize(match.home);
+  const away = normalize(match.away);
+  let score = 0;
+  if (eventHome === home) score += 5;
+  else if (eventHome.includes(home) || home.includes(eventHome)) score += 3;
+  if (eventAway === away) score += 5;
+  else if (eventAway.includes(away) || away.includes(eventAway)) score += 3;
+  const eventTime = new Date(event.event_date).getTime();
+  const targetTime = new Date(match.kickoff).getTime();
+  if (Number.isFinite(eventTime) && Number.isFinite(targetTime)) {
+    const hours = Math.abs(eventTime - targetTime) / 3_600_000;
+    if (hours <= 1) score += 3;
+    else if (hours <= 6) score += 2;
+    else if (hours <= 12) score += 1;
+  }
+  return score;
+}
+
+export async function resolvePublishedMatchEvent(match: PublishedMatch): Promise<BsdEvent | undefined> {
+  if (!isBsdConfigured()) return undefined;
+  const targetDay = day(new Date(match.kickoff));
   const rows = await bsdGetAll("events/", {
-    team_id: teamId,
-    status: "finished",
-    date_from: dateOnly(start),
-    date_to: dateOnly(end)
+    date_from: shiftDay(targetDay, -1),
+    date_to: shiftDay(targetDay, 1)
   });
-
-  return rows
-    .map((row) => row as BsdEvent)
-    .filter((row) => String(row.status || "").toLowerCase() === "finished")
-    .sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime())
-    .flatMap((event): HistorySample[] => {
-      const homeId = eventTeamId(event, "home");
-      const awayId = eventTeamId(event, "away");
-      const venue = teamId === homeId ? "home" : teamId === awayId ? "away" : undefined;
-      if (!venue) return [];
-      const gf = numberValue(venue === "home" ? event.home_score : event.away_score);
-      const ga = numberValue(venue === "home" ? event.away_score : event.home_score);
-      if (gf === undefined || ga === undefined) return [];
-      return [{
-        venue,
-        gf,
-        ga,
-        xgFor: numberValue(venue === "home" ? event.home_xg : event.away_xg),
-        bigChancesFor: numberValue(venue === "home" ? event.home_big_chances : event.away_big_chances)
-      }];
-    })
-    .slice(0, HISTORY_MATCHES);
-}
-
-function mean(values: number[]): number | undefined {
-  return values.length ? Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(4)) : undefined;
-}
-
-function profileFromHistory(history: HistorySample[], requestedVenue: "home" | "away"): TeamProfile | undefined {
-  if (!history.length) return undefined;
-  const split = history.filter((item) => item.venue === requestedVenue);
-  const relevant = split.length ? split : history;
-  const recent = history.slice(0, 5);
-  const gf = mean(relevant.map((item) => item.gf));
-  const ga = mean(relevant.map((item) => item.ga));
-  if (gf === undefined || ga === undefined) return undefined;
-  const xg = relevant.flatMap((item) => item.xgFor === undefined ? [] : [item.xgFor]);
-  const big = relevant.flatMap((item) => item.bigChancesFor === undefined ? [] : [item.bigChancesFor]);
-  return {
-    gf,
-    ga,
-    recentGf: mean(recent.map((item) => item.gf)),
-    recentGa: mean(recent.map((item) => item.ga)),
-    scoringTwoPlusRate: relevant.filter((item) => item.gf >= 2).length / relevant.length,
-    concedingTwoPlusRate: relevant.filter((item) => item.ga >= 2).length / relevant.length,
-    cleanSheetRate: relevant.filter((item) => item.ga === 0).length / relevant.length,
-    xgFor: mean(xg),
-    bigChancesFor: mean(big),
-    sampleCount: history.length,
-    venueSampleCount: split.length,
-    xgCoverage: history.filter((item) => item.xgFor !== undefined).length / history.length
-  };
-}
-
-export async function fetchBsdProfiles(event: BsdEvent): Promise<{ home: TeamProfile; away: TeamProfile } | undefined> {
-  const homeId = eventTeamId(event, "home");
-  const awayId = eventTeamId(event, "away");
-  if (homeId === undefined || awayId === undefined) return undefined;
-  const kickoff = new Date(event.event_date);
-  const [homeHistory, awayHistory] = await Promise.all([fetchHistory(homeId, kickoff), fetchHistory(awayId, kickoff)]);
-  const home = profileFromHistory(homeHistory, "home");
-  const away = profileFromHistory(awayHistory, "away");
-  return home && away ? { home, away } : undefined;
+  const events = rows.flatMap((row): BsdEvent[] => {
+    const id = numeric(row.id);
+    const eventDate = typeof row.event_date === "string" ? row.event_date : undefined;
+    if (id === undefined || !eventDate) return [];
+    return [{ ...row, id, event_date: eventDate } as BsdEvent];
+  });
+  const ranked = events.map((event) => ({ event, score: eventSimilarity(match, event) })).sort((a, b) => b.score - a.score);
+  return ranked[0]?.score >= 8 ? ranked[0].event : undefined;
 }
 
 function playerName(value: unknown): string | undefined {
-  if (typeof value === "string" && value.trim()) return value;
-  if (!value || typeof value !== "object") return undefined;
-  const item = value as Record<string, unknown>;
-  const player = item.player && typeof item.player === "object" ? item.player as Record<string, unknown> : undefined;
-  const name = item.name || item.player_name || player?.name || player?.short_name;
-  return typeof name === "string" && name.trim() ? name : undefined;
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (!isRecord(value)) return undefined;
+  const nested = isRecord(value.player) ? value.player : undefined;
+  const name = value.name ?? value.player_name ?? nested?.name ?? nested?.short_name;
+  return typeof name === "string" && name.trim() ? name.trim() : undefined;
 }
 
 function playerList(value: unknown): string[] {
@@ -330,71 +141,41 @@ function playerList(value: unknown): string[] {
 }
 
 function sideBlock(root: unknown, side: "home" | "away"): Record<string, unknown> | undefined {
-  if (!root) return undefined;
-  if (root && typeof root === "object" && !Array.isArray(root)) {
-    const object = root as Record<string, unknown>;
-    const direct = object[side];
-    if (direct && typeof direct === "object" && !Array.isArray(direct)) return direct as Record<string, unknown>;
-    const alt = object[`${side}_team`];
-    if (alt && typeof alt === "object" && !Array.isArray(alt)) return alt as Record<string, unknown>;
+  if (isRecord(root)) {
+    const direct = root[side];
+    if (isRecord(direct)) return direct;
+    const alt = root[`${side}_team`];
+    if (isRecord(alt)) return alt;
   }
   if (Array.isArray(root)) {
-    return root.find((item) => {
-      if (!item || typeof item !== "object") return false;
-      const row = item as Record<string, unknown>;
-      return String(row.side || row.location || row.home_away || "").toLowerCase() === side;
-    }) as Record<string, unknown> | undefined;
+    return root.find((item) => isRecord(item) && String(item.side ?? item.location ?? item.home_away ?? "").toLowerCase() === side) as Record<string, unknown> | undefined;
   }
   return undefined;
 }
 
-function parseSide(block: Record<string, unknown> | undefined): { starting: string[]; bench: string[]; formation?: string } {
-  if (!block) return { starting: [], bench: [] };
-  const starting = playerList(block.starting_xi || block.startingXI || block.starters || block.starting || block.players);
-  const bench = playerList(block.substitutes || block.bench || block.subs);
-  return { starting: starting.slice(0, 11), bench, formation: typeof block.formation === "string" ? block.formation : undefined };
+function parseSide(block: Record<string, unknown> | undefined): { starting: string[]; formation?: string } {
+  if (!block) return { starting: [] };
+  const starting = playerList(block.starting_xi ?? block.startingXI ?? block.starters ?? block.starting ?? block.players).slice(0, 11);
+  return { starting, formation: typeof block.formation === "string" ? block.formation : undefined };
 }
 
-export async function fetchBsdLineup(eventId: number): Promise<BsdLineup> {
-  const payload = await bsdGet(`events/${eventId}/lineups/`);
-  if (!payload || typeof payload !== "object") {
-    return { status: "unavailable", homeStarting: [], awayStarting: [], homeBench: [], awayBench: [] };
-  }
-  const root = payload as Record<string, unknown>;
-  const statusValue = String(root.lineup_status || "unavailable").toLowerCase();
+export async function fetchPublishedMatchLineup(match: PublishedMatch): Promise<BsdLineup> {
+  const event = await resolvePublishedMatchEvent(match);
+  if (!event) return { status: "unavailable", homeStarting: [], awayStarting: [] };
+  const payload = await bsdGet(`events/${event.id}/lineups/`).catch(() => undefined);
+  if (!isRecord(payload)) return { status: "unavailable", eventId: event.id, homeStarting: [], awayStarting: [] };
+  const statusValue = String(payload.lineup_status ?? payload.status ?? "unavailable").toLowerCase();
   const status: BsdLineup["status"] = statusValue === "confirmed" ? "confirmed" : statusValue === "predicted" ? "predicted" : "unavailable";
-  if (status !== "confirmed") return { status, homeStarting: [], awayStarting: [], homeBench: [], awayBench: [] };
-  const lineups = root.lineups ?? root;
-  const home = parseSide(sideBlock(lineups, "home"));
-  const away = parseSide(sideBlock(lineups, "away"));
+  if (status !== "confirmed") return { status, eventId: event.id, homeStarting: [], awayStarting: [] };
+  const root = payload.lineups ?? payload;
+  const home = parseSide(sideBlock(root, "home"));
+  const away = parseSide(sideBlock(root, "away"));
   return {
     status,
+    eventId: event.id,
     homeStarting: home.starting,
     awayStarting: away.starting,
-    homeBench: home.bench,
-    awayBench: away.bench,
     homeFormation: home.formation,
     awayFormation: away.formation
-  };
-}
-
-export async function testBsdConnection(targetDate: string): Promise<{
-  configured: boolean;
-  eventCount: number;
-  leagueCount: number;
-  unresolvedCompetitionCount: number;
-  baseUrl: string;
-}> {
-  if (!isBsdConfigured()) {
-    return { configured: false, eventCount: 0, leagueCount: 0, unresolvedCompetitionCount: 0, baseUrl: BSD_BASE_URL };
-  }
-  const [events, directory] = await Promise.all([fetchBsdEvents(targetDate), fetchBsdLeagueDirectory()]);
-  const unresolvedCompetitionCount = events.filter((event) => !eventCompetition(event, directory).resolved).length;
-  return {
-    configured: true,
-    eventCount: events.length,
-    leagueCount: directory.size,
-    unresolvedCompetitionCount,
-    baseUrl: BSD_BASE_URL
   };
 }
