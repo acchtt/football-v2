@@ -1,76 +1,89 @@
-import { ManualPreHandoff } from "@/components/ManualPreHandoff";
-import { currentIctDate, getCurrentModelBoard } from "@/lib/model-board";
-import { MODEL } from "@/lib/model";
+import Link from "next/link";
+import { getPublishedMatches, getPublishedState } from "@/lib/published";
 
-export const maxDuration = 300;
+function formatKickoff(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(new Date(value));
+}
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
-  const params = await searchParams;
-  const date = params.date || currentIctDate();
-  const board = await getCurrentModelBoard(date);
-  const candidateViews = board.candidates.map((match) => ({
-    id: match.id,
-    home: match.home,
-    away: match.away,
-    competition: match.competition,
-    kickoff: match.kickoff
-  }));
+export default function Home() {
+  const state = getPublishedState();
+  const matches = getPublishedMatches();
 
   return (
     <main className="shell">
       <header className="topbar">
-        <div className="brand">
-          <div className="brand-mark">F1</div>
-          <div>
-            <small>Decision control</small>
-            <h1>Football v1.0</h1>
-          </div>
+        <div>
+          <span className="eyebrow">Chat → Website control plane</span>
+          <h1>Football Decision Control</h1>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span className="mode-pill">{board.mode} PROVIDER</span>
-          <span className="model-pill"><i className="live-dot" />{MODEL.version} · {MODEL.regime}</span>
+        <div className="header-pills">
+          <span className="pill">{state.model.version}</span>
+          <span className="pill live">BSD XI LIVE</span>
         </div>
       </header>
 
       <section className="hero">
         <div>
-          <span className="eyebrow">Daily slate · ICT</span>
-          <h2>BSD gathers the evidence. ChatGPT makes the model call.</h2>
-          <p>
-            The website now uses BSD for fixtures and historical evidence only. The broad retrieval pass is not an official model board. Copy the generated packet into this Football ChatGPT project, then paste the JSON shortlist back here.
-          </p>
-          <form className="date-form" method="get">
-            <label>Board date <input type="date" name="date" defaultValue={date} /></label>
-            <button type="submit">Load evidence</button>
-          </form>
+          <span className="eyebrow">Published slate</span>
+          <h2>Only matches researched and approved in chat appear here.</h2>
+          <p>ChatGPT researches the upcoming slate and publishes the PRE decision packet. The website does not scan or rank matches. It waits for confirmed BSD lineups, accepts your odds image, verifies the market, then executes the published decision policy.</p>
         </div>
-        <div className="summary">
-          <div><span>Scanned</span><strong>{board.scannedCount}</strong></div>
-          <div><span>Retrieval</span><strong>{board.candidateCount}</strong></div>
-          <div><span>Official PRE</span><strong>Manual</strong></div>
-          <div><span>Min price</span><strong>{MODEL.minimumOverPrice.toFixed(2)}</strong></div>
+        <div className="summary-card">
+          <span>Published matches</span>
+          <strong>{matches.length}</strong>
+          <small>{state.published_at ? `Last publish ${new Date(state.published_at).toLocaleString("en-GB", { timeZone: "Asia/Ho_Chi_Minh" })} ICT` : "Waiting for first chat publish"}</small>
         </div>
       </section>
 
+      <section className="flow-strip">
+        <div><b>01</b><span>Chat research</span></div>
+        <div><b>02</b><span>Publish PRE</span></div>
+        <div><b>03</b><span>BSD confirmed XI</span></div>
+        <div><b>04</b><span>Your odds image</span></div>
+        <div><b>05</b><span>LOCK / HOLD</span></div>
+      </section>
+
       <div className="section-head">
-        <div>
-          <h3>Current-model handoff · {date}</h3>
-          <p>{board.rankingEngine}. Retrieval scores are recall aids only and are not displayed as picks.</p>
-        </div>
-        <span className="status-pill">BSD → CHATGPT PRE → XI → SCREENSHOT → CHATGPT VERDICT</span>
+        <div><span className="eyebrow">Active board</span><h3>Upcoming published matches</h3></div>
+        <span className="pill">{state.model.regime}</span>
       </div>
 
-      <ManualPreHandoff packet={board.handoffPacket} candidates={candidateViews} />
-
-      {board.mode === "DEMO" && (
-        <div className="notice">
-          BSD is not active in this runtime, so the site is using canonical demo controls rather than fabricating live data.
-        </div>
-      )}
+      <section className="published-grid">
+        {matches.map((match) => (
+          <Link className="published-card" href={`/match/${match.slug}`} key={match.slug}>
+            <div className="card-top">
+              <span className={`focus ${match.focus.toLowerCase().replaceAll(" ", "-")}`}>{match.focus}</span>
+              <span className="kickoff">{formatKickoff(match.kickoff)} ICT</span>
+            </div>
+            <h3>{match.home}<br /><span>vs</span> {match.away}</h3>
+            <p className="competition">{match.competition}</p>
+            <p>{match.research.summary}</p>
+            <div className="card-bottom">
+              <span>Published PRE</span>
+              <strong>Open match →</strong>
+            </div>
+          </Link>
+        ))}
+        {!matches.length && (
+          <div className="empty-state">
+            <span className="eyebrow">No published matches</span>
+            <h3>The board is intentionally empty.</h3>
+            <p>Ask me in chat to research the upcoming matches. When I find matches worth tracking, I will publish them here automatically.</p>
+          </div>
+        )}
+      </section>
 
       <footer>
-        <span>{MODEL.version} · {MODEL.regime}</span>
-        <span>BSD evidence · Manual ChatGPT reasoning · Screenshot-only market · No OpenAI API required</span>
+        <span>ChatGPT publishes PRE · BSD supplies confirmed XI · Browser OCR reads odds</span>
+        <span>{state.model.version} · {state.model.regime}</span>
       </footer>
     </main>
   );
