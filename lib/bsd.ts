@@ -11,6 +11,18 @@ type BsdEvent = {
   away_team_name?: string;
 };
 
+export type BsdResearchFixture = {
+  id: number;
+  kickoff: string;
+  home: string;
+  away: string;
+  status: string;
+  competition: string;
+  competitionResolved: boolean;
+  leagueId?: number;
+  country?: string;
+};
+
 function token(): string {
   const value = process.env.BSD_API_TOKEN;
   if (!value) throw new Error("BSD_API_TOKEN is not configured");
@@ -178,4 +190,69 @@ export async function fetchPublishedMatchLineup(match: PublishedMatch): Promise<
     homeFormation: home.formation,
     awayFormation: away.formation
   };
+}
+
+function objectName(value: unknown): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (isRecord(value)) {
+    const name = value.name ?? value.short_name;
+    if (typeof name === "string" && name.trim()) return name.trim();
+  }
+  return "";
+}
+
+function objectCountry(value: unknown): string {
+  if (!isRecord(value)) return "";
+  const country = value.country_code ?? value.country;
+  return typeof country === "string" ? country.trim() : "";
+}
+
+export async function fetchBsdResearchSlate(dateFrom: string, dateTo: string): Promise<BsdResearchFixture[]> {
+  if (!isBsdConfigured()) return [];
+  const [rows, leagueRows] = await Promise.all([
+    bsdGetAll("events/", { date_from: dateFrom, date_to: dateTo }),
+    bsdGetAll("leagues/")
+  ]);
+
+  const leagueDirectory = new Map<number, { name: string; country: string }>();
+  for (const row of leagueRows) {
+    const id = numeric(row.id);
+    const name = typeof row.name === "string" ? row.name.trim() : "";
+    if (id === undefined || !name) continue;
+    const country = typeof row.country_code === "string" ? row.country_code : typeof row.country === "string" ? row.country : "";
+    leagueDirectory.set(id, { name, country });
+  }
+
+  return rows.flatMap((row): BsdResearchFixture[] => {
+    const id = numeric(row.id);
+    const kickoff = typeof row.event_date === "string" ? row.event_date : "";
+    const home = teamName(row.home_team, row.home_team_name);
+    const away = teamName(row.away_team, row.away_team_name);
+    if (id === undefined || !kickoff || !home || !away) return [];
+
+    const leagueId = numeric(row.league_id) ?? (isRecord(row.league) ? numeric(row.league.id) : numeric(row.league));
+    const inlineCompetition = [row.league, row.competition, row.tournament].map(objectName).find(Boolean)
+      || (typeof row.league_name === "string" ? row.league_name.trim() : "")
+      || (typeof row.competition_name === "string" ? row.competition_name.trim() : "")
+      || (typeof row.tournament_name === "string" ? row.tournament_name.trim() : "");
+    const resolvedLeague = leagueId !== undefined ? leagueDirectory.get(leagueId) : undefined;
+    const competition = inlineCompetition || resolvedLeague?.name || "Unknown competition";
+    const country = [row.league, row.competition, row.tournament].map(objectCountry).find(Boolean)
+      || (typeof row.country_code === "string" ? row.country_code : "")
+      || (typeof row.country === "string" ? row.country : "")
+      || resolvedLeague?.country
+      || undefined;
+
+    return [{
+      id,
+      kickoff,
+      home,
+      away,
+      status: String(row.status ?? "scheduled"),
+      competition,
+      competitionResolved: competition !== "Unknown competition",
+      leagueId,
+      country
+    }];
+  }).sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 }
