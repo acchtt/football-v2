@@ -16,6 +16,13 @@ type OcrWord = {
 
 type SpatialRow = Row & { top: number };
 
+function foldText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function cleanToken(value: string): string {
   return value
     .replaceAll(",", ".")
@@ -25,7 +32,12 @@ function cleanToken(value: string): string {
 }
 
 function totalFromToken(value: string): number | undefined {
-  const token = cleanToken(value);
+  let token = foldText(cleanToken(value));
+
+  // Vietnamese bookmaker screenshots label the Over side as "Tài".
+  // Tesseract commonly returns it as "Tai". Support merged OCR tokens too,
+  // e.g. Tai2.5/3.0 or Over3.0/3.5.
+  token = token.replace(/^(?:tai|over|o)(?=[2-5])/, "");
 
   const split = token.match(/^([2-5](?:\.[05])?)\/([2-5](?:\.[05])?)$/);
   if (split) {
@@ -53,6 +65,40 @@ function priceFromToken(value: string): number | undefined {
   if (!match) return undefined;
   const price = Number(match[1]);
   return price > 1 && price <= 3.5 ? price : undefined;
+}
+
+function isOverLabel(value: string): boolean {
+  const token = foldText(cleanToken(value)).replace(/[^a-z]/g, "");
+  return token === "tai" || token === "over" || token === "o";
+}
+
+function isUnderLabel(value: string): boolean {
+  const token = foldText(cleanToken(value)).replace(/[^a-z]/g, "");
+  return token === "under" || token === "u";
+}
+
+function parseLabelledOverRows(text: string): Row[] {
+  const normalized = foldText(text.replaceAll(",", "."));
+  const rows: Row[] = [];
+  const seenLines = new Set<string>();
+
+  for (const rawLine of normalized.split(/\r?\n/)) {
+    // Explicit bookmaker layout:
+    // Tài 2.5/3.0 1.55    Under 2.5/3.0 2.54
+    // We only capture the Tài/Over side and intentionally ignore Under.
+    const pattern = /(?:^|\s)(?:tai|over|o)\s*([2-5](?:\.[05])?(?:\s*\/\s*[2-5](?:\.[05])?)?)\s*([1-3]\.[0-9]{2,3})/g;
+    for (const match of rawLine.matchAll(pattern)) {
+      const total = totalFromToken(match[1]);
+      const price = priceFromToken(match[2]);
+      if (total === undefined || price === undefined) continue;
+      const line = String(Number(total.toFixed(2)));
+      if (seenLines.has(line)) continue;
+      seenLines.add(line);
+      rows.push({ line, odds: String(price) });
+    }
+  }
+
+  return rows.slice(0, 12);
 }
 
 function parseTsvWords(tsv: string): OcrWord[] {
@@ -89,6 +135,32 @@ function parseSpatialTotals(tsv: string): Row[] {
 
     const lineCenterY = lineWord.top + lineWord.height / 2;
     const maxVerticalGap = Math.max(8, lineWord.height * 0.9);
+    const labelReach = Math.max(110, lineWord.height * 14);
+    const sameRowWords = words.filter((word) => {
+      const centerY = word.top + word.height / 2;
+      return Math.abs(centerY - lineCenterY) <= maxVerticalGap;
+    });
+
+    const precedingLabels = sameRowWords
+      .filter((word) => isOverLabel(word.text) || isUnderLabel(word.text))
+      .filter((word) => word.left + word.width <= lineWord.left + 6)
+      .map((word) => ({
+        word,
+        gap: lineWord.left - (word.left + word.width),
+        side: isUnderLabel(word.text) ? "under" as const : "over" as const
+      }))
+      .filter((item) => item.gap <= labelReach)
+      .sort((a, b) => a.gap - b.gap);
+
+    // If the nearest row label says Under, this is the right-side market and
+    // must never enter the Over verdict flow.
+    if (precedingLabels[0]?.side === "under") continue;
+
+    const underAnchorsToRight = sameRowWords
+      .filter((word) => isUnderLabel(word.text) && word.left > lineWord.left)
+      .sort((a, b) => a.left - b.left);
+    const overPriceBoundary = underAnchorsToRight[0]?.left;
+
     const maxHorizontalGap = Math.max(100, lineWord.height * 12);
     const lineRight = lineWord.left + lineWord.width;
 
@@ -101,6 +173,9 @@ function parseSpatialTotals(tsv: string): Row[] {
         const horizontalGap = word.left - lineRight;
         if (verticalGap > maxVerticalGap) return [];
         if (horizontalGap < -2 || horizontalGap > maxHorizontalGap) return [];
+        // In Tài | Under tables, never cross into the Under half if the Tài
+        // price itself was missed by OCR. Missing is safer than a wrong pair.
+        if (overPriceBoundary !== undefined && word.left >= overPriceBoundary) return [];
         return [{ word, price, horizontalGap, verticalGap }];
       })
       .sort((a, b) => a.horizontalGap - b.horizontalGap || a.verticalGap - b.verticalGap);
@@ -115,13 +190,12 @@ function parseSpatialTotals(tsv: string): Row[] {
     });
   }
 
-  const seen = new Set<string>();
+  const seenLines = new Set<string>();
   return found
     .sort((a, b) => a.top - b.top)
     .filter((row) => {
-      const key = `${row.line}-${row.odds}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
+      if (seenLines.has(row.line)) return false;
+      seenLines.add(row.line);
       return true;
     })
     .map(({ line, odds }) => ({ line, odds }))
@@ -134,6 +208,11 @@ function parseFlatOcr(text: string): Row[] {
   const seen = new Set<string>();
 
   for (const rawLine of normalized.split(/\r?\n/)) {
+    // If a row visibly contains an Under label but no explicit Tài/Over label,
+    // do not guess from the flattened text.
+    const folded = foldText(rawLine);
+    if (/\bunder\b/.test(folded) && !/(?:^|\s)(?:tai|over|o)\b/.test(folded)) continue;
+
     const tokens = rawLine.trim().split(/\s+/).filter(Boolean);
     for (let index = 0; index < tokens.length; index += 1) {
       const total = totalFromToken(tokens[index]);
@@ -154,6 +233,14 @@ function parseFlatOcr(text: string): Row[] {
   }
 
   return rows.slice(0, 12);
+}
+
+function mergeRows(primary: Row[], secondary: Row[]): Row[] {
+  const byLine = new Map<string, Row>();
+  for (const row of [...primary, ...secondary]) {
+    if (!byLine.has(row.line)) byLine.set(row.line, row);
+  }
+  return [...byLine.values()].slice(0, 12);
 }
 
 async function prepareOcrImage(file: File): Promise<Blob | File> {
@@ -280,19 +367,23 @@ export function OddsVerdict({ match, xi }: { match: PublishedMatch; xi: XiEvalua
       const tsv = result.data.tsv || "";
       setOcrText(text);
 
+      const labelled = parseLabelledOverRows(text);
       const spatial = tsv ? parseSpatialTotals(tsv) : [];
-      const extracted = spatial.length ? spatial : parseFlatOcr(text);
+      const reliable = mergeRows(labelled, spatial);
+      const extracted = reliable.length ? reliable : parseFlatOcr(text);
       setRows(extracted);
       setOcrNotice(
-        spatial.length
-          ? `Table mode: found ${spatial.length} full-match Over row${spatial.length === 1 ? "" : "s"} by pairing each Asian-total line with the price immediately to its right.`
-          : extracted.length
-            ? "Fallback text mode used. Please check every extracted row carefully."
-            : "No reliable full-match Asian-total rows were detected. Add the visible rows manually."
+        labelled.length
+          ? `Tài/Over mode: found ${extracted.length} Over row${extracted.length === 1 ? "" : "s"}. The Under column was ignored.`
+          : spatial.length
+            ? `Table mode: found ${spatial.length} Over row${spatial.length === 1 ? "" : "s"} using row coordinates. Under-labelled rows were excluded.`
+            : extracted.length
+              ? "Fallback text mode used. Please check every extracted row carefully."
+              : "No reliable full-match Tài/Over rows were detected. Add the visible rows manually."
       );
     } catch (error) {
       setOcrText(error instanceof Error ? `OCR failed: ${error.message}` : "OCR failed. Enter the visible rows manually.");
-      setOcrNotice("OCR failed. Enter the visible Asian-total rows manually.");
+      setOcrNotice("OCR failed. Enter the visible Tài/Over rows manually.");
     } finally {
       setOcrBusy(false);
     }
@@ -330,7 +421,7 @@ export function OddsVerdict({ match, xi }: { match: PublishedMatch; xi: XiEvalua
         {pasteNotice && <p className="paste-notice" aria-live="polite">{pasteNotice}</p>}
         {preview && <img src={preview} className="odds-image" alt="Odds screenshot" />}
         <div className="actions">
-          <button type="button" disabled={!file || ocrBusy} onClick={runOcr}>{ocrBusy ? "Reading table…" : "Extract Asian totals"}</button>
+          <button type="button" disabled={!file || ocrBusy} onClick={runOcr}>{ocrBusy ? "Reading Tài/Over table…" : "Extract Tài / Over odds"}</button>
           <button type="button" onClick={() => { setRows((current) => [...current, { line: "", odds: "" }]); setVerified(false); }}>Add row manually</button>
           {file && <button type="button" onClick={() => ingestImage(null)}>Clear image</button>}
         </div>
@@ -340,16 +431,16 @@ export function OddsVerdict({ match, xi }: { match: PublishedMatch; xi: XiEvalua
 
       <div className="odds-editor">
         <div className="editor-head">
-          <div><span className="kicker">Visible full-match market</span><h3>Verify Over lines and prices</h3></div>
+          <div><span className="kicker">Visible full-match market</span><h3>Verify Tài / Over lines and prices</h3></div>
           <span className={verified ? "badge ok" : "badge"}>{verified ? "VERIFIED" : "UNVERIFIED"}</span>
         </div>
-        {rows.length === 0 && <p className="muted">Upload or paste an image and extract the Asian totals, or add the visible rows manually.</p>}
+        {rows.length === 0 && <p className="muted">Upload or paste an image and extract the Tài/Over odds, or add the visible rows manually.</p>}
         {rows.map((row, index) => {
           const normalized = normalizeOffer(Number(row.line), Number(row.odds));
           return (
             <div className="odds-row" key={index}>
               <label>Over line<input inputMode="decimal" value={row.line} onChange={(event) => updateRow(index, "line", event.target.value)} /></label>
-              <label>Shown Over price<input inputMode="decimal" value={row.odds} onChange={(event) => updateRow(index, "odds", event.target.value)} /></label>
+              <label>Shown Tài / Over price<input inputMode="decimal" value={row.odds} onChange={(event) => updateRow(index, "odds", event.target.value)} /></label>
               <div className="normalized"><span>Normalized</span><strong>{normalized ? `${normalized.decimalOdds.toFixed(2)} ${normalized.oddsFormat}` : "—"}</strong></div>
               <button type="button" className="text-button" onClick={() => { setRows((current) => current.filter((_, i) => i !== index)); setVerified(false); }}>Remove</button>
             </div>
