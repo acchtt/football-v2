@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import NextMatch from "@/components/NextMatch";
 import { getPublishedMatches, getPublishedState } from "@/lib/published";
 
@@ -66,8 +67,24 @@ export default function Home() {
               <span className={`focus ${match.focus.toLowerCase().replaceAll(" ", "-")}`}>{match.focus}</span>
               <span className="kickoff">{formatKickoff(match.kickoff)} ICT</span>
             </div>
-            <h3>{match.home}<br /><span>vs</span> {match.away}</h3>
-            <p className="competition">{match.competition}</p>
+
+            <div className="league-row">
+              <BrandLogo kind="league" name={match.competition} className="league-logo" />
+              <span className="competition league-name">{match.competition}</span>
+            </div>
+
+            <div className="card-matchup">
+              <div className="team-row">
+                <BrandLogo kind="team" name={match.home} className="team-logo" />
+                <h3>{match.home}</h3>
+              </div>
+              <div className="versus">vs</div>
+              <div className="team-row">
+                <BrandLogo kind="team" name={match.away} className="team-logo" />
+                <h3>{match.away}</h3>
+              </div>
+            </div>
+
             <p>{match.research.summary}</p>
             <div className="card-bottom">
               <span>Published PRE</span>
