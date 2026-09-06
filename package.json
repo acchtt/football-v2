@@ -1,6 +1,6 @@
 {
-  "name": "football-chat-publish",
-  "version": "1.0.0",
+  "name": "football-v2-reset",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,8 +10,7 @@
   "dependencies": {
     "next": "15.5.18",
     "react": "19.1.7",
-    "react-dom": "19.1.7",
-    "tesseract.js": "6.0.1"
+    "react-dom": "19.1.7"
   },
   "devDependencies": {
     "@types/node": "22.18.0",
