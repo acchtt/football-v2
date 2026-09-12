@@ -17,6 +17,18 @@ type RawEvent = {
   currentMinute?: number;
 };
 
+type LivePatch = {
+  id: number;
+  status: string;
+  homeScore?: number;
+  awayScore?: number;
+  period?: string;
+  currentMinute?: number;
+  eventDate?: string;
+  home?: string;
+  away?: string;
+};
+
 export type BsdFixture = {
   eventId: number;
   homeTeam: string;
@@ -53,6 +65,12 @@ function text(value: unknown): string | undefined {
   return undefined;
 }
 
+function stringish(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
+}
+
 function teamName(value: unknown, flat?: unknown): string {
   if (typeof flat === "string" && flat.trim()) return flat.trim();
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -66,7 +84,7 @@ function teamName(value: unknown, flat?: unknown): string {
 function payloadRows(payload: unknown): Record<string, unknown>[] {
   if (Array.isArray(payload)) return payload.filter(isRecord);
   if (!isRecord(payload)) return [];
-  const batch = [payload.results, payload.events, payload.data].find(Array.isArray) as unknown[] | undefined;
+  const batch = [payload.results, payload.events, payload.live, payload.matches, payload.data].find(Array.isArray) as unknown[] | undefined;
   return batch ? batch.filter(isRecord) : [payload];
 }
 
@@ -172,8 +190,10 @@ async function bsdGetAll(dateFrom: string, dateTo: string): Promise<Record<strin
 }
 
 function parseEvent(row: Record<string, unknown>, defaultStatus = ""): RawEvent | undefined {
+  const score = isRecord(row.score) ? row.score : undefined;
+  const time = isRecord(row.time) ? row.time : undefined;
   const id = numeric(row.id ?? row.event_id);
-  const eventDate = text(row.event_date ?? row.date ?? row.kickoff) || "";
+  const eventDate = text(row.event_date ?? row.date ?? row.kickoff ?? row.kickoff_at ?? time?.kickoff_at) || "";
   const home = teamName(row.home_team ?? row.home, row.home_team_name ?? row.home_name);
   const away = teamName(row.away_team ?? row.away, row.away_team_name ?? row.away_name);
   if (id === undefined || !eventDate || !home || !away) return undefined;
@@ -183,11 +203,33 @@ function parseEvent(row: Record<string, unknown>, defaultStatus = ""): RawEvent 
     eventDate,
     home,
     away,
-    status: String(row.status || defaultStatus).toLowerCase(),
-    homeScore: numeric(row.home_score),
-    awayScore: numeric(row.away_score),
-    period: text(row.period ?? row.current_period ?? row.match_period),
-    currentMinute: numeric(row.current_minute ?? row.minute)
+    status: String(row.status ?? time?.status ?? defaultStatus).toLowerCase(),
+    homeScore: numeric(row.home_score ?? score?.home),
+    awayScore: numeric(row.away_score ?? score?.away),
+    period: stringish(row.period ?? row.current_period ?? row.match_period ?? time?.period),
+    currentMinute: numeric(row.current_minute ?? row.minute ?? time?.minute)
+  };
+}
+
+function parseLivePatch(row: Record<string, unknown>): LivePatch | undefined {
+  const score = isRecord(row.score) ? row.score : undefined;
+  const time = isRecord(row.time) ? row.time : undefined;
+  const id = numeric(row.id ?? row.event_id);
+  if (id === undefined) return undefined;
+
+  const home = teamName(row.home_team ?? row.home, row.home_team_name ?? row.home_name) || undefined;
+  const away = teamName(row.away_team ?? row.away, row.away_team_name ?? row.away_name) || undefined;
+
+  return {
+    id,
+    status: String(row.status ?? time?.status ?? "live").toLowerCase(),
+    homeScore: numeric(row.home_score ?? score?.home),
+    awayScore: numeric(row.away_score ?? score?.away),
+    period: stringish(row.period ?? row.current_period ?? row.match_period ?? time?.period),
+    currentMinute: numeric(row.current_minute ?? row.minute ?? time?.minute),
+    eventDate: text(row.event_date ?? row.date ?? row.kickoff ?? row.kickoff_at ?? time?.kickoff_at),
+    home,
+    away
   };
 }
 
@@ -236,17 +278,17 @@ async function fetchEventWindow(fixtures: FixtureRef[]) {
   });
 }
 
-async function fetchLiveEvents() {
-  if (!isBsdConfigured()) return [] as RawEvent[];
+async function fetchLivePatches() {
+  if (!isBsdConfigured()) return [] as LivePatch[];
   try {
     const rows = await bsdFetch("/events/live/");
     return rows.flatMap((row) => {
-      const event = parseEvent(row, "live");
-      return event ? [event] : [];
+      const patch = parseLivePatch(row);
+      return patch ? [patch] : [];
     });
   } catch (error) {
     console.error("BSD live score sync failed", error);
-    return [] as RawEvent[];
+    return [] as LivePatch[];
   }
 }
 
@@ -256,14 +298,45 @@ export async function fetchBsdFixtures(fixtures: FixtureRef[]) {
 
   let events: RawEvent[] = [];
   try {
-    const [windowEvents, liveEvents] = await Promise.all([
+    const [windowEvents, livePatches] = await Promise.all([
       fetchEventWindow(fixtures),
-      fetchLiveEvents()
+      fetchLivePatches()
     ]);
-    const byId = new Map<number, RawEvent>();
-    for (const event of windowEvents) byId.set(event.id, event);
-    for (const event of liveEvents) byId.set(event.id, event);
-    events = [...byId.values()];
+
+    const liveById = new Map(livePatches.map((patch) => [patch.id, patch]));
+    const mergedIds = new Set<number>();
+
+    events = windowEvents.map((event) => {
+      const live = liveById.get(event.id);
+      if (!live) return event;
+      mergedIds.add(event.id);
+      return {
+        ...event,
+        eventDate: live.eventDate || event.eventDate,
+        home: live.home || event.home,
+        away: live.away || event.away,
+        status: live.status || "live",
+        homeScore: live.homeScore ?? event.homeScore,
+        awayScore: live.awayScore ?? event.awayScore,
+        period: live.period ?? event.period,
+        currentMinute: live.currentMinute ?? event.currentMinute
+      };
+    });
+
+    for (const live of livePatches) {
+      if (mergedIds.has(live.id) || !live.eventDate || !live.home || !live.away) continue;
+      events.push({
+        id: live.id,
+        eventDate: live.eventDate,
+        home: live.home,
+        away: live.away,
+        status: live.status || "live",
+        homeScore: live.homeScore,
+        awayScore: live.awayScore,
+        period: live.period,
+        currentMinute: live.currentMinute
+      });
+    }
   } catch (error) {
     console.error("BSD fixture sync failed", error);
     return output;
