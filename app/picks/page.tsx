@@ -234,8 +234,8 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                     <div className="meta">{formatICT(kickoff)} · {row.Competition || "Unknown competition"}</div>
                     {teams ? (
                       <div className="teamStack compact">
-                        <div className="teamRow"><span className="sideLabel">HOME</span><strong>{teams.home}</strong></div>
-                        <div className="teamRow"><span className="sideLabel">AWAY</span><strong>{teams.away}</strong></div>
+                        <div className="teamRow"><strong>{teams.home}</strong></div>
+                        <div className="teamRow"><strong>{teams.away}</strong></div>
                       </div>
                     ) : (
                       <div className="match">{match}</div>
