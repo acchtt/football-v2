@@ -1,5 +1,6 @@
 import { AirtableError, records, selectName, TABLES } from "@/lib/airtable";
 import { fetchBsdFinalScores, getBsdScore, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
+import { fetchManualScores, getManualScore } from "@/lib/manual-scores";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,17 @@ function resultTone(result: string) {
   return "cyan";
 }
 
+function returnTo(filters: Awaited<SearchParams>) {
+  const params = new URLSearchParams();
+  if (filters.date) params.set("date", filters.date);
+  if (filters.result) params.set("result", filters.result);
+  if (filters.competition) params.set("competition", filters.competition);
+  if (filters.model) params.set("model", filters.model);
+  if (filters.q) params.set("q", filters.q);
+  const query = params.toString();
+  return query ? `/picks?${query}` : "/picks";
+}
+
 function Notice({ message }: { message: string }) {
   return (
     <main className="wrap">
@@ -103,6 +115,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
     const competitionFilter = filters.competition || "ALL";
     const modelFilter = filters.model || "ALL";
     const query = normalize(filters.q || "");
+    const scoreReturnTo = returnTo(filters);
 
     const allPicks = await records<Row>(TABLES.picks, FIELDS, { field: "Recorded At", direction: "desc" });
     const datedPicks = allPicks
@@ -130,7 +143,10 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
       const kickoff = pick.fields.Kickoff;
       return match && kickoff ? [{ match, kickoff }] : [];
     });
-    const finalScores = await fetchBsdFinalScores(scoreFixtures);
+    const [finalScores, manualScores] = await Promise.all([
+      fetchBsdFinalScores(scoreFixtures),
+      fetchManualScores()
+    ]);
 
     const settled = picks.filter((pick) => selectName(pick.fields.Result) && selectName(pick.fields.Result) !== "PENDING");
     const stake = settled.reduce((sum, pick) => sum + (pick.fields["Stake u"] || 0), 0);
@@ -143,7 +159,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
         <div>
           <div className="eyebrow cyan">OFFICIAL WEBSITE PICKS</div>
           <h1>History</h1>
-          <p className="sub">Newest records first. Match, final score, selection and result stay visible; model notes move into the expandable detail.</p>
+          <p className="sub">Newest records first. Manual final scores override BSD here and on the Schedule page.</p>
         </div>
 
         <div className="metrics" style={{ marginTop: 24 }}>
@@ -204,7 +220,10 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
             const recordedAt = (row["Recorded At"] || kickoff) as string;
             const match = row.Match || "Unknown fixture";
             const teams = splitFixtureName(match);
-            const score = getBsdScore(finalScores, match, kickoff);
+            const manualScore = getManualScore(manualScores, match, kickoff);
+            const bsdScore = getBsdScore(finalScores, match, kickoff);
+            const score = manualScore || bsdScore;
+            const scoreSource = manualScore ? "MANUAL" : bsdScore ? "FT" : "SCORE";
             const result = selectName(row.Result) || "PENDING";
             const verdict = selectName(row.Verdict);
 
@@ -227,8 +246,8 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                     </div>
                   </div>
 
-                  <div className={`scoreBlock ${score ? "final" : "pending"}`}>
-                    <span>{score ? "FT" : "SCORE"}</span>
+                  <div className={`scoreBlock ${score ? "final" : "pending"} ${manualScore ? "manual" : ""}`}>
+                    <span>{scoreSource}</span>
                     <strong>{score ? `${score.home}–${score.away}` : "—"}</strong>
                   </div>
 
@@ -246,8 +265,33 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                   <div className="detailStrip">
                     <span><small>STAKE</small><strong>{row["Stake u"] ?? "—"}u</strong></span>
                     <span><small>RECORDED</small><strong>{formatICT(recordedAt)}</strong></span>
-                    {score && <span><small>BSD EVENT</small><strong>#{score.eventId}</strong></span>}
+                    {manualScore && <span><small>SCORE SOURCE</small><strong>MANUAL</strong></span>}
+                    {!manualScore && bsdScore && <span><small>BSD EVENT</small><strong>#{bsdScore.eventId}</strong></span>}
                   </div>
+
+                  <div className="scoreEditor">
+                    <div>
+                      <div className="label">MANUAL FINAL SCORE</div>
+                      <p>Save an override here and it will also appear on Schedule.</p>
+                    </div>
+                    <form className="scoreForm" method="post" action="/api/manual-score">
+                      <input type="hidden" name="match" value={match} />
+                      <input type="hidden" name="kickoff" value={kickoff} />
+                      <input type="hidden" name="returnTo" value={scoreReturnTo} />
+                      <label>
+                        <span>{teams?.home || "Home"}</span>
+                        <input name="home" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.home ?? bsdScore?.home ?? ""} aria-label="Home score" />
+                      </label>
+                      <span className="scoreDash">–</span>
+                      <label>
+                        <span>{teams?.away || "Away"}</span>
+                        <input name="away" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.away ?? bsdScore?.away ?? ""} aria-label="Away score" />
+                      </label>
+                      <button className="scoreSave" type="submit" name="action" value="save">Save score</button>
+                      {manualScore && <button className="scoreClear" type="submit" name="action" value="clear" formNoValidate>Use BSD</button>}
+                    </form>
+                  </div>
+
                   {row.Reason && <><div className="label" style={{ marginTop: 16 }}>DECISION REASON</div><p>{row.Reason}</p></>}
                 </div>
               </details>
