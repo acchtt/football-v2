@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "echo \"Static frontend is deployed by GitHub Pages; Cloudflare Worker requires no build step.\"",
+    "build:next": "next build",
+    "start": "next start",
+    "deploy:worker": "wrangler deploy"
   },
   "dependencies": {
     "next": "15.5.18",
@@ -16,6 +18,7 @@
     "@types/node": "22.18.0",
     "@types/react": "19.1.12",
     "@types/react-dom": "19.1.9",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "wrangler": "^4.42.0"
   }
 }
