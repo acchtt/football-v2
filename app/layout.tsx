@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import LiveScoreClient from "./live-score-client";
 import "./globals.css";
 import "./score-editor.css";
 import "./readability-fix.css";
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </nav>
           </div>
         </header>
+        <LiveScoreClient />
         {children}
       </body>
     </html>
