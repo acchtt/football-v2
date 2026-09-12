@@ -19,6 +19,7 @@ type Row = {
 };
 
 type SearchParams = Promise<{
+  date?: string;
   result?: string;
   competition?: string;
   model?: string;
@@ -36,6 +37,17 @@ function timestamp(value?: string) {
   if (!value) return 0;
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function dateKey(value: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(value));
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 function normalize(value = "") {
@@ -85,6 +97,7 @@ function Notice({ message }: { message: string }) {
 export default async function PicksPage({ searchParams }: { searchParams: SearchParams }) {
   try {
     const filters = await searchParams;
+    const dateFilter = filters.date || "";
     const resultFilter = filters.result || "ALL";
     const competitionFilter = filters.competition || "ALL";
     const modelFilter = filters.model || "ALL";
@@ -101,7 +114,9 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
 
     const picks = datedPicks.filter((pick) => {
       const row = pick.fields;
+      const kickoff = row.Kickoff as string;
       const result = selectName(row.Result) || "PENDING";
+      if (dateFilter && dateKey(kickoff) !== dateFilter) return false;
       if (resultFilter !== "ALL" && result !== resultFilter) return false;
       if (competitionFilter !== "ALL" && row.Competition !== competitionFilter) return false;
       if (modelFilter !== "ALL" && row["Model Version"] !== modelFilter) return false;
@@ -135,6 +150,10 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
           <div className="filterSearch">
             <label htmlFor="q">Search</label>
             <input id="q" name="q" type="search" defaultValue={filters.q || ""} placeholder="Match, competition or reason" />
+          </div>
+          <div>
+            <label htmlFor="date">Match date</label>
+            <input id="date" name="date" type="date" defaultValue={dateFilter} />
           </div>
           <div>
             <label htmlFor="result">Result</label>
