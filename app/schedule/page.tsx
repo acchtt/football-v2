@@ -20,6 +20,7 @@ type Row = {
 };
 
 type SearchParams = Promise<{
+  date?: string;
   tier?: string;
   grade?: string;
   competition?: string;
@@ -42,6 +43,17 @@ function timestamp(value?: string) {
 
 function hasValidDate(value?: string) {
   return timestamp(value) > 0;
+}
+
+function dateKey(value: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(value));
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 function normalize(value = "") {
@@ -92,6 +104,7 @@ function Notice({ message }: { message: string }) {
 export default async function SchedulePage({ searchParams }: { searchParams: SearchParams }) {
   try {
     const filters = await searchParams;
+    const dateFilter = filters.date || "";
     const tierFilter = (filters.tier || "ALL").toUpperCase();
     const gradeFilter = filters.grade || "ALL";
     const competitionFilter = filters.competition || "ALL";
@@ -117,8 +130,10 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
 
     const board = baseBoard.filter((record) => {
       const row = record.fields;
+      const kickoff = row["Kickoff ICT"] as string;
       const tier = selectName(row["Board Tier"]);
       const grade = selectName(row["PRE Grade"]);
+      if (dateFilter && dateKey(kickoff) !== dateFilter) return false;
       if (tierFilter !== "ALL" && tier !== tierFilter) return false;
       if (gradeFilter !== "ALL" && grade !== gradeFilter) return false;
       if (competitionFilter !== "ALL" && row.Competition !== competitionFilter) return false;
@@ -154,6 +169,10 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
           <div className="filterSearch">
             <label htmlFor="q">Search</label>
             <input id="q" name="q" type="search" defaultValue={filters.q || ""} placeholder="Match or competition" />
+          </div>
+          <div>
+            <label htmlFor="date">Kickoff date</label>
+            <input id="date" name="date" type="date" defaultValue={dateFilter} />
           </div>
           <div>
             <label htmlFor="tier">Tier</label>
