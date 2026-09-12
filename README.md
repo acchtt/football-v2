@@ -1,7 +1,14 @@
 # football-v2
 
-The previous Football Decision Control website was scrapped on 2026-09-06 ICT at the user's request.
+SlipTrace Football Control — Airtable-backed schedule and picks dashboard.
 
-The full pre-scrap site is preserved on branch `archive/site-before-scrap-2026-09-06` at commit `802ba322b0c2dd83c7806d7dbadeb185e5fb912e`.
+Production source is `main` and is intended to deploy through the single Vercel project `football-v2-nwyg`.
 
-`main` is intentionally reset to a minimal shell for a clean rebuild.
+Current integrations:
+- Airtable schedule / picks / manual score overrides
+- BSD fixture kickoff and final-score sync
+- BSD live-score polling with automatic live minute / score updates
+
+Archive of the pre-scrap site remains on branch `archive/site-before-scrap-2026-09-06` at commit `802ba322b0c2dd83c7806d7dbadeb185e5fb912e`.
+
+Deployment retrigger: 2026-09-12 ICT.
