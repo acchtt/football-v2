@@ -1,5 +1,5 @@
 import { AirtableError, records, selectName, TABLES, type Rec } from "@/lib/airtable";
-import { fetchBsdFinalScores, getBsdScore, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
+import { fetchBsdFixtures, getBsdFixture, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
 import { fetchManualScores, getManualScore } from "@/lib/manual-scores";
 
 export const dynamic = "force-dynamic";
@@ -170,8 +170,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
       const kickoff = record.fields["Kickoff ICT"];
       return match && kickoff ? [{ match, kickoff }] : [];
     });
-    const [finalScores, manualScores] = await Promise.all([
-      fetchBsdFinalScores(scoreFixtures),
+    const [bsdFixtures, manualScores] = await Promise.all([
+      fetchBsdFixtures(scoreFixtures),
       fetchManualScores()
     ]);
 
@@ -183,13 +183,25 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
       groups.set(day, [...(groups.get(day) || []), record]);
     }
 
+    for (const recordsForDay of groups.values()) {
+      recordsForDay.sort((a, b) => {
+        const aKickoff = a.fields["Kickoff ICT"] as string;
+        const bKickoff = b.fields["Kickoff ICT"] as string;
+        const aMatch = a.fields.Match || "";
+        const bMatch = b.fields.Match || "";
+        const aResolved = getBsdFixture(bsdFixtures, aMatch, aKickoff)?.kickoff || aKickoff;
+        const bResolved = getBsdFixture(bsdFixtures, bMatch, bKickoff)?.kickoff || bKickoff;
+        return timestamp(bResolved) - timestamp(aResolved);
+      });
+    }
+
     return (
       <main className="wrap">
         <div className="top">
           <div>
             <div className="eyebrow">LIVE CONTROL BOARD</div>
             <h1>Schedule</h1>
-            <p className="sub">Newest slate dates first. Airtable Slate Date controls the board day; kickoff is used only for the ICT clock time. Manual final scores override BSD.</p>
+            <p className="sub">Newest slate dates first. Slate Date controls the board day; BSD supplies the live kickoff time when available, with Airtable as fallback. Manual final scores override BSD.</p>
           </div>
           <div className="stats">
             <div className="stat red"><small>FOCUS</small><strong>{focus}</strong></div>
@@ -237,7 +249,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
 
         <div className="resultCount">
           Showing {board.length} of {baseBoard.length} dated FOCUS / WATCHLIST fixtures
-          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD scores {isBsdConfigured() ? "on" : "off"}</span>
+          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD fixture sync {isBsdConfigured() ? "on" : "off"}</span>
         </div>
 
         {board.length === 0 ? (
@@ -251,8 +263,12 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                 const kickoff = row["Kickoff ICT"] as string;
                 const match = row.Match || "Unknown fixture";
                 const teams = splitFixtureName(match);
+                const bsdFixture = getBsdFixture(bsdFixtures, match, kickoff);
+                const displayKickoff = bsdFixture?.kickoff || kickoff;
                 const manualScore = getManualScore(manualScores, match, kickoff);
-                const bsdScore = getBsdScore(finalScores, match, kickoff);
+                const bsdScore = bsdFixture?.status === "finished" && bsdFixture.home !== undefined && bsdFixture.away !== undefined
+                  ? { home: bsdFixture.home, away: bsdFixture.away, eventId: bsdFixture.eventId }
+                  : undefined;
                 const score = manualScore || bsdScore;
                 const scoreSource = manualScore ? "MANUAL" : bsdScore ? "FT" : "SCORE";
                 const tier = selectName(row["Board Tier"]);
@@ -266,8 +282,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                   <details className="card fixtureCard" key={record.id}>
                     <summary className="fixtureReadable">
                       <div className="kickoffBlock">
-                        <div className="time">{kickoffTime(kickoff)}</div>
-                        <div className="timeZone">ICT</div>
+                        <div className="time">{kickoffTime(displayKickoff)}</div>
+                        <div className="timeZone">ICT{bsdFixture ? " · BSD" : ""}</div>
                       </div>
 
                       <div className="fixtureIdentity">
@@ -299,8 +315,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                         <span><small>XI</small><strong>{xi || "—"}</strong></span>
                         <span><small>MARKET</small><strong>{market || "—"}</strong></span>
                         {status && <span><small>COVERAGE</small><strong>{status}</strong></span>}
+                        {bsdFixture && <span><small>BSD EVENT</small><strong>#{bsdFixture.eventId}</strong></span>}
                         {manualScore && <span><small>SCORE SOURCE</small><strong>MANUAL</strong></span>}
-                        {!manualScore && bsdScore && <span><small>BSD EVENT</small><strong>#{bsdScore.eventId}</strong></span>}
                       </div>
 
                       <div className="scoreEditor">
