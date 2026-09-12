@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "sliptrace-football-api",
-  "main": "backend/cloudflare-worker/src/index.js",
+  "name": "football-v2",
+  "main": "backend/cloudflare-worker/src/entry.js",
   "compatibility_date": "2026-09-12",
   "workers_dev": true,
   "vars": {
