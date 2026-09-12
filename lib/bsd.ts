@@ -15,6 +15,16 @@ type RawEvent = {
   awayScore?: number;
 };
 
+export type BsdFixture = {
+  eventId: number;
+  homeTeam: string;
+  awayTeam: string;
+  kickoff: string;
+  status: string;
+  home?: number;
+  away?: number;
+};
+
 export type BsdFinalScore = {
   eventId: number;
   home: number;
@@ -201,38 +211,60 @@ async function fetchEventWindow(fixtures: FixtureRef[]) {
   });
 }
 
-export async function fetchBsdFinalScores(fixtures: FixtureRef[]) {
-  const output = new Map<string, BsdFinalScore>();
+export async function fetchBsdFixtures(fixtures: FixtureRef[]) {
+  const output = new Map<string, BsdFixture>();
   if (!fixtures.length || !isBsdConfigured()) return output;
 
   let events: RawEvent[] = [];
   try {
     events = await fetchEventWindow(fixtures);
   } catch (error) {
-    console.error("BSD score sync failed", error);
+    console.error("BSD fixture sync failed", error);
     return output;
   }
 
-  const finished = events.filter((event) =>
-    event.status === "finished" && event.homeScore !== undefined && event.awayScore !== undefined
-  );
-
   for (const fixture of fixtures) {
-    const ranked = finished
+    const ranked = events
       .map((event) => ({ event, score: eventMatchScore(fixture, event) }))
       .filter((entry) => entry.score >= 10)
       .sort((a, b) => b.score - a.score);
 
     const best = ranked[0]?.event;
-    if (!best || best.homeScore === undefined || best.awayScore === undefined) continue;
+    if (!best) continue;
 
     output.set(lookupKey(fixture.match, fixture.kickoff), {
       eventId: best.id,
-      home: best.homeScore,
-      away: best.awayScore,
       homeTeam: best.home,
       awayTeam: best.away,
-      kickoff: best.eventDate
+      kickoff: best.eventDate,
+      status: best.status,
+      home: best.homeScore,
+      away: best.awayScore
+    });
+  }
+
+  return output;
+}
+
+export function getBsdFixture(fixtures: Map<string, BsdFixture>, match: string, kickoff: string) {
+  return fixtures.get(lookupKey(match, kickoff));
+}
+
+export async function fetchBsdFinalScores(fixtures: FixtureRef[]) {
+  const resolved = await fetchBsdFixtures(fixtures);
+  const output = new Map<string, BsdFinalScore>();
+
+  for (const fixture of fixtures) {
+    const event = getBsdFixture(resolved, fixture.match, fixture.kickoff);
+    if (!event || event.status !== "finished" || event.home === undefined || event.away === undefined) continue;
+
+    output.set(lookupKey(fixture.match, fixture.kickoff), {
+      eventId: event.eventId,
+      home: event.home,
+      away: event.away,
+      homeTeam: event.homeTeam,
+      awayTeam: event.awayTeam,
+      kickoff: event.kickoff
     });
   }
 
