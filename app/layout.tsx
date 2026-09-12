@@ -15,6 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
+        <LiveScoreClient />
         <header className="nav">
           <div className="navin">
             <Link href="/schedule" className="brand">
@@ -30,7 +31,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </nav>
           </div>
         </header>
-        <LiveScoreClient />
         {children}
       </body>
     </html>
