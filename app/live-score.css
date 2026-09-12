@@ -1,0 +1,12 @@
+.scoreBlock.live {
+  background: rgba(255,59,79,.06);
+}
+
+.scoreBlock.live span {
+  color: #ff7d8b;
+}
+
+.scoreBlock.live strong {
+  color: #fff3f5;
+  text-shadow: 0 0 14px rgba(255,59,79,.16);
+}
