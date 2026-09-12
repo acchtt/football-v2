@@ -1,5 +1,5 @@
-// SlipTrace API endpoint. Cloudflare Workers is now the production backend.
-window.SLIPTRACE_API = "https://football-v2-2.acchtt.workers.dev";
+// SlipTrace API endpoint. Cloudflare Workers is the production backend.
+window.SLIPTRACE_API = "https://football-v2.acchtt.workers.dev";
 
 // Keep the existing static app unchanged while routing its legacy API calls to Cloudflare.
 (() => {
