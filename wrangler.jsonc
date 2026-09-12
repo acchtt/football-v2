@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "sliptrace-football-api",
+  "main": "backend/cloudflare-worker/src/index.js",
+  "compatibility_date": "2026-09-12",
+  "workers_dev": true,
+  "vars": {
+    "AIRTABLE_BASE_ID": "appWyZJjitSBATXAU",
+    "BSD_API_BASE_URL": "https://sports.bzzoiro.com/api/v2",
+    "ALLOWED_ORIGIN": "https://acchtt.github.io"
+  }
+}
