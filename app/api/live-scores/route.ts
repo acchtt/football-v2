@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const BSD_BASE_URL = (process.env.BSD_API_BASE_URL || "https://sports.bzzoiro.com/api/v2").replace(/\/$/, "");
+const PAGES_ORIGIN = "https://acchtt.github.io";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -53,17 +54,7 @@ function parseLive(row: AnyRecord) {
   const status = (textValue(row.status ?? time?.status) || "live").toLowerCase();
 
   if (!home || !away) return undefined;
-
-  return {
-    id,
-    home,
-    away,
-    homeScore,
-    awayScore,
-    minute,
-    period,
-    status
-  };
+  return { id, home, away, homeScore, awayScore, minute, period, status };
 }
 
 async function fetchJson(path: string, token: string) {
@@ -75,24 +66,28 @@ async function fetchJson(path: string, token: string) {
 
   const bodyText = await response.text();
   let payload: unknown = null;
-  try {
-    payload = bodyText ? JSON.parse(bodyText) : null;
-  } catch {
-    payload = null;
-  }
+  try { payload = bodyText ? JSON.parse(bodyText) : null; } catch { payload = null; }
+  return { ok: response.ok, status: response.status, payload, error: response.ok ? undefined : bodyText.slice(0, 300) };
+}
 
+function cors(headers: HeadersInit = {}) {
   return {
-    ok: response.ok,
-    status: response.status,
-    payload,
-    error: response.ok ? undefined : bodyText.slice(0, 300)
+    "Access-Control-Allow-Origin": PAGES_ORIGIN,
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store, max-age=0",
+    ...headers
   };
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: cors() });
 }
 
 export async function GET() {
   const token = process.env.BSD_API_TOKEN;
   if (!token) {
-    return NextResponse.json({ ok: false, error: "BSD_API_TOKEN is not configured" }, { status: 503 });
+    return NextResponse.json({ ok: false, error: "BSD_API_TOKEN is not configured" }, { status: 503, headers: cors() });
   }
 
   const [listResult, compactResult] = await Promise.all([
@@ -101,7 +96,6 @@ export async function GET() {
   ]);
 
   const merged = new Map<string, ReturnType<typeof parseLive>>();
-
   for (const source of [listResult, compactResult]) {
     if (!source.ok) continue;
     for (const row of rows(source.payload)) {
@@ -114,7 +108,6 @@ export async function GET() {
   }
 
   const events = [...merged.values()].filter((event): event is NonNullable<typeof event> => Boolean(event));
-
   return NextResponse.json({
     ok: listResult.ok || compactResult.ok,
     count: events.length,
@@ -124,7 +117,5 @@ export async function GET() {
     },
     events,
     generatedAt: new Date().toISOString()
-  }, {
-    headers: { "Cache-Control": "no-store, max-age=0" }
-  });
+  }, { headers: cors() });
 }
