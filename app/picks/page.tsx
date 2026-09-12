@@ -1,4 +1,5 @@
 import { AirtableError, records, selectName, TABLES } from "@/lib/airtable";
+import { fetchBsdFinalScores, getBsdScore, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,13 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
       return true;
     });
 
+    const scoreFixtures = picks.flatMap((pick) => {
+      const match = pick.fields.Match;
+      const kickoff = pick.fields.Kickoff;
+      return match && kickoff ? [{ match, kickoff }] : [];
+    });
+    const finalScores = await fetchBsdFinalScores(scoreFixtures);
+
     const settled = picks.filter((pick) => selectName(pick.fields.Result) && selectName(pick.fields.Result) !== "PENDING");
     const stake = settled.reduce((sum, pick) => sum + (pick.fields["Stake u"] || 0), 0);
     const profit = settled.reduce((sum, pick) => sum + (pick.fields["P/L u"] || 0), 0);
@@ -135,7 +143,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
         <div>
           <div className="eyebrow cyan">OFFICIAL WEBSITE PICKS</div>
           <h1>History</h1>
-          <p className="sub">Newest records first. Immutable Website Picks log with model version, settlement state, stake and recorded P/L.</p>
+          <p className="sub">Newest records first. Match, final score, selection and result stay visible; model notes move into the expandable detail.</p>
         </div>
 
         <div className="metrics" style={{ marginTop: 24 }}>
@@ -182,7 +190,10 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
           </div>
         </form>
 
-        <div className="resultCount">Showing {picks.length} of {datedPicks.length} dated picks</div>
+        <div className="resultCount">
+          Showing {picks.length} of {datedPicks.length} dated picks
+          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD scores {isBsdConfigured() ? "on" : "off"}</span>
+        </div>
 
         {picks.length === 0 ? (
           <div className="empty">No picks match the current filters.</div>
@@ -191,31 +202,51 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
             const row = pick.fields;
             const kickoff = row.Kickoff as string;
             const recordedAt = (row["Recorded At"] || kickoff) as string;
+            const match = row.Match || "Unknown fixture";
+            const teams = splitFixtureName(match);
+            const score = getBsdScore(finalScores, match, kickoff);
             const result = selectName(row.Result) || "PENDING";
             const verdict = selectName(row.Verdict);
 
             return (
-              <details className="card" key={pick.id}>
-                <summary className="pick">
-                  <div>
+              <details className="card pickCard" key={pick.id}>
+                <summary className="pickReadable">
+                  <div className="pickIdentity">
                     <div className="meta">{formatICT(kickoff)} · {row.Competition || "Unknown competition"}</div>
-                    <div className="match">{row.Match || "Unknown fixture"}</div>
-                    <div className="badges" style={{ justifyContent: "flex-start", marginTop: 9 }}>
+                    {teams ? (
+                      <div className="teamStack compact">
+                        <div className="teamRow"><span className="sideLabel">HOME</span><strong>{teams.home}</strong></div>
+                        <div className="teamRow"><span className="sideLabel">AWAY</span><strong>{teams.away}</strong></div>
+                      </div>
+                    ) : (
+                      <div className="match">{match}</div>
+                    )}
+                    <div className="pickTags">
                       {verdict && <span className="badge cyan">{verdict}</span>}
-                      <span className={`badge ${resultTone(result)}`}>{result}</span>
                       {row["Model Version"] && <span className="badge">{row["Model Version"]}</span>}
                     </div>
                   </div>
-                  <div className="selection">
-                    <div className="meta">SELECTION</div>
-                    <strong>O{row.Line ?? "—"} @ {row.Odds ?? "—"}</strong>
-                    <div className="meta" style={{ marginTop: 7 }}>P/L {units(row["P/L u"])}</div>
+
+                  <div className={`scoreBlock ${score ? "final" : "pending"}`}>
+                    <span>{score ? "FT" : "SCORE"}</span>
+                    <strong>{score ? `${score.home}–${score.away}` : "—"}</strong>
+                  </div>
+
+                  <div className="betBlock">
+                    <span className="betLabel">SELECTION</span>
+                    <strong>O{row.Line ?? "—"} <em>@ {row.Odds ?? "—"}</em></strong>
+                    <div className="betOutcome">
+                      <span className={`badge ${resultTone(result)}`}>{result}</span>
+                      <span className="plValue">{units(row["P/L u"])}</span>
+                    </div>
                   </div>
                 </summary>
+
                 <div className="detail">
-                  <div className="badges" style={{ justifyContent: "flex-start" }}>
-                    <span className="badge">STAKE {row["Stake u"] ?? "—"}u</span>
-                    <span className="badge">RECORDED {formatICT(recordedAt)}</span>
+                  <div className="detailStrip">
+                    <span><small>STAKE</small><strong>{row["Stake u"] ?? "—"}u</strong></span>
+                    <span><small>RECORDED</small><strong>{formatICT(recordedAt)}</strong></span>
+                    {score && <span><small>BSD EVENT</small><strong>#{score.eventId}</strong></span>}
                   </div>
                   {row.Reason && <><div className="label" style={{ marginTop: 16 }}>DECISION REASON</div><p>{row.Reason}</p></>}
                 </div>
