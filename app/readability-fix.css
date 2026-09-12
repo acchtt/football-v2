@@ -1,0 +1,18 @@
+.teamRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.teamRow strong {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .teamRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
