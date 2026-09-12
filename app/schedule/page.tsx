@@ -1,6 +1,7 @@
 import { AirtableError, records, selectName, TABLES, type Rec } from "@/lib/airtable";
 import { fetchBsdFixtures, getBsdFixture, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
 import { fetchManualScores, getManualScore } from "@/lib/manual-scores";
+import LiveRefresh from "@/app/live-refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -197,11 +198,12 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
 
     return (
       <main className="wrap">
+        <LiveRefresh enabled={isBsdConfigured()} />
         <div className="top">
           <div>
             <div className="eyebrow">LIVE CONTROL BOARD</div>
             <h1>Schedule</h1>
-            <p className="sub">Newest slate dates first. Slate Date controls the board day; BSD supplies the live kickoff time when available, with Airtable as fallback. Manual final scores override BSD.</p>
+            <p className="sub">Newest slate dates first. BSD supplies kickoff times and live scores when available; live data refreshes automatically about every 15 seconds. Manual final scores override BSD.</p>
           </div>
           <div className="stats">
             <div className="stat red"><small>FOCUS</small><strong>{focus}</strong></div>
@@ -249,7 +251,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
 
         <div className="resultCount">
           Showing {board.length} of {baseBoard.length} dated FOCUS / WATCHLIST fixtures
-          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD fixture sync {isBsdConfigured() ? "on" : "off"}</span>
+          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD live sync {isBsdConfigured() ? "on" : "off"}</span>
         </div>
 
         {board.length === 0 ? (
@@ -266,11 +268,19 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                 const bsdFixture = getBsdFixture(bsdFixtures, match, kickoff);
                 const displayKickoff = bsdFixture?.kickoff || kickoff;
                 const manualScore = getManualScore(manualScores, match, kickoff);
-                const bsdScore = bsdFixture?.status === "finished" && bsdFixture.home !== undefined && bsdFixture.away !== undefined
+                const isLive = bsdFixture?.status === "live";
+                const isFinished = bsdFixture?.status === "finished";
+                const bsdScore = bsdFixture && (isLive || isFinished) && bsdFixture.home !== undefined && bsdFixture.away !== undefined
                   ? { home: bsdFixture.home, away: bsdFixture.away, eventId: bsdFixture.eventId }
                   : undefined;
+                const bsdFinalScore = isFinished ? bsdScore : undefined;
                 const score = manualScore || bsdScore;
-                const scoreSource = manualScore ? "MANUAL" : bsdScore ? "FT" : "SCORE";
+                const liveLabel = bsdFixture?.currentMinute !== undefined
+                  ? `${bsdFixture.currentMinute}′`
+                  : bsdFixture?.period
+                    ? bsdFixture.period.toUpperCase()
+                    : "LIVE";
+                const scoreSource = manualScore ? "MANUAL" : isLive && bsdScore ? liveLabel : isFinished && bsdScore ? "FT" : "SCORE";
                 const tier = selectName(row["Board Tier"]);
                 const grade = selectName(row["PRE Grade"]);
                 const structure = selectName(row["Structural Type"]);
@@ -298,7 +308,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                         <div className="comp">{row.Competition || "Unknown competition"}</div>
                       </div>
 
-                      <div className={`scoreBlock ${score ? "final" : "pending"} ${manualScore ? "manual" : ""}`}>
+                      <div className={`scoreBlock ${score ? (isLive && !manualScore ? "live" : "final") : "pending"} ${manualScore ? "manual" : ""}`}>
                         <span>{scoreSource}</span>
                         <strong>{score ? `${score.home}–${score.away}` : "—"}</strong>
                       </div>
@@ -316,6 +326,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                         <span><small>MARKET</small><strong>{market || "—"}</strong></span>
                         {status && <span><small>COVERAGE</small><strong>{status}</strong></span>}
                         {bsdFixture && <span><small>BSD EVENT</small><strong>#{bsdFixture.eventId}</strong></span>}
+                        {isLive && <span><small>LIVE STATE</small><strong>{liveLabel}</strong></span>}
                         {manualScore && <span><small>SCORE SOURCE</small><strong>MANUAL</strong></span>}
                       </div>
 
@@ -330,12 +341,12 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                           <input type="hidden" name="returnTo" value={scoreReturnTo} />
                           <label>
                             <span>{teams?.home || "Home"}</span>
-                            <input name="home" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.home ?? bsdScore?.home ?? ""} aria-label="Home score" />
+                            <input name="home" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.home ?? bsdFinalScore?.home ?? ""} aria-label="Home score" />
                           </label>
                           <span className="scoreDash">–</span>
                           <label>
                             <span>{teams?.away || "Away"}</span>
-                            <input name="away" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.away ?? bsdScore?.away ?? ""} aria-label="Away score" />
+                            <input name="away" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.away ?? bsdFinalScore?.away ?? ""} aria-label="Away score" />
                           </label>
                           <button className="scoreSave" type="submit" name="action" value="save">Save score</button>
                           {manualScore && <button className="scoreClear" type="submit" name="action" value="clear" formNoValidate>Use BSD</button>}
