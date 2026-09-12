@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "football-v2",
-  "main": "src/entry.js",
+  "main": "src/dashboard-entry.js",
   "compatibility_date": "2026-09-12",
   "workers_dev": true,
   "vars": {
