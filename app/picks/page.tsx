@@ -1,6 +1,7 @@
 import { AirtableError, records, selectName, TABLES } from "@/lib/airtable";
 import { fetchBsdFixtures, getBsdFixture, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
 import { fetchManualScores, getManualScore } from "@/lib/manual-scores";
+import LiveRefresh from "@/app/live-refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -156,10 +157,11 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
 
     return (
       <main className="wrap">
+        <LiveRefresh enabled={isBsdConfigured()} />
         <div>
           <div className="eyebrow cyan">OFFICIAL WEBSITE PICKS</div>
           <h1>History</h1>
-          <p className="sub">Newest records first. BSD supplies the actual fixture kickoff when available; manual final scores override BSD.</p>
+          <p className="sub">Newest records first. BSD supplies kickoff times and live scores when available; live data refreshes automatically about every 15 seconds. Manual final scores override BSD.</p>
         </div>
 
         <div className="metrics" style={{ marginTop: 24 }}>
@@ -208,7 +210,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
 
         <div className="resultCount">
           Showing {picks.length} of {datedPicks.length} dated picks
-          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD fixture sync {isBsdConfigured() ? "on" : "off"}</span>
+          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD live sync {isBsdConfigured() ? "on" : "off"}</span>
         </div>
 
         {picks.length === 0 ? (
@@ -223,11 +225,19 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
             const bsdFixture = getBsdFixture(bsdFixtures, match, kickoff);
             const displayKickoff = bsdFixture?.kickoff || kickoff;
             const manualScore = getManualScore(manualScores, match, kickoff);
-            const bsdScore = bsdFixture?.status === "finished" && bsdFixture.home !== undefined && bsdFixture.away !== undefined
+            const isLive = bsdFixture?.status === "live";
+            const isFinished = bsdFixture?.status === "finished";
+            const bsdScore = bsdFixture && (isLive || isFinished) && bsdFixture.home !== undefined && bsdFixture.away !== undefined
               ? { home: bsdFixture.home, away: bsdFixture.away, eventId: bsdFixture.eventId }
               : undefined;
+            const bsdFinalScore = isFinished ? bsdScore : undefined;
             const score = manualScore || bsdScore;
-            const scoreSource = manualScore ? "MANUAL" : bsdScore ? "FT" : "SCORE";
+            const liveLabel = bsdFixture?.currentMinute !== undefined
+              ? `${bsdFixture.currentMinute}′`
+              : bsdFixture?.period
+                ? bsdFixture.period.toUpperCase()
+                : "LIVE";
+            const scoreSource = manualScore ? "MANUAL" : isLive && bsdScore ? liveLabel : isFinished && bsdScore ? "FT" : "SCORE";
             const result = selectName(row.Result) || "PENDING";
             const verdict = selectName(row.Verdict);
 
@@ -250,7 +260,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                     </div>
                   </div>
 
-                  <div className={`scoreBlock ${score ? "final" : "pending"} ${manualScore ? "manual" : ""}`}>
+                  <div className={`scoreBlock ${score ? (isLive && !manualScore ? "live" : "final") : "pending"} ${manualScore ? "manual" : ""}`}>
                     <span>{scoreSource}</span>
                     <strong>{score ? `${score.home}–${score.away}` : "—"}</strong>
                   </div>
@@ -270,6 +280,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                     <span><small>STAKE</small><strong>{row["Stake u"] ?? "—"}u</strong></span>
                     <span><small>RECORDED</small><strong>{formatICT(recordedAt)}</strong></span>
                     {bsdFixture && <span><small>BSD EVENT</small><strong>#{bsdFixture.eventId}</strong></span>}
+                    {isLive && <span><small>LIVE STATE</small><strong>{liveLabel}</strong></span>}
                     {manualScore && <span><small>SCORE SOURCE</small><strong>MANUAL</strong></span>}
                   </div>
 
@@ -284,12 +295,12 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                       <input type="hidden" name="returnTo" value={scoreReturnTo} />
                       <label>
                         <span>{teams?.home || "Home"}</span>
-                        <input name="home" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.home ?? bsdScore?.home ?? ""} aria-label="Home score" />
+                        <input name="home" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.home ?? bsdFinalScore?.home ?? ""} aria-label="Home score" />
                       </label>
                       <span className="scoreDash">–</span>
                       <label>
                         <span>{teams?.away || "Away"}</span>
-                        <input name="away" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.away ?? bsdScore?.away ?? ""} aria-label="Away score" />
+                        <input name="away" type="number" min="0" max="99" step="1" required defaultValue={manualScore?.away ?? bsdFinalScore?.away ?? ""} aria-label="Away score" />
                       </label>
                       <button className="scoreSave" type="submit" name="action" value="save">Save score</button>
                       {manualScore && <button className="scoreClear" type="submit" name="action" value="clear" formNoValidate>Use BSD</button>}
