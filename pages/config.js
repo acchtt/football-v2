@@ -1,7 +1,7 @@
-// SlipTrace API endpoint. Change this single value when moving backend hosts.
-window.SLIPTRACE_API = "https://football-v2-nwyg.vercel.app";
+// SlipTrace API endpoint. Cloudflare Workers is now the production backend.
+window.SLIPTRACE_API = "https://football-v2.acchtt.workers.dev";
 
-// Keep the existing static app unchanged while allowing the API host to move.
+// Keep the static app unchanged while allowing the API host to move.
 (() => {
   const oldOrigin = "https://football-v2-nwyg.vercel.app";
   const targetOrigin = String(window.SLIPTRACE_API || oldOrigin).replace(/\/$/, "");
