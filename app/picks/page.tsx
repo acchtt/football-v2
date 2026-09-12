@@ -1,5 +1,5 @@
 import { AirtableError, records, selectName, TABLES } from "@/lib/airtable";
-import { fetchBsdFinalScores, getBsdScore, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
+import { fetchBsdFixtures, getBsdFixture, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
 import { fetchManualScores, getManualScore } from "@/lib/manual-scores";
 
 export const dynamic = "force-dynamic";
@@ -143,8 +143,8 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
       const kickoff = pick.fields.Kickoff;
       return match && kickoff ? [{ match, kickoff }] : [];
     });
-    const [finalScores, manualScores] = await Promise.all([
-      fetchBsdFinalScores(scoreFixtures),
+    const [bsdFixtures, manualScores] = await Promise.all([
+      fetchBsdFixtures(scoreFixtures),
       fetchManualScores()
     ]);
 
@@ -159,7 +159,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
         <div>
           <div className="eyebrow cyan">OFFICIAL WEBSITE PICKS</div>
           <h1>History</h1>
-          <p className="sub">Newest records first. Manual final scores override BSD here and on the Schedule page.</p>
+          <p className="sub">Newest records first. BSD supplies the actual fixture kickoff when available; manual final scores override BSD.</p>
         </div>
 
         <div className="metrics" style={{ marginTop: 24 }}>
@@ -208,7 +208,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
 
         <div className="resultCount">
           Showing {picks.length} of {datedPicks.length} dated picks
-          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD scores {isBsdConfigured() ? "on" : "off"}</span>
+          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD fixture sync {isBsdConfigured() ? "on" : "off"}</span>
         </div>
 
         {picks.length === 0 ? (
@@ -220,8 +220,12 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
             const recordedAt = (row["Recorded At"] || kickoff) as string;
             const match = row.Match || "Unknown fixture";
             const teams = splitFixtureName(match);
+            const bsdFixture = getBsdFixture(bsdFixtures, match, kickoff);
+            const displayKickoff = bsdFixture?.kickoff || kickoff;
             const manualScore = getManualScore(manualScores, match, kickoff);
-            const bsdScore = getBsdScore(finalScores, match, kickoff);
+            const bsdScore = bsdFixture?.status === "finished" && bsdFixture.home !== undefined && bsdFixture.away !== undefined
+              ? { home: bsdFixture.home, away: bsdFixture.away, eventId: bsdFixture.eventId }
+              : undefined;
             const score = manualScore || bsdScore;
             const scoreSource = manualScore ? "MANUAL" : bsdScore ? "FT" : "SCORE";
             const result = selectName(row.Result) || "PENDING";
@@ -231,7 +235,7 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
               <details className="card pickCard" key={pick.id}>
                 <summary className="pickReadable">
                   <div className="pickIdentity">
-                    <div className="meta">{formatICT(kickoff)} · {row.Competition || "Unknown competition"}</div>
+                    <div className="meta">{formatICT(displayKickoff)}{bsdFixture ? " · BSD" : ""} · {row.Competition || "Unknown competition"}</div>
                     {teams ? (
                       <div className="teamStack compact">
                         <div className="teamRow"><strong>{teams.home}</strong></div>
@@ -265,8 +269,8 @@ export default async function PicksPage({ searchParams }: { searchParams: Search
                   <div className="detailStrip">
                     <span><small>STAKE</small><strong>{row["Stake u"] ?? "—"}u</strong></span>
                     <span><small>RECORDED</small><strong>{formatICT(recordedAt)}</strong></span>
+                    {bsdFixture && <span><small>BSD EVENT</small><strong>#{bsdFixture.eventId}</strong></span>}
                     {manualScore && <span><small>SCORE SOURCE</small><strong>MANUAL</strong></span>}
-                    {!manualScore && bsdScore && <span><small>BSD EVENT</small><strong>#{bsdScore.eventId}</strong></span>}
                   </div>
 
                   <div className="scoreEditor">
