@@ -264,8 +264,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                       <div className="fixtureIdentity">
                         {teams ? (
                           <div className="teamStack">
-                            <div className="teamRow"><span className="sideLabel">HOME</span><strong>{teams.home}</strong></div>
-                            <div className="teamRow"><span className="sideLabel">AWAY</span><strong>{teams.away}</strong></div>
+                            <div className="teamRow"><strong>{teams.home}</strong></div>
+                            <div className="teamRow"><strong>{teams.away}</strong></div>
                           </div>
                         ) : (
                           <div className="match">{match}</div>
