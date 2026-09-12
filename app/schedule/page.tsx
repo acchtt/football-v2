@@ -58,6 +58,13 @@ function dateKey(value: string) {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
+function slateDay(row: Row) {
+  const slate = row["Slate Date"];
+  if (slate && /^\d{4}-\d{2}-\d{2}$/.test(slate)) return slate;
+  const kickoff = row["Kickoff ICT"];
+  return kickoff && hasValidDate(kickoff) ? dateKey(kickoff) : "";
+}
+
 function normalize(value = "") {
   return value
     .toLowerCase()
@@ -68,7 +75,7 @@ function normalize(value = "") {
 }
 
 function fixtureKey(row: Row) {
-  return `${normalize(row.Match)}|${row["Kickoff ICT"] || row["Slate Date"] || ""}`;
+  return `${normalize(row.Match)}|${slateDay(row)}`;
 }
 
 function kickoffTime(value: string) {
@@ -80,14 +87,14 @@ function kickoffTime(value: string) {
   }).format(new Date(value));
 }
 
-function dayLabel(value: string) {
+function dayLabelFromSlate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: ZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric"
-  }).format(new Date(value));
+  }).format(new Date(`${value}T12:00:00+07:00`));
 }
 
 function returnTo(filters: Awaited<SearchParams>) {
@@ -131,23 +138,26 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
       timestamp(b.fields["Screened At"] || b.createdTime) - timestamp(a.fields["Screened At"] || a.createdTime)
     )) {
       const key = fixtureKey(record.fields);
-      if (!latest.has(key)) latest.set(key, record);
+      if (key.endsWith("|") || latest.has(key)) continue;
+      latest.set(key, record);
     }
 
     const baseBoard = [...latest.values()]
       .filter((record) => ["FOCUS", "WATCHLIST"].includes(selectName(record.fields["Board Tier"])))
-      .filter((record) => hasValidDate(record.fields["Kickoff ICT"]))
-      .sort((a, b) => timestamp(b.fields["Kickoff ICT"]) - timestamp(a.fields["Kickoff ICT"]));
+      .filter((record) => Boolean(slateDay(record.fields)) && hasValidDate(record.fields["Kickoff ICT"]))
+      .sort((a, b) => {
+        const dayCompare = slateDay(b.fields).localeCompare(slateDay(a.fields));
+        return dayCompare || timestamp(b.fields["Kickoff ICT"]) - timestamp(a.fields["Kickoff ICT"]);
+      });
 
     const competitions = [...new Set(baseBoard.map((record) => record.fields.Competition).filter((value): value is string => Boolean(value)))].sort();
     const grades = [...new Set(baseBoard.map((record) => selectName(record.fields["PRE Grade"])).filter(Boolean))].sort();
 
     const board = baseBoard.filter((record) => {
       const row = record.fields;
-      const kickoff = row["Kickoff ICT"] as string;
       const tier = selectName(row["Board Tier"]);
       const grade = selectName(row["PRE Grade"]);
-      if (dateFilter && dateKey(kickoff) !== dateFilter) return false;
+      if (dateFilter && slateDay(row) !== dateFilter) return false;
       if (tierFilter !== "ALL" && tier !== tierFilter) return false;
       if (gradeFilter !== "ALL" && grade !== gradeFilter) return false;
       if (competitionFilter !== "ALL" && row.Competition !== competitionFilter) return false;
@@ -169,9 +179,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
     const groups = new Map<string, Rec<Row>[]>();
 
     for (const record of board) {
-      const kickoff = record.fields["Kickoff ICT"] as string;
-      const label = dayLabel(kickoff);
-      groups.set(label, [...(groups.get(label) || []), record]);
+      const day = slateDay(record.fields);
+      groups.set(day, [...(groups.get(day) || []), record]);
     }
 
     return (
@@ -180,7 +189,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
           <div>
             <div className="eyebrow">LIVE CONTROL BOARD</div>
             <h1>Schedule</h1>
-            <p className="sub">Newest fixtures first. Manual final scores override BSD; clear a manual score at any time to return to automatic BSD results.</p>
+            <p className="sub">Newest slate dates first. Airtable Slate Date controls the board day; kickoff is used only for the ICT clock time. Manual final scores override BSD.</p>
           </div>
           <div className="stats">
             <div className="stat red"><small>FOCUS</small><strong>{focus}</strong></div>
@@ -195,7 +204,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
             <input id="q" name="q" type="search" defaultValue={filters.q || ""} placeholder="Match or competition" />
           </div>
           <div>
-            <label htmlFor="date">Kickoff date</label>
+            <label htmlFor="date">Slate date</label>
             <input id="date" name="date" type="date" defaultValue={dateFilter} />
           </div>
           <div>
@@ -236,7 +245,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
         ) : (
           [...groups.entries()].map(([day, dayRecords]) => (
             <section key={day}>
-              <div className="sectionTitle">{day} · ICT</div>
+              <div className="sectionTitle">{dayLabelFromSlate(day)} · ICT</div>
               {dayRecords.map((record) => {
                 const row = record.fields;
                 const kickoff = row["Kickoff ICT"] as string;
