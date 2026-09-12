@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { AirtableError } from "@/lib/airtable";
 import { saveManualScore } from "@/lib/manual-scores";
 
 function cleanReturnTo(value: FormDataEntryValue | null) {
@@ -24,27 +25,37 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const form = await request.formData();
-  const match = typeof form.get("match") === "string" ? String(form.get("match")).trim() : "";
-  const kickoff = typeof form.get("kickoff") === "string" ? String(form.get("kickoff")).trim() : "";
-  const action = typeof form.get("action") === "string" ? String(form.get("action")) : "save";
-  const returnTo = cleanReturnTo(form.get("returnTo"));
+  try {
+    const form = await request.formData();
+    const match = typeof form.get("match") === "string" ? String(form.get("match")).trim() : "";
+    const kickoff = typeof form.get("kickoff") === "string" ? String(form.get("kickoff")).trim() : "";
+    const action = typeof form.get("action") === "string" ? String(form.get("action")) : "save";
+    const returnTo = cleanReturnTo(form.get("returnTo"));
 
-  if (!match || !kickoff || !Number.isFinite(new Date(kickoff).getTime())) {
-    return new NextResponse("Match and kickoff are required.", { status: 400 });
-  }
+    if (!match || !kickoff || !Number.isFinite(new Date(kickoff).getTime())) {
+      return new NextResponse("Match and kickoff are required.", { status: 400 });
+    }
 
-  if (action === "clear") {
-    await saveManualScore(match, kickoff, null, null);
+    if (action === "clear") {
+      await saveManualScore(match, kickoff, null, null);
+      return NextResponse.redirect(new URL(returnTo, request.url), 303);
+    }
+
+    const home = scoreValue(form.get("home"));
+    const away = scoreValue(form.get("away"));
+    if (home === undefined || away === undefined) {
+      return new NextResponse("Enter whole-number scores between 0 and 99.", { status: 400 });
+    }
+
+    await saveManualScore(match, kickoff, home, away);
     return NextResponse.redirect(new URL(returnTo, request.url), 303);
+  } catch (error) {
+    console.error("Manual score save failed", error);
+    const message = error instanceof Error ? error.message : "Unknown server error";
+    const status = error instanceof AirtableError && error.status && error.status >= 400 && error.status < 500 ? error.status : 502;
+    return new NextResponse(`Manual score could not be saved.\n\n${message}`, {
+      status,
+      headers: { "Content-Type": "text/plain; charset=utf-8" }
+    });
   }
-
-  const home = scoreValue(form.get("home"));
-  const away = scoreValue(form.get("away"));
-  if (home === undefined || away === undefined) {
-    return new NextResponse("Enter whole-number scores between 0 and 99.", { status: 400 });
-  }
-
-  await saveManualScore(match, kickoff, home, away);
-  return NextResponse.redirect(new URL(returnTo, request.url), 303);
 }
