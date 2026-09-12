@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import "./score-editor.css";
 import "./readability-fix.css";
+import "./live-score.css";
 
 export const metadata: Metadata = {
   title: "SlipTrace Football Control",
