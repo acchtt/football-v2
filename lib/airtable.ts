@@ -4,7 +4,8 @@ export const BASE_ID = process.env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
 
 export const TABLES = {
   coverage: "tblcl1UAyMqZT6Ub0",
-  picks: "tblg3J5sbJYbzuTYD"
+  picks: "tblg3J5sbJYbzuTYD",
+  manualScores: "tblvsHegh2WZ8qor2"
 } as const;
 
 export type Rec<T> = {
@@ -23,17 +24,41 @@ export class AirtableError extends Error {
   }
 }
 
+function token() {
+  const value = process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_ACCESS_TOKEN;
+  if (!value) {
+    throw new AirtableError("AIRTABLE_TOKEN is missing from the Vercel Production environment.");
+  }
+  return value;
+}
+
+async function airtableFetch(url: URL, init: RequestInit = {}) {
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token()}`,
+      "Content-Type": "application/json",
+      ...(init.headers || {})
+    },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new AirtableError(
+      `Airtable HTTP ${response.status}: ${text.slice(0, 500) || "request rejected"}`,
+      response.status
+    );
+  }
+
+  return response;
+}
+
 export async function records<T>(
   table: string,
   fields: string[],
   sort?: { field: string; direction: "asc" | "desc" }
 ): Promise<Rec<T>[]> {
-  const token = process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_ACCESS_TOKEN;
-
-  if (!token) {
-    throw new AirtableError("AIRTABLE_TOKEN is missing from the Vercel Production environment.");
-  }
-
   const out: Rec<T>[] = [];
   let offset: string | undefined;
 
@@ -49,25 +74,29 @@ export async function records<T>(
 
     if (offset) url.searchParams.set("offset", offset);
 
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new AirtableError(
-        `Airtable HTTP ${response.status}: ${text.slice(0, 500) || "request rejected"}`,
-        response.status
-      );
-    }
-
+    const response = await airtableFetch(url);
     const payload = (await response.json()) as { records: Rec<T>[]; offset?: string };
     out.push(...payload.records);
     offset = payload.offset;
   } while (offset);
 
   return out;
+}
+
+export async function upsertRecord(
+  table: string,
+  mergeField: string,
+  fields: Record<string, unknown>
+) {
+  const url = new URL(`${API}/${BASE_ID}/${table}`);
+  const response = await airtableFetch(url, {
+    method: "PATCH",
+    body: JSON.stringify({
+      performUpsert: { fieldsToMergeOn: [mergeField] },
+      records: [{ fields }]
+    })
+  });
+  return response.json();
 }
 
 export function selectName(value: unknown): string {
