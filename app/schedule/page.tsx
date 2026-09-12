@@ -1,4 +1,5 @@
 import { AirtableError, records, selectName, TABLES, type Rec } from "@/lib/airtable";
+import { fetchBsdFinalScores, getBsdScore, isBsdConfigured, splitFixtureName } from "@/lib/bsd";
 
 export const dynamic = "force-dynamic";
 
@@ -141,6 +142,13 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
       return true;
     });
 
+    const scoreFixtures = board.flatMap((record) => {
+      const match = record.fields.Match;
+      const kickoff = record.fields["Kickoff ICT"];
+      return match && kickoff ? [{ match, kickoff }] : [];
+    });
+    const finalScores = await fetchBsdFinalScores(scoreFixtures);
+
     const focus = board.filter((record) => selectName(record.fields["Board Tier"]) === "FOCUS").length;
     const groups = new Map<string, Rec<Row>[]>();
 
@@ -156,7 +164,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
           <div>
             <div className="eyebrow">LIVE CONTROL BOARD</div>
             <h1>Schedule</h1>
-            <p className="sub">Newest fixtures first. Latest authoritative screening state from Daily Coverage Ledger; duplicate sweep records are collapsed and undated fixtures are excluded.</p>
+            <p className="sub">Newest fixtures first. The compact row shows kickoff, teams, final score when available, PRE grade and board tier; open a row for the model detail.</p>
           </div>
           <div className="stats">
             <div className="stat red"><small>FOCUS</small><strong>{focus}</strong></div>
@@ -202,7 +210,10 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
           </div>
         </form>
 
-        <div className="resultCount">Showing {board.length} of {baseBoard.length} dated FOCUS / WATCHLIST fixtures</div>
+        <div className="resultCount">
+          Showing {board.length} of {baseBoard.length} dated FOCUS / WATCHLIST fixtures
+          <span className={`syncState ${isBsdConfigured() ? "on" : "off"}`}>BSD scores {isBsdConfigured() ? "on" : "off"}</span>
+        </div>
 
         {board.length === 0 ? (
           <div className="empty">No fixtures match the current filters.</div>
@@ -213,6 +224,9 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
               {dayRecords.map((record) => {
                 const row = record.fields;
                 const kickoff = row["Kickoff ICT"] as string;
+                const match = row.Match || "Unknown fixture";
+                const teams = splitFixtureName(match);
+                const score = getBsdScore(finalScores, match, kickoff);
                 const tier = selectName(row["Board Tier"]);
                 const grade = selectName(row["PRE Grade"]);
                 const structure = selectName(row["Structural Type"]);
@@ -221,24 +235,43 @@ export default async function SchedulePage({ searchParams }: { searchParams: Sea
                 const status = selectName(row["Coverage Status"]);
 
                 return (
-                  <details className="card" key={record.id}>
-                    <summary className="fixture">
-                      <div className="time">{kickoffTime(kickoff)}</div>
-                      <div>
-                        <div className="match">{row.Match || "Unknown fixture"}</div>
+                  <details className="card fixtureCard" key={record.id}>
+                    <summary className="fixtureReadable">
+                      <div className="kickoffBlock">
+                        <div className="time">{kickoffTime(kickoff)}</div>
+                        <div className="timeZone">ICT</div>
+                      </div>
+
+                      <div className="fixtureIdentity">
+                        {teams ? (
+                          <div className="teamStack">
+                            <div className="teamRow"><span className="sideLabel">HOME</span><strong>{teams.home}</strong></div>
+                            <div className="teamRow"><span className="sideLabel">AWAY</span><strong>{teams.away}</strong></div>
+                          </div>
+                        ) : (
+                          <div className="match">{match}</div>
+                        )}
                         <div className="comp">{row.Competition || "Unknown competition"}</div>
                       </div>
-                      <div className="badges">
+
+                      <div className={`scoreBlock ${score ? "final" : "pending"}`}>
+                        <span>{score ? "FT" : "SCORE"}</span>
+                        <strong>{score ? `${score.home}–${score.away}` : "—"}</strong>
+                      </div>
+
+                      <div className="primaryBadges">
                         {grade && <span className={`badge ${grade.startsWith("A") ? "lime" : "amber"}`}>{grade}</span>}
                         <span className={`badge ${tier === "FOCUS" ? "red" : "cyan"}`}>{tier}</span>
                       </div>
                     </summary>
+
                     <div className="detail">
-                      <div className="badges" style={{ justifyContent: "flex-start" }}>
-                        {structure && <span className="badge">{structure}</span>}
-                        <span className="badge">XI {xi || "—"}</span>
-                        <span className="badge">MARKET {market || "—"}</span>
-                        {status && <span className="badge">{status}</span>}
+                      <div className="detailStrip">
+                        {structure && <span><small>STRUCTURE</small><strong>{structure}</strong></span>}
+                        <span><small>XI</small><strong>{xi || "—"}</strong></span>
+                        <span><small>MARKET</small><strong>{market || "—"}</strong></span>
+                        {status && <span><small>COVERAGE</small><strong>{status}</strong></span>}
+                        {score && <span><small>BSD EVENT</small><strong>#{score.eventId}</strong></span>}
                       </div>
                       {row["Frozen PRE Summary"] && <><div className="label" style={{ marginTop: 16 }}>FROZEN PRE</div><p>{row["Frozen PRE Summary"]}</p></>}
                       {row["Coverage Notes"] && <><div className="label" style={{ marginTop: 16, color: "#8b919d" }}>COVERAGE NOTES</div><p>{row["Coverage Notes"]}</p></>}
