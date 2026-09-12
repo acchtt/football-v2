@@ -19,6 +19,13 @@ type Row = {
   "Coverage Notes"?: string;
 };
 
+type SearchParams = Promise<{
+  tier?: string;
+  grade?: string;
+  competition?: string;
+  q?: string;
+}>;
+
 const FIELDS = [
   "Coverage ID", "Slate Date", "Match", "Competition", "Kickoff ICT",
   "Coverage Status", "PRE Grade", "Structural Type", "Board Tier",
@@ -29,7 +36,12 @@ const ZONE = "Asia/Ho_Chi_Minh";
 
 function timestamp(value?: string) {
   if (!value) return 0;
-  return Date.parse(value) || 0;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function hasValidDate(value?: string) {
+  return timestamp(value) > 0;
 }
 
 function normalize(value = "") {
@@ -45,8 +57,7 @@ function fixtureKey(row: Row) {
   return `${normalize(row.Match)}|${row["Kickoff ICT"] || row["Slate Date"] || ""}`;
 }
 
-function kickoffTime(value?: string) {
-  if (!value) return "—";
+function kickoffTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: ZONE,
     hour: "2-digit",
@@ -55,13 +66,13 @@ function kickoffTime(value?: string) {
   }).format(new Date(value));
 }
 
-function dayLabel(value?: string) {
-  if (!value) return "Unknown day";
+function dayLabel(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: ZONE,
     weekday: "long",
     day: "numeric",
-    month: "long"
+    month: "long",
+    year: "numeric"
   }).format(new Date(value));
 }
 
@@ -78,8 +89,14 @@ function Notice({ message }: { message: string }) {
   );
 }
 
-export default async function SchedulePage() {
+export default async function SchedulePage({ searchParams }: { searchParams: SearchParams }) {
   try {
+    const filters = await searchParams;
+    const tierFilter = (filters.tier || "ALL").toUpperCase();
+    const gradeFilter = filters.grade || "ALL";
+    const competitionFilter = filters.competition || "ALL";
+    const query = normalize(filters.q || "");
+
     const all = await records<Row>(TABLES.coverage, FIELDS, { field: "Screened At", direction: "desc" });
 
     const latest = new Map<string, Rec<Row>>();
@@ -90,15 +107,31 @@ export default async function SchedulePage() {
       if (!latest.has(key)) latest.set(key, record);
     }
 
-    const board = [...latest.values()]
+    const baseBoard = [...latest.values()]
       .filter((record) => ["FOCUS", "WATCHLIST"].includes(selectName(record.fields["Board Tier"])))
-      .sort((a, b) => timestamp(a.fields["Kickoff ICT"]) - timestamp(b.fields["Kickoff ICT"]));
+      .filter((record) => hasValidDate(record.fields["Kickoff ICT"]))
+      .sort((a, b) => timestamp(b.fields["Kickoff ICT"]) - timestamp(a.fields["Kickoff ICT"]));
+
+    const competitions = [...new Set(baseBoard.map((record) => record.fields.Competition).filter((value): value is string => Boolean(value)))].sort();
+    const grades = [...new Set(baseBoard.map((record) => selectName(record.fields["PRE Grade"])).filter(Boolean))].sort();
+
+    const board = baseBoard.filter((record) => {
+      const row = record.fields;
+      const tier = selectName(row["Board Tier"]);
+      const grade = selectName(row["PRE Grade"]);
+      if (tierFilter !== "ALL" && tier !== tierFilter) return false;
+      if (gradeFilter !== "ALL" && grade !== gradeFilter) return false;
+      if (competitionFilter !== "ALL" && row.Competition !== competitionFilter) return false;
+      if (query && !normalize(`${row.Match || ""} ${row.Competition || ""}`).includes(query)) return false;
+      return true;
+    });
 
     const focus = board.filter((record) => selectName(record.fields["Board Tier"]) === "FOCUS").length;
     const groups = new Map<string, Rec<Row>[]>();
 
     for (const record of board) {
-      const label = dayLabel(record.fields["Kickoff ICT"]);
+      const kickoff = record.fields["Kickoff ICT"] as string;
+      const label = dayLabel(kickoff);
       groups.set(label, [...(groups.get(label) || []), record]);
     }
 
@@ -108,7 +141,7 @@ export default async function SchedulePage() {
           <div>
             <div className="eyebrow">LIVE CONTROL BOARD</div>
             <h1>Schedule</h1>
-            <p className="sub">Latest authoritative screening state from Daily Coverage Ledger. Repeated sweep records are collapsed before FOCUS / WATCHLIST filtering.</p>
+            <p className="sub">Newest fixtures first. Latest authoritative screening state from Daily Coverage Ledger; duplicate sweep records are collapsed and undated fixtures are excluded.</p>
           </div>
           <div className="stats">
             <div className="stat red"><small>FOCUS</small><strong>{focus}</strong></div>
@@ -117,14 +150,50 @@ export default async function SchedulePage() {
           </div>
         </div>
 
+        <form className="filters" method="get">
+          <div className="filterSearch">
+            <label htmlFor="q">Search</label>
+            <input id="q" name="q" type="search" defaultValue={filters.q || ""} placeholder="Match or competition" />
+          </div>
+          <div>
+            <label htmlFor="tier">Tier</label>
+            <select id="tier" name="tier" defaultValue={tierFilter}>
+              <option value="ALL">All tiers</option>
+              <option value="FOCUS">FOCUS</option>
+              <option value="WATCHLIST">WATCHLIST</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="grade">PRE grade</label>
+            <select id="grade" name="grade" defaultValue={gradeFilter}>
+              <option value="ALL">All grades</option>
+              {grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="competition">Competition</label>
+            <select id="competition" name="competition" defaultValue={competitionFilter}>
+              <option value="ALL">All competitions</option>
+              {competitions.map((competition) => <option key={competition} value={competition}>{competition}</option>)}
+            </select>
+          </div>
+          <div className="filterActions">
+            <button className="filterButton" type="submit">Apply</button>
+            <a className="filterReset" href="/schedule">Reset</a>
+          </div>
+        </form>
+
+        <div className="resultCount">Showing {board.length} of {baseBoard.length} dated FOCUS / WATCHLIST fixtures</div>
+
         {board.length === 0 ? (
-          <div className="empty">No FOCUS or WATCHLIST fixtures on the latest board.</div>
+          <div className="empty">No fixtures match the current filters.</div>
         ) : (
           [...groups.entries()].map(([day, dayRecords]) => (
             <section key={day}>
               <div className="sectionTitle">{day} · ICT</div>
               {dayRecords.map((record) => {
                 const row = record.fields;
+                const kickoff = row["Kickoff ICT"] as string;
                 const tier = selectName(row["Board Tier"]);
                 const grade = selectName(row["PRE Grade"]);
                 const structure = selectName(row["Structural Type"]);
@@ -135,7 +204,7 @@ export default async function SchedulePage() {
                 return (
                   <details className="card" key={record.id}>
                     <summary className="fixture">
-                      <div className="time">{kickoffTime(row["Kickoff ICT"])}</div>
+                      <div className="time">{kickoffTime(kickoff)}</div>
                       <div>
                         <div className="match">{row.Match || "Unknown fixture"}</div>
                         <div className="comp">{row.Competition || "Unknown competition"}</div>
