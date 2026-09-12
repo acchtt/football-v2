@@ -83,19 +83,36 @@ export async function records<T>(
   return out;
 }
 
-export async function upsertRecord(
+export async function createRecord<T = Record<string, unknown>>(
   table: string,
-  mergeField: string,
   fields: Record<string, unknown>
-) {
+): Promise<Rec<T>> {
   const url = new URL(`${API}/${BASE_ID}/${table}`);
   const response = await airtableFetch(url, {
-    method: "PATCH",
-    body: JSON.stringify({
-      performUpsert: { fieldsToMergeOn: [mergeField] },
-      records: [{ fields }]
-    })
+    method: "POST",
+    body: JSON.stringify({ records: [{ fields }] })
   });
+  const payload = (await response.json()) as { records: Rec<T>[] };
+  if (!payload.records?.[0]) throw new AirtableError("Airtable create returned no record.");
+  return payload.records[0];
+}
+
+export async function updateRecord<T = Record<string, unknown>>(
+  table: string,
+  recordId: string,
+  fields: Record<string, unknown>
+): Promise<Rec<T>> {
+  const url = new URL(`${API}/${BASE_ID}/${table}/${recordId}`);
+  const response = await airtableFetch(url, {
+    method: "PATCH",
+    body: JSON.stringify({ fields })
+  });
+  return response.json() as Promise<Rec<T>>;
+}
+
+export async function deleteRecord(table: string, recordId: string) {
+  const url = new URL(`${API}/${BASE_ID}/${table}/${recordId}`);
+  const response = await airtableFetch(url, { method: "DELETE" });
   return response.json();
 }
 
