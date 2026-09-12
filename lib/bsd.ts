@@ -13,6 +13,8 @@ type RawEvent = {
   status: string;
   homeScore?: number;
   awayScore?: number;
+  period?: string;
+  currentMinute?: number;
 };
 
 export type BsdFixture = {
@@ -23,6 +25,8 @@ export type BsdFixture = {
   status: string;
   home?: number;
   away?: number;
+  period?: string;
+  currentMinute?: number;
 };
 
 export type BsdFinalScore = {
@@ -44,6 +48,11 @@ function numeric(value: unknown): number | undefined {
   return undefined;
 }
 
+function text(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return undefined;
+}
+
 function teamName(value: unknown, flat?: unknown): string {
   if (typeof flat === "string" && flat.trim()) return flat.trim();
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -52,6 +61,13 @@ function teamName(value: unknown, flat?: unknown): string {
     if (typeof name === "string" && name.trim()) return name.trim();
   }
   return "";
+}
+
+function payloadRows(payload: unknown): Record<string, unknown>[] {
+  if (Array.isArray(payload)) return payload.filter(isRecord);
+  if (!isRecord(payload)) return [];
+  const batch = [payload.results, payload.events, payload.data].find(Array.isArray) as unknown[] | undefined;
+  return batch ? batch.filter(isRecord) : [payload];
 }
 
 export function isBsdConfigured() {
@@ -110,6 +126,18 @@ function addDays(day: string, amount: number) {
   return utcDay(date);
 }
 
+async function bsdFetch(path: string) {
+  const token = process.env.BSD_API_TOKEN;
+  if (!token) return [] as Record<string, unknown>[];
+  const response = await fetch(`${BSD_BASE_URL}${path}`, {
+    headers: { Authorization: `Token ${token}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000)
+  });
+  if (!response.ok) throw new Error(`BSD ${path} returned ${response.status}`);
+  return payloadRows(await response.json());
+}
+
 async function bsdGetAll(dateFrom: string, dateTo: string): Promise<Record<string, unknown>[]> {
   const token = process.env.BSD_API_TOKEN;
   if (!token) return [];
@@ -133,26 +161,21 @@ async function bsdGetAll(dateFrom: string, dateTo: string): Promise<Record<strin
 
     if (!response.ok) throw new Error(`BSD events returned ${response.status}`);
     const payload: unknown = await response.json();
+    const batch = payloadRows(payload);
+    results.push(...batch);
 
-    if (Array.isArray(payload)) return payload.filter(isRecord);
-    if (!isRecord(payload)) return results;
-
-    const batch = [payload.results, payload.events, payload.data].find(Array.isArray) as unknown[] | undefined;
-    if (!batch) return results;
-
-    results.push(...batch.filter(isRecord));
-    if (!payload.next || batch.length < limit) break;
+    if (!isRecord(payload) || !payload.next || batch.length < limit) break;
     offset += limit;
   }
 
   return results;
 }
 
-function parseEvent(row: Record<string, unknown>): RawEvent | undefined {
-  const id = numeric(row.id);
-  const eventDate = typeof row.event_date === "string" ? row.event_date : "";
-  const home = teamName(row.home_team, row.home_team_name);
-  const away = teamName(row.away_team, row.away_team_name);
+function parseEvent(row: Record<string, unknown>, defaultStatus = ""): RawEvent | undefined {
+  const id = numeric(row.id ?? row.event_id);
+  const eventDate = text(row.event_date ?? row.date ?? row.kickoff) || "";
+  const home = teamName(row.home_team ?? row.home, row.home_team_name ?? row.home_name);
+  const away = teamName(row.away_team ?? row.away, row.away_team_name ?? row.away_name);
   if (id === undefined || !eventDate || !home || !away) return undefined;
 
   return {
@@ -160,9 +183,11 @@ function parseEvent(row: Record<string, unknown>): RawEvent | undefined {
     eventDate,
     home,
     away,
-    status: String(row.status || "").toLowerCase(),
+    status: String(row.status || defaultStatus).toLowerCase(),
     homeScore: numeric(row.home_score),
-    awayScore: numeric(row.away_score)
+    awayScore: numeric(row.away_score),
+    period: text(row.period ?? row.current_period ?? row.match_period),
+    currentMinute: numeric(row.current_minute ?? row.minute)
   };
 }
 
@@ -211,13 +236,34 @@ async function fetchEventWindow(fixtures: FixtureRef[]) {
   });
 }
 
+async function fetchLiveEvents() {
+  if (!isBsdConfigured()) return [] as RawEvent[];
+  try {
+    const rows = await bsdFetch("/events/live/");
+    return rows.flatMap((row) => {
+      const event = parseEvent(row, "live");
+      return event ? [event] : [];
+    });
+  } catch (error) {
+    console.error("BSD live score sync failed", error);
+    return [] as RawEvent[];
+  }
+}
+
 export async function fetchBsdFixtures(fixtures: FixtureRef[]) {
   const output = new Map<string, BsdFixture>();
   if (!fixtures.length || !isBsdConfigured()) return output;
 
   let events: RawEvent[] = [];
   try {
-    events = await fetchEventWindow(fixtures);
+    const [windowEvents, liveEvents] = await Promise.all([
+      fetchEventWindow(fixtures),
+      fetchLiveEvents()
+    ]);
+    const byId = new Map<number, RawEvent>();
+    for (const event of windowEvents) byId.set(event.id, event);
+    for (const event of liveEvents) byId.set(event.id, event);
+    events = [...byId.values()];
   } catch (error) {
     console.error("BSD fixture sync failed", error);
     return output;
@@ -239,7 +285,9 @@ export async function fetchBsdFixtures(fixtures: FixtureRef[]) {
       kickoff: best.eventDate,
       status: best.status,
       home: best.homeScore,
-      away: best.awayScore
+      away: best.awayScore,
+      period: best.period,
+      currentMinute: best.currentMinute
     });
   }
 
