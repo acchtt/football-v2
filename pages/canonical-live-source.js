@@ -65,12 +65,15 @@
     return id === null ? '' : String(id);
   }
 
-  function eventKey(event) {
-    const id = eventId(event);
-    if (id) return `id:${id}`;
+  function teamKey(event) {
     const home = normName(teamName(event, 'home'));
     const away = normName(teamName(event, 'away'));
-    return home && away ? `teams:${home}|${away}` : '';
+    return home && away ? `${home}|${away}` : '';
+  }
+
+  function eventKey(event) {
+    const id = eventId(event);
+    return id ? `id:${id}` : (teamKey(event) ? `teams:${teamKey(event)}` : '');
   }
 
   function rowsFrom(payload) {
@@ -117,7 +120,12 @@
         const response = await nativeFetch(`${API}/api/bsd/live?canonical=${now}`, { cache: 'no-store' });
         if (!response.ok) return { ok: false, rows: liveCache };
         const payload = await response.json();
-        const rows = rowsFrom(payload).filter(event => normalizedStatus(event) === 'live');
+        // Membership in BSD's dedicated live endpoint is authoritative. Some
+        // compact rows omit a literal `status: live`, so only exclude rows that
+        // explicitly resolve to a terminal/stopped state, then force LIVE.
+        const rows = rowsFrom(payload)
+          .filter(event => !['finished','stopped'].includes(normalizedStatus(event)))
+          .map(event => ({ ...event, status: 'live' }));
         liveCache = rows;
         liveCacheAt = Date.now();
         window.__SLIPTRACE_CANONICAL_LIVE__ = rows;
@@ -175,9 +183,9 @@
     const liveByTeams = new Map();
     for (const event of liveResult.rows) {
       const id = eventId(event);
-      const key = eventKey(event);
+      const teams = teamKey(event);
       if (id) liveById.set(id, event);
-      if (key) liveByTeams.set(key, event);
+      if (teams) liveByTeams.set(teams, event);
     }
 
     const output = [];
@@ -185,8 +193,9 @@
 
     for (const event of container.rows) {
       const id = eventId(event);
+      const teams = teamKey(event);
       const key = eventKey(event);
-      const liveEvent = (id && liveById.get(id)) || (key && liveByTeams.get(key)) || null;
+      const liveEvent = (id && liveById.get(id)) || (teams && liveByTeams.get(teams)) || null;
       const dayStatus = normalizedStatus(event);
 
       if (liveEvent) {
@@ -205,11 +214,8 @@
         continue;
       }
 
-      if (dayStatus === 'finished') {
-        output.push({ ...event, status: 'finished' });
-      } else {
-        output.push(event);
-      }
+      if (dayStatus === 'finished') output.push({ ...event, status: 'finished' });
+      else output.push(event);
       if (key) included.add(key);
     }
 
