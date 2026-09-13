@@ -1,0 +1,25 @@
+name: Probe Soccerway upstream
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/probe-soccerway.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call live Worker Soccerway probe
+        run: |
+          set -euo pipefail
+          echo "=== Soccerway probe response ==="
+          curl --fail-with-body --silent --show-error \
+            "https://football-v2-2.acchtt.workers.dev/api/soccerway-probe"
+          echo
