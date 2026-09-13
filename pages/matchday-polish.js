@@ -92,34 +92,101 @@
     label.textContent=name;
   }
 
+  function rowStatus(row) {
+    const clockText=(row.querySelector('.matchScore [data-clock]')?.textContent||'').trim().toUpperCase();
+    if(/^FT\b/.test(clockText) || row.classList.contains('is-ft-row')) return 'ft';
+    if(row.querySelector('.tag.live') || row.classList.contains('is-live-row')) return 'live';
+    return 'scheduled';
+  }
+
   function decorateRow(row,groupName) {
     const br=boardRowFor(row);
     addCompetition(row,br,groupName);
     const fallback=row.querySelector('.matchTime')?.textContent||'';
     row.dataset.kickoffSort=String(parseKickoff(br?.kickoff||br?.displayKickoff||br?.kickoffICT,fallback));
-    const clock=row.querySelector('.matchScore [data-clock]');
-    const clockText=(clock?.textContent||'').trim().toUpperCase();
-    row.classList.toggle('is-ft-row',/^FT\b/.test(clockText));
-    row.classList.toggle('is-live-row',!!row.querySelector('.tag.live')&&!row.classList.contains('is-ft-row'));
+    const status=rowStatus(row);
+    row.classList.toggle('is-ft-row',status==='ft');
+    row.classList.toggle('is-live-row',status==='live');
+    row.dataset.matchStatus=status;
   }
 
-  function flattenPanel(panel) {
-    const groups=[...panel.querySelectorAll(':scope > .leagueGroup')];
-    if(!groups.length) return;
-    const items=[];
-    for(const group of groups){
-      const groupName=group.querySelector('.leagueTitle strong')?.textContent?.trim()||'';
-      for(const row of group.querySelectorAll(':scope > .matchRow')){
-        decorateRow(row,groupName);
-        items.push(row);
+  function rowKey(row) {
+    return row.dataset.liveEvent || row.getAttribute('href') || `${rowTeams(row).home}|${rowTeams(row).away}`;
+  }
+
+  function makeStatusSection(status,rows) {
+    const section=document.createElement('section');
+    section.className=`matchStatusSection status-${status}`;
+    section.dataset.status=status;
+
+    const head=document.createElement('div');
+    head.className='matchStatusHead';
+    const label=status==='live'?'LIVE':status==='scheduled'?'SCHEDULED':'FT';
+    head.innerHTML=`<div><span class="statusDot"></span><strong>${label}</strong></div><span>${rows.length}</span>`;
+
+    const list=document.createElement('div');
+    list.className='chronoMatches';
+    rows.sort((a,b)=>Number(a.dataset.kickoffSort)-Number(b.dataset.kickoffSort));
+    rows.forEach(row=>list.appendChild(row));
+
+    section.append(head,list);
+    return section;
+  }
+
+  function findPrimaryMatchdayPanel(mainCol) {
+    const panels=[...mainCol.querySelectorAll(':scope > .panel')];
+    return panels.find(panel=>/^(today|fixtures)$/i.test(panel.querySelector('.panelHead h2')?.textContent?.trim()||'')) || panels.at(-1) || null;
+  }
+
+  function groupNameFor(row) {
+    const group=row.closest('.leagueGroup');
+    if(group) return group.querySelector('.leagueTitle strong')?.textContent?.trim()||'';
+    return row.querySelector('.matchCompetition')?.textContent?.trim()||'';
+  }
+
+  function shouldReorganize(primary,mainCol) {
+    if(!primary) return false;
+    if(primary.querySelector(':scope > .leagueGroup')) return true;
+    if([...mainCol.querySelectorAll(':scope > .panel')].some(p=>/^live now$/i.test(p.querySelector('.panelHead h2')?.textContent?.trim()||''))) return true;
+    for(const section of primary.querySelectorAll(':scope > .matchStatusSection')) {
+      for(const row of section.querySelectorAll(':scope > .chronoMatches > .matchRow')) {
+        if(rowStatus(row)!==section.dataset.status) return true;
       }
     }
-    items.sort((a,b)=>Number(a.dataset.kickoffSort)-Number(b.dataset.kickoffSort));
-    let list=panel.querySelector(':scope > .chronoMatches');
-    if(!list){list=document.createElement('div');list.className='chronoMatches';}
-    for(const row of items) list.appendChild(row);
-    groups.forEach(g=>g.remove());
-    panel.appendChild(list);
+    return false;
+  }
+
+  function organizeMatchday(mainCol) {
+    const primary=findPrimaryMatchdayPanel(mainCol);
+    if(!primary) return;
+
+    if(!shouldReorganize(primary,mainCol)) {
+      primary.querySelectorAll('.matchRow').forEach(row=>decorateRow(row,groupNameFor(row)));
+      return;
+    }
+
+    const candidates=[...primary.querySelectorAll('.matchRow')];
+    const unique=new Map();
+    for(const row of candidates) {
+      decorateRow(row,groupNameFor(row));
+      const key=rowKey(row);
+      if(!unique.has(key)) unique.set(key,row);
+    }
+
+    const buckets={live:[],scheduled:[],ft:[]};
+    for(const row of unique.values()) buckets[rowStatus(row)].push(row);
+
+    primary.querySelectorAll(':scope > .leagueGroup,:scope > .chronoMatches,:scope > .matchStatusSection').forEach(node=>node.remove());
+    ['live','scheduled','ft'].forEach(status=>{
+      if(buckets[status].length) primary.appendChild(makeStatusSection(status,buckets[status]));
+    });
+
+    const headCount=primary.querySelector('.panelHead > span');
+    if(headCount) headCount.textContent=String(unique.size);
+
+    [...mainCol.querySelectorAll(':scope > .panel')].forEach(panel=>{
+      if(panel!==primary && /^live now$/i.test(panel.querySelector('.panelHead h2')?.textContent?.trim()||'')) panel.remove();
+    });
   }
 
   function decorateHero() {
@@ -145,9 +212,7 @@
   }
 
   function decorateExistingRows() {
-    document.querySelectorAll('.matchRow').forEach(row=>{
-      if(row.closest('.chronoMatches')) decorateRow(row,row.querySelector('.matchCompetition')?.textContent||'');
-    });
+    document.querySelectorAll('.matchRow').forEach(row=>decorateRow(row,groupNameFor(row)));
     decorateHero();
     decorateSideRail();
   }
@@ -156,7 +221,8 @@
     if(working)return; working=true;
     try {
       await ensureBoard();
-      document.querySelectorAll('.mainCol > .panel').forEach(flattenPanel);
+      const mainCol=document.querySelector('.shell .layout > .mainCol');
+      if(mainCol) organizeMatchday(mainCol);
       decorateExistingRows();
     } finally {working=false;}
   }
@@ -167,7 +233,7 @@
   }
 
   const observer=new MutationObserver(schedule);
-  observer.observe(document.getElementById('app'),{childList:true,subtree:true});
+  observer.observe(document.getElementById('app'),{childList:true,subtree:true,characterData:true});
   window.addEventListener('hashchange',schedule);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule();});
   schedule();
