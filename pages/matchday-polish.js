@@ -133,11 +133,23 @@
     if(clock) clock.classList.toggle('clock-ft',/^FT\b/i.test(clock.textContent.trim()));
   }
 
+  function decorateSideRail() {
+    document.querySelectorAll('.sideList .sideItem').forEach(item=>{
+      const strong=item.querySelector('strong');
+      const label=item.querySelector('span');
+      if(!strong||!label)return;
+      const teams=splitMatch(strong.textContent.trim());
+      const br=bestBoardRow(teams.home,teams.away);
+      if(br?.competition && (!label.textContent.trim() || /^competition$/i.test(label.textContent.trim()))) label.textContent=br.competition;
+    });
+  }
+
   function decorateExistingRows() {
     document.querySelectorAll('.matchRow').forEach(row=>{
       if(row.closest('.chronoMatches')) decorateRow(row,row.querySelector('.matchCompetition')?.textContent||'');
     });
     decorateHero();
+    decorateSideRail();
   }
 
   async function polish() {
