@@ -1,7 +1,13 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "soccerway-livescore",
-  "main": "src/index.js",
+  "main": "src/board-entry.js",
   "compatibility_date": "2026-09-13",
-  "workers_dev": true
+  "workers_dev": true,
+  "services": [
+    {
+      "binding": "BOARD_API",
+      "service": "football-v2"
+    }
+  ]
 }
