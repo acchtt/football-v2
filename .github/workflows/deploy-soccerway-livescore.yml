@@ -38,3 +38,32 @@ jobs:
       - name: Deploy standalone livescore Worker
         working-directory: projects/soccerway-livescore
         run: npx --yes wrangler@4 deploy --config wrangler.jsonc
+
+      - name: Smoke test production UI and feed
+        run: |
+          set -euo pipefail
+          BASE="https://soccerway-livescore.acchtt.workers.dev"
+          for i in 1 2 3 4 5; do
+            if curl --fail --silent --show-error "$BASE/" -o /tmp/index.html && \
+               curl --fail --silent --show-error "$BASE/api/fixtures?day=0" -o /tmp/feed.json; then
+              break
+            fi
+            sleep 2
+          done
+          grep -q "Soccerway Live" /tmp/index.html
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/feed.json',encoding='utf-8'))
+          assert p.get('ok') is True, p
+          assert p.get('source') == 'Soccerway', p
+          assert isinstance(p.get('fixtures'), list), p
+          assert p.get('count') == len(p['fixtures']), p
+          assert p['fixtures'], 'Soccerway returned no fixtures for day=0'
+          sample=p['fixtures'][:50]
+          required=('matchId','homeTeam','awayTeam','kickoffTimestamp','status')
+          for row in sample:
+              for key in required:
+                  assert row.get(key) not in (None,''), (key,row)
+          print('fixtures=', p['count'], 'live=', p.get('liveCount'))
+          print('sample=', sample[0]['homeTeam'], 'vs', sample[0]['awayTeam'])
+          PY
