@@ -39,6 +39,11 @@ function text(value) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
 }
 
+function identifier(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return text(value);
+}
+
 function teamName(value, flat) {
   if (text(flat)) return text(flat);
   if (text(value)) return text(value);
@@ -97,11 +102,24 @@ function parseAsset(row) {
   const homeTeamId = teamId(homeObj, source.home_team_id ?? source.home_id);
   const awayTeamId = teamId(awayObj, source.away_team_id ?? source.away_id);
   if (!home || !away || (homeTeamId === undefined && awayTeamId === undefined)) return null;
-  const id = numeric(source.id ?? source.event_id);
+
+  // BSD may expose two identifiers for the same fixture:
+  // a numeric REST event id and an alphanumeric live-feed/websocket key.
+  // Keep both instead of using `source.id ?? source.event_id`, because an
+  // alphanumeric `id` would otherwise prevent us from seeing a numeric event_id.
+  const rawId = source.id;
+  const rawEventId = source.event_id;
+  const restId = numeric(rawId) ?? numeric(rawEventId);
+  const liveId = [rawId, rawEventId]
+    .map(identifier)
+    .find((value) => value && numeric(value) === undefined) || null;
+
   const eventDate = text(source.event_date ?? source.date ?? source.kickoff ?? source.kickoff_at ?? source.time?.kickoff_at);
   const leagueId = numeric(source.league_id ?? source.league?.id);
   return {
-    id,
+    id: restId,
+    restId,
+    liveId,
     eventDate,
     home,
     away,
@@ -127,7 +145,11 @@ async function fixtureAssets(env, from, to) {
     for (const row of rows) {
       const asset = parseAsset(row);
       if (!asset) continue;
-      const key = asset.id !== undefined ? `id:${asset.id}` : `${asset.home}|${asset.away}|${asset.eventDate}`;
+      const key = asset.restId !== undefined
+        ? `rest:${asset.restId}`
+        : asset.liveId
+          ? `live:${asset.liveId}`
+          : `${asset.home}|${asset.away}|${asset.eventDate}`;
       if (seen.has(key)) continue;
       seen.add(key);
       events.push(asset);
