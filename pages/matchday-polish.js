@@ -3,9 +3,19 @@
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const CACHE_KEYS = ['sliptrace.dashboard.compat.v2','sliptrace.dashboard.compat.v1','sliptrace.dashboard.v4'];
+  const STATUS_ORDER = ['live','scheduled','ft'];
+  const STATUS_LABEL = {live:'LIVE',scheduled:'SCHEDULED',ft:'FT'};
+  const TAB_KEY = 'sliptrace.matchday.statusTab';
+
   let board = null;
   let scheduled = false;
   let working = false;
+  let activeStatus = (() => {
+    try {
+      const saved = sessionStorage.getItem(TAB_KEY);
+      return STATUS_ORDER.includes(saved) ? saved : 'live';
+    } catch { return 'live'; }
+  })();
 
   function norm(v='') {
     return String(v).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
@@ -114,25 +124,6 @@
     return row.dataset.liveEvent || row.getAttribute('href') || `${rowTeams(row).home}|${rowTeams(row).away}`;
   }
 
-  function makeStatusSection(status,rows) {
-    const section=document.createElement('section');
-    section.className=`matchStatusSection status-${status}`;
-    section.dataset.status=status;
-
-    const head=document.createElement('div');
-    head.className='matchStatusHead';
-    const label=status==='live'?'LIVE':status==='scheduled'?'SCHEDULED':'FT';
-    head.innerHTML=`<div><span class="statusDot"></span><strong>${label}</strong></div><span>${rows.length}</span>`;
-
-    const list=document.createElement('div');
-    list.className='chronoMatches';
-    rows.sort((a,b)=>Number(a.dataset.kickoffSort)-Number(b.dataset.kickoffSort));
-    rows.forEach(row=>list.appendChild(row));
-
-    section.append(head,list);
-    return section;
-  }
-
   function findPrimaryMatchdayPanel(mainCol) {
     const panels=[...mainCol.querySelectorAll(':scope > .panel')];
     return panels.find(panel=>/^(today|fixtures)$/i.test(panel.querySelector('.panelHead h2')?.textContent?.trim()||'')) || panels.at(-1) || null;
@@ -144,14 +135,92 @@
     return row.querySelector('.matchCompetition')?.textContent?.trim()||'';
   }
 
-  function shouldReorganize(primary,mainCol) {
-    if(!primary) return false;
-    if(primary.querySelector(':scope > .leagueGroup')) return true;
-    if([...mainCol.querySelectorAll(':scope > .panel')].some(p=>/^live now$/i.test(p.querySelector('.panelHead h2')?.textContent?.trim()||''))) return true;
-    for(const section of primary.querySelectorAll(':scope > .matchStatusSection')) {
-      for(const row of section.querySelectorAll(':scope > .chronoMatches > .matchRow')) {
-        if(rowStatus(row)!==section.dataset.status) return true;
+  function sortRows(rows) {
+    return rows.sort((a,b)=>Number(a.dataset.kickoffSort)-Number(b.dataset.kickoffSort));
+  }
+
+  function chooseActiveStatus(buckets, hasExistingTabs) {
+    if (hasExistingTabs && STATUS_ORDER.includes(activeStatus)) return activeStatus;
+    if (buckets.live.length) return 'live';
+    if (buckets.scheduled.length) return 'scheduled';
+    return 'ft';
+  }
+
+  function setActiveTab(root,status) {
+    activeStatus=STATUS_ORDER.includes(status)?status:'live';
+    try{sessionStorage.setItem(TAB_KEY,activeStatus);}catch{}
+    root.querySelectorAll('[data-status-tab]').forEach(btn=>{
+      const active=btn.dataset.statusTab===activeStatus;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-selected',active?'true':'false');
+      btn.tabIndex=active?0:-1;
+    });
+    root.querySelectorAll('[data-status-pane]').forEach(pane=>{
+      pane.classList.toggle('hidden',pane.dataset.statusPane!==activeStatus);
+    });
+  }
+
+  function buildTabs(primary,buckets) {
+    const host=document.createElement('div');
+    host.className='matchStatusTabsHost';
+
+    const tabs=document.createElement('div');
+    tabs.className='matchStatusTabs';
+    tabs.setAttribute('role','tablist');
+    tabs.setAttribute('aria-label','Match status');
+
+    for(const status of STATUS_ORDER){
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className=`matchStatusTab status-${status}`;
+      btn.dataset.statusTab=status;
+      btn.setAttribute('role','tab');
+      btn.innerHTML=`<span class="statusDot"></span><strong>${STATUS_LABEL[status]}</strong><b>${buckets[status].length}</b>`;
+      btn.addEventListener('click',()=>setActiveTab(host,status));
+      tabs.appendChild(btn);
+    }
+
+    const content=document.createElement('div');
+    content.className='matchStatusTabContent';
+    for(const status of STATUS_ORDER){
+      const pane=document.createElement('div');
+      pane.className=`matchStatusPane status-${status}`;
+      pane.dataset.statusPane=status;
+      pane.setAttribute('role','tabpanel');
+
+      const rows=sortRows(buckets[status]);
+      if(rows.length){
+        const list=document.createElement('div');
+        list.className='chronoMatches';
+        rows.forEach(row=>list.appendChild(row));
+        pane.appendChild(list);
+      } else {
+        const empty=document.createElement('div');
+        empty.className='empty statusEmpty';
+        empty.textContent=status==='live'?'No live matches.':status==='scheduled'?'No scheduled matches.':'No finished matches.';
+        pane.appendChild(empty);
       }
+      content.appendChild(pane);
+    }
+
+    host.append(tabs,content);
+    return host;
+  }
+
+  function needsRebuild(primary,mainCol,buckets) {
+    const host=primary.querySelector(':scope > .matchStatusTabsHost');
+    if(!host) return true;
+    if(primary.querySelector(':scope > .leagueGroup,:scope > .chronoMatches,:scope > .matchStatusSection')) return true;
+    if([...mainCol.querySelectorAll(':scope > .panel')].some(p=>/^live now$/i.test(p.querySelector('.panelHead h2')?.textContent?.trim()||''))) return true;
+
+    for(const status of STATUS_ORDER){
+      const pane=host.querySelector(`[data-status-pane="${status}"]`);
+      const rows=pane?[...pane.querySelectorAll('.matchRow')]:[];
+      if(rows.length!==buckets[status].length) return true;
+      if(rows.some(row=>rowStatus(row)!==status)) return true;
+      const keys=rows.map(rowKey).join('|');
+      const target=sortRows([...buckets[status]]).map(rowKey).join('|');
+      if(keys!==target) return true;
     }
     return false;
   }
@@ -160,14 +229,9 @@
     const primary=findPrimaryMatchdayPanel(mainCol);
     if(!primary) return;
 
-    if(!shouldReorganize(primary,mainCol)) {
-      primary.querySelectorAll('.matchRow').forEach(row=>decorateRow(row,groupNameFor(row)));
-      return;
-    }
-
     const candidates=[...primary.querySelectorAll('.matchRow')];
     const unique=new Map();
-    for(const row of candidates) {
+    for(const row of candidates){
       decorateRow(row,groupNameFor(row));
       const key=rowKey(row);
       if(!unique.has(key)) unique.set(key,row);
@@ -176,10 +240,14 @@
     const buckets={live:[],scheduled:[],ft:[]};
     for(const row of unique.values()) buckets[rowStatus(row)].push(row);
 
-    primary.querySelectorAll(':scope > .leagueGroup,:scope > .chronoMatches,:scope > .matchStatusSection').forEach(node=>node.remove());
-    ['live','scheduled','ft'].forEach(status=>{
-      if(buckets[status].length) primary.appendChild(makeStatusSection(status,buckets[status]));
-    });
+    const hadTabs=!!primary.querySelector(':scope > .matchStatusTabsHost');
+    if(needsRebuild(primary,mainCol,buckets)){
+      activeStatus=chooseActiveStatus(buckets,hadTabs);
+      primary.querySelectorAll(':scope > .leagueGroup,:scope > .chronoMatches,:scope > .matchStatusSection,:scope > .matchStatusTabsHost').forEach(node=>node.remove());
+      const host=buildTabs(primary,buckets);
+      primary.appendChild(host);
+      setActiveTab(host,activeStatus);
+    }
 
     const headCount=primary.querySelector('.panelHead > span');
     if(headCount) headCount.textContent=String(unique.size);
