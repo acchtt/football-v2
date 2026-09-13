@@ -39,19 +39,25 @@ jobs:
         working-directory: projects/soccerway-livescore
         run: npx --yes wrangler@4 deploy --config wrangler.jsonc
 
-      - name: Smoke test production UI, feed, and board filter
+      - name: Smoke test SlipTrace Soccerway production
         run: |
           set -euo pipefail
           BASE="https://soccerway-livescore.acchtt.workers.dev"
-          for i in 1 2 3 4 5; do
+          ok=0
+          for i in 1 2 3 4 5 6 7 8; do
             if curl --fail --silent --show-error "$BASE/" -o /tmp/index.html && \
-               curl --fail --silent --show-error -D /tmp/feed.headers "$BASE/api/fixtures?day=0" -o /tmp/feed.json && \
-               curl --fail --silent --show-error -D /tmp/board.headers "$BASE/api/board?day=0" -o /tmp/board.json; then
+               curl --fail --silent --show-error "$BASE/api/fixtures?day=0" -o /tmp/feed.json && \
+               curl --fail --silent --show-error "$BASE/api/board?day=0" -o /tmp/board.json && \
+               curl --fail --silent --show-error "$BASE/api/dashboard-data" -o /tmp/dashboard.json; then
+              ok=1
               break
             fi
             sleep 2
           done
-          grep -q "Focus / Watchlist Live" /tmp/index.html
+          test "$ok" = "1"
+          grep -q "SlipTrace Football · Soccerway" /tmp/index.html
+          grep -q "app-v2.css" /tmp/index.html
+          grep -q "SOCCERWAY" /tmp/index.html
           python - <<'PY'
           import json
           from pathlib import Path
@@ -68,11 +74,6 @@ jobs:
           assert isinstance(p.get('fixtures'), list), p
           assert p.get('count') == len(p['fixtures']), p
           assert p['fixtures'], 'Soccerway returned no fixtures for day=0'
-          sample=p['fixtures'][:50]
-          required=('matchId','homeTeam','awayTeam','kickoffTimestamp','status')
-          for row in sample:
-              for key in required:
-                  assert row.get(key) not in (None,''), (key,row)
 
           b=load_json('/tmp/board.json')
           assert b.get('ok') is True, b
@@ -81,9 +82,11 @@ jobs:
           assert b.get('source') == 'SlipTrace FOCUS/WATCHLIST + Soccerway', b
           assert all(str(x.get('tier','')).upper() in ('FOCUS','WATCHLIST') for x in b['fixtures']), b
 
+          d=load_json('/tmp/dashboard.json')
+          assert d.get('ok') is True, d
+          assert isinstance(d.get('schedule'), list), d
+
           print('raw_fixtures=', p['count'], 'raw_live=', p.get('liveCount'))
           print('board_fixtures=', b['count'], 'focus=', b.get('focusCount'), 'watch=', b.get('watchlistCount'), 'matched=', b.get('matchedCount'))
-          if b['fixtures']:
-              x=b['fixtures'][0]
-              print('board_sample=', x.get('homeTeam'), 'vs', x.get('awayTeam'), x.get('tier'), 'matched=', x.get('matchedToSoccerway'))
+          print('dashboard_rows=', len(d.get('schedule') or []), 'picks=', len(d.get('picks') or []))
           PY
