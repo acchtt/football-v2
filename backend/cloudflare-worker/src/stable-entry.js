@@ -39,8 +39,8 @@ function json(data, status, env, request, extra = {}) {
 }
 
 function eventId(url) {
-  const value = Number(url.searchParams.get("event_id"));
-  return Number.isInteger(value) && value > 0 ? value : null;
+  const value = String(url.searchParams.get("event_id") || "").trim();
+  return /^[A-Za-z0-9_-]+$/.test(value) ? value : null;
 }
 
 async function bsdJson(env, path) {
@@ -62,9 +62,10 @@ async function matchStats(env, id) {
   if (cached && now - cached.at < STATS_TTL_MS) return { ...cached.value, cached: true };
   if (statsInFlight.has(id)) return statsInFlight.get(id);
 
+  const safeId = encodeURIComponent(id);
   const task = Promise.all([
-    bsdJson(env, `/events/${id}/stats/`),
-    bsdJson(env, `/events/${id}/`).catch(() => null),
+    bsdJson(env, `/events/${safeId}/stats/`),
+    bsdJson(env, `/events/${safeId}/`).catch(() => null),
   ]).then(([stats, event]) => {
     const value = { ok: true, eventId: id, stats, event, cached: false, generatedAt: new Date().toISOString() };
     statsCache.set(id, { at: Date.now(), value });
