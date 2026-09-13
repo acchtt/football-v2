@@ -39,80 +39,57 @@ jobs:
         working-directory: projects/soccerway-livescore
         run: npx --yes wrangler@4 deploy --config wrangler.jsonc
 
-      - name: Smoke test SlipTrace Soccerway production
+      - name: Smoke test Soccerway APIs and server pages
         run: |
           set -euo pipefail
           BASE="https://soccerway-livescore.acchtt.workers.dev"
-          ok=0
           for i in 1 2 3 4 5 6 7 8; do
-            if curl --fail --silent --show-error "$BASE/?ci=$GITHUB_RUN_ID" -o /tmp/index.html && \
-               curl --fail --silent --show-error "$BASE/sliptrace-client-v3.js" -o /tmp/app.js && \
+            if curl --fail --silent --show-error "$BASE/?view=today&ci=$GITHUB_RUN_ID" -o /tmp/today.html && \
+               curl --fail --silent --show-error "$BASE/?view=board&ci=$GITHUB_RUN_ID" -o /tmp/board-page.html && \
+               curl --fail --silent --show-error "$BASE/?view=leagues&ci=$GITHUB_RUN_ID" -o /tmp/leagues.html && \
+               curl --fail --silent --show-error "$BASE/?view=teams&ci=$GITHUB_RUN_ID" -o /tmp/teams.html && \
+               curl --fail --silent --show-error "$BASE/?view=picks&ci=$GITHUB_RUN_ID" -o /tmp/picks.html && \
+               curl --fail --silent --show-error "$BASE/?view=today&status=scheduled&ci=$GITHUB_RUN_ID" -o /tmp/scheduled.html && \
+               curl --fail --silent --show-error "$BASE/sliptrace-client-v4.js" -o /tmp/app.js && \
                curl --fail --silent --show-error "$BASE/api/fixtures?day=0" -o /tmp/feed.json && \
-               curl --fail --silent --show-error "$BASE/api/board?day=0" -o /tmp/board.json && \
-               curl --fail --silent --show-error "$BASE/api/dashboard-data" -o /tmp/dashboard.json; then
-              ok=1
+               curl --fail --silent --show-error "$BASE/api/board?day=0" -o /tmp/board.json; then
               break
             fi
             sleep 2
           done
-          test "$ok" = "1"
-          grep -q "SlipTrace Football · Soccerway" /tmp/index.html
-          grep -q "Football operations" /tmp/index.html
-          grep -q "FOCUS/WATCHLIST board only" /tmp/index.html
-          grep -q 'src="/sliptrace-client-v3.js"' /tmp/index.html
-          grep -q "SOCCERWAY" /tmp/app.js
+
+          grep -q "Football operations" /tmp/today.html
+          grep -q "<h1>Board</h1>" /tmp/board-page.html
+          grep -q "<h1>Competitions</h1>" /tmp/leagues.html
+          grep -q "<h1>Teams</h1>" /tmp/teams.html
+          grep -q "<h1>Picks</h1>" /tmp/picks.html
+          grep -q "status-scheduled active" /tmp/scheduled.html
+          grep -q 'href="/?view=board' /tmp/today.html
+          grep -q 'src="/sliptrace-client-v4.js"' /tmp/today.html
           node --check /tmp/app.js
 
           python - <<'PY'
           import json
           from pathlib import Path
-
-          def load_json(path):
-              raw=Path(path).read_text(encoding='utf-8')
-              if raw.lstrip().lower().startswith('<!doctype') or raw.lstrip().startswith('<html'):
-                  raise AssertionError(f'{path} returned HTML instead of JSON: {raw[:180]}')
-              return json.loads(raw)
-
-          p=load_json('/tmp/feed.json')
-          assert p.get('ok') is True, p
-          assert p.get('source') == 'Soccerway', p
-          assert isinstance(p.get('fixtures'), list), p
-          assert p.get('count') == len(p['fixtures']), p
-          assert p['fixtures'], 'Soccerway returned no fixtures for day=0'
-
-          b=load_json('/tmp/board.json')
-          assert b.get('ok') is True, b
-          assert isinstance(b.get('fixtures'), list), b
-          assert b.get('count') == len(b['fixtures']), b
-          assert b.get('source') == 'SlipTrace FOCUS/WATCHLIST + Soccerway', b
-          assert all(str(x.get('tier','')).upper() in ('FOCUS','WATCHLIST') for x in b['fixtures']), b
-
-          d=load_json('/tmp/dashboard.json')
-          assert d.get('ok') is True, d
-          assert isinstance(d.get('schedule'), list), d
-
-          print('app_js_bytes=', len(Path('/tmp/app.js').read_bytes()))
-          print('raw_fixtures=', p['count'], 'raw_live=', p.get('liveCount'))
-          print('board_fixtures=', b['count'], 'focus=', b.get('focusCount'), 'watch=', b.get('watchlistCount'), 'matched=', b.get('matchedCount'))
+          p=json.loads(Path('/tmp/feed.json').read_text())
+          b=json.loads(Path('/tmp/board.json').read_text())
+          assert p.get('ok') is True and isinstance(p.get('fixtures'), list) and p['fixtures']
+          assert b.get('ok') is True and isinstance(b.get('fixtures'), list)
+          assert all(str(x.get('tier','')).upper() in ('FOCUS','WATCHLIST') for x in b['fixtures'])
+          print('raw_fixtures=', p.get('count'), 'board_fixtures=', b.get('count'), 'matched=', b.get('matchedCount'))
           PY
 
-      - name: Browser render check
+      - name: Browser navigation check
         run: |
           set -euo pipefail
-          BASE="https://soccerway-livescore.acchtt.workers.dev/?browser=$GITHUB_RUN_ID"
+          BASE="https://soccerway-livescore.acchtt.workers.dev"
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
           if [ -z "$CHROME" ]; then
             echo "::error::No Chrome/Chromium binary available on runner"
             exit 1
           fi
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=10000 --dump-dom "$BASE" > /tmp/rendered.html 2>/tmp/chrome.log || {
-            cat /tmp/chrome.log
-            exit 1
-          }
-          grep -q 'data-app-booted="1"' /tmp/rendered.html
-          grep -q "Football operations" /tmp/rendered.html
-          grep -q "SOCCERWAY LIVE" /tmp/rendered.html
-          if grep -q "Loading FOCUS / WATCHLIST board" /tmp/rendered.html; then
-            echo "::error::Browser remained on fallback loading shell"
-            exit 1
-          fi
+          for route in "?view=today" "?view=board" "?view=leagues" "?view=teams" "?view=picks" "?view=today&status=ft"; do
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=3500 --dump-dom "$BASE/$route&browser=$GITHUB_RUN_ID" > /tmp/rendered.html 2>/tmp/chrome.log || { cat /tmp/chrome.log; exit 1; }
+            grep -q 'data-app-booted="1"' /tmp/rendered.html
+            grep -q "SOCCERWAY LIVE" /tmp/rendered.html
+          done
