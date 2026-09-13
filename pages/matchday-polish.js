@@ -104,8 +104,11 @@
 
   function rowStatus(row) {
     const clockText=(row.querySelector('.matchScore [data-clock]')?.textContent||'').trim().toUpperCase();
-    if(/^FT\b/.test(clockText) || row.classList.contains('is-ft-row')) return 'ft';
-    if(row.querySelector('.tag.live') || row.classList.contains('is-live-row')) return 'live';
+    if(/^FT\b/.test(clockText)) return 'ft';
+    // Only the actual match-state badge in the kickoff/status column can mark a
+    // fixture live. FOCUS badges also use `.tag.live` for red styling and must
+    // never affect match state.
+    if(row.querySelector('.matchTime .tag.live')) return 'live';
     return 'scheduled';
   }
 
