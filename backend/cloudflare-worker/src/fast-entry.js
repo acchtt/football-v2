@@ -53,6 +53,11 @@ function stringish(value) {
   return undefined;
 }
 
+function eventIdentifier(value) {
+  const id = stringish(value);
+  return id || undefined;
+}
+
 function teamName(value, flat) {
   if (typeof flat === "string" && flat.trim()) return flat.trim();
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -70,6 +75,44 @@ function payloadRows(payload) {
   return batch ? batch.filter(isRecord) : [payload];
 }
 
+function normalizePeriod(value) {
+  const p = String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if (["1", "1h", "half1", "1sthalf", "firsthalf"].includes(p)) return 1;
+  if (["2", "2h", "half2", "2ndhalf", "secondhalf"].includes(p)) return 2;
+  if (["3", "et1", "1et", "extra1", "1stextra", "firstextra"].includes(p)) return 3;
+  if (["4", "et2", "2et", "extra2", "2ndextra", "secondextra"].includes(p)) return 4;
+  if (["5", "pens", "penalties", "shootout"].includes(p)) return 5;
+  return undefined;
+}
+
+// BSD has two clock shapes in circulation: some REST live rows expose the minute
+// within the current period, while richer event/WebSocket rows expose full-match
+// minute. Period-aware normalization supports both without double-adding offsets.
+function normalizeClock(minute, second, period, periodStartedAtUts) {
+  let m = numeric(minute);
+  let s = numeric(second);
+  const p = normalizePeriod(period);
+
+  if (m === undefined && p && numeric(periodStartedAtUts) !== undefined) {
+    const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - Number(periodStartedAtUts)));
+    m = Math.floor(elapsed / 60);
+    s = elapsed % 60;
+  }
+
+  if (m === undefined) return { minute: undefined, second: s, rawMinute: undefined };
+  const rawMinute = m;
+
+  if (p === 2 && m <= 45) m += 45;
+  else if (p === 3 && m <= 15) m += 90;
+  else if (p === 4 && m <= 15) m += 105;
+
+  return {
+    minute: m,
+    second: s === undefined ? undefined : Math.max(0, Math.min(59, Math.floor(s))),
+    rawMinute,
+  };
+}
+
 function parseScore(row, defaultStatus = "") {
   const nestedEvent = isRecord(row.event) ? row.event : undefined;
   const source = nestedEvent ? { ...nestedEvent, ...row } : row;
@@ -80,18 +123,27 @@ function parseScore(row, defaultStatus = "") {
   const home = teamName(source.home_team ?? source.home, source.home_team_name ?? source.home_name);
   const away = teamName(source.away_team ?? source.away, source.away_team_name ?? source.away_name);
   if (!home || !away) return undefined;
+  const period = stringish(source.period ?? source.current_period ?? source.match_period ?? time?.period);
+  const periodStartedAtUts = numeric(source.period_started_at_uts ?? time?.period_started_at_uts);
+  const clock = normalizeClock(
+    source.current_minute ?? source.minute ?? time?.minute ?? time?.current_minute,
+    source.current_second ?? source.second ?? time?.second ?? time?.current_second,
+    period,
+    periodStartedAtUts,
+  );
   return {
-    id: numeric(source.id ?? source.event_id),
+    id: eventIdentifier(source.id ?? source.event_id),
     eventDate: text(source.event_date ?? source.date ?? source.kickoff ?? source.kickoff_at ?? time?.kickoff_at) || "",
     home,
     away,
     homeScore,
     awayScore,
-    minute: numeric(source.current_minute ?? source.minute ?? time?.minute ?? time?.current_minute),
-    second: numeric(source.current_second ?? source.second ?? time?.second ?? time?.current_second),
+    minute: clock.minute,
+    rawMinute: clock.rawMinute,
+    second: clock.second,
     display: stringish(source.clock_display ?? source.display ?? time?.display),
-    period: stringish(source.period ?? source.current_period ?? source.match_period ?? time?.period),
-    periodStartedAtUts: numeric(source.period_started_at_uts ?? time?.period_started_at_uts),
+    period,
+    periodStartedAtUts,
     status: String(source.status ?? time?.status ?? defaultStatus).toLowerCase(),
   };
 }
@@ -100,21 +152,30 @@ function parsePatch(row) {
   const nestedEvent = isRecord(row.event) ? row.event : undefined;
   const score = isRecord(row.score) ? row.score : undefined;
   const time = isRecord(row.time) ? row.time : undefined;
-  const id = numeric(row.id ?? row.event_id ?? nestedEvent?.id ?? nestedEvent?.event_id);
-  if (id === undefined) return undefined;
+  const id = eventIdentifier(row.id ?? row.event_id ?? nestedEvent?.id ?? nestedEvent?.event_id);
+  if (!id) return undefined;
+  const period = stringish(row.period ?? row.current_period ?? row.match_period ?? time?.period ?? nestedEvent?.period ?? nestedEvent?.time?.period);
+  const periodStartedAtUts = numeric(row.period_started_at_uts ?? time?.period_started_at_uts ?? nestedEvent?.period_started_at_uts ?? nestedEvent?.time?.period_started_at_uts);
+  const clock = normalizeClock(
+    row.current_minute ?? row.minute ?? time?.minute ?? time?.current_minute ?? nestedEvent?.current_minute ?? nestedEvent?.minute ?? nestedEvent?.time?.minute,
+    row.current_second ?? row.second ?? time?.second ?? time?.current_second ?? nestedEvent?.current_second ?? nestedEvent?.second ?? nestedEvent?.time?.second,
+    period,
+    periodStartedAtUts,
+  );
   return {
     id,
     eventDate: text(row.event_date ?? row.date ?? row.kickoff ?? row.kickoff_at ?? time?.kickoff_at) || undefined,
     home: teamName(row.home_team ?? row.home ?? nestedEvent?.home_team ?? nestedEvent?.home, row.home_team_name ?? row.home_name ?? nestedEvent?.home_team_name) || undefined,
     away: teamName(row.away_team ?? row.away ?? nestedEvent?.away_team ?? nestedEvent?.away, row.away_team_name ?? row.away_name ?? nestedEvent?.away_team_name) || undefined,
-    homeScore: numeric(row.home_score ?? score?.home ?? score?.home_score),
-    awayScore: numeric(row.away_score ?? score?.away ?? score?.away_score),
-    minute: numeric(row.current_minute ?? row.minute ?? time?.minute ?? time?.current_minute),
-    second: numeric(row.current_second ?? row.second ?? time?.second ?? time?.current_second),
-    display: stringish(row.clock_display ?? row.display ?? time?.display),
-    period: stringish(row.period ?? row.current_period ?? row.match_period ?? time?.period),
-    periodStartedAtUts: numeric(row.period_started_at_uts ?? time?.period_started_at_uts),
-    status: String(row.status ?? time?.status ?? "live").toLowerCase(),
+    homeScore: numeric(row.home_score ?? score?.home ?? score?.home_score ?? nestedEvent?.home_score ?? nestedEvent?.score?.home),
+    awayScore: numeric(row.away_score ?? score?.away ?? score?.away_score ?? nestedEvent?.away_score ?? nestedEvent?.score?.away),
+    minute: clock.minute,
+    rawMinute: clock.rawMinute,
+    second: clock.second,
+    display: stringish(row.clock_display ?? row.display ?? time?.display ?? nestedEvent?.display ?? nestedEvent?.time?.display),
+    period,
+    periodStartedAtUts,
+    status: String(row.status ?? time?.status ?? nestedEvent?.status ?? nestedEvent?.time?.status ?? "live").toLowerCase(),
   };
 }
 
@@ -215,6 +276,7 @@ async function buildFastScoreFeed(env) {
         homeScore: event.homeScore,
         awayScore: event.awayScore,
         minute: finished ? undefined : event.minute,
+        rawMinute: finished ? undefined : event.rawMinute,
         second: finished ? undefined : event.second,
         display: finished ? "FT" : event.display,
         period: finished ? "FT" : event.period,
