@@ -81,11 +81,14 @@
   }
 
   function rowTeams(row){const lines=[...row.querySelectorAll('.teamLine')];const read=line=>line?.querySelector('span')?.textContent?.trim()||'';return{home:read(lines[0]),away:read(lines[1])};}
+  function rowIsLive(row){return row.dataset.matchStatus==='live'||Boolean(row.querySelector('.matchTime .tag.live'));}
   function escapeHtml(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
   function applyRow(row,date) {
     const{home,away}=rowTeams(row);if(!home||!away)return true;
-    const match=strictMatch(home,away,date);
+    // LIVE is global: validate against every FOCUS/WATCHLIST row regardless of slate date.
+    // SCHEDULED/FT stay date-scoped to the selected Matchday date.
+    const match=strictMatch(home,away,rowIsLive(row)?'':date);
     if(!match){if(row.isConnected)row.remove();return false;}
 
     const competition=String(match.competition||'').trim();
@@ -113,9 +116,10 @@
   }
 
   function refreshCounts(){
-    document.querySelectorAll('.statusTab').forEach(tab=>{
+    document.querySelectorAll('.matchStatusTab').forEach(tab=>{
       const status=tab.dataset.statusTab;
-      const count=String(document.querySelectorAll(`.matchRow[data-match-status="${status}"]`).length);
+      const pane=document.querySelector(`[data-status-pane="${status}"]`);
+      const count=String(pane?pane.querySelectorAll('.matchRow').length:0);
       const badge=tab.querySelector('b');
       if(badge&&badge.textContent!==count)badge.textContent=count;
     });
