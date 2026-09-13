@@ -16,6 +16,10 @@
     situation: '',
     commentary: '',
     activity: [],
+    coverageText: '',
+    coverageClass: '',
+    coverageNote: '',
+    ballNode: null,
   };
 
   function esc(v='') { return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -40,27 +44,35 @@
     return side === 'home' || side === 'away' ? side : '';
   }
   function setCoverage(text, cls, note) {
+    state.coverageText = text;
+    state.coverageClass = cls || 'limited';
+    state.coverageNote = note || '';
     const panel = matchApp.querySelector('#bsdLiveCentre');
     if (!panel) return;
     const badge = panel.querySelector('.lcCoverage b');
     const small = panel.querySelector('.lcCoverage small');
     if (badge) {
-      badge.className = cls || 'limited';
-      badge.textContent = text;
+      badge.className = state.coverageClass;
+      badge.textContent = state.coverageText;
     }
-    if (small) small.textContent = note || '';
+    if (small) small.textContent = state.coverageNote;
+  }
+  function renderActivity() {
+    if (!state.activity.length) return;
+    const node = matchApp.querySelector('#bsdLiveCentre .lcActivity');
+    if (!node) return;
+    node.innerHTML = state.activity.map(row => `<div><span class="${sideClass(row.side)}">${row.minute !== undefined && row.minute !== null ? `${esc(row.minute)}′` : '•'}</span><p>${esc(row.text)}</p></div>`).join('');
   }
   function pushActivity(item) {
     if (!item?.text) return;
     state.activity.unshift(item);
     state.activity = state.activity.slice(0, 5);
-    const node = matchApp.querySelector('#bsdLiveCentre .lcActivity');
-    if (!node) return;
-    node.innerHTML = state.activity.map(row => `<div><span class="${sideClass(row.side)}">${row.minute !== undefined && row.minute !== null ? `${esc(row.minute)}′` : '•'}</span><p>${esc(row.text)}</p></div>`).join('');
+    renderActivity();
   }
-  function applyPosition() {
+  function applyOverlay() {
     const panel = matchApp.querySelector('#bsdLiveCentre');
     if (!panel) return;
+    if (state.coverageText) setCoverage(state.coverageText, state.coverageClass, state.coverageNote);
     const ball = panel.querySelector('.lcBall');
     if (ball && state.position) {
       const side = sideClass(state.position.side);
@@ -80,6 +92,7 @@
       situation.className = sideClass(state.position?.side);
     }
     if (commentary && state.commentary) commentary.textContent = state.commentary;
+    renderActivity();
   }
   function positionFromLivedata(frame) {
     const points = Array.isArray(frame?.coordinates) ? frame.coordinates : [];
@@ -89,7 +102,7 @@
     state.situation = frame.situation || 'live';
     state.commentary = frame.commentary || `${label(frame.situation || 'Live')} · ${frame.side || ''}`;
     pushActivity({ side: frame.side, text: state.commentary });
-    applyPosition();
+    applyOverlay();
   }
   function positionFromAction(frame) {
     if (!Number.isFinite(Number(frame?.x)) || !Number.isFinite(Number(frame?.y))) return;
@@ -98,7 +111,7 @@
     const player = frame.player?.name ? `${frame.player.name} · ` : '';
     state.commentary = `${player}${label(frame.action_type || 'Action')}`;
     pushActivity({ side: frame.team || frame.side, minute: frame.minute, text: state.commentary });
-    applyPosition();
+    applyOverlay();
   }
   function handleFrame(frame) {
     if (!frame || typeof frame !== 'object') return;
@@ -112,6 +125,7 @@
       const history = Array.isArray(frame.history) ? frame.history : [];
       if (history.length) positionFromAction(history[history.length - 1]);
       else if (live.length) positionFromLivedata(live[live.length - 1]);
+      else applyOverlay();
       return;
     }
     if (frame.type === 'livedata') {
@@ -130,17 +144,20 @@
       const message = frame.message || code || 'WebSocket error';
       if (code === 'subscription_required') {
         state.blocked = true;
+        state.situation = 'WebSocket addon required';
+        state.commentary = 'Real pitch animation requires the BSD WebSocket addon. REST stats remain active.';
         setCoverage('WS ADDON', 'limited', 'BSD WebSocket addon required');
-        const p = matchApp.querySelector('#bsdLiveCentre .lcSituation p');
-        if (p) p.textContent = 'Real pitch animation requires the BSD WebSocket addon. REST stats remain active.';
       } else if (code === 'not_tracked') {
         state.blocked = true;
+        state.situation = 'No positional feed';
+        state.commentary = 'BSD does not provide positional WebSocket coverage for this match.';
         setCoverage('NO WS', 'limited', 'no positional coverage');
-        const p = matchApp.querySelector('#bsdLiveCentre .lcSituation p');
-        if (p) p.textContent = 'BSD does not provide positional WebSocket coverage for this match.';
       } else {
+        state.situation = 'WebSocket error';
+        state.commentary = message;
         setCoverage('WS ERROR', 'limited', message);
       }
+      applyOverlay();
     }
   }
   function closeSocket() {
@@ -194,7 +211,7 @@
   }
   function start(id) {
     if (!id) return;
-    if (state.eventId === id) { applyPosition(); connect(); return; }
+    if (state.eventId === id) { applyOverlay(); connect(); return; }
     closeSocket();
     state.eventId = id;
     state.blocked = false;
@@ -203,6 +220,10 @@
     state.situation = '';
     state.commentary = '';
     state.activity = [];
+    state.coverageText = '';
+    state.coverageClass = '';
+    state.coverageNote = '';
+    state.ballNode = null;
     connect();
   }
   function stop() {
@@ -211,6 +232,7 @@
     state.blocked = false;
     state.position = null;
     state.activity = [];
+    state.ballNode = null;
   }
   function sync() {
     if (!active()) return stop();
@@ -220,7 +242,14 @@
 
   const observer = new MutationObserver(() => {
     clearTimeout(observer._timer);
-    observer._timer = setTimeout(() => { sync(); applyPosition(); }, 30);
+    observer._timer = setTimeout(() => {
+      sync();
+      const ball = matchApp.querySelector('#bsdLiveCentre .lcBall');
+      if (ball && ball !== state.ballNode) {
+        state.ballNode = ball;
+        applyOverlay();
+      }
+    }, 20);
   });
   observer.observe(matchApp, { childList: true, subtree: true, characterData: true });
   window.addEventListener('hashchange', () => setTimeout(sync, 0));
