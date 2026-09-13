@@ -1,5 +1,5 @@
 import app from "./board-entry.js";
-import { renderSiteHtml } from "./template-ui.js";
+import { clientScript, renderSiteHtml } from "./template-ui.js";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -50,7 +50,18 @@ export default {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
           "Cache-Control": "no-store, max-age=0",
-          "X-SlipTrace-Frontend": "soccerway-template-v1",
+          "X-SlipTrace-Frontend": "soccerway-template-v2",
+        },
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/app.js") {
+      return new Response(clientScript(), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Cache-Control": "no-store, max-age=0",
+          "X-SlipTrace-Asset": "soccerway-app-v2",
         },
       });
     }
