@@ -52,13 +52,7 @@
     return {schedule:[]};
   }
 
-  function rowTeams(row) {
-    const names=[...row.querySelectorAll('.teamLine span')].map(x=>x.textContent.trim()).filter(Boolean);
-    return {home:names[0]||'',away:names[1]||''};
-  }
-
-  function boardRowFor(row) {
-    const {home,away}=rowTeams(row);
+  function bestBoardRow(home,away) {
     if(!home||!away||!board?.schedule) return null;
     let best=null,bestScore=0;
     for(const candidate of board.schedule){
@@ -67,6 +61,16 @@
       if(s>bestScore){bestScore=s;best=candidate;}
     }
     return bestScore>=6?best:null;
+  }
+
+  function rowTeams(row) {
+    const names=[...row.querySelectorAll('.teamLine span')].map(x=>x.textContent.trim()).filter(Boolean);
+    return {home:names[0]||'',away:names[1]||''};
+  }
+
+  function boardRowFor(row) {
+    const {home,away}=rowTeams(row);
+    return bestBoardRow(home,away);
   }
 
   function parseKickoff(value,fallback='') {
@@ -118,12 +122,22 @@
     panel.appendChild(list);
   }
 
+  function decorateHero() {
+    const hero=document.querySelector('.matchHero');
+    if(!hero)return;
+    const names=[...hero.querySelectorAll('.heroTeam span')].map(x=>x.textContent.trim()).filter(Boolean);
+    const br=bestBoardRow(names[0]||'',names[1]||'');
+    const league=hero.querySelector('.heroScore .league');
+    if(league && br?.competition && (!league.textContent.trim() || /^competition$/i.test(league.textContent.trim()))) league.textContent=br.competition;
+    const clock=document.getElementById('heroClock');
+    if(clock) clock.classList.toggle('clock-ft',/^FT\b/i.test(clock.textContent.trim()));
+  }
+
   function decorateExistingRows() {
     document.querySelectorAll('.matchRow').forEach(row=>{
       if(row.closest('.chronoMatches')) decorateRow(row,row.querySelector('.matchCompetition')?.textContent||'');
     });
-    const hero=document.getElementById('heroClock');
-    if(hero) hero.classList.toggle('clock-ft',/^FT\b/i.test(hero.textContent.trim()));
+    decorateHero();
   }
 
   async function polish() {
