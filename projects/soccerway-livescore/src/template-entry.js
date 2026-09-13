@@ -64,7 +64,8 @@ export default {
       const [board, dashboard] = await Promise.all([initialBoard(url, env, ctx), dashboardPayload(env)]);
       const view = cleanView(url.searchParams.get("view"));
       const status = cleanStatus(url.searchParams.get("status"));
-      return new Response(renderSiteHtml(board, { view, status, dashboard }), {
+      const query = String(url.searchParams.get("q") || "").slice(0, 120);
+      return new Response(renderSiteHtml(board, { view, status, dashboard, query }), {
         status: 200,
         headers: {
           "Content-Type": "text/html; charset=utf-8",
