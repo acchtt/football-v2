@@ -51,7 +51,9 @@ jobs:
             local name="$1"
             local url="$2"
             echo "Checking $name: $url"
+            local body
             body="$(mktemp)"
+            local status
             status="$(curl --retry 4 --retry-delay 2 --retry-all-errors -sS -o "$body" -w '%{http_code}' "$url")"
             cat "$body"
             echo
@@ -59,13 +61,7 @@ jobs:
               echo "::error::$name returned HTTP $status"
               exit 1
             fi
-            python - "$body" <<'PY'
-import json, sys
-with open(sys.argv[1], encoding='utf-8') as f:
-    payload = json.load(f)
-if isinstance(payload, dict) and payload.get('ok') is False:
-    raise SystemExit('API returned ok=false: ' + json.dumps(payload)[:500])
-PY
+            python -c 'import json,sys; p=json.load(open(sys.argv[1],encoding="utf-8")); assert not (isinstance(p,dict) and p.get("ok") is False), "API returned ok=false: "+json.dumps(p)[:500]' "$body"
             rm -f "$body"
           }
 
