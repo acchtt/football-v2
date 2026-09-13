@@ -68,6 +68,118 @@ function compactProbe(result) {
   };
 }
 
+function numberOrNull(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function unixIso(value) {
+  const numeric = numberOrNull(value);
+  if (numeric === null) return null;
+  const date = new Date(numeric * 1000);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function parseSoccerwayFeed(raw) {
+  const fixtures = [];
+  let competition = {};
+  let current = null;
+
+  const flush = () => {
+    if (!current?.AA || !current?.AE || !current?.AF) {
+      current = null;
+      return;
+    }
+    fixtures.push({
+      matchId: current.AA,
+      competition: current._competition?.ZA || "",
+      competitionId: current._competition?.ZEE || current._competition?.ZC || "",
+      region: current._competition?.ZY || "",
+      kickoffTimestamp: numberOrNull(current.AD),
+      kickoffUtcSource: unixIso(current.AD),
+      homeTeam: current.AE,
+      awayTeam: current.AF,
+      homeTeamId: current.AU || "",
+      awayTeamId: current.AV || "",
+      homeSlug: current.WU || "",
+      awaySlug: current.WV || "",
+      statusCode: current.AB || "",
+      homeScore: numberOrNull(current.AG),
+      awayScore: numberOrNull(current.AH),
+      source: "Soccerway",
+    });
+    current = null;
+  };
+
+  for (let token of String(raw || "").split("¬")) {
+    if (!token) continue;
+    if (token.startsWith("~")) token = token.slice(1);
+    const divider = token.indexOf("÷");
+    if (divider < 0) continue;
+    const key = token.slice(0, divider);
+    const value = token.slice(divider + 1);
+
+    if (key === "ZA") {
+      flush();
+      competition = { ZA: value };
+      continue;
+    }
+    if (key.startsWith("Z")) {
+      competition[key] = value;
+      continue;
+    }
+    if (key === "AA") {
+      flush();
+      current = { AA: value, _competition: { ...competition } };
+      continue;
+    }
+    if (current) current[key] = value;
+  }
+
+  flush();
+  return fixtures;
+}
+
+function parseDay(url) {
+  const raw = url.searchParams.get("day") ?? "0";
+  const day = Number(raw);
+  if (!Number.isInteger(day) || day < -7 || day > 7) return null;
+  return day;
+}
+
+async function soccerwayFixtures(day) {
+  const feedUrl = `https://www.soccerway.com/x/feed/f_1_${day}_3_en_1`;
+  const result = await fetchText(feedUrl);
+  if (!result.ok) {
+    return {
+      ok: false,
+      source: "Soccerway",
+      day,
+      upstream: { status: result.status, url: result.finalUrl, error: result.error },
+      fixtures: [],
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  const fixtures = parseSoccerwayFeed(result.body);
+  return {
+    ok: true,
+    source: "Soccerway",
+    projectId: 2020,
+    day,
+    upstream: {
+      status: result.status,
+      url: result.finalUrl,
+      bytes: result.body.length,
+      contentType: result.contentType,
+    },
+    count: fixtures.length,
+    fixtures,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
 async function soccerwayProbe() {
   const homepage = await fetchText("https://www.soccerway.com/", {
     "User-Agent": SOCCERWAY_HEADERS["User-Agent"],
@@ -111,13 +223,23 @@ async function soccerwayProbe() {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (request.method === "OPTIONS" && url.pathname === "/api/soccerway-probe") {
+
+    if (request.method === "OPTIONS" && ["/api/soccerway-probe", "/api/soccerway-fixtures"].includes(url.pathname)) {
       return new Response(null, { status: 204, headers: cors(env, request) });
     }
+
+    if (request.method === "GET" && url.pathname === "/api/soccerway-fixtures") {
+      const day = parseDay(url);
+      if (day === null) return json({ ok: false, error: "day must be an integer from -7 to 7" }, 400, env, request);
+      const result = await soccerwayFixtures(day);
+      return json(result, result.ok ? 200 : 502, env, request);
+    }
+
     if (request.method === "GET" && url.pathname === "/api/soccerway-probe") {
       const result = await soccerwayProbe();
       return json(result, result.ok ? 200 : 502, env, request);
     }
+
     return app.fetch(request, env, ctx);
   },
 };
