@@ -1,5 +1,5 @@
 // SlipTrace Live Centre v9 — resilient BSD stats/momentum/shotmap mode.
-// WebSocket transport is intentionally disabled here until it is verified independently.
+// WebSocket transport is intentionally handled by realtime-v10.js.
 (() => {
   'use strict';
 
@@ -22,7 +22,7 @@
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function isRecord(v){return Boolean(v&&typeof v==='object'&&!Array.isArray(v));}
   function routeActive(){return /^#match\//.test(location.hash);}
-  function domEventId(){const t=matchApp.querySelector('.matchTopline > span')?.textContent||'';const m=t.match(/BSD EVENT\s+(\d+)/i);return m?Number(m[1]):null;}
+  function domEventId(){const t=matchApp.querySelector('.matchTopline > span')?.textContent||'';const m=t.match(/BSD EVENT\s+([A-Za-z0-9_-]+)/i);return m?m[1]:null;}
   function teamNames(){const t=[...matchApp.querySelectorAll('.matchHeroTeam strong')].map(n=>n.textContent.trim());return{home:t[0]||'HOME',away:t[1]||'AWAY'};}
   function key(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
   function num(v){if(typeof v==='number'&&Number.isFinite(v))return v;if(typeof v==='string'){const n=Number(v.replace(/%/g,'').trim());return Number.isFinite(n)?n:null;}if(isRecord(v)){for(const k of ['value','total','count','stat']){const n=num(v[k]);if(n!==null)return n;}}return null;}
@@ -114,12 +114,13 @@
           <div class="lcFreshness"><span>STATS ${age===null?'—':`${age}s`}</span><span>EVENT ${esc(String(state.eventId))}</span></div>
         </div>
       </div>`;
+    window.dispatchEvent(new CustomEvent('sliptrace:live-centre-rendered'));
   }
 
   async function fetchStats(){
     if(!state.eventId||!routeActive()||document.visibilityState==='hidden')return;const id=state.eventId;
     try{
-      const res=await fetch(`${API}/api/match-stats?event_id=${id}&t=${Date.now()}`,{cache:'no-store'});const payload=await res.json().catch(()=>null);
+      const res=await fetch(`${API}/api/match-stats?event_id=${encodeURIComponent(id)}&t=${Date.now()}`,{cache:'no-store'});const payload=await res.json().catch(()=>null);
       if(id!==state.eventId)return;if(!res.ok||!payload?.ok)throw new Error(payload?.error||`HTTP ${res.status}`);
       state.payload=payload;state.at=Date.now();state.error='';render();
     }catch(e){if(id!==state.eventId)return;state.error=e?.message||'BSD stats unavailable';render();}
