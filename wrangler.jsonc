@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "football-v2",
-  "main": "backend/cloudflare-worker/src/soccerway-probe-entry.js",
+  "main": "backend/cloudflare-worker/src/fast-entry.js",
   "compatibility_date": "2026-09-12",
   "workers_dev": true,
   "vars": {
