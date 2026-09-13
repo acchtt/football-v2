@@ -88,7 +88,10 @@ function parseScore(row, defaultStatus = "") {
     homeScore,
     awayScore,
     minute: numeric(source.current_minute ?? source.minute ?? time?.minute ?? time?.current_minute),
-    period: stringish(source.period ?? source.current_period ?? source.match_period ?? time?.period ?? time?.display),
+    second: numeric(source.current_second ?? source.second ?? time?.second ?? time?.current_second),
+    display: stringish(source.clock_display ?? source.display ?? time?.display),
+    period: stringish(source.period ?? source.current_period ?? source.match_period ?? time?.period),
+    periodStartedAtUts: numeric(source.period_started_at_uts ?? time?.period_started_at_uts),
     status: String(source.status ?? time?.status ?? defaultStatus).toLowerCase(),
   };
 }
@@ -107,7 +110,10 @@ function parsePatch(row) {
     homeScore: numeric(row.home_score ?? score?.home ?? score?.home_score),
     awayScore: numeric(row.away_score ?? score?.away ?? score?.away_score),
     minute: numeric(row.current_minute ?? row.minute ?? time?.minute ?? time?.current_minute),
-    period: stringish(row.period ?? row.current_period ?? row.match_period ?? time?.period ?? time?.display),
+    second: numeric(row.current_second ?? row.second ?? time?.second ?? time?.current_second),
+    display: stringish(row.clock_display ?? row.display ?? time?.display),
+    period: stringish(row.period ?? row.current_period ?? row.match_period ?? time?.period),
+    periodStartedAtUts: numeric(row.period_started_at_uts ?? time?.period_started_at_uts),
     status: String(row.status ?? time?.status ?? "live").toLowerCase(),
   };
 }
@@ -128,25 +134,6 @@ function eventKey(event) {
 function finishedStatus(status) {
   const value = String(status || "").toLowerCase();
   return value === "finished" || value === "ft" || value === "full_time" || value === "full time" || value === "ended" || value === "complete" || value === "completed";
-}
-
-// BSD's compact live feed can report the clock relative to the current period.
-// Example: period=2H + minute=13 means the 58th match minute, not 13'.
-function normalizedMinute(minute, period) {
-  const value = numeric(minute);
-  if (value === undefined) return undefined;
-  const p = String(period || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-
-  const secondHalf = p === "2h" || p === "2" || p === "half2" || p === "2ndhalf" || p === "secondhalf";
-  if (secondHalf && value >= 0 && value <= 45) return value + 45;
-
-  const firstExtra = p === "et1" || p === "1et" || p === "extra1" || p === "1stextra" || p === "firstextra";
-  if (firstExtra && value >= 0 && value <= 15) return value + 90;
-
-  const secondExtra = p === "et2" || p === "2et" || p === "extra2" || p === "2ndextra" || p === "secondextra";
-  if (secondExtra && value >= 0 && value <= 15) return value + 105;
-
-  return value;
 }
 
 async function bsdFetch(env, path) {
@@ -220,7 +207,6 @@ async function buildFastScoreFeed(env) {
     .filter((event) => event.home && event.away && event.homeScore !== undefined && event.awayScore !== undefined)
     .map((event) => {
       const finished = finishedStatus(event.status);
-      const minute = normalizedMinute(event.minute, event.period);
       return {
         id: event.id,
         eventDate: event.eventDate,
@@ -228,9 +214,11 @@ async function buildFastScoreFeed(env) {
         away: event.away,
         homeScore: event.homeScore,
         awayScore: event.awayScore,
-        minute: finished ? undefined : minute,
-        rawMinute: finished ? undefined : event.minute,
+        minute: finished ? undefined : event.minute,
+        second: finished ? undefined : event.second,
+        display: finished ? "FT" : event.display,
         period: finished ? "FT" : event.period,
+        periodStartedAtUts: finished ? undefined : event.periodStartedAtUts,
         status: finished ? "finished" : (event.status || "live"),
       };
     });
