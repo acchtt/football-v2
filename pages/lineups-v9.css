@@ -1,0 +1,29 @@
+/* SlipTrace Match Desk v9 lineups */
+.lineupsPanel{margin-top:16px}
+.lineupsPanel>header{display:flex;align-items:center;justify-content:space-between}
+.xiHeadMeta{display:flex;align-items:center;gap:9px}
+.xiHeadMeta small{color:#69747f;font-size:9px;letter-spacing:.06em}
+.xiStatus{font-size:9px!important;letter-spacing:.08em;padding:4px 7px;border:1px solid #303944;background:#0b1015;color:#9ba5af}
+.xiStatus.confirmed{border-color:#425d31;background:#10170c;color:#b9dc8e}
+.xiStatus.predicted{border-color:#5a4728;background:#171208;color:#ddb978}
+.xiStatus.unavailable{border-color:#5a2d34;background:#170d10;color:#e68a93}
+.xiGrid{display:grid;grid-template-columns:1fr 1fr}
+.xiTeam:first-child{border-right:1px solid #222a33}
+.xiTeam>header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px;border-bottom:1px solid #202832;background:#0b0f13}
+.xiTeam>header div{min-width:0}
+.xiTeam>header strong{display:block;color:#eef1f3;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xiTeam>header span{display:block;margin-top:3px;color:#77838e;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.xiTeam>header>b{color:#77838e;font-size:10px;white-space:nowrap}
+.xiStarters{display:grid;grid-template-columns:1fr;min-height:180px}
+.xiStarters>p,.xiEmpty{margin:0;padding:22px 14px;color:#77838e;font-size:12px}
+.xiPlayer{display:grid;grid-template-columns:30px minmax(0,1fr) 1px;align-items:center;min-height:38px;padding:6px 12px;border-bottom:1px solid #1b232b}
+.xiPlayer:last-child{border-bottom:0}
+.xiPlayer>b{color:#8b96a1;font-size:11px;font-variant-numeric:tabular-nums}
+.xiPlayer>span{min-width:0;color:#d7dce0;font-size:12px;font-weight:720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xiPlayer small{margin-left:7px;color:#6f7a85;font-size:9px;font-weight:650;text-transform:uppercase}
+.xiBench{border-top:1px solid #27303a;background:#0a0e12}
+.xiBench>summary{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;color:#8d98a3;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.06em;cursor:pointer}
+.xiBench>summary b{color:#69747f;font-size:9px}
+.xiBench>div{border-top:1px solid #1e262f}
+.xiNotice{padding:10px 13px;border-top:1px solid #44361f;background:#141008;color:#c7a76d;font-size:10px}
+@media(max-width:760px){.xiGrid{grid-template-columns:1fr}.xiTeam:first-child{border-right:0;border-bottom:1px solid #2a323b}.xiPlayer{min-height:36px}.xiTeam>header strong{font-size:14px}}
