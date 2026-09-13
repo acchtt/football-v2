@@ -46,6 +46,7 @@ jobs:
           ok=0
           for i in 1 2 3 4 5 6 7 8; do
             if curl --fail --silent --show-error "$BASE/" -o /tmp/index.html && \
+               curl --fail --silent --show-error "$BASE/app.js?v=2" -o /tmp/app.js && \
                curl --fail --silent --show-error "$BASE/api/fixtures?day=0" -o /tmp/feed.json && \
                curl --fail --silent --show-error "$BASE/api/board?day=0" -o /tmp/board.json && \
                curl --fail --silent --show-error "$BASE/api/dashboard-data" -o /tmp/dashboard.json; then
@@ -57,7 +58,10 @@ jobs:
           test "$ok" = "1"
           grep -q "SlipTrace Football · Soccerway" /tmp/index.html
           grep -q "app-v2.css" /tmp/index.html
-          grep -q "SOCCERWAY" /tmp/index.html
+          grep -q "Loading FOCUS / WATCHLIST board" /tmp/index.html
+          grep -q 'src="/app.js?v=2"' /tmp/index.html
+          grep -q "SOCCERWAY" /tmp/app.js
+          node --check /tmp/app.js
           python - <<'PY'
           import json
           from pathlib import Path
@@ -86,7 +90,7 @@ jobs:
           assert d.get('ok') is True, d
           assert isinstance(d.get('schedule'), list), d
 
+          print('app_js_bytes=', len(Path('/tmp/app.js').read_bytes()))
           print('raw_fixtures=', p['count'], 'raw_live=', p.get('liveCount'))
           print('board_fixtures=', b['count'], 'focus=', b.get('focusCount'), 'watch=', b.get('watchlistCount'), 'matched=', b.get('matchedCount'))
-          print('dashboard_rows=', len(d.get('schedule') or []), 'picks=', len(d.get('picks') or []))
           PY
