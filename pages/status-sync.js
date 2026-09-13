@@ -157,6 +157,10 @@
   }
 
   function applyNotLive(row, event) {
+    if (livePanel(row)) {
+      removeFromLivePanel(row);
+      return;
+    }
     if (row.dataset.matchStatus === 'ft' || row.classList.contains('is-ft-row')) return;
     updateScore(row, event);
     const clock = row.querySelector('.matchScore [data-clock]');
