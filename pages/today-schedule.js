@@ -1,6 +1,8 @@
-// Schedule front page: ICT today only, split into ended and upcoming/live sections.
+// Schedule front page: ICT today only, split into ended and upcoming/live tabs.
 (() => {
   const endedStatuses = new Set(["finished", "ft", "full time", "full_time", "fulltime"]);
+  let activeBucket = "upcoming";
+  let bucketInitialized = false;
 
   function isEndedMatch(row) {
     if (row?.manualScore) return true;
@@ -31,15 +33,33 @@
       const ended = ordered.filter(isEndedMatch);
       const upcoming = ordered.filter((row) => !isEndedMatch(row));
 
-      const endedHtml = ended.length
-        ? `<section><div class="sectionTitle">ENDED MATCHES · ${ended.length}</div>${ended.map(scheduleCard).join("")}</section>`
-        : `<section><div class="sectionTitle">ENDED MATCHES · 0</div><div class="empty">No ended matches yet.</div></section>`;
+      if (!bucketInitialized) {
+        activeBucket = upcoming.length ? "upcoming" : "ended";
+        bucketInitialized = true;
+      }
 
-      const upcomingHtml = upcoming.length
-        ? `<section><div class="sectionTitle">UPCOMING / LIVE · ${upcoming.length}</div>${upcoming.map(scheduleCard).join("")}</section>`
-        : `<section><div class="sectionTitle">UPCOMING / LIVE · 0</div><div class="empty">No upcoming matches today.</div></section>`;
+      const visible = activeBucket === "ended" ? ended : upcoming;
+      const emptyText = activeBucket === "ended" ? "No ended matches yet." : "No upcoming matches today.";
+      const sectionLabel = activeBucket === "ended" ? "ENDED MATCHES" : "UPCOMING / LIVE";
 
-      list.innerHTML = `<div class="resultCount">Showing ${ordered.length} of ${todayRows.length} fixtures ${statusBadge()}</div>` + endedHtml + upcomingHtml;
+      list.innerHTML = `
+        <div class="resultCount">Showing ${ordered.length} of ${todayRows.length} fixtures ${statusBadge()}</div>
+        <div class="scheduleSubtabs" role="tablist" aria-label="Match status">
+          <button type="button" class="scheduleSubtab ${activeBucket === "upcoming" ? "active" : ""}" data-schedule-bucket="upcoming" role="tab" aria-selected="${activeBucket === "upcoming"}">Upcoming / Live <span>${upcoming.length}</span></button>
+          <button type="button" class="scheduleSubtab ${activeBucket === "ended" ? "active" : ""}" data-schedule-bucket="ended" role="tab" aria-selected="${activeBucket === "ended"}">Ended <span>${ended.length}</span></button>
+        </div>
+        <section>
+          <div class="sectionTitle">${sectionLabel} · ${visible.length}</div>
+          ${visible.length ? visible.map(scheduleCard).join("") : `<div class="empty">${emptyText}</div>`}
+        </section>`;
+
+      document.querySelectorAll("[data-schedule-bucket]").forEach((button) => {
+        button.addEventListener("click", () => {
+          activeBucket = button.dataset.scheduleBucket;
+          draw(filtered);
+        });
+      });
+
       bindScoreForms();
     };
 
