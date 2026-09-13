@@ -45,8 +45,8 @@ jobs:
           BASE="https://soccerway-livescore.acchtt.workers.dev"
           ok=0
           for i in 1 2 3 4 5 6 7 8; do
-            if curl --fail --silent --show-error "$BASE/" -o /tmp/index.html && \
-               curl --fail --silent --show-error "$BASE/app.js?v=2" -o /tmp/app.js && \
+            if curl --fail --silent --show-error "$BASE/?ci=$GITHUB_RUN_ID" -o /tmp/index.html && \
+               curl --fail --silent --show-error "$BASE/sliptrace-client-v3.js" -o /tmp/app.js && \
                curl --fail --silent --show-error "$BASE/api/fixtures?day=0" -o /tmp/feed.json && \
                curl --fail --silent --show-error "$BASE/api/board?day=0" -o /tmp/board.json && \
                curl --fail --silent --show-error "$BASE/api/dashboard-data" -o /tmp/dashboard.json; then
@@ -57,11 +57,12 @@ jobs:
           done
           test "$ok" = "1"
           grep -q "SlipTrace Football · Soccerway" /tmp/index.html
-          grep -q "app-v2.css" /tmp/index.html
-          grep -q "Loading FOCUS / WATCHLIST board" /tmp/index.html
-          grep -q 'src="/app.js?v=2"' /tmp/index.html
+          grep -q "Football operations" /tmp/index.html
+          grep -q "FOCUS/WATCHLIST board only" /tmp/index.html
+          grep -q 'src="/sliptrace-client-v3.js"' /tmp/index.html
           grep -q "SOCCERWAY" /tmp/app.js
           node --check /tmp/app.js
+
           python - <<'PY'
           import json
           from pathlib import Path
@@ -94,3 +95,24 @@ jobs:
           print('raw_fixtures=', p['count'], 'raw_live=', p.get('liveCount'))
           print('board_fixtures=', b['count'], 'focus=', b.get('focusCount'), 'watch=', b.get('watchlistCount'), 'matched=', b.get('matchedCount'))
           PY
+
+      - name: Browser render check
+        run: |
+          set -euo pipefail
+          BASE="https://soccerway-livescore.acchtt.workers.dev/?browser=$GITHUB_RUN_ID"
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME" ]; then
+            echo "::error::No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=10000 --dump-dom "$BASE" > /tmp/rendered.html 2>/tmp/chrome.log || {
+            cat /tmp/chrome.log
+            exit 1
+          }
+          grep -q 'data-app-booted="1"' /tmp/rendered.html
+          grep -q "Football operations" /tmp/rendered.html
+          grep -q "SOCCERWAY LIVE" /tmp/rendered.html
+          if grep -q "Loading FOCUS / WATCHLIST board" /tmp/rendered.html; then
+            echo "::error::Browser remained on fallback loading shell"
+            exit 1
+          fi
