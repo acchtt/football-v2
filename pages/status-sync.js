@@ -5,6 +5,7 @@
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
   let syncing = false;
   let resolved = new Map();
+  let renderTimer = 0;
 
   const pick = (...values) => values.find(v => v !== undefined && v !== null && v !== '') ?? null;
   const finite = value => Number.isFinite(Number(value)) ? Number(value) : null;
@@ -12,13 +13,24 @@
   function normalizeStatus(raw) {
     const value = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
     if (['live','inprogress','in_progress','playing','ongoing','ht','halftime','half_time','break','paused','extra_time','penalties','penalty_shootout'].includes(value)) return 'live';
-    if (['finished','ended','complete','completed','final','ft','aet','after_extra_time','after_penalties','penalties_finished'].includes(value)) return 'finished';
+    if (['finished','ended','complete','completed','final','ft','aet','after_extra_time','after_penalties','penalties_finished','full_time','fulltime'].includes(value)) return 'finished';
     if (['postponed','cancelled','canceled','abandoned','suspended'].includes(value)) return value;
     return 'upcoming';
   }
 
   function eventStatus(event) {
-    return normalizeStatus(pick(event?.status, event?.time?.status));
+    const primary = normalizeStatus(pick(event?.status, event?.time?.status));
+    const period = normalizeStatus(pick(
+      event?.time?.period,
+      event?.current_period,
+      event?.period,
+      event?.time?.display,
+      event?.display
+    ));
+    if (period === 'finished') return 'finished';
+    if (primary === 'finished') return 'finished';
+    if (primary === 'upcoming' && period === 'live') return 'live';
+    return primary;
   }
 
   function eventId(event) {
@@ -110,7 +122,10 @@
   function updateScore(row, event) {
     const current = score(event);
     const node = row.querySelector('.matchScore strong');
-    if (node && current.home !== null && current.away !== null) node.textContent = `${current.home}–${current.away}`;
+    if (node && current.home !== null && current.away !== null) {
+      const text = `${current.home}–${current.away}`;
+      if (node.textContent !== text) node.textContent = text;
+    }
   }
 
   function livePanel(row) {
@@ -147,10 +162,17 @@
     const minute = finite(pick(event?.time?.minute, event?.current_minute, event?.minute));
     const display = pick(event?.time?.display, event?.display);
     const clockText = display || (minute !== null ? `${minute}′` : 'LIVE');
+    const period = periodLabel(event);
     const clock = row.querySelector('.matchScore [data-clock]');
     const time = row.querySelector('.matchTime');
     if (clock && clock.textContent !== String(clockText)) clock.textContent = String(clockText);
-    if (time) time.innerHTML = `<span class="tag live"><i class="dot bad"></i>LIVE</span><small>${periodLabel(event)}</small>`;
+    if (time) {
+      const hasLive = Boolean(time.querySelector('.tag.live'));
+      const currentPeriod = time.querySelector('small')?.textContent || '';
+      if (!hasLive || currentPeriod !== period) {
+        time.innerHTML = `<span class="tag live"><i class="dot bad"></i>LIVE</span><small>${period}</small>`;
+      }
+    }
     row.dataset.matchStatus = 'live';
     row.classList.add('is-live-row');
     row.classList.remove('is-ft-row');
@@ -167,14 +189,22 @@
     const time = row.querySelector('.matchTime');
     const kickoffText = formatTime(kickoff(event));
     if (clock && clock.textContent !== kickoffText) clock.textContent = kickoffText;
-    if (time) time.innerHTML = `${kickoffText}<small>Status syncing</small>`;
+    if (time && (time.querySelector('.tag.live') || !/status syncing/i.test(time.textContent))) {
+      time.innerHTML = `${kickoffText}<small>Status syncing</small>`;
+    }
     row.dataset.matchStatus = 'syncing';
     row.classList.remove('is-live-row', 'is-ft-row');
   }
 
-  function refreshLiveKpi() {
+  function liveBucketCount() {
+    const livePane = document.querySelector('[data-status-pane="live"]');
+    if (livePane) return livePane.querySelectorAll('.matchRow').length;
     const panel = [...document.querySelectorAll('.panel')].find(item => item.querySelector('.panelHead h2')?.textContent?.trim().toLowerCase() === 'live now');
-    const count = panel ? panel.querySelectorAll('.matchRow').length : 0;
+    return panel ? panel.querySelectorAll('.matchRow').length : 0;
+  }
+
+  function refreshLiveKpi() {
+    const count = liveBucketCount();
     document.querySelectorAll('.kpi').forEach(kpi => {
       if (kpi.querySelector('span')?.textContent?.trim().toLowerCase() !== 'live') return;
       const value = kpi.querySelector('strong');
@@ -190,9 +220,13 @@
     if (key) next.set(key, value);
   }
 
+  function previousFor(row) {
+    return resolved.get(String(row.dataset.liveEvent || '')) || resolved.get(rowTeamKey(row)) || null;
+  }
+
   function reassert() {
     document.querySelectorAll('.matchRow[data-live-event]').forEach(row => {
-      const state = resolved.get(String(row.dataset.liveEvent || '')) || resolved.get(rowTeamKey(row));
+      const state = previousFor(row);
       if (!state) return;
       if (state.status === 'finished') applyFinished(row, state.event);
       else if (state.status === 'live') applyLive(row, state.event);
@@ -204,6 +238,7 @@
   async function sync() {
     if (syncing || !document.querySelector('.matchRow[data-live-event]')) return;
     syncing = true;
+    let changed = false;
     try {
       const stamp = Date.now();
       const date = selectedDate();
@@ -220,12 +255,14 @@
       document.querySelectorAll('.matchRow[data-live-event]').forEach(row => {
         const liveEvent = lookup(liveIndex, row);
         const dayEvent = lookup(dayIndex, row);
+        const previous = previousFor(row);
 
         if (liveEvent) {
           const status = eventStatus(liveEvent);
           if (status === 'finished') {
             applyFinished(row, liveEvent);
             remember(row, 'finished', liveEvent, next);
+            changed = true;
             return;
           }
           if (status === 'live') {
@@ -235,27 +272,31 @@
           }
         }
 
-        // A successful /live response is authoritative for membership in the Live now panel.
-        if (liveOk && livePanel(row) && !liveEvent) {
-          removeFromLivePanel(row);
-          return;
+        if (dayEvent) {
+          const dayStatus = eventStatus(dayEvent);
+          if (dayStatus === 'finished') {
+            applyFinished(row, dayEvent);
+            remember(row, 'finished', dayEvent, next);
+            changed = true;
+            return;
+          }
+          if (dayStatus === 'live') {
+            if (liveOk && !liveEvent) {
+              applyNotLive(row, dayEvent);
+              remember(row, 'syncing', dayEvent, next);
+              changed = true;
+            } else {
+              applyLive(row, dayEvent);
+              remember(row, 'live', dayEvent, next);
+            }
+            return;
+          }
         }
 
-        if (!dayEvent) return;
-        const dayStatus = eventStatus(dayEvent);
-        if (dayStatus === 'finished') {
-          applyFinished(row, dayEvent);
-          remember(row, 'finished', dayEvent, next);
-          return;
-        }
-        if (dayStatus === 'live') {
-          if (liveOk && !liveEvent) {
-            applyNotLive(row, dayEvent);
-            remember(row, 'syncing', dayEvent, next);
-          } else {
-            applyLive(row, dayEvent);
-            remember(row, 'live', dayEvent, next);
-          }
+        if (liveOk && !liveEvent && previous?.status === 'live') {
+          applyNotLive(row, previous.event);
+          remember(row, 'syncing', previous.event, next);
+          changed = true;
         }
       });
 
@@ -263,6 +304,7 @@
       refreshLiveKpi();
     } finally {
       syncing = false;
+      if (changed) setTimeout(refreshLiveKpi, 0);
     }
   }
 
@@ -270,8 +312,10 @@
   if (!app) return;
 
   new MutationObserver(() => {
-    if (resolved.size) queueMicrotask(reassert);
-  }).observe(app, { childList: true, subtree: true, characterData: true });
+    if (!resolved.size) return;
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(reassert, 0);
+  }).observe(app, { childList: true });
 
   window.addEventListener('focus', sync);
   window.addEventListener('hashchange', () => setTimeout(sync, 0));
