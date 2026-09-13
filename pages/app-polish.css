@@ -18,7 +18,23 @@ html,body,button,input,select{font-family:"Inter",system-ui,-apple-system,BlinkM
 .chronoMatches .teamLine{font-weight:720}
 .chronoMatches .matchMeta{align-self:center}
 
+.matchStatusSection{border-top:1px solid var(--line)}
+.matchStatusSection:first-of-type{border-top:0}
+.matchStatusHead{height:38px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:#0b0f14;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.matchStatusHead>div{display:flex;align-items:center;gap:8px}
+.matchStatusHead strong{font-size:10px;letter-spacing:.12em}
+.matchStatusHead>span{color:var(--dim);font-variant-numeric:tabular-nums}
+.statusDot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--dim)}
+.status-live .matchStatusHead strong{color:var(--red)}
+.status-live .statusDot{background:var(--red);box-shadow:0 0 0 3px rgba(255,82,101,.08)}
+.status-scheduled .matchStatusHead strong{color:var(--cyan)}
+.status-scheduled .statusDot{background:var(--cyan)}
+.status-ft .matchStatusHead strong{color:#9ca7b5}
+.status-ft .statusDot{background:#7c8795}
+.status-ft .matchRow{opacity:.9}
+
 @media(max-width:760px){
   .chronoMatches .matchRow{grid-template-columns:58px minmax(0,1fr) 60px}
   .matchCompetition{margin-left:32px;font-size:9px}
+  .matchStatusHead{height:34px;padding:0 10px}
 }
