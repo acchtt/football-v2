@@ -1,4 +1,5 @@
-// SlipTrace v6 polling cadence + shared response bus.
+// SlipTrace polling cadence + shared response bus.
+// Fast enough to feel live, slow enough to avoid upstream rate-limit cascades.
 // desk-v4 owns refresh functions inside its IIFE, so remap only its two known polling intervals
 // before it initializes. Match Desk consumes the same responses without creating duplicate polls.
 (() => {
@@ -6,8 +7,8 @@
 
   const nativeSetInterval = window.setInterval.bind(window);
   const nativeFetch = window.fetch.bind(window);
-  const LIVE_MS = 3000;
-  const DASHBOARD_MS = 8000;
+  const LIVE_MS = 5000;
+  const DASHBOARD_MS = 12000;
 
   const bus = window.SLIPTRACE_DATA_BUS = window.SLIPTRACE_DATA_BUS || {
     dashboard: null,
