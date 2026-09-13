@@ -18,23 +18,33 @@ html,body,button,input,select{font-family:"Inter",system-ui,-apple-system,BlinkM
 .chronoMatches .teamLine{font-weight:720}
 .chronoMatches .matchMeta{align-self:center}
 
-.matchStatusSection{border-top:1px solid var(--line)}
-.matchStatusSection:first-of-type{border-top:0}
-.matchStatusHead{height:38px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:#0b0f14;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
-.matchStatusHead>div{display:flex;align-items:center;gap:8px}
-.matchStatusHead strong{font-size:10px;letter-spacing:.12em}
-.matchStatusHead>span{color:var(--dim);font-variant-numeric:tabular-nums}
-.statusDot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--dim)}
-.status-live .matchStatusHead strong{color:var(--red)}
-.status-live .statusDot{background:var(--red);box-shadow:0 0 0 3px rgba(255,82,101,.08)}
-.status-scheduled .matchStatusHead strong{color:var(--cyan)}
-.status-scheduled .statusDot{background:var(--cyan)}
-.status-ft .matchStatusHead strong{color:#9ca7b5}
-.status-ft .statusDot{background:#7c8795}
+.matchStatusTabsHost{background:var(--surface)}
+.matchStatusTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#0b0f14;border-bottom:1px solid var(--line)}
+.matchStatusTab{position:relative;height:48px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:9px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;transition:background .12s ease,color .12s ease}
+.matchStatusTab:last-child{border-right:0}
+.matchStatusTab:hover{background:var(--surface2);color:var(--text)}
+.matchStatusTab.active{background:var(--surface2);color:var(--text)}
+.matchStatusTab.active:after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--dim)}
+.matchStatusTab b{min-width:22px;height:20px;padding:0 6px;border:1px solid var(--line2);border-radius:3px;display:inline-grid;place-items:center;font-size:10px;font-variant-numeric:tabular-nums;color:var(--muted);background:rgba(255,255,255,.015)}
+.statusDot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--dim);flex:0 0 auto}
+.matchStatusTab.status-live .statusDot{background:var(--red)}
+.matchStatusTab.status-live.active{color:var(--red)}
+.matchStatusTab.status-live.active:after{background:var(--red)}
+.matchStatusTab.status-scheduled .statusDot{background:var(--cyan)}
+.matchStatusTab.status-scheduled.active{color:var(--cyan)}
+.matchStatusTab.status-scheduled.active:after{background:var(--cyan)}
+.matchStatusTab.status-ft .statusDot{background:#7c8795}
+.matchStatusTab.status-ft.active{color:#a8b1bd}
+.matchStatusTab.status-ft.active:after{background:#8994a2}
+
+.matchStatusTabContent{min-height:90px}
+.matchStatusPane.hidden{display:none!important}
 .status-ft .matchRow{opacity:.9}
+.statusEmpty{padding:34px 18px}
 
 @media(max-width:760px){
   .chronoMatches .matchRow{grid-template-columns:58px minmax(0,1fr) 60px}
   .matchCompetition{margin-left:32px;font-size:9px}
-  .matchStatusHead{height:34px;padding:0 10px}
+  .matchStatusTab{height:44px;gap:6px;font-size:10px;letter-spacing:.05em}
+  .matchStatusTab b{min-width:20px;height:18px;padding:0 5px;font-size:9px}
 }
