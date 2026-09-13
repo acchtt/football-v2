@@ -9,6 +9,9 @@
   const nativeFetch = window.fetch.bind(window);
   const nativeSetInterval = window.setInterval.bind(window);
   let replacedAppLiveTimer = false;
+  let boardSnapshot = null;
+  let boardSnapshotAt = 0;
+  let boardSnapshotPromise = null;
 
   window.SLIPTRACE_API = API;
   window.SLIPTRACE_TIME_ZONE = TZ;
@@ -55,6 +58,118 @@
     return payload;
   }
 
+  function norm(v='') {
+    return String(v)
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club)\b/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function splitMatch(match='') {
+    for (const re of [/\s+vs\.?\s+/i, /\s+v\.?\s+/i, /\s+—\s+/, /\s+–\s+/, /\s+-\s+/]) {
+      const parts = String(match).split(re).map(x => x.trim()).filter(Boolean);
+      if (parts.length === 2) return { home: parts[0], away: parts[1] };
+    }
+    return { home: String(match), away: '' };
+  }
+
+  function nameScore(a, b) {
+    const x = norm(a), y = norm(b);
+    if (!x || !y) return 0;
+    if (x === y) return 6;
+    if (x.includes(y) || y.includes(x)) return 4;
+    const aa = new Set(x.split(' '));
+    const bb = new Set(y.split(' '));
+    let overlap = 0;
+    aa.forEach(token => { if (bb.has(token)) overlap++; });
+    const ratio = overlap / Math.max(aa.size, bb.size);
+    return ratio >= .75 ? 4 : ratio >= .5 ? 3 : 0;
+  }
+
+  function eventTeamName(event, side) {
+    const nested = event?.[`${side}_team`];
+    if (nested && typeof nested === 'object') return nested.name || nested.short_name || side.toUpperCase();
+    return event?.[`${side}_team_name`] || event?.[`${side}_name`] || (typeof nested === 'string' ? nested : null) || side.toUpperCase();
+  }
+
+  function rememberDashboard(payload) {
+    if (!payload || !Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) return;
+    boardSnapshot = payload;
+    boardSnapshotAt = Date.now();
+    try { localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(payload)); } catch {}
+  }
+
+  function readCachedDashboard() {
+    try {
+      const cached = JSON.parse(localStorage.getItem(DASHBOARD_CACHE_KEY) || 'null');
+      if (cached && Array.isArray(cached.schedule) && Array.isArray(cached.picks)) return cached;
+    } catch {}
+    return null;
+  }
+
+  async function getBoardSnapshot() {
+    if (boardSnapshot && Date.now() - boardSnapshotAt < 30000) return boardSnapshot;
+    if (boardSnapshotPromise) return boardSnapshotPromise;
+
+    boardSnapshotPromise = (async () => {
+      try {
+        const response = await timedFetch(`${API}/api/dashboard-data?board_only=${Date.now()}`, { cache: 'no-store' }, 6500);
+        if (response.ok) {
+          const payload = await response.json();
+          if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
+            rememberDashboard(payload);
+            return payload;
+          }
+        }
+      } catch {}
+
+      const cached = readCachedDashboard();
+      if (cached) {
+        boardSnapshot = cached;
+        boardSnapshotAt = Date.now();
+        return cached;
+      }
+      return { ok: true, schedule: [], picks: [], degraded: true };
+    })();
+
+    try { return await boardSnapshotPromise; }
+    finally { boardSnapshotPromise = null; }
+  }
+
+  function filterEventsToBoard(payload, dashboard, date) {
+    if (!payload || typeof payload !== 'object') return payload;
+    const data = payload.data && typeof payload.data === 'object' ? payload.data : null;
+    if (!data || !Array.isArray(data.results)) return payload;
+
+    const boardRows = (dashboard?.schedule || []).filter(row => {
+      const tier = String(row?.tier || '').toUpperCase();
+      return row?.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST');
+    });
+
+    const filtered = data.results.filter(event => boardRows.some(row => {
+      const teams = splitMatch(row.match || '');
+      const score = nameScore(teams.home, eventTeamName(event, 'home')) + nameScore(teams.away, eventTeamName(event, 'away'));
+      return score >= 6;
+    }));
+
+    return {
+      ...payload,
+      data: {
+        ...data,
+        count: filtered.length,
+        next: null,
+        previous: null,
+        results: filtered,
+      },
+      boardOnly: true,
+      boardDate: date,
+    };
+  }
+
   function jsonResponse(payload, original) {
     const headers = new Headers(original?.headers || {});
     headers.set('Content-Type', 'application/json; charset=utf-8');
@@ -77,15 +192,13 @@
   }
 
   function cachedDashboardResponse() {
-    try {
-      const cached = JSON.parse(localStorage.getItem(DASHBOARD_CACHE_KEY) || 'null');
-      if (cached && Array.isArray(cached.schedule) && Array.isArray(cached.picks)) {
-        return new Response(JSON.stringify({ ...cached, ok: true, cached: true, degraded: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
-        });
-      }
-    } catch {}
+    const cached = readCachedDashboard();
+    if (cached) {
+      return new Response(JSON.stringify({ ...cached, ok: true, cached: true, degraded: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+      });
+    }
     return new Response(JSON.stringify({ ok: true, schedule: [], picks: [], cached: true, degraded: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
@@ -104,9 +217,7 @@
         const response = await timedFetch(input, init, 6500);
         if (response.ok) {
           response.clone().json().then(payload => {
-            if (payload?.ok && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
-              try { localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(payload)); } catch {}
-            }
+            if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) rememberDashboard(payload);
           }).catch(() => {});
           return response;
         }
@@ -121,7 +232,18 @@
       if (!response.ok) return response;
       try {
         const payload = await response.clone().json();
-        return jsonResponse(normalizeBsdPayload(payload, url.pathname), response);
+        let normalized = normalizeBsdPayload(payload, url.pathname);
+
+        if (url.pathname === '/api/bsd/events') {
+          const dateFrom = url.searchParams.get('date_from');
+          const dateTo = url.searchParams.get('date_to');
+          if (dateFrom && dateFrom === dateTo) {
+            const dashboard = await getBoardSnapshot();
+            normalized = filterEventsToBoard(normalized, dashboard, dateFrom);
+          }
+        }
+
+        return jsonResponse(normalized, response);
       } catch {
         return response;
       }
