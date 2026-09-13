@@ -1,0 +1,147 @@
+/* SlipTrace v5 graphic layer — stronger sports-broadcast identity without dashboard chrome. */
+
+/* Stronger page atmosphere */
+body{
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px) 0 0/72px 72px,
+    linear-gradient(rgba(255,255,255,.010) 1px,transparent 1px) 0 0/72px 72px,
+    #080a0d;
+}
+body:before{
+  background:linear-gradient(180deg,rgba(20,26,34,.26),transparent 34%);
+  mask-image:none;
+}
+
+/* Header / brand becomes an actual visual anchor */
+.topbar{height:66px;background:rgba(7,9,12,.985);border-bottom-color:#2a3038}
+.topbar:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--red) 0 11%,#722d36 11% 18%,#26313a 18% 82%,#23606a 82% 89%,var(--cyan) 89% 100%);opacity:.9}
+.topbarIn{max-width:1500px;padding:0 32px}
+.brand{gap:13px}
+.brandMark{width:39px;height:39px;font-size:13px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.16)}
+.brand b{font-size:15px;letter-spacing:.15em}
+.topbar nav a{font-size:13px;letter-spacing:.02em}
+
+#app{max-width:1500px;padding:34px 32px 78px}
+.deskLayout{grid-template-columns:minmax(0,1fr) 300px;gap:36px}
+
+/* Matchday masthead */
+.pageHead{position:relative;min-height:94px;align-items:center;margin:0 0 18px;padding:18px 20px 18px 24px;background:#0c1015;border-top:1px solid #2b333d;border-bottom:1px solid #252d36;overflow:hidden}
+.pageHead:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--red)}
+.pageHead:after{content:"";position:absolute;right:0;top:0;width:180px;height:100%;background:repeating-linear-gradient(135deg,rgba(255,255,255,.026) 0 1px,transparent 1px 9px);pointer-events:none}
+.kicker{color:#85909c;font-size:10px;letter-spacing:.19em}
+.pageHead h1{font-size:43px;letter-spacing:-.035em}
+.pageHead p{font-size:12px;color:#9aa4ae}
+.summaryStats{position:relative;z-index:1;gap:28px;padding-right:8px}
+.summaryStats span{font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.summaryStats b{font-size:22px}
+
+/* Navigation feels closer to a broadcast rundown */
+.subnav{height:46px;margin-bottom:16px;background:#0a0d11;padding-left:2px;border-bottom-color:#29313a}
+.subnav button{height:46px;padding-bottom:12px;text-transform:uppercase;letter-spacing:.055em;font-size:11px}
+.subnav button.active:after{height:3px}
+
+/* Toolbar becomes part of the desk surface */
+.toolbar{padding:10px;background:#0c1015;border:1px solid #1f2730;margin-bottom:13px}
+.toolbar input,.toolbar select{background:#090d11;border-color:#303944}
+.toolbar input:focus,.toolbar select:focus{background:#0c1117;border-color:#485868}
+
+/* Section dividers are more graphic */
+.matchGroup{margin-top:24px}
+.matchGroup>header{height:39px;padding:0 10px 0 0;font-size:11px;letter-spacing:.14em;background:#0a0e12;border-top:1px solid #1c232b;border-bottom:1px solid #242c35}
+.matchGroup>header:before{width:5px;height:100%;margin-right:7px;background:#59636d}
+.matchGroup>header:after{background:#242c35}
+.matchGroup.liveGroup>header{background:#130d10;color:#ef9aa1;border-color:#3b2228}
+.matchGroup.liveGroup>header:before{background:var(--red)}
+.matchGroup.nextGroup>header{background:#0b1115;color:#97d8e0}
+.matchGroup.nextGroup>header:before{background:var(--cyan)}
+.matchGroup.awaitingGroup>header{background:#12100b;color:#d7bd87}
+.matchGroup.awaitingGroup>header:before{background:var(--amber)}
+.matchGroup.finishedGroup>header{background:#0f120c;color:#bfdc99}
+.matchGroup.finishedGroup>header:before{background:var(--lime)}
+
+/* Real club crests should float as badges, not live inside UI circles */
+.crest{width:34px;height:34px;border:0;border-radius:0;background:transparent;overflow:visible;color:#66717d;font-size:8px}
+.crest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:transparent;padding:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.crest>span{display:grid;place-items:center;width:27px;height:27px;border:1px solid #2d3741;border-radius:3px;background:#10151a;color:#79848f}
+.crest.hasImage>span{opacity:0}
+.teamLine{gap:12px;min-height:34px}
+.fixtureTeams .teamLine+.teamLine{margin-top:3px}
+.fixtureTeams .teamLine strong{font-size:17px;font-weight:680}
+.fixtureTeams small{margin-left:46px;margin-top:5px;font-size:11px;color:#818c97}
+.railCrest .crest{width:27px;height:27px;font-size:7px}
+.railCrest .crest>span{width:22px;height:22px}
+.rightRail li{grid-template-columns:42px 29px minmax(0,1fr) auto}
+
+/* Match rows gain depth without turning into cards */
+.rows,.pickRows{border:1px solid #202832;border-top:0;background:#090c10}
+.fixtureRow,.pickRow{background:#0d1116;border-top-color:#202730}
+.fixtureRow:nth-child(even),.pickRow:nth-child(even){background:#0c1014}
+.fixtureRow summary,.pickRow summary{min-height:94px}
+.fixtureRow summary{grid-template-columns:84px minmax(0,1fr) 144px 104px 18px;padding:12px 12px 12px 16px}
+.fixtureRow.focus:before{width:4px}
+.fixtureRow.focus{background:#101217}
+.fixtureRow.live{background:#151014}
+.fixtureRow:hover,.pickRow:hover{background:#131920}
+.fixtureRow[open],.pickRow[open]{background:#12181f}
+.kick{min-height:62px;display:flex;flex-direction:column;justify-content:center}
+.kick strong{font-size:21px}
+.kick span{font-size:10px}
+.signal{gap:16px;font-size:11px}
+.grade,.tier{letter-spacing:.035em}
+
+/* Score is now a real visual terminal cell */
+.score{min-height:66px;border:1px solid #262f39;background:#090d11}
+.score strong{font-size:27px}
+.score span{font-size:10px;margin-top:7px}
+.score.live{background:#190e12;border-color:#4a252d}
+.score.live strong{color:#fff}
+.score.live span{color:#f1848e}
+.score.final{background:#0d130d;border-color:#293929}
+.score.final strong{color:#eef4e8}
+.score.final span{color:#aac58c}
+.score.manual{background:#15120c;border-color:#40351f}
+.score.pending{background:#0a0d11;border-color:#202832}
+
+/* Expanded analyst sheet */
+.rowDetail{background:#090d11;border-top-color:#303943;padding-top:18px;padding-bottom:20px}
+.rowDetail dl{padding:0 0 16px;border-bottom:1px solid #202730}
+.rowDetail dt{font-size:10px;color:#77838e}
+.rowDetail dd{font-size:13px}
+.note{padding-top:15px}
+
+/* Right rail becomes a defined match-centre column */
+.rightRail{top:98px;padding:18px 18px 20px;background:#0b0f13;border:1px solid #202832;border-top:3px solid #303945}
+.rightRail:before{content:"MATCH CENTRE";display:block;margin-bottom:20px;color:#67727d;font-size:9px;font-weight:800;letter-spacing:.18em}
+.rightRail section{padding-bottom:23px;margin-bottom:22px}
+.rightRail h3{font-size:11px;color:#b0b8c1}
+.rightRail li{padding:4px 0}
+.railTeams b{font-size:12px;color:#d5dae0}
+.railTeams small{font-size:10px}
+.railScore{font-size:15px}
+.railBig{font-size:34px}
+
+/* Picks inherit the same stronger graphics */
+.pickRow summary{grid-template-columns:86px minmax(0,1fr) 148px 100px 122px 18px;padding:12px 12px 12px 14px}
+.pickRow{border-left-width:4px}
+.selection span{font-size:14px}.selection strong{font-size:11px}
+.result strong{font-size:12px}.result span{font-size:14px}
+
+@media(max-width:1180px){
+  .deskLayout{grid-template-columns:1fr}
+  .fixtureRow summary{grid-template-columns:78px minmax(0,1fr) 132px 96px 18px}
+  .pickRow summary{grid-template-columns:80px minmax(0,1fr) 136px 92px 112px 18px}
+}
+@media(max-width:850px){
+  #app{padding:22px 13px 60px}.topbarIn{padding:0 14px}
+  .pageHead{min-height:0;padding:16px 15px 16px 19px}.pageHead h1{font-size:34px}.pageHead:after{width:90px}
+  .toolbar{padding:8px}
+  .crest{width:30px;height:30px}.crest>span{width:25px;height:25px}.fixtureTeams small{margin-left:42px}
+  .fixtureRow summary{grid-template-columns:68px minmax(0,1fr) 82px 18px;min-height:100px}.signal{margin-left:42px}.score{min-height:58px}
+  .pickRow summary{grid-template-columns:70px minmax(0,1fr) 82px 18px}
+}
+@media(max-width:560px){
+  .pageHead h1{font-size:32px}.pageHead:after{display:none}.summaryStats{gap:14px}
+  .crest{width:28px;height:28px}.crest>span{width:23px;height:23px}.teamLine{gap:9px;min-height:30px}.fixtureTeams small{margin-left:37px}.signal{margin-left:37px}
+  .fixtureTeams .teamLine strong{font-size:16px}.score strong{font-size:23px}
+  .matchGroup>header{font-size:10px}
+}
