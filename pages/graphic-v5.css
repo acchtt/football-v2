@@ -23,6 +23,7 @@ body:before{
 
 #app{max-width:1500px;padding:34px 32px 78px}
 .deskLayout{grid-template-columns:minmax(0,1fr) 300px;gap:36px}
+.mainDesk{min-width:0}
 
 /* Matchday masthead */
 .pageHead{position:relative;min-height:94px;align-items:center;margin:0 0 18px;padding:18px 20px 18px 24px;background:#0c1015;border-top:1px solid #2b333d;border-bottom:1px solid #252d36;overflow:hidden}
@@ -47,7 +48,7 @@ body:before{
 
 /* Section dividers are more graphic */
 .matchGroup{margin-top:24px}
-.matchGroup>header{height:39px;padding:0 10px 0 0;font-size:11px;letter-spacing:.14em;background:#0a0e12;border-top:1px solid #1c232b;border-bottom:1px solid #242c35}
+.matchGroup>header{height:39px;display:flex;align-items:center;gap:9px;padding:0 10px 0 0;font-size:11px;letter-spacing:.14em;background:#0a0e12;border-top:1px solid #1c232b;border-bottom:1px solid #242c35}
 .matchGroup>header:before{width:5px;height:100%;margin-right:7px;background:#59636d}
 .matchGroup>header:after{background:#242c35}
 .matchGroup.liveGroup>header{background:#130d10;color:#ef9aa1;border-color:#3b2228}
@@ -59,40 +60,40 @@ body:before{
 .matchGroup.finishedGroup>header{background:#0f120c;color:#bfdc99}
 .matchGroup.finishedGroup>header:before{background:var(--lime)}
 
-/* Real club crests should float as badges, not live inside UI circles */
-.crest{width:34px;height:34px;border:0;border-radius:0;background:transparent;overflow:visible;color:#66717d;font-size:8px}
-.crest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:transparent;padding:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
-.crest>span{display:grid;place-items:center;width:27px;height:27px;border:1px solid #2d3741;border-radius:3px;background:#10151a;color:#79848f}
+/* Real club crests: free-standing badge lane, no circle UI */
+.crest{position:relative;flex:0 0 34px;width:34px;height:34px;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible;color:#66717d;font-size:8px}
+.crest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:transparent!important;padding:0!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.38))}
+.crest>span{display:grid;place-items:center;width:28px;height:28px;border:1px solid #2d3741;border-radius:3px;background:#10151a;color:#79848f}
 .crest.hasImage>span{opacity:0}
-.teamLine{gap:12px;min-height:34px}
-.fixtureTeams .teamLine+.teamLine{margin-top:3px}
-.fixtureTeams .teamLine strong{font-size:17px;font-weight:680}
-.fixtureTeams small{margin-left:46px;margin-top:5px;font-size:11px;color:#818c97}
-.railCrest .crest{width:27px;height:27px;font-size:7px}
+.teamLine{display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:13px;align-items:center;min-height:34px}
+.fixtureTeams .teamLine+.teamLine{margin-top:8px}
+.fixtureTeams .teamLine strong{font-size:17px;font-weight:680;line-height:1.15}
+.fixtureTeams small{margin-left:47px;margin-top:8px;font-size:11px;color:#818c97}
+.railCrest .crest{width:27px;height:27px;flex-basis:27px;font-size:7px}
 .railCrest .crest>span{width:22px;height:22px}
 .rightRail li{grid-template-columns:42px 29px minmax(0,1fr) auto}
 
-/* Match rows gain depth without turning into cards */
+/* Match rows: compact lanes with less dead horizontal space */
 .rows,.pickRows{border:1px solid #202832;border-top:0;background:#090c10}
-.fixtureRow,.pickRow{background:#0d1116;border-top-color:#202730}
+.fixtureRow,.pickRow{position:relative;background:#0d1116;border-top-color:#202730}
 .fixtureRow:nth-child(even),.pickRow:nth-child(even){background:#0c1014}
-.fixtureRow summary,.pickRow summary{min-height:94px}
-.fixtureRow summary{grid-template-columns:84px minmax(0,1fr) 144px 104px 18px;padding:12px 12px 12px 16px}
+.fixtureRow summary,.pickRow summary{min-height:108px}
+.fixtureRow summary{grid-template-columns:76px minmax(260px,1fr) 108px 88px 14px;gap:12px;padding:13px 12px 13px 14px}
 .fixtureRow.focus:before{width:4px}
 .fixtureRow.focus{background:#101217}
 .fixtureRow.live{background:#151014}
 .fixtureRow:hover,.pickRow:hover{background:#131920}
 .fixtureRow[open],.pickRow[open]{background:#12181f}
-.kick{min-height:62px;display:flex;flex-direction:column;justify-content:center}
+.kick{min-height:72px;display:flex;flex-direction:column;justify-content:center;padding-right:12px}
 .kick strong{font-size:21px}
 .kick span{font-size:10px}
-.signal{gap:16px;font-size:11px}
+.signal{justify-content:flex-end;gap:10px;font-size:10px;white-space:nowrap}
 .grade,.tier{letter-spacing:.035em}
 
-/* Score is now a real visual terminal cell */
-.score{min-height:66px;border:1px solid #262f39;background:#090d11}
-.score strong{font-size:27px}
-.score span{font-size:10px;margin-top:7px}
+/* Score is a compact match-state terminal cell */
+.score{min-height:64px;border:1px solid #262f39;background:#090d11;padding:0 7px}
+.score strong{font-size:25px}
+.score span{font-size:9px;margin-top:6px}
 .score.live{background:#190e12;border-color:#4a252d}
 .score.live strong{color:#fff}
 .score.live span{color:#f1848e}
@@ -121,27 +122,58 @@ body:before{
 .railBig{font-size:34px}
 
 /* Picks inherit the same stronger graphics */
-.pickRow summary{grid-template-columns:86px minmax(0,1fr) 148px 100px 122px 18px;padding:12px 12px 12px 14px}
+.pickRow summary{grid-template-columns:78px minmax(260px,1fr) 130px 88px 108px 14px;gap:12px;padding:13px 12px 13px 14px}
 .pickRow{border-left-width:4px}
 .selection span{font-size:14px}.selection strong{font-size:11px}
 .result strong{font-size:12px}.result span{font-size:14px}
 
+/* Keep the full desktop information anatomy much longer. */
 @media(max-width:1180px){
   .deskLayout{grid-template-columns:1fr}
-  .fixtureRow summary{grid-template-columns:78px minmax(0,1fr) 132px 96px 18px}
-  .pickRow summary{grid-template-columns:80px minmax(0,1fr) 136px 92px 112px 18px}
+  .rightRail{display:none}
+  .mainDesk{max-width:1080px;margin:0 auto;width:100%}
+  .fixtureRow summary{grid-template-columns:72px minmax(250px,1fr) 102px 84px 14px;gap:11px}
+  .pickRow summary{grid-template-columns:74px minmax(250px,1fr) 122px 84px 102px 14px;gap:11px}
 }
+
+/* Tablet / smaller desktop still keeps time, teams, signal and score visible. */
 @media(max-width:850px){
   #app{padding:22px 13px 60px}.topbarIn{padding:0 14px}
   .pageHead{min-height:0;padding:16px 15px 16px 19px}.pageHead h1{font-size:34px}.pageHead:after{width:90px}
   .toolbar{padding:8px}
-  .crest{width:30px;height:30px}.crest>span{width:25px;height:25px}.fixtureTeams small{margin-left:42px}
-  .fixtureRow summary{grid-template-columns:68px minmax(0,1fr) 82px 18px;min-height:100px}.signal{margin-left:42px}.score{min-height:58px}
-  .pickRow summary{grid-template-columns:70px minmax(0,1fr) 82px 18px}
+  .crest{width:32px;height:32px;flex-basis:32px}.crest>span{width:26px;height:26px}
+  .teamLine{grid-template-columns:32px minmax(0,1fr);column-gap:12px;min-height:32px}
+  .fixtureTeams .teamLine+.teamLine{margin-top:7px}
+  .fixtureTeams small{margin-left:44px;margin-top:7px}
+  .fixtureRow summary{grid-template-columns:66px minmax(230px,1fr) 94px 80px 14px;gap:10px;min-height:104px;padding:12px 10px 12px 12px}
+  .fixtureTeams .teamLine strong{font-size:16px}
+  .signal{grid-column:auto;margin:0;justify-content:flex-end;font-size:9px;gap:8px}
+  .score{grid-column:auto;grid-row:auto;min-height:58px}
+  .chev{grid-column:auto;grid-row:auto}
+  .pickRow summary{grid-template-columns:68px minmax(230px,1fr) 112px 80px 98px 14px;gap:10px}
+  .selection{grid-column:auto;text-align:right;border-top:0;padding-top:0}
+  .result{grid-column:auto;display:block;text-align:right}
+  .pickRow .score{grid-column:auto;grid-row:auto}.pickRow .chev{grid-column:auto;grid-row:auto}
 }
+
+/* Only phones collapse to the stacked row. */
+@media(max-width:650px){
+  .pageHead{display:block}.summaryStats{margin-top:14px;justify-content:flex-start}
+  .toolbar,.pickTools{grid-template-columns:1fr}.searchBox{grid-column:auto}
+  .fixtureRow summary{grid-template-columns:58px minmax(0,1fr) 72px 16px;gap:9px;min-height:108px}
+  .signal{grid-column:2/4;justify-content:flex-start;margin:3px 0 0 44px}
+  .score{grid-column:3;grid-row:1;border-left:0}.chev{grid-column:4;grid-row:1}
+  .pickRow summary{grid-template-columns:60px minmax(0,1fr) 74px 16px}
+  .selection{grid-column:2/4;text-align:left;border-top:1px solid #181e25;padding-top:9px}
+  .result{grid-column:2/4;display:flex;gap:9px;text-align:left}
+  .pickRow .score{grid-column:3;grid-row:1}.pickRow .chev{grid-column:4;grid-row:1}
+}
+
 @media(max-width:560px){
   .pageHead h1{font-size:32px}.pageHead:after{display:none}.summaryStats{gap:14px}
-  .crest{width:28px;height:28px}.crest>span{width:23px;height:23px}.teamLine{gap:9px;min-height:30px}.fixtureTeams small{margin-left:37px}.signal{margin-left:37px}
+  .crest{width:30px;height:30px;flex-basis:30px}.crest>span{width:24px;height:24px}
+  .teamLine{grid-template-columns:30px minmax(0,1fr);column-gap:10px;min-height:30px}
+  .fixtureTeams .teamLine+.teamLine{margin-top:7px}.fixtureTeams small{margin-left:40px}.signal{margin-left:40px}
   .fixtureTeams .teamLine strong{font-size:16px}.score strong{font-size:23px}
   .matchGroup>header{font-size:10px}
 }
