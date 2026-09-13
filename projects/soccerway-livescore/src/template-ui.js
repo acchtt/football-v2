@@ -8,6 +8,8 @@ function clientApp() {
   const FULL_SYNC_MS = 15000;
   const root = document.getElementById('app');
 
+  if (!root) throw new Error('SlipTrace app root is missing');
+
   const state = {
     day: 0,
     payload: null,
@@ -58,7 +60,14 @@ function clientApp() {
     let last;
     for (let i=0;i<attempts;i++) {
       try {
-        const response = await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
+        const controller = new AbortController();
+        const timeout = setTimeout(()=>controller.abort(), 8000);
+        let response;
+        try {
+          response = await fetch(url,{cache:'no-store',headers:{Accept:'application/json'},signal:controller.signal});
+        } finally {
+          clearTimeout(timeout);
+        }
         const raw = await response.text();
         let payload;
         try { payload = raw ? JSON.parse(raw) : null; }
@@ -82,44 +91,36 @@ function clientApp() {
     if (state.fullBusy) return;
     state.fullBusy = true;
     try {
-      const payload = await fetchJson(`/api/board?day=${state.day}&t=${Date.now()}`,5);
+      const payload = await fetchJson(`/api/board?day=${state.day}&t=${Date.now()}`,3);
       state.payload = payload;
       state.lastSync = Date.now();
       state.error = '';
       if (!rows().some(isLive) && state.activeStatus === 'live') state.activeStatus = rows().some(f=>!isLive(f)&&!isFinished(f)) ? 'scheduled' : 'ft';
-      render();
     } catch (error) {
       state.error = error?.message || String(error);
-      render();
     } finally {
       state.loading = false;
       state.fullBusy = false;
+      render();
     }
   }
 
   function mergeLive(payload) {
     if (!state.payload) return;
     const map = new Map(rows().map(f=>[f.matchId,f]));
-    const liveIds = new Set();
+    const previousLive = new Set(rows().filter(isLive).map(f=>f.matchId));
+    const nextLive = new Set();
     for (const live of payload.fixtures || []) {
       if (!map.has(live.matchId)) continue;
-      liveIds.add(live.matchId);
+      nextLive.add(live.matchId);
       map.set(live.matchId,{...map.get(live.matchId),...live});
     }
-    let changedOut = false;
-    for (const [id,old] of map) {
-      if (old.status === 'live' && !liveIds.has(id)) changedOut = true;
-    }
+    const disappeared = [...previousLive].some(id=>!nextLive.has(id));
     const fixtures = [...map.values()];
-    state.payload = {
-      ...state.payload,
-      fixtures,
-      liveCount: fixtures.filter(isLive).length,
-      generatedAt: payload.generatedAt || new Date().toISOString(),
-    };
+    state.payload = {...state.payload,fixtures,liveCount:fixtures.filter(isLive).length,generatedAt:payload.generatedAt || new Date().toISOString()};
     state.lastSync = Date.now();
     render();
-    if (changedOut) loadBoard();
+    if (disappeared) loadBoard();
   }
 
   async function pollLive() {
@@ -141,6 +142,8 @@ function clientApp() {
   function restartPolling() {
     clearTimeout(state.liveTimer);
     clearInterval(state.fullTimer);
+    state.loading = !state.payload;
+    render();
     loadBoard().then(pollLive);
     state.fullTimer = setInterval(()=>{ if(document.visibilityState==='visible') loadBoard(); },FULL_SYNC_MS);
   }
@@ -180,13 +183,12 @@ function clientApp() {
     const cls = isLive(f) ? 'is-live-row' : isFinished(f) ? 'is-ft-row' : '';
     const liveTag = isLive(f) ? '<span class="tag live"><i class="dot bad"></i>LIVE</span>' : esc(formatTime(kickoffValue(f)));
     const tier = `<span class="tag ${f.tier==='FOCUS'?'live':'ws'}">${esc(f.grade||'—')} · ${esc(f.tier||'—')}</span>`;
-    const meta = boardMode ? tier : tier;
     const scoreText = boardMode ? esc(f.structure || '—') : score;
     const clock = boardMode ? (f.matchedToSoccerway ? 'SOCCERWAY' : 'BOARD ONLY') : statusLabel(f);
     return `<a class="matchRow ${cls}" href="#match/${encodeURIComponent(f.matchId)}" data-live-event="${esc(f.matchId)}">
       <div class="matchTime">${liveTag}<small>${isLive(f)?esc(f.statusText||'LIVE'):esc(f.region||'')}</small></div>
       <div class="teams"><div class="teamLine"><span></span><span>${esc(f.homeTeam)}</span></div><div class="teamLine"><span></span><span>${esc(f.awayTeam)}</span></div><div class="matchCompetition">${esc(f.competition||'')}</div></div>
-      <div class="matchMeta">${meta}</div>
+      <div class="matchMeta">${tier}</div>
       <div class="matchScore"><strong>${scoreText}</strong><small data-clock>${esc(clock)}</small></div>
     </a>`;
   }
@@ -199,11 +201,7 @@ function clientApp() {
   }
 
   function statusTabs(list) {
-    const buckets = {
-      live:list.filter(isLive),
-      scheduled:list.filter(f=>!isLive(f)&&!isFinished(f)),
-      ft:list.filter(isFinished),
-    };
+    const buckets = {live:list.filter(isLive),scheduled:list.filter(f=>!isLive(f)&&!isFinished(f)),ft:list.filter(isFinished)};
     const status = state.activeStatus;
     const selected = buckets[status] || [];
     return `<div class="matchStatusTabsHost"><div class="matchStatusTabs" role="tablist">
@@ -259,13 +257,10 @@ function clientApp() {
       <div class="matchColumns"><div class="mainCol"><section class="panel modelPanel"><div class="panelHead"><h3>SlipTrace model</h3><span>Airtable + Soccerway</span></div><div class="modelGrid"><div class="modelCell"><span>PRE grade</span><strong>${esc(f.grade||'—')}</strong></div><div class="modelCell"><span>Tier</span><strong>${esc(f.tier||'—')}</strong></div><div class="modelCell"><span>Structure</span><strong>${esc(f.structure||'—')}</strong></div><div class="modelCell"><span>Score source</span><strong>${f.matchedToSoccerway?'SOCCERWAY':'—'}</strong></div><div class="modelCell"><span>Status</span><strong>${esc((f.status||'scheduled').toUpperCase())}</strong></div><div class="modelCell"><span>Minute</span><strong>${esc(f.minute||'—')}</strong></div></div></section></div><aside class="sideCol"><section class="panel"><div class="panelHead"><h3>Live state</h3><span>${f.matchedToSoccerway?'1s polling':'unmatched'}</span></div><div class="modelGrid"><div class="modelCell"><span>Home</span><strong>${f.homeScore==null?'—':f.homeScore}</strong></div><div class="modelCell"><span>Away</span><strong>${f.awayScore==null?'—':f.awayScore}</strong></div><div class="modelCell"><span>State</span><strong>${esc(statusLabel(f))}</strong></div></div></section></aside></div></main>${mobileNav('today')}`;
   }
 
-  function searchPage(q) {
-    state.query=q;
-    return todayPage();
-  }
+  function searchPage(q) { state.query=q; return todayPage(); }
 
   function skeleton() {
-    return `${header(routeName())}<main class="shell"><div class="pageHead"><div><span class="eyebrow">Loading</span><h1>SlipTrace</h1></div></div><section class="panel">${Array.from({length:7},()=>'<div class="skeleton"></div>').join('')}</section></main>${mobileNav(routeName())}`;
+    return `${header(routeName())}<main class="shell"><div class="pageHead"><div><span class="eyebrow">Loading</span><h1>SlipTrace</h1><p class="subtle">Connecting to board and Soccerway…</p></div></div><section class="panel">${Array.from({length:7},()=>'<div class="skeleton"></div>').join('')}</section></main>${mobileNav(routeName())}`;
   }
 
   function render() {
@@ -294,12 +289,17 @@ function clientApp() {
   window.addEventListener('hashchange',render);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){loadBoard();clearTimeout(state.liveTimer);pollLive();}});
 
+  render();
   Promise.all([loadDashboard(),loadBoard()]).finally(()=>{
     state.loading=false;
     render();
     pollLive();
     state.fullTimer=setInterval(()=>{if(document.visibilityState==='visible')loadBoard();},FULL_SYNC_MS);
   });
+}
+
+export function clientScript() {
+  return `(${clientApp.toString()})();`;
 }
 
 export function renderSiteHtml() {
@@ -324,12 +324,13 @@ export function renderSiteHtml() {
     .matchHero .heroTeam{justify-content:center;text-align:center}
     .matchHero .heroTeam.away{justify-content:center;text-align:center}
     .matchHero .heroScore .clock{min-width:62px}
+    .bootShell{max-width:1420px;margin:0 auto;padding:24px 22px 50px}
     @media(max-width:760px){.matchCompetition{margin-left:0}.headerSearch{width:min(250px,68vw)}}
   </style>
 </head>
 <body>
-  <main id="app" aria-live="polite"></main>
-  <script>(${clientApp.toString()})();</script>
+  <main id="app" aria-live="polite"><div class="bootShell"><section class="panel"><div class="panelHead"><h2>SlipTrace</h2><span>Soccerway</span></div><div class="empty">Loading FOCUS / WATCHLIST board…</div></section></div></main>
+  <script src="/app.js?v=2" defer></script>
 </body>
 </html>`;
 }
