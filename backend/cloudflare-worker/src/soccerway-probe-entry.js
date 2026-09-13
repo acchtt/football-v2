@@ -1,4 +1,4 @@
-import app from "./health-entry.js";
+import app from "./assets-entry.js";
 
 function cors(env, request) {
   const allowed = String(env.ALLOWED_ORIGIN || "https://acchtt.github.io")
