@@ -33,8 +33,8 @@ function json(data, status, env, request) {
 }
 
 function eventId(url) {
-  const value = Number(url.searchParams.get("event_id"));
-  return Number.isInteger(value) && value > 0 ? value : null;
+  const value = String(url.searchParams.get("event_id") || "").trim();
+  return /^[A-Za-z0-9_-]+$/.test(value) ? value : null;
 }
 
 function isObj(value) {
@@ -99,16 +99,11 @@ function normalizePlayer(item) {
   const name = playerName(item);
   if (!name) return null;
   const p = isObj(item?.player) ? item.player : (isObj(item) ? item : {});
-  const rawId = Number(p.id ?? p.player_id ?? item?.player_id);
+  const rawId = p.id ?? p.player_id ?? item?.player_id;
+  const id = rawId === undefined || rawId === null ? null : String(rawId);
   const number = stringValue(item?.shirt_number ?? item?.jersey_number ?? item?.number ?? p.shirt_number ?? p.jersey_number ?? p.number);
   const position = stringValue(item?.position ?? item?.pos ?? p.position ?? p.position_short ?? p.position_name);
-  return {
-    id: Number.isFinite(rawId) ? rawId : null,
-    name,
-    number,
-    position,
-    starter: playerStarter(item),
-  };
+  return { id, name, number, position, starter: playerStarter(item) };
 }
 
 function playerList(value) {
@@ -217,7 +212,6 @@ function sidePlayers(root, container, side) {
     if (!substitutes.length) substitutes = marked ? all.filter((p) => p.starter === false) : all.slice(11);
   }
 
-  // Some providers return one flat player list with side markers instead of side containers.
   if (!starters.length && !substitutes.length) {
     const global = findArray(root, ["players", "lineups", "lineup"]);
     if (global) {
@@ -249,14 +243,8 @@ function normalizeLineups(raw) {
   const homePlayers = sidePlayers(raw, homeContainer, "home");
   const awayPlayers = sidePlayers(raw, awayContainer, "away");
   const status = lineupStatus(raw);
-  const home = {
-    formation: formationFor(raw, homeContainer, "home"),
-    ...homePlayers,
-  };
-  const away = {
-    formation: formationFor(raw, awayContainer, "away"),
-    ...awayPlayers,
-  };
+  const home = { formation: formationFor(raw, homeContainer, "home"), ...homePlayers };
+  const away = { formation: formationFor(raw, awayContainer, "away"), ...awayPlayers };
   return {
     status,
     available: Boolean(home.starters.length || away.starters.length || home.substitutes.length || away.substitutes.length),
@@ -268,7 +256,7 @@ function normalizeLineups(raw) {
 async function bsdLineups(env, id) {
   if (!env.BSD_API_TOKEN) throw new Error("BSD_API_TOKEN missing");
   const base = String(env.BSD_API_BASE_URL || "https://sports.bzzoiro.com/api/v2").replace(/\/$/, "");
-  const response = await fetch(`${base}/events/${id}/lineups/`, {
+  const response = await fetch(`${base}/events/${encodeURIComponent(id)}/lineups/`, {
     headers: { Authorization: `Token ${env.BSD_API_TOKEN}`, Accept: "application/json" },
   });
   const body = await response.text();
