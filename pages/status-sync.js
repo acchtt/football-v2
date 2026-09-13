@@ -37,6 +37,10 @@
     return 'upcoming';
   }
 
+  function eventStatus(event) {
+    return normalizeStatus(pick(event?.status, event?.time?.status));
+  }
+
   function eventId(event) {
     return String(pick(event?.id, event?.event_id, event?.eventId) ?? '');
   }
@@ -111,6 +115,22 @@
     return 'upcoming';
   }
 
+  function livePanelFor(row) {
+    const panel = row.closest('.panel');
+    const title = panel?.querySelector('.panelHead h2')?.textContent?.trim().toLowerCase() || '';
+    return title === 'live now' ? panel : null;
+  }
+
+  function removeFinishedFromLivePanel(row) {
+    const panel = livePanelFor(row);
+    if (!panel) return;
+    row.remove();
+    const remaining = panel.querySelectorAll('.matchRow').length;
+    const countNode = panel.querySelector('.panelHead > span');
+    if (countNode) countNode.textContent = String(remaining);
+    if (!remaining) panel.remove();
+  }
+
   function updateScore(row, event) {
     const sc = score(event);
     const scoreNode = row.querySelector('.matchScore strong');
@@ -128,9 +148,17 @@
     row.dataset.matchStatus = 'ft';
     row.classList.remove('is-live-row');
     row.classList.add('is-ft-row');
+    removeFinishedFromLivePanel(row);
   }
 
   function applyLive(row, event) {
+    // A stale item can briefly remain in the provider's live collection after FT.
+    // Never turn it back into LIVE when the event payload itself says it is finished.
+    if (eventStatus(event) === 'finished') {
+      applyFinished(row, event);
+      return;
+    }
+
     updateScore(row, event);
     const clockNode = row.querySelector('.matchScore [data-clock]');
     const timeNode = row.querySelector('.matchTime');
@@ -163,12 +191,16 @@
   }
 
   function refreshKpis() {
+    const liveIds = new Set();
+    document.querySelectorAll('.matchRow[data-match-status="live"]').forEach(row => {
+      liveIds.add(String(row.dataset.liveEvent || rowTeamKey(row) || Math.random()));
+    });
     document.querySelectorAll('.kpi').forEach(kpi => {
       const label = kpi.querySelector('span')?.textContent?.trim().toLowerCase();
       const value = kpi.querySelector('strong');
       if (!value) return;
-      if (label === 'live') value.textContent = String(document.querySelectorAll('.matchRow[data-match-status="live"]').length);
-      if (label === 'matches') value.textContent = String(document.querySelectorAll('.matchRow').length);
+      if (label === 'live') value.textContent = String(liveIds.size);
+      if (label === 'matches') value.textContent = String(document.querySelectorAll('.mainCol .panel:not(:first-child) .matchRow').length || document.querySelectorAll('.matchRow').length);
     });
   }
 
@@ -207,6 +239,7 @@
       if (resolved.status === 'finished' && currentRowStatus(row) !== 'finished') applyFinished(row, resolved.event);
       if (resolved.status === 'live' && currentRowStatus(row) !== 'live') applyLive(row, resolved.event);
     });
+    refreshKpis();
   }
 
   async function syncStatuses() {
@@ -234,19 +267,30 @@
         const previous = lastResolved.get(id) || lastResolved.get(key);
 
         // Source precedence:
-        // 1) Presence in BSD live feed is authoritative LIVE.
-        // 2) Day feed may mark FT only when the event is no longer live.
-        // 3) Stale UPCOMING responses are never allowed to downgrade LIVE/FT.
+        // 1) A BSD live-feed item is LIVE only when its own status is live.
+        // 2) A finished status from either feed wins immediately.
+        // 3) Day feed may provide the current status when the live feed omits a fixture.
+        // 4) Stale UPCOMING responses never downgrade a previously strong LIVE/FT state.
         if (liveEvent) {
-          applyLive(row, liveEvent);
-          const resolved = { status: 'live', event: liveEvent };
-          if (id) nextResolved.set(id, resolved);
-          if (key) nextResolved.set(key, resolved);
-          return;
+          const liveStatus = eventStatus(liveEvent);
+          if (liveStatus === 'finished') {
+            applyFinished(row, liveEvent);
+            const resolved = { status: 'finished', event: liveEvent };
+            if (id) nextResolved.set(id, resolved);
+            if (key) nextResolved.set(key, resolved);
+            return;
+          }
+          if (liveStatus === 'live') {
+            applyLive(row, liveEvent);
+            const resolved = { status: 'live', event: liveEvent };
+            if (id) nextResolved.set(id, resolved);
+            if (key) nextResolved.set(key, resolved);
+            return;
+          }
         }
 
         if (dayEvent) {
-          const dayStatus = normalizeStatus(pick(dayEvent?.status, dayEvent?.time?.status));
+          const dayStatus = eventStatus(dayEvent);
           if (dayStatus === 'finished') {
             applyFinished(row, dayEvent);
             const resolved = { status: 'finished', event: dayEvent };
