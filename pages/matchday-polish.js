@@ -10,6 +10,7 @@
   let board = null;
   let scheduled = false;
   let working = false;
+  let suppressObserver = false;
   let activeStatus = (() => {
     try {
       const saved = sessionStorage.getItem(TAB_KEY);
@@ -98,16 +99,19 @@
     let label=teams.querySelector('.matchCompetition');
     const name=String(boardRow?.competition||groupName||'').trim();
     if(!name || /^competition$/i.test(name)) return;
-    if(!label){label=document.createElement('div');label.className='matchCompetition';teams.appendChild(label);}
-    label.textContent=name;
+    if(!label){
+      label=document.createElement('div');
+      label.className='matchCompetition';
+      label.textContent=name;
+      teams.appendChild(label);
+      return;
+    }
+    if(label.textContent!==name) label.textContent=name;
   }
 
   function rowStatus(row) {
     const clockText=(row.querySelector('.matchScore [data-clock]')?.textContent||'').trim().toUpperCase();
     if(/^FT\b/.test(clockText)) return 'ft';
-    // Only the actual match-state badge in the kickoff/status column can mark a
-    // fixture live. FOCUS badges also use `.tag.live` for red styling and must
-    // never affect match state.
     if(row.querySelector('.matchTime .tag.live')) return 'live';
     return 'scheduled';
   }
@@ -116,11 +120,12 @@
     const br=boardRowFor(row);
     addCompetition(row,br,groupName);
     const fallback=row.querySelector('.matchTime')?.textContent||'';
-    row.dataset.kickoffSort=String(parseKickoff(br?.kickoff||br?.displayKickoff||br?.kickoffICT,fallback));
+    const kickoffSort=String(parseKickoff(br?.kickoff||br?.displayKickoff||br?.kickoffICT,fallback));
+    if(row.dataset.kickoffSort!==kickoffSort) row.dataset.kickoffSort=kickoffSort;
     const status=rowStatus(row);
     row.classList.toggle('is-ft-row',status==='ft');
     row.classList.toggle('is-live-row',status==='live');
-    row.dataset.matchStatus=status;
+    if(row.dataset.matchStatus!==status) row.dataset.matchStatus=status;
   }
 
   function rowKey(row) {
@@ -155,8 +160,9 @@
     root.querySelectorAll('[data-status-tab]').forEach(btn=>{
       const active=btn.dataset.statusTab===activeStatus;
       btn.classList.toggle('active',active);
-      btn.setAttribute('aria-selected',active?'true':'false');
-      btn.tabIndex=active?0:-1;
+      if(btn.getAttribute('aria-selected')!==(active?'true':'false')) btn.setAttribute('aria-selected',active?'true':'false');
+      const nextTabIndex=active?0:-1;
+      if(btn.tabIndex!==nextTabIndex) btn.tabIndex=nextTabIndex;
     });
     root.querySelectorAll('[data-status-pane]').forEach(pane=>{
       pane.classList.toggle('hidden',pane.dataset.statusPane!==activeStatus);
@@ -253,7 +259,8 @@
     }
 
     const headCount=primary.querySelector('.panelHead > span');
-    if(headCount) headCount.textContent=String(unique.size);
+    const nextCount=String(unique.size);
+    if(headCount && headCount.textContent!==nextCount) headCount.textContent=nextCount;
 
     [...mainCol.querySelectorAll(':scope > .panel')].forEach(panel=>{
       if(panel!==primary && /^live now$/i.test(panel.querySelector('.panelHead h2')?.textContent?.trim()||'')) panel.remove();
@@ -266,7 +273,7 @@
     const names=[...hero.querySelectorAll('.heroTeam span')].map(x=>x.textContent.trim()).filter(Boolean);
     const br=bestBoardRow(names[0]||'',names[1]||'');
     const league=hero.querySelector('.heroScore .league');
-    if(league && br?.competition && (!league.textContent.trim() || /^competition$/i.test(league.textContent.trim()))) league.textContent=br.competition;
+    if(league && br?.competition && (!league.textContent.trim() || /^competition$/i.test(league.textContent.trim())) && league.textContent!==br.competition) league.textContent=br.competition;
     const clock=document.getElementById('heroClock');
     if(clock) clock.classList.toggle('clock-ft',/^FT\b/i.test(clock.textContent.trim()));
   }
@@ -278,7 +285,7 @@
       if(!strong||!label)return;
       const teams=splitMatch(strong.textContent.trim());
       const br=bestBoardRow(teams.home,teams.away);
-      if(br?.competition && (!label.textContent.trim() || /^competition$/i.test(label.textContent.trim()))) label.textContent=br.competition;
+      if(br?.competition && (!label.textContent.trim() || /^competition$/i.test(label.textContent.trim())) && label.textContent!==br.competition) label.textContent=br.competition;
     });
   }
 
@@ -289,22 +296,39 @@
   }
 
   async function polish() {
-    if(working)return; working=true;
+    if(working)return;
+    working=true;
     try {
       await ensureBoard();
+      suppressObserver=true;
       const mainCol=document.querySelector('.shell .layout > .mainCol');
       if(mainCol) organizeMatchday(mainCol);
       decorateExistingRows();
-    } finally {working=false;}
+      observer.takeRecords();
+    } finally {
+      suppressObserver=false;
+      working=false;
+    }
   }
 
   function schedule() {
-    if(scheduled)return; scheduled=true;
-    requestAnimationFrame(()=>{scheduled=false;polish();});
+    if(scheduled||working)return;
+    scheduled=true;
+    requestAnimationFrame(()=>{
+      scheduled=false;
+      polish();
+    });
   }
 
-  const observer=new MutationObserver(schedule);
-  observer.observe(document.getElementById('app'),{childList:true,subtree:true,characterData:true});
+  const app=document.getElementById('app');
+  if(!app)return;
+
+  const observer=new MutationObserver(records=>{
+    if(suppressObserver||working||!records.length)return;
+    schedule();
+  });
+  observer.observe(app,{childList:true,subtree:true});
+
   window.addEventListener('hashchange',schedule);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule();});
   schedule();
