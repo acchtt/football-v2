@@ -21,5 +21,5 @@ jobs:
           set -euo pipefail
           echo "=== Soccerway probe response ==="
           curl --fail-with-body --silent --show-error \
-            "https://football-v2-2.acchtt.workers.dev/api/soccerway-probe"
+            "https://football-v2.acchtt.workers.dev/api/soccerway-probe"
           echo
