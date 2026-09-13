@@ -1,7 +1,8 @@
 import app from "./fast-entry.js";
 
-const DASHBOARD_TTL_MS = 7000;
-const DASHBOARD_STALE_MS = 60000;
+const DASHBOARD_TTL_MS = 8000;
+const DASHBOARD_STALE_MS = 3 * 60 * 1000;
+const EDGE_CACHE_MAX_AGE_S = 10 * 60;
 const STATS_TTL_MS = 5000;
 
 let dashboardCache = null;
@@ -78,31 +79,107 @@ async function matchStats(env, id) {
   return task;
 }
 
+function validDashboard(payload) {
+  return Boolean(payload?.ok && Array.isArray(payload.schedule) && Array.isArray(payload.picks));
+}
+
+function dashboardEdgeKey(request) {
+  const url = new URL(request.url);
+  url.search = "";
+  url.pathname = "/api/dashboard-data";
+  return new Request(url.toString(), { method: "GET" });
+}
+
+async function readEdgeDashboard(request) {
+  try {
+    if (!globalThis.caches?.default) return null;
+    const response = await caches.default.match(dashboardEdgeKey(request));
+    if (!response) return null;
+    const payload = await response.json().catch(() => null);
+    if (!validDashboard(payload)) return null;
+    const storedAt = Number(response.headers.get("X-SlipTrace-Stored-At")) || 0;
+    if (!storedAt) return null;
+    return { payload, storedAt };
+  } catch {
+    return null;
+  }
+}
+
+function writeEdgeDashboard(request, payload, ctx) {
+  try {
+    if (!globalThis.caches?.default || !validDashboard(payload)) return;
+    const storedAt = Date.now();
+    const response = new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": `public, max-age=${EDGE_CACHE_MAX_AGE_S}`,
+        "X-SlipTrace-Stored-At": String(storedAt),
+      },
+    });
+    ctx.waitUntil(caches.default.put(dashboardEdgeKey(request), response));
+  } catch {}
+}
+
+function cachedDashboardResponse(request, env, payload, storedAt, source) {
+  const staleAgeMs = Math.max(0, Date.now() - storedAt);
+  return json({
+    ...payload,
+    cached: true,
+    degraded: source === "STALE" || staleAgeMs >= DASHBOARD_TTL_MS,
+    staleAgeMs,
+    cacheSource: source,
+  }, 200, env, request, { "X-SlipTrace-Cache": source });
+}
+
 async function dashboardResponse(request, env, ctx) {
   const now = Date.now();
+
   if (dashboardCache && now - dashboardAt < DASHBOARD_TTL_MS) {
-    return json({ ...dashboardCache, cached: true }, 200, env, request, { "X-SlipTrace-Cache": "HIT" });
+    return cachedDashboardResponse(request, env, dashboardCache, dashboardAt, "MEMORY");
   }
+
+  const edge = await readEdgeDashboard(request);
+  if (edge) {
+    if (!dashboardCache || edge.storedAt > dashboardAt) {
+      dashboardCache = edge.payload;
+      dashboardAt = edge.storedAt;
+    }
+    if (now - edge.storedAt < DASHBOARD_TTL_MS) {
+      return cachedDashboardResponse(request, env, edge.payload, edge.storedAt, "EDGE");
+    }
+  }
+
   if (dashboardInFlight) return dashboardInFlight;
 
   dashboardInFlight = (async () => {
+    const fallback = dashboardCache && Date.now() - dashboardAt < DASHBOARD_STALE_MS
+      ? { payload: dashboardCache, storedAt: dashboardAt }
+      : edge && Date.now() - edge.storedAt < DASHBOARD_STALE_MS
+        ? edge
+        : null;
+
     try {
       const upstream = await app.fetch(request, env, ctx);
-      if (upstream.ok) {
-        const payload = await upstream.clone().json();
-        if (payload?.ok && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
-          dashboardCache = payload;
-          dashboardAt = Date.now();
-        }
-        return upstream;
+      const payload = await upstream.clone().json().catch(() => null);
+
+      if (upstream.ok && validDashboard(payload)) {
+        dashboardCache = payload;
+        dashboardAt = Date.now();
+        writeEdgeDashboard(request, payload, ctx);
+        return json({ ...payload, cached: false, degraded: false, staleAgeMs: 0, cacheSource: "ORIGIN" }, 200, env, request, {
+          "X-SlipTrace-Cache": "MISS",
+        });
       }
-      if (dashboardCache && Date.now() - dashboardAt < DASHBOARD_STALE_MS) {
-        return json({ ...dashboardCache, cached: true, degraded: true, staleAgeMs: Date.now() - dashboardAt }, 200, env, request, { "X-SlipTrace-Cache": "STALE" });
+
+      if (fallback) {
+        return cachedDashboardResponse(request, env, fallback.payload, fallback.storedAt, "STALE");
       }
+
       return upstream;
     } catch (error) {
-      if (dashboardCache && Date.now() - dashboardAt < DASHBOARD_STALE_MS) {
-        return json({ ...dashboardCache, cached: true, degraded: true, staleAgeMs: Date.now() - dashboardAt }, 200, env, request, { "X-SlipTrace-Cache": "STALE" });
+      if (fallback) {
+        return cachedDashboardResponse(request, env, fallback.payload, fallback.storedAt, "STALE");
       }
       return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 502, env, request);
     } finally {
