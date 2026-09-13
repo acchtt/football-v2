@@ -26,8 +26,8 @@
   function active() { return /^#match\//.test(location.hash); }
   function currentEventId() {
     const text = matchApp.querySelector('.matchTopline>span')?.textContent || '';
-    const match = text.match(/BSD EVENT\s+(\d+)/i);
-    return match ? Number(match[1]) : null;
+    const match = text.match(/BSD EVENT\s+([A-Za-z0-9_-]+)/i);
+    return match ? match[1] : null;
   }
   function wsUrl() {
     const url = new URL(API);
@@ -115,7 +115,7 @@
   }
   function handleFrame(frame) {
     if (!frame || typeof frame !== 'object') return;
-    if (frame.event_id && Number(frame.event_id) !== state.eventId) return;
+    if (frame.event_id !== undefined && frame.event_id !== null && String(frame.event_id) !== String(state.eventId)) return;
 
     if (frame.type === 'subscribed') {
       state.source = frame.source || 'basic';
