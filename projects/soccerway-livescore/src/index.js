@@ -141,7 +141,7 @@ async function fetchSoccerway(day, ctx) {
   const cacheResponse = new Response(body, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=10",
+      "Cache-Control": "public, max-age=1",
     },
   });
   ctx.waitUntil(cache.put(cacheKey, cacheResponse));
@@ -188,7 +188,7 @@ const HTML = `<!doctype html>
 <div class="wrap">
   <div class="top">
     <div class="title"><span class="dot"></span>Soccerway Live</div>
-    <div class="sub">Independent livescore prototype · auto-refreshes every 20 seconds</div>
+    <div class="sub">Near-real-time mode · live scores poll every ~1 second</div>
     <div class="controls">
       <button data-day="-1">Yesterday</button>
       <button data-day="0" class="active">Today</button>
@@ -201,7 +201,9 @@ const HTML = `<!doctype html>
   <div id="list"></div>
 </div>
 <script>
-let day=0,lastPayload=null;
+let day=0,lastPayload=null,previousLiveIds=new Set(),liveTimer=null,fullTimer=null;
+let liveBusy=false,fullBusy=false;
+const LIVE_POLL_MS=1000,FULL_RESYNC_MS=15000;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
 function localTime(iso){if(!iso)return '—';const d=new Date(iso);return isNaN(d)?'—':d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
@@ -223,13 +225,48 @@ function render(){
     return '<div class="match"><div><div class="time '+(f.status==='live'?'status live':'')+'">'+esc(statusText(f))+'</div></div><div class="teams"><div class="team"><span class="name">'+esc(f.homeTeam)+'</span><span class="score">'+esc(scoreA)+'</span></div><div class="team"><span class="name">'+esc(f.awayTeam)+'</span><span class="score">'+esc(scoreB)+'</span></div><div class="matchId">'+esc(f.matchId)+'</div></div><div class="right">'+(f.status==='live'?'<span class="status live">LIVE</span>':'')+'</div></div>';
   }).join('')+'</section>').join('');
 }
-async function load(){
-  try{
-    const r=await fetch('/api/fixtures?day='+day,{cache:'no-store'});const p=await r.json();if(!p.ok)throw new Error(p.error||'Feed failed');lastPayload=p;render();
-  }catch(e){$('#count').textContent='Feed error';$('#list').innerHTML='<div class="empty">'+esc(e.message)+'</div>';}
+function mergeLive(p){
+  if(!lastPayload){lastPayload=p;render();return false;}
+  const map=new Map((lastPayload.fixtures||[]).map(f=>[f.matchId,f]));
+  const nextLiveIds=new Set();
+  for(const live of p.fixtures||[]){
+    nextLiveIds.add(live.matchId);
+    const old=map.get(live.matchId);
+    map.set(live.matchId,old?{...old,...live}:live);
+  }
+  let disappeared=false;
+  for(const id of previousLiveIds){if(!nextLiveIds.has(id)){disappeared=true;break;}}
+  previousLiveIds=nextLiveIds;
+  lastPayload={...lastPayload,fixtures:[...map.values()],liveCount:p.liveCount,generatedAt:p.generatedAt};
+  render();
+  return disappeared;
 }
-document.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{day=Number(b.dataset.day);document.querySelectorAll('[data-day]').forEach(x=>x.classList.toggle('active',x===b));load();});
-$('#search').addEventListener('input',render);$('#liveOnly').addEventListener('change',render);load();setInterval(load,20000);
+async function loadFull(){
+  if(fullBusy)return;
+  fullBusy=true;
+  try{
+    const r=await fetch('/api/fixtures?day='+day,{cache:'no-store'});const p=await r.json();if(!p.ok)throw new Error(p.error||'Feed failed');
+    lastPayload=p;previousLiveIds=new Set((p.fixtures||[]).filter(f=>f.status==='live').map(f=>f.matchId));render();
+  }catch(e){$('#count').textContent='Feed error';$('#list').innerHTML='<div class="empty">'+esc(e.message)+'</div>';}
+  finally{fullBusy=false;}
+}
+async function pollLive(){
+  if(liveBusy){scheduleLive();return;}
+  liveBusy=true;
+  try{
+    const r=await fetch('/api/live?day='+day,{cache:'no-store'});const p=await r.json();if(!p.ok)throw new Error(p.error||'Live feed failed');
+    const disappeared=mergeLive(p);
+    if(disappeared)loadFull();
+  }catch(e){}
+  finally{liveBusy=false;scheduleLive();}
+}
+function scheduleLive(){clearTimeout(liveTimer);liveTimer=setTimeout(pollLive,LIVE_POLL_MS);}
+function scheduleFull(){clearInterval(fullTimer);fullTimer=setInterval(()=>{if(document.visibilityState==='visible')loadFull();},FULL_RESYNC_MS);}
+function restart(){clearTimeout(liveTimer);clearInterval(fullTimer);previousLiveIds=new Set();loadFull().then(()=>pollLive());scheduleFull();}
+document.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{day=Number(b.dataset.day);document.querySelectorAll('[data-day]').forEach(x=>x.classList.toggle('active',x===b));restart();});
+$('#search').addEventListener('input',render);$('#liveOnly').addEventListener('change',render);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){loadFull();clearTimeout(liveTimer);pollLive();}});
+restart();
 </script>
 </body></html>`;
 
@@ -243,7 +280,7 @@ export default {
         url.searchParams.set("view", "live");
         return fixturesApi(url, ctx);
       }
-      if (request.method === "GET" && url.pathname === "/api/health") return json({ ok: true, service: "soccerway-livescore", generatedAt: new Date().toISOString() });
+      if (request.method === "GET" && url.pathname === "/api/health") return json({ ok: true, service: "soccerway-livescore", livePollTargetMs: 1000, edgeCacheSeconds: 1, generatedAt: new Date().toISOString() });
       if (request.method === "GET" && url.pathname === "/") return new Response(HTML, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" } });
       return json({ ok: false, error: "Not found" }, 404);
     } catch (error) {
