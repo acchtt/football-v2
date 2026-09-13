@@ -1,0 +1,24 @@
+html,body,button,input,select{font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+
+.matchRow.is-live-row .matchScore small,
+.heroScore .clock:not(.clock-ft){color:#55d9ef!important}
+
+.matchRow.is-ft-row .matchScore small,
+.heroScore .clock.clock-ft{color:#8d99a8!important}
+
+.matchRow.is-live-row .matchScore small{font-weight:800;letter-spacing:.01em}
+.matchRow.is-ft-row .matchScore small{font-weight:750;letter-spacing:.06em}
+
+.chronoMatches{display:block}
+.chronoMatches>.matchRow:first-child{border-top:0}
+.matchCompetition{margin:2px 0 0 38px;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.chronoMatches .matchRow{grid-template-columns:74px minmax(0,1fr) 104px 82px}
+.chronoMatches .teams{gap:6px}
+.chronoMatches .teamLine{font-weight:720}
+.chronoMatches .matchMeta{align-self:center}
+
+@media(max-width:760px){
+  .chronoMatches .matchRow{grid-template-columns:58px minmax(0,1fr) 60px}
+  .matchCompetition{margin-left:32px;font-size:9px}
+}
