@@ -12,8 +12,8 @@
   function active() { return /^#match\//.test(location.hash); }
   function eventId() {
     const text = matchApp.querySelector('.matchTopline>span')?.textContent || '';
-    const match = text.match(/BSD EVENT\s+(\d+)/i);
-    return match ? Number(match[1]) : null;
+    const match = text.match(/BSD EVENT\s+([A-Za-z0-9_-]+)/i);
+    return match ? match[1] : null;
   }
   function teamNames() {
     const rows = [...matchApp.querySelectorAll('.matchHeroTeam strong')].map(n => n.textContent.trim());
@@ -82,7 +82,7 @@
     state.busy = true;
     const id = state.eventId;
     try {
-      const response = await fetch(`${API}/api/match-lineups?event_id=${id}&t=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`${API}/api/match-lineups?event_id=${encodeURIComponent(id)}&t=${Date.now()}`, { cache: 'no-store' });
       const payload = await response.json().catch(() => null);
       if (id !== state.eventId) return;
       if (!response.ok || !payload?.ok) throw new Error(payload?.error || `HTTP ${response.status}`);
@@ -100,7 +100,7 @@
   }
   function start(id) {
     if (!id) return;
-    if (state.eventId === id) return;
+    if (state.eventId === id) { render(); return; }
     clearInterval(state.timer);
     state.eventId = id;
     state.data = null;
