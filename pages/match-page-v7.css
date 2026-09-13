@@ -1,0 +1,104 @@
+/* SlipTrace Match Desk v7 */
+#matchApp{max-width:1500px;margin:0 auto;padding:28px 32px 80px;color:var(--text)}
+.matchShell{max-width:1240px;margin:0 auto}
+.matchTopline{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:2px 0 14px;color:#77828d;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.matchBack{display:inline-flex;align-items:center;gap:8px;color:#b9c1c8;font-size:11px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}
+.matchBack:hover{color:#fff}
+.matchDataDelay{max-width:1240px;margin:0 auto 10px;padding:8px 11px;border-left:3px solid var(--amber);background:#15120d;color:#d8b87a;font-size:10px;font-weight:780;letter-spacing:.08em}
+
+.matchHero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 250px minmax(0,1fr);gap:28px;align-items:center;min-height:224px;padding:34px 42px 58px;background:#0c1015;border:1px solid #27303a;border-top:3px solid #3b4652;overflow:hidden}
+.matchHero.live{border-top-color:var(--red);background:#110d11}
+.matchHero.final{border-top-color:var(--lime)}
+.matchHero.manual{border-top-color:var(--amber)}
+.matchHero:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.016) 0 1px,transparent 1px 13px);mask-image:linear-gradient(90deg,transparent 12%,#000 50%,transparent 88%)}
+.matchHeroTeam{position:relative;z-index:1;display:flex;align-items:center;gap:20px;min-width:0}
+.matchHeroTeam.away{flex-direction:row-reverse;text-align:right}
+.matchHeroTeam strong{font-size:25px;line-height:1.05;font-weight:850;letter-spacing:-.025em;white-space:normal}
+.matchHeroCrest{flex:0 0 auto;width:82px;height:82px;display:grid;place-items:center;background:transparent}
+.matchHeroCrest img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.42))}
+.matchHeroCrest>span{display:grid;place-items:center;width:62px;height:62px;border:1px solid #313a44;background:#10151a;color:#7e8994;font-size:17px;font-weight:850}
+.matchScoreboard{position:relative;z-index:1;text-align:center;min-width:0}
+.matchScoreboard>span{display:block;color:#87929d;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.matchScoreboard>div{display:flex;align-items:center;justify-content:center;gap:17px;margin:13px 0 8px}
+.matchScoreboard b{font-size:54px;line-height:.9;font-weight:900;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
+.matchScoreboard i{color:#64707b;font-size:27px;font-style:normal;font-weight:500}
+.matchScoreboard .kickoffHero{font-size:42px;letter-spacing:-.035em}
+.matchScoreboard em{display:inline-flex;align-items:center;justify-content:center;min-height:24px;padding:0 8px;border:1px solid #29323c;background:#090d11;color:#aab3bc;font-size:10px;font-style:normal;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
+.matchHero.live .matchScoreboard em{border-color:#4b262d;background:#190e12;color:#f08a94}
+.matchHero footer{position:absolute;left:0;right:0;bottom:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:22px;min-height:41px;padding:8px 20px;border-top:1px solid #242c35;background:#090d11;color:#86919c;font-size:10px;font-weight:700;letter-spacing:.035em;text-transform:uppercase}
+.matchHero footer .heroGrade{color:#bddc94;font-weight:850}
+.matchHero footer .heroTier{color:#8cbec3;font-weight:850}
+.matchHero footer .heroTier.focus{color:#ed858e}
+
+.matchGrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.7fr);gap:16px;margin-top:16px}
+.matchPanel{margin-top:16px;border:1px solid #222b34;background:#0c1015}
+.matchGrid .matchPanel{margin-top:0}
+.matchPanel>header{height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border-bottom:1px solid #27303a;background:#0a0e12;color:#aab3bc;font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}
+.matchPanel>header b{color:#69747f;font-size:10px}
+.matchPanel>header i{width:7px;height:7px;border-radius:50%;background:#59636d}
+.matchPanel>header i.on{background:var(--red);box-shadow:0 0 0 4px rgba(243,78,94,.08)}
+.matchFields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.liveData .matchFields{grid-template-columns:repeat(2,minmax(0,1fr))}
+.matchField{min-height:72px;padding:14px;border-right:1px solid #1d252d;border-bottom:1px solid #1d252d}
+.matchField:nth-child(3n){border-right:0}
+.liveData .matchField:nth-child(3n){border-right:1px solid #1d252d}
+.liveData .matchField:nth-child(2n){border-right:0}
+.matchField span{display:block;color:#737e89;font-size:9px;font-weight:760;letter-spacing:.08em;text-transform:uppercase}
+.matchField strong{display:block;margin-top:7px;color:#d8dde1;font-size:14px;font-weight:780}
+.matchField strong.positive,.decisionRow strong.positive{color:#b9dc8e}
+.matchField strong.negative,.decisionRow strong.negative{color:#e27d87}
+.matchField strong.pending,.decisionRow strong.pending{color:#85bdc3}
+.matchText{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;padding:17px 14px;border-top:1px solid #222a33}
+.matchText>span{color:#79848f;font-size:9px;font-weight:800;letter-spacing:.1em}
+.matchText p{margin:0;color:#c2c9cf;font-size:12px;line-height:1.7}
+
+.decisionList{display:grid}
+.decisionRow{display:grid;grid-template-columns:1.2fr repeat(4,.7fr);gap:0;border-top:1px solid #1e262f}
+.decisionRow:first-child{border-top:0}
+.decisionRow>div{padding:15px 14px;border-right:1px solid #1e262f}
+.decisionRow>div:last-child{border-right:0;text-align:right}
+.decisionRow span{display:block;color:#707b86;font-size:9px;font-weight:760;letter-spacing:.08em;text-transform:uppercase}
+.decisionRow strong{display:block;margin-top:6px;color:#e0e4e7;font-size:14px;font-weight:820}
+.matchEmptyLine{padding:20px 14px;color:#7e8994;font-size:12px}
+
+.matchManual{display:flex;align-items:end;gap:12px;padding:17px 14px}
+.matchManual label{min-width:150px;color:#828d98;font-size:10px;font-weight:700}
+.matchManual label span{display:block;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.matchManual input{width:78px;height:40px;border:1px solid #313b46;background:#090d11;color:#fff;padding:0 10px;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.matchManual i{padding-bottom:8px;color:#66717c;font-style:normal}
+.matchManual button{height:40px;border:1px solid #35414d;background:#11171d;color:#d1d7dc;padding:0 14px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.matchManual button:hover{border-color:#536372;color:#fff}
+.matchManual .matchClear{background:transparent;border-color:transparent;color:#7d8893;text-decoration:underline;text-underline-offset:3px}
+
+.matchLoading{padding:50px 0;border-top:3px solid var(--cyan)}
+.matchLoading>span{color:#74808b;font-size:10px;font-weight:850;letter-spacing:.16em}
+.matchLoading h1{margin:7px 0 8px;font-size:36px;letter-spacing:-.03em}
+.matchLoading p{color:#89949f;font-size:12px}
+
+/* A fixture row now navigates to Match Desk instead of expanding inline. */
+.fixtureRow>summary{cursor:pointer}
+.fixtureRow>summary:hover .fixtureTeams strong{color:#fff}
+.fixtureRow>summary .chev{transform:rotate(-90deg);color:#697581}
+.fixtureRow[open]>summary .chev{transform:rotate(-90deg)}
+
+@media(max-width:960px){
+  #matchApp{padding:22px 16px 65px}
+  .matchHero{grid-template-columns:minmax(0,1fr) 190px minmax(0,1fr);gap:18px;padding:28px 24px 54px}
+  .matchHeroCrest{width:66px;height:66px}.matchHeroTeam{gap:13px}.matchHeroTeam strong{font-size:20px}.matchScoreboard b{font-size:44px}.matchScoreboard .kickoffHero{font-size:34px}
+  .matchGrid{grid-template-columns:1fr}.matchFields{grid-template-columns:repeat(3,1fr)}
+}
+
+@media(max-width:680px){
+  .matchTopline>span{display:none}
+  .matchHero{grid-template-columns:1fr 110px 1fr;gap:8px;min-height:190px;padding:24px 10px 50px}
+  .matchHeroTeam{display:grid;justify-items:center;gap:9px;text-align:center}.matchHeroTeam.away{display:grid;text-align:center}
+  .matchHeroCrest{width:52px;height:52px}.matchHeroCrest>span{width:46px;height:46px;font-size:13px}
+  .matchHeroTeam strong{font-size:15px;line-height:1.15}
+  .matchScoreboard>span{font-size:8px}.matchScoreboard b{font-size:35px}.matchScoreboard>div{gap:9px}.matchScoreboard i{font-size:20px}.matchScoreboard .kickoffHero{font-size:27px}.matchScoreboard em{font-size:8px}
+  .matchHero footer{gap:10px;justify-content:flex-start;overflow-x:auto;white-space:nowrap;padding:8px 10px}
+  .matchFields,.liveData .matchFields{grid-template-columns:repeat(2,1fr)}
+  .matchField:nth-child(3n),.liveData .matchField:nth-child(3n){border-right:1px solid #1d252d}.matchField:nth-child(2n),.liveData .matchField:nth-child(2n){border-right:0}
+  .matchText{grid-template-columns:1fr;gap:7px}
+  .decisionRow{grid-template-columns:1fr 1fr}.decisionRow>div:nth-child(even){border-right:0}.decisionRow>div:last-child{text-align:left}
+  .matchManual{display:grid;grid-template-columns:1fr 18px 1fr}.matchManual label{min-width:0}.matchManual input{width:100%}.matchManual button{grid-column:1/-1}.matchManual .matchClear{grid-column:1/-1}
+}
