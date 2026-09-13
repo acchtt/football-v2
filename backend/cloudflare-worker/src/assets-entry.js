@@ -92,6 +92,22 @@ async function bsdPage(env, from, to, offset) {
   return payload;
 }
 
+function firstNumeric(values) {
+  for (const value of values) {
+    const n = numeric(value);
+    if (n !== undefined) return n;
+  }
+  return undefined;
+}
+
+function firstOpaque(values) {
+  for (const value of values) {
+    const id = identifier(value);
+    if (id && numeric(id) === undefined) return id;
+  }
+  return null;
+}
+
 function parseAsset(row) {
   const nested = isRecord(row.event) ? row.event : undefined;
   const source = nested ? { ...nested, ...row } : row;
@@ -103,21 +119,31 @@ function parseAsset(row) {
   const awayTeamId = teamId(awayObj, source.away_team_id ?? source.away_id);
   if (!home || !away || (homeTeamId === undefined && awayTeamId === undefined)) return null;
 
-  // BSD may expose two identifiers for the same fixture:
-  // a numeric REST event id and an alphanumeric live-feed/websocket key.
-  // Keep both instead of using `source.id ?? source.event_id`, because an
-  // alphanumeric `id` would otherwise prevent us from seeing a numeric event_id.
-  const rawId = source.id;
-  const rawEventId = source.event_id;
-  const restId = numeric(rawId) ?? numeric(rawEventId);
-  const liveId = [rawId, rawEventId]
-    .map(identifier)
-    .find((value) => value && numeric(value) === undefined) || null;
+  // Do not flatten identifiers before classifying them. Some BSD list/live rows
+  // expose an opaque provider/live key on the outer object while the nested event
+  // carries the canonical numeric REST/WebSocket event id.
+  const idCandidates = [
+    nested?.id,
+    nested?.event_id,
+    nested?.match_id,
+    row.event_id,
+    row.match_id,
+    row.id,
+  ];
+  const restId = firstNumeric(idCandidates);
+  const liveId = firstOpaque([
+    row.id,
+    row.event_id,
+    row.match_id,
+    nested?.id,
+    nested?.event_id,
+    nested?.match_id,
+  ]);
 
   const eventDate = text(source.event_date ?? source.date ?? source.kickoff ?? source.kickoff_at ?? source.time?.kickoff_at);
   const leagueId = numeric(source.league_id ?? source.league?.id);
   return {
-    id: restId,
+    id: restId ?? liveId,
     restId,
     liveId,
     eventDate,
