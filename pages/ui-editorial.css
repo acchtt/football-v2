@@ -1,0 +1,548 @@
+/* SlipTrace editorial pass — flatter, quieter, deliberately utilitarian. */
+:root{
+  --ed-bg:#0b0c0e;
+  --ed-surface:#0f1012;
+  --ed-surface-2:#131417;
+  --ed-line:#282a2f;
+  --ed-line-soft:#1d1f23;
+  --ed-text:#eceef1;
+  --ed-muted:#9a9fa8;
+  --ed-dim:#737982;
+  --ed-red:#e34a55;
+  --ed-cyan:#69cbd5;
+  --ed-green:#a8d46f;
+  --ed-amber:#d7ad61;
+}
+
+html{scroll-behavior:auto}
+body{
+  background:var(--ed-bg)!important;
+  color:var(--ed-text);
+  font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  font-size:14px;
+  letter-spacing:0;
+}
+
+/* Remove the glossy/dashboard treatment. */
+.nav{
+  background:var(--ed-bg)!important;
+  backdrop-filter:none!important;
+  border-bottom:1px solid var(--ed-line)!important;
+}
+.navin{
+  min-height:58px!important;
+  max-width:1180px!important;
+  padding:8px 18px!important;
+  gap:18px!important;
+}
+.brand{gap:9px!important}
+.logo{
+  width:32px!important;
+  height:32px!important;
+  border-radius:3px!important;
+  background:var(--ed-red)!important;
+  box-shadow:none!important;
+  font-size:12px;
+}
+.brandname{
+  font-size:12px!important;
+  letter-spacing:.12em!important;
+}
+.brandsub{
+  margin-top:1px;
+  font-size:9px!important;
+  letter-spacing:.08em!important;
+  color:#8e949d!important;
+}
+
+/* Primary nav: simple text + underline instead of pill container. */
+.tabs{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  padding:0!important;
+  gap:22px!important;
+}
+.tabs a{
+  position:relative;
+  min-height:40px!important;
+  padding:10px 0 9px!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#9da2aa;
+  font-size:13px!important;
+  font-weight:650!important;
+}
+.tabs a:hover{background:transparent!important;color:#fff!important}
+.tabs a.active,.tabs a[aria-current="page"]{
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#fff!important;
+}
+.tabs a.active:after,.tabs a[aria-current="page"]:after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-9px;
+  height:2px;
+  background:var(--ed-red);
+}
+
+/* Header source state: plain telemetry, not status pills. */
+.controlStatus{gap:12px!important}
+.sourcePill{
+  height:auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--ed-muted)!important;
+  font-size:10px!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+}
+.sourcePill i{
+  width:6px!important;height:6px!important;
+  box-shadow:none!important;
+}
+.sourcePill b{
+  color:#aeb3ba!important;
+  font-size:10px!important;
+  font-weight:650!important;
+}
+.sourcePill.ok b{color:#b8c3ae!important}
+.sourcePill.bad b{color:#d88d94!important}
+.sourceAge{font-size:10px!important;color:#777d85!important}
+
+.wrap{
+  max-width:1180px!important;
+  padding:22px 18px 52px!important;
+}
+
+/* Page heading: no marketing eyebrow, no hero treatment. */
+.v2PageHead{
+  align-items:flex-end!important;
+  gap:22px!important;
+  margin-bottom:18px!important;
+}
+.v2PageHead .eyebrow{display:none!important}
+.v2PageHead h1{
+  margin:0!important;
+  font-size:30px!important;
+  line-height:1.1!important;
+  letter-spacing:-.02em!important;
+  font-weight:720!important;
+}
+.v2PageHead .sub{
+  margin:5px 0 0!important;
+  font-size:12px!important;
+  color:var(--ed-muted)!important;
+}
+
+/* KPI area becomes one compact line, not three cards. */
+.v2HeadlineStats{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:flex-end!important;
+  gap:0!important;
+  min-width:0!important;
+}
+.v2HeadlineStats>span{
+  min-height:auto!important;
+  min-width:72px;
+  padding:0 14px!important;
+  border:0!important;
+  border-left:1px solid var(--ed-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  text-align:right;
+}
+.v2HeadlineStats>span:first-child{border-left:0!important}
+.v2HeadlineStats small{
+  color:#7f858d!important;
+  font-size:9px!important;
+  font-weight:600!important;
+  letter-spacing:.04em!important;
+}
+.v2HeadlineStats b{
+  margin-top:2px!important;
+  font-size:18px!important;
+  line-height:1.1!important;
+  font-weight:700!important;
+}
+.v2HeadlineStats .liveMetric b{color:#d9767f!important}
+.v2HeadlineStats .pendingMetric b{color:#c8cbd0!important}
+.v2SecondaryLine{
+  margin:-7px 0 15px!important;
+  color:#7d838b!important;
+  font-size:11px!important;
+}
+
+/* Status tabs as editorial navigation. */
+.v2StatusTabs{
+  display:flex!important;
+  width:100%;
+  gap:20px!important;
+  margin:0 0 16px!important;
+  padding:0!important;
+  border:0!important;
+  border-bottom:1px solid var(--ed-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.v2StatusTabs button{
+  position:relative;
+  min-height:38px!important;
+  padding:0 0 10px!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#858b93!important;
+  font-size:12px!important;
+  font-weight:650!important;
+}
+.v2StatusTabs button:hover{background:transparent!important;color:#d8dbe0!important}
+.v2StatusTabs button.active{
+  background:transparent!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+.v2StatusTabs button.active:after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-1px;
+  height:2px;
+  background:var(--ed-red);
+}
+.v2StatusTabs button span{
+  display:inline!important;
+  min-width:0!important;
+  height:auto!important;
+  margin-left:5px!important;
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#777d85!important;
+  font-size:11px!important;
+}
+.v2StatusTabs button.active span{color:#b5bac1!important}
+
+/* Filters: quiet form controls, less boxed UI. */
+.v2Filters{
+  grid-template-columns:minmax(240px,420px) auto!important;
+  gap:8px!important;
+  margin-bottom:13px!important;
+}
+.v2Filters label>span{
+  margin-bottom:5px!important;
+  color:#7e848d!important;
+  font-size:9px!important;
+  font-weight:650!important;
+  letter-spacing:.03em!important;
+  text-transform:none!important;
+}
+.v2Filters input,.v2Filters select{
+  height:38px!important;
+  border:1px solid var(--ed-line)!important;
+  border-radius:4px!important;
+  background:#0e0f11!important;
+  color:var(--ed-text)!important;
+  padding:0 10px!important;
+}
+.v2Filters input:focus,.v2Filters select:focus{border-color:#4f555d!important}
+.v2FilterToggle,.v2FilterReset{
+  height:38px!important;
+  border:1px solid var(--ed-line)!important;
+  border-radius:4px!important;
+  background:#111214!important;
+  color:#aeb3ba!important;
+  font-weight:600!important;
+}
+.v2FilterToggle{gap:8px!important;padding:0 11px!important}
+.v2FilterToggle b{color:#858b93!important;font-size:13px!important;font-weight:500!important}
+.v2AdvancedFilters{
+  padding:10px!important;
+  border:1px solid var(--ed-line-soft)!important;
+  border-radius:4px!important;
+  background:#0d0e10!important;
+}
+.v2ResultLine{
+  margin:4px 0 12px!important;
+  color:#737982!important;
+  font-size:10px!important;
+}
+
+/* Section labels: simple rule, no count pill. */
+.v2Section{margin-top:8px!important}
+.v2SectionTitle{
+  gap:8px!important;
+  margin:17px 0 7px!important;
+  color:#848a92!important;
+  font-size:10px!important;
+  font-weight:650!important;
+  letter-spacing:.06em!important;
+}
+.v2SectionTitle:after{background:var(--ed-line-soft)!important}
+.v2SectionTitle b{
+  display:inline!important;
+  min-width:0!important;
+  height:auto!important;
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#676d75!important;
+  font-size:10px!important;
+}
+.v2SectionTitle.live span{color:#c76a73!important}
+.v2SectionTitle.live b{color:#8f676b!important;background:transparent!important}
+
+/* Fixture rows: flat, almost table-like. */
+.card.v2MatchCard,.card.v2PickCard{
+  margin:0!important;
+  border:0!important;
+  border-top:1px solid var(--ed-line-soft)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  transition:none!important;
+}
+.card.v2MatchCard:last-child,.card.v2PickCard:last-child{border-bottom:1px solid var(--ed-line-soft)!important}
+.card.v2MatchCard:hover,.card.v2PickCard:hover{
+  background:#0e0f11!important;
+  border-color:var(--ed-line-soft)!important;
+  transform:none!important;
+}
+.v2MatchCard.is-live{
+  border-left:2px solid var(--ed-red)!important;
+  box-shadow:none!important;
+}
+.v2MatchCard.is-ended{opacity:.78!important}
+
+.v2MatchSummary{
+  grid-template-columns:64px minmax(0,1fr) 82px 112px 18px!important;
+  gap:14px!important;
+  padding:12px 8px!important;
+}
+.v2Kickoff{
+  padding-right:12px!important;
+  border-right:1px solid var(--ed-line-soft)!important;
+}
+.v2Kickoff strong{
+  font-size:18px!important;
+  font-weight:680!important;
+}
+.v2Kickoff span{
+  margin-top:4px!important;
+  color:#737982!important;
+  font-size:9px!important;
+  font-weight:600!important;
+  letter-spacing:.03em!important;
+}
+.v2TeamLine strong{
+  font-size:15px!important;
+  line-height:1.3!important;
+  font-weight:630!important;
+}
+.v2TeamLine+.v2TeamLine{margin-top:1px!important}
+.v2Meta{
+  margin-top:5px!important;
+  color:#80868f!important;
+  font-size:11px!important;
+}
+.liveText{color:#cb737c!important;font-weight:650!important}
+
+/* Score becomes content, not a separate glass tile. */
+.v2Score{
+  width:82px!important;
+  min-height:46px!important;
+  border-left:1px solid var(--ed-line-soft)!important;
+  border-right:1px solid var(--ed-line-soft)!important;
+  background:transparent!important;
+}
+.v2Score span{
+  color:#757b84!important;
+  font-size:9px!important;
+  font-weight:650!important;
+  letter-spacing:.04em!important;
+}
+.v2Score strong{
+  margin-top:2px!important;
+  font-size:19px!important;
+  font-weight:700!important;
+}
+.v2Score.live{background:transparent!important}
+.v2Score.live span{color:#ca747d!important}
+.v2Score.final span{color:#94a884!important}
+.v2Score.manual span{color:#b89e70!important}
+.v2Score.pending strong{color:#70757d!important}
+
+/* Signals: plain compact labels, no multicolor badge candy. */
+.v2Signals{gap:10px!important}
+.v2Signals .badge{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#8e949c!important;
+  font-size:10px!important;
+  font-weight:650!important;
+}
+.v2Signals .badge.red{color:#c67880!important}
+.v2Signals .badge.cyan{color:#83aeb3!important}
+.v2Signals .badge.lime{color:#a2b58a!important}
+.v2Signals .badge.amber{color:#b49a6c!important}
+.matchChevron{
+  width:18px!important;height:18px!important;
+  color:#626871!important;
+  font-size:15px!important;
+}
+.card[open] .matchChevron{color:#999fa7!important}
+
+/* Expanded area: one quiet block, not nested dashboard cards. */
+.v2Detail{
+  padding:13px 8px 16px!important;
+  border-top:1px solid var(--ed-line-soft)!important;
+  background:#0d0e10!important;
+}
+.v2Detail .detailStrip{gap:16px!important}
+.v2Detail .detailStrip span{
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.v2Detail .detailStrip small{
+  color:#6f757d!important;
+  font-size:9px!important;
+  font-weight:600!important;
+}
+.v2Detail .detailStrip strong{
+  margin-top:2px!important;
+  font-size:11px!important;
+  font-weight:600!important;
+}
+.detailNote .label,.scoreEditor .label{font-size:9px!important;color:#788089!important}
+.detailNote p,.scoreEditor p{color:#b8bdc4!important}
+.scoreEditor{border-top:1px solid var(--ed-line-soft)!important}
+
+/* Picks: same flat row logic. */
+.v2PickSummary{
+  grid-template-columns:minmax(0,1fr) 82px 180px 18px!important;
+  gap:14px!important;
+  padding:12px 8px!important;
+}
+.v2PickMain>.v2Meta{margin-bottom:4px!important}
+.v2PickTags{gap:10px!important;margin-top:6px!important}
+.v2PickTags span{
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#70767e!important;
+  font-size:9px!important;
+  font-weight:600!important;
+}
+.v2Selection{text-align:right!important}
+.v2Selection small{
+  color:#737982!important;
+  font-size:9px!important;
+  font-weight:600!important;
+  letter-spacing:.03em!important;
+}
+.v2Selection>strong{
+  margin-top:2px!important;
+  font-size:16px!important;
+  font-weight:680!important;
+}
+.v2Selection em{font-size:12px!important;color:#8d939b!important}
+.v2Outcome{gap:8px!important;margin-top:5px!important}
+.v2Outcome span{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  font-size:10px!important;
+  font-weight:650!important;
+}
+.v2Outcome b{font-size:12px!important;font-weight:680!important}
+.v2Outcome.win span,.v2Outcome.win b{color:#9fb486!important}
+.v2Outcome.loss span,.v2Outcome.loss b{color:#c97880!important}
+.v2Outcome.push span,.v2Outcome.push b{color:#a1a6ad!important}
+.v2Outcome.pending span,.v2Outcome.pending b{color:#8b9199!important}
+.v2PickCard.outcome-win,.v2PickCard.outcome-loss,.v2PickCard.outcome-pending{box-shadow:none!important}
+.v2PickCard.outcome-win{border-left:2px solid #6f805f!important}
+.v2PickCard.outcome-loss{border-left:2px solid #8e4e54!important}
+.v2PickCard.outcome-pending{border-left:2px solid #51646a!important}
+
+/* Loading: static skeletons instead of animated shimmer. */
+.notice.v2Loading{
+  max-width:none!important;
+  margin:18px 0!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.loadingHead{
+  width:120px!important;height:20px!important;
+  border-radius:2px!important;background:#17181b!important;
+}
+.loadingCard{
+  height:68px!important;
+  margin:0!important;
+  border:0!important;
+  border-top:1px solid var(--ed-line-soft)!important;
+  border-radius:0!important;
+  background:#0d0e10!important;
+  animation:none!important;
+}
+.empty{
+  padding:18px 0!important;
+  border:0!important;
+  border-top:1px solid var(--ed-line-soft)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  text-align:left!important;
+  font-size:12px!important;
+  color:#767c84!important;
+}
+
+/* Accessible focus, but restrained. */
+:focus-visible{
+  outline:1px solid #83939a!important;
+  outline-offset:2px!important;
+}
+
+@media(max-width:1050px){
+  .v2MatchSummary{grid-template-columns:60px minmax(0,1fr) 78px 18px!important}
+  .v2Score{width:78px!important}
+  .v2Signals{grid-column:2/4!important;justify-content:flex-start!important;margin-top:-4px}
+  .v2PickSummary{grid-template-columns:minmax(0,1fr) 78px 18px!important}
+}
+
+@media(max-width:760px){
+  .navin{min-height:54px!important;padding:7px 12px!important}
+  .logo{width:30px!important;height:30px!important}
+  .brandsub{display:none!important}
+  .controlStatus{grid-column:1/-1!important;border-top:1px solid var(--ed-line-soft);padding-top:6px;margin-top:1px}
+  .sourceAge{display:inline!important}
+  .tabs{gap:16px!important}
+  .tabs a.active:after,.tabs a[aria-current="page"]:after{bottom:-7px!important}
+  .wrap{padding:18px 12px 44px!important}
+  .v2PageHead{display:block!important;margin-bottom:14px!important}
+  .v2PageHead h1{font-size:27px!important}
+  .v2HeadlineStats{justify-content:flex-start!important;margin-top:13px!important}
+  .v2HeadlineStats>span{padding:0 12px!important;text-align:left!important;min-width:0!important}
+  .v2HeadlineStats>span:first-child{padding-left:0!important}
+  .v2StatusTabs{gap:18px!important;overflow-x:auto!important}
+  .v2StatusTabs button{white-space:nowrap!important}
+  .v2Filters{grid-template-columns:1fr auto!important}
+  .v2AdvancedFilters{grid-template-columns:1fr!important}
+  .v2MatchSummary{grid-template-columns:48px minmax(0,1fr) 62px 16px!important;gap:9px!important;padding:11px 2px!important}
+  .v2Kickoff{padding-right:8px!important}
+  .v2Kickoff strong{font-size:16px!important}
+  .v2TeamLine strong{font-size:14px!important}
+  .v2Score{width:62px!important;min-height:42px!important}
+  .v2Score strong{font-size:17px!important}
+  .v2Signals{grid-column:2/4!important}
+  .v2PickSummary{grid-template-columns:minmax(0,1fr) 62px 16px!important;gap:9px!important;padding:11px 2px!important}
+  .v2Selection{grid-column:1/3!important;padding-top:9px!important;border-top:1px solid var(--ed-line-soft)!important;text-align:left!important}
+  .v2Outcome{justify-content:flex-start!important}
+  .v2Detail{padding-left:2px!important;padding-right:2px!important}
+}
