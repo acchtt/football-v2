@@ -130,6 +130,25 @@ function finishedStatus(status) {
   return value === "finished" || value === "ft" || value === "full_time" || value === "full time" || value === "ended" || value === "complete" || value === "completed";
 }
 
+// BSD's compact live feed can report the clock relative to the current period.
+// Example: period=2H + minute=13 means the 58th match minute, not 13'.
+function normalizedMinute(minute, period) {
+  const value = numeric(minute);
+  if (value === undefined) return undefined;
+  const p = String(period || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+  const secondHalf = p === "2h" || p === "2" || p === "half2" || p === "2ndhalf" || p === "secondhalf";
+  if (secondHalf && value >= 0 && value <= 45) return value + 45;
+
+  const firstExtra = p === "et1" || p === "1et" || p === "extra1" || p === "1stextra" || p === "firstextra";
+  if (firstExtra && value >= 0 && value <= 15) return value + 90;
+
+  const secondExtra = p === "et2" || p === "2et" || p === "extra2" || p === "2ndextra" || p === "secondextra";
+  if (secondExtra && value >= 0 && value <= 15) return value + 105;
+
+  return value;
+}
+
 async function bsdFetch(env, path) {
   if (!env.BSD_API_TOKEN) return { ok: false, status: 503, payload: null, error: "BSD_API_TOKEN missing" };
   const base = String(env.BSD_API_BASE_URL || "https://sports.bzzoiro.com/api/v2").replace(/\/$/, "");
@@ -201,6 +220,7 @@ async function buildFastScoreFeed(env) {
     .filter((event) => event.home && event.away && event.homeScore !== undefined && event.awayScore !== undefined)
     .map((event) => {
       const finished = finishedStatus(event.status);
+      const minute = normalizedMinute(event.minute, event.period);
       return {
         id: event.id,
         eventDate: event.eventDate,
@@ -208,7 +228,8 @@ async function buildFastScoreFeed(env) {
         away: event.away,
         homeScore: event.homeScore,
         awayScore: event.awayScore,
-        minute: finished ? undefined : event.minute,
+        minute: finished ? undefined : minute,
+        rawMinute: finished ? undefined : event.minute,
         period: finished ? "FT" : event.period,
         status: finished ? "finished" : (event.status || "live"),
       };
