@@ -39,3 +39,36 @@ jobs:
 
       - name: Deploy Worker
         run: npx --yes wrangler@4 deploy --config wrangler.jsonc
+
+      - name: Smoke test production API
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://football-v2.acchtt.workers.dev"
+          TODAY="$(TZ=Asia/Ho_Chi_Minh date +%F)"
+
+          check_json() {
+            local name="$1"
+            local url="$2"
+            echo "Checking $name: $url"
+            body="$(mktemp)"
+            status="$(curl --retry 4 --retry-delay 2 --retry-all-errors -sS -o "$body" -w '%{http_code}' "$url")"
+            cat "$body"
+            echo
+            if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+              echo "::error::$name returned HTTP $status"
+              exit 1
+            fi
+            python - "$body" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf-8') as f:
+    payload = json.load(f)
+if isinstance(payload, dict) and payload.get('ok') is False:
+    raise SystemExit('API returned ok=false: ' + json.dumps(payload)[:500])
+PY
+            rm -f "$body"
+          }
+
+          check_json "BSD events" "$BASE/api/bsd/events?date_from=$TODAY&date_to=$TODAY&limit=5"
+          check_json "BSD live" "$BASE/api/bsd/live"
+          check_json "dashboard" "$BASE/api/dashboard-data"
