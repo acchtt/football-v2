@@ -56,6 +56,12 @@ async function bsdJson(env, path) {
   return payload;
 }
 
+function errText(result) {
+  return result?.status === "rejected"
+    ? (result.reason instanceof Error ? result.reason.message : String(result.reason))
+    : "";
+}
+
 async function matchStats(env, id) {
   const now = Date.now();
   const cached = statsCache.get(id);
@@ -63,11 +69,29 @@ async function matchStats(env, id) {
   if (statsInFlight.has(id)) return statsInFlight.get(id);
 
   const safeId = encodeURIComponent(id);
-  const task = Promise.all([
+  const task = Promise.allSettled([
     bsdJson(env, `/events/${safeId}/stats/`),
-    bsdJson(env, `/events/${safeId}/`).catch(() => null),
-  ]).then(([stats, event]) => {
-    const value = { ok: true, eventId: id, stats, event, cached: false, generatedAt: new Date().toISOString() };
+    bsdJson(env, `/events/${safeId}/`),
+  ]).then(([statsResult, eventResult]) => {
+    const stats = statsResult.status === "fulfilled" ? statsResult.value : null;
+    const event = eventResult.status === "fulfilled" ? eventResult.value : null;
+    if (!stats && !event) {
+      throw new Error(errText(eventResult) || errText(statsResult) || "BSD match data unavailable");
+    }
+    const value = {
+      ok: true,
+      eventId: id,
+      stats,
+      event,
+      statsAvailable: Boolean(stats),
+      eventAvailable: Boolean(event),
+      warnings: {
+        stats: stats ? null : errText(statsResult) || "stats unavailable",
+        event: event ? null : errText(eventResult) || "event detail unavailable",
+      },
+      cached: false,
+      generatedAt: new Date().toISOString(),
+    };
     statsCache.set(id, { at: Date.now(), value });
     if (statsCache.size > 60) {
       const oldest = [...statsCache.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, statsCache.size - 60);
