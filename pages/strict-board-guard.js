@@ -10,6 +10,7 @@
   let loading = null;
   let queued = false;
   let busy = false;
+  let suppressObserver = false;
 
   function norm(v='') {
     return String(v).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
@@ -80,25 +81,84 @@
   }
 
   function rowTeams(row){const lines=[...row.querySelectorAll('.teamLine')];const read=line=>line?.querySelector('span')?.textContent?.trim()||'';return{home:read(lines[0]),away:read(lines[1])};}
+  function escapeHtml(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
   function applyRow(row,date) {
     const{home,away}=rowTeams(row);if(!home||!away)return true;
     const match=strictMatch(home,away,date);
-    if(!match){row.remove();return false;}
+    if(!match){if(row.isConnected)row.remove();return false;}
+
     const competition=String(match.competition||'').trim();
-    if(competition){const teams=row.querySelector('.teams');let label=teams?.querySelector('.matchCompetition');if(teams&&!label){label=document.createElement('div');label.className='matchCompetition';teams.appendChild(label);}if(label)label.textContent=competition;}
-    const meta=row.querySelector('.matchMeta');if(meta){const tier=String(match.tier||'').toUpperCase();meta.innerHTML=`<span class="tag ${tier==='FOCUS'?'live':''}">${escapeHtml(match.grade||'—')} · ${escapeHtml(tier)}</span>`;}
-    row.dataset.strictBoard='1';return true;
+    if(competition){
+      const teams=row.querySelector('.teams');
+      let label=teams?.querySelector('.matchCompetition');
+      if(teams&&!label){
+        label=document.createElement('div');
+        label.className='matchCompetition';
+        label.textContent=competition;
+        teams.appendChild(label);
+      } else if(label && label.textContent!==competition) {
+        label.textContent=competition;
+      }
+    }
+
+    const meta=row.querySelector('.matchMeta');
+    if(meta){
+      const tier=String(match.tier||'').toUpperCase();
+      const next=`<span class="tag ${tier==='FOCUS'?'live':''}">${escapeHtml(match.grade||'—')} · ${escapeHtml(tier)}</span>`;
+      if(meta.innerHTML!==next) meta.innerHTML=next;
+    }
+    if(row.dataset.strictBoard!=='1') row.dataset.strictBoard='1';
+    return true;
   }
 
-  function escapeHtml(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  function refreshCounts(){document.querySelectorAll('.statusTab').forEach(tab=>{const status=tab.dataset.statusTab;const count=document.querySelectorAll(`.matchRow[data-match-status="${status}"]`).length;const badge=tab.querySelector('b');if(badge)badge.textContent=String(count);});document.querySelectorAll('.kpi').forEach(k=>{const label=k.querySelector('span')?.textContent?.trim().toLowerCase();if(label==='matches'){const strong=k.querySelector('strong');if(strong)strong.textContent=String(document.querySelectorAll('.matchRow[data-strict-board="1"]').length);}});}
+  function refreshCounts(){
+    document.querySelectorAll('.statusTab').forEach(tab=>{
+      const status=tab.dataset.statusTab;
+      const count=String(document.querySelectorAll(`.matchRow[data-match-status="${status}"]`).length);
+      const badge=tab.querySelector('b');
+      if(badge&&badge.textContent!==count)badge.textContent=count;
+    });
+    const matches=String(document.querySelectorAll('.matchRow[data-strict-board="1"]').length);
+    document.querySelectorAll('.kpi').forEach(k=>{
+      const label=k.querySelector('span')?.textContent?.trim().toLowerCase();
+      if(label==='matches'){
+        const strong=k.querySelector('strong');
+        if(strong&&strong.textContent!==matches)strong.textContent=matches;
+      }
+    });
+  }
 
-  async function run(force=false){if(busy)return;busy=true;try{await ensureBoard(force);const date=selectedDate();document.querySelectorAll('.matchRow').forEach(row=>applyRow(row,date));refreshCounts();}finally{busy=false;}}
-  function schedule(force=false){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;run(force);});}
+  async function run(force=false){
+    if(busy)return;
+    busy=true;
+    try{
+      await ensureBoard(force);
+      suppressObserver=true;
+      const date=selectedDate();
+      document.querySelectorAll('.matchRow').forEach(row=>applyRow(row,date));
+      refreshCounts();
+      observer.takeRecords();
+    }finally{
+      suppressObserver=false;
+      busy=false;
+    }
+  }
+
+  function schedule(force=false){
+    if(queued||busy)return;
+    queued=true;
+    requestAnimationFrame(()=>{queued=false;run(force);});
+  }
 
   const root=document.getElementById('app');
-  new MutationObserver(()=>schedule(false)).observe(root,{childList:true,subtree:true});
+  if(!root)return;
+  const observer=new MutationObserver(records=>{
+    if(suppressObserver||busy||!records.length)return;
+    schedule(false);
+  });
+  observer.observe(root,{childList:true,subtree:true});
+
   window.addEventListener('hashchange',()=>schedule(true));
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule(true);});
   setInterval(()=>{if(document.visibilityState==='visible')schedule(true);},15_000);
