@@ -16,10 +16,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Call live Worker Soccerway probe
+      - name: Validate normalized Soccerway fixtures endpoint
         run: |
           set -euo pipefail
-          echo "=== Soccerway probe response ==="
           curl --fail-with-body --silent --show-error \
-            "https://football-v2.acchtt.workers.dev/api/soccerway-probe"
-          echo
+            "https://football-v2.acchtt.workers.dev/api/soccerway-fixtures?day=0" \
+            -o /tmp/soccerway.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/soccerway.json', encoding='utf-8'))
+          print('ok=', p.get('ok'))
+          print('source=', p.get('source'))
+          print('count=', p.get('count'))
+          print('upstream_status=', (p.get('upstream') or {}).get('status'))
+          for i, f in enumerate((p.get('fixtures') or [])[:5], 1):
+              print(i, json.dumps(f, ensure_ascii=False, separators=(',', ':')))
+          if not p.get('ok') or not isinstance(p.get('fixtures'), list) or not p.get('fixtures'):
+              raise SystemExit('Normalized fixture endpoint did not produce fixtures')
+          required=('matchId','homeTeam','awayTeam','kickoffTimestamp')
+          bad=[f for f in p['fixtures'][:50] if any(f.get(k) in (None,'') for k in required)]
+          if bad:
+              raise SystemExit(f'Parser missing required fields in {len(bad)} sampled fixtures')
+          PY
