@@ -1,0 +1,26 @@
+/* SlipTrace v6 typography — local-only for zero font download latency. */
+html,body,button,input,select,textarea{
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif;
+}
+.brand b,
+.pageHead h1,
+.fixtureTeams .teamLine strong,
+.kick strong,
+.score strong,
+.pickWhen strong,
+.selection span,
+.result span,
+.summaryStats b,
+.railBig,
+.railScore,
+.rightRail time{
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif;
+}
+.systemClock{
+  font-family:Consolas,"Courier New",monospace;
+}
+body{
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
