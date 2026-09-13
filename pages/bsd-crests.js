@@ -40,12 +40,6 @@
     return `${get('year')}-${get('month')}-${get('day')}`;
   }
 
-  function shiftDay(key, delta) {
-    const date = new Date(`${key}T12:00:00+07:00`);
-    date.setUTCDate(date.getUTCDate() + delta);
-    return dateKey(date);
-  }
-
   function addAssets(rows) {
     const seen = new Set(assets.map((event) => `${event.id ?? ''}|${event.home}|${event.away}|${event.eventDate || ''}`));
     for (const event of rows || []) {
@@ -59,7 +53,7 @@
 
   async function fetchRange(from, to) {
     const key = `${from}|${to}`;
-    if (loadedRanges.has(key)) return;
+    if (loadedRanges.has(key)) return false;
     loadedRanges.add(key);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 9000);
@@ -69,9 +63,11 @@
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.ok) throw new Error(payload?.error || `HTTP ${response.status}`);
       addAssets(payload.events);
+      return true;
     } catch (error) {
       loadedRanges.delete(key);
       console.warn('SlipTrace crest lookup failed', error);
+      return false;
     } finally {
       clearTimeout(timer);
     }
@@ -96,11 +92,7 @@
         const score = nameScore(name, event[side]);
         if (score < 4) continue;
         if (!best || score > best.score) {
-          best = {
-            score,
-            id: event[`${side}TeamId`],
-            logo: event[`${side}Logo`],
-          };
+          best = { score, id: event[`${side}TeamId`], logo: event[`${side}Logo`] };
         }
       }
     }
@@ -160,7 +152,7 @@
     if (busy) { queued = true; return; }
     busy = true;
     const today = dateKey();
-    await fetchRange(shiftDay(today, -7), shiftDay(today, 1));
+    await fetchRange(today, today);
     decorate();
     busy = false;
     if (queued) { queued = false; loadInitial(); }
@@ -171,10 +163,10 @@
     const dates = [...document.querySelectorAll('.pickRow .pickWhen span')]
       .map((node) => node.textContent?.trim())
       .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value || ''));
-    const unique = [...new Set(dates)];
     const today = dateKey();
-    const initialFrom = shiftDay(today, -7), initialTo = shiftDay(today, 1);
-    const missing = unique.filter((day) => day < initialFrom || day > initialTo).slice(0, Math.min(3, extraDayBudget));
+    const missing = [...new Set(dates)]
+      .filter((day) => day !== today && !loadedRanges.has(`${day}|${day}`))
+      .slice(0, Math.min(3, extraDayBudget));
     for (const day of missing) {
       extraDayBudget -= 1;
       await fetchRange(day, day);
@@ -196,6 +188,5 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') loadInitial();
   });
-  setInterval(loadInitial, 10 * 60 * 1000);
   loadInitial();
 })();
