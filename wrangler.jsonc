@@ -1,12 +1,25 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "football-v2",
-  "main": "backend/cloudflare-worker/src/app-v2-entry.js",
+  "main": "backend/cloudflare-worker/src/push-entry.js",
   "compatibility_date": "2026-09-12",
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "vars": {
     "AIRTABLE_BASE_ID": "appWyZJjitSBATXAU",
     "BSD_API_BASE_URL": "https://sports.bzzoiro.com/api/v2",
-    "ALLOWED_ORIGIN": "https://acchtt.github.io"
+    "ALLOWED_ORIGIN": "https://acchtt.github.io",
+    "VAPID_SUBJECT": "https://acchtt.github.io/football-v2/"
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "PUSH_REGISTRY", "class_name": "PushRegistry" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1_push_registry", "new_sqlite_classes": ["PushRegistry"] }
+  ],
+  "triggers": {
+    "crons": ["* * * * *"]
   }
 }
