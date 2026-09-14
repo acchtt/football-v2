@@ -1,4 +1,4 @@
-const CACHE='sliptrace-shell-v11';
+const CACHE='sliptrace-shell-v12';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>`${BASE}${name}`;
 const SHELL=[
@@ -14,7 +14,7 @@ const SHELL=[
   asset('mobile-v3.css?v=1'),
   asset('mobile-v4.css?v=1'),
   asset('alerts-center.css?v=2'),
-  asset('desktop-front-v2.css?v=1'),
+  asset('desktop-front-v2.css?v=2'),
   asset('manifest.webmanifest?v=3'),
   asset('icons/sliptrace-192.png'),
   asset('icons/sliptrace-512.png'),
@@ -31,7 +31,7 @@ const SHELL=[
   asset('pwa-v2.js?v=3'),
   asset('alerts-center.js?v=2'),
   asset('mobile-layout-v3.js?v=1'),
-  asset('desktop-front-v2.js?v=1')
+  asset('desktop-front-v2.js?v=2')
 ];
 
 self.addEventListener('install',event=>{
