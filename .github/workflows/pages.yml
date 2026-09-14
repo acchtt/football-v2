@@ -59,12 +59,13 @@ jobs:
               'index.html','sw.js','offline.html','pwa-v2.js','mobile-v2.css',
               'mobile-v3.css','mobile-v4.css','mobile-layout-v3.js',
               'desktop-front-v2.css','desktop-front-v2.js',
+              'strict-board-filter.js','strict-board-guard.js',
               'alerts-center.js','alerts-center.css'
           ]:
               assert (root/required).exists(), f'missing {required}'
           print('PWA artifact validated')
           PY
-          for js in pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/sw.js; do
+          for js in pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/strict-board-filter.js pages/strict-board-guard.js pages/sw.js; do
             node --check "$js"
           done
           echo "PWA JavaScript syntax validated"
