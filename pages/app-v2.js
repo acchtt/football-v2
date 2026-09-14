@@ -246,7 +246,7 @@
   function header() {
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
-      '<a class="brand" href="#board"><span class="brandMark">ST</span><span class="brandWords"><b>SLIPTRACE</b><small>Match intelligence</small></span></a>' +
+      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Football decision board</small></span></a>' +
       '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams or players" placeholder="Search teams or players" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
@@ -391,18 +391,16 @@
       'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"';
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
-    const signalIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>';
     const stateIcon = status === 'live' ?
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"></path></svg>' :
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
     return '<article class="boardMatchCard ' + tierClass + '" style="--order:' + (index || 0) + '">' + open +
-      '<div class="fixtureSignal"><span class="fixtureSignalIcon">' + signalIcon + '</span><div><small>' + esc(tier) +
-      '</small><strong>' + esc(grade) + '</strong></div></div>' +
+      '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong></div>' +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
       '<span class="fixtureVersus">VS</span><div class="teamLine away">' +
       crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
-      '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '<i aria-hidden="true">◆</i>') +
+      '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
       '<b>' + esc(competition) + '</b></span></div>' +
       '<div class="fixtureState"><span class="fixtureStatus ' + status + '">' + stateIcon + esc(statusName) + '</span>' +
       '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small></div>' +
@@ -477,8 +475,7 @@
     const tier = String(next && next.tier || 'WATCHLIST').toUpperCase();
     const nextBody = next ? (
       (nextId ? '<a class="nextDecision" href="#match/' + nextId + '">' : '<div class="nextDecision">') +
-      '<div class="nextDecisionTop"><span class="nextSignal ' + (tier === 'FOCUS' ? 'focus' : 'watch') +
-      '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>' +
+      '<div class="nextDecisionTop"><span class="nextSignal ' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
       esc(tier) + '</span><strong>' + esc(next.grade || '—') + '</strong></div>' +
       '<div class="nextTeams"><div>' + crest('team', nextEvent && teamId(nextEvent, 'home'), nextTeams.home || 'Home') +
       '<span>' + esc(nextTeams.home || 'Home') + '</span></div><i>VS</i><div>' +
@@ -490,7 +487,7 @@
       (nextStatus === 'live' ? 'data-clock-id="' + (nextId || '') + '"' : 'data-countdown="' + esc(kickoff || '') + '"') + '>' +
       esc(nextStatus === 'live' ? liveClock(nextEvent) : countdownText(kickoff)) + '</strong></div>' +
       (nextId ? '</a>' : '</div>')
-    ) : '<div class="nextDecisionEmpty"><span>◇</span><strong>Board clear</strong><small>No active decisions on this slate.</small></div>';
+    ) : '<div class="nextDecisionEmpty"><strong>Board clear</strong><small>No active decisions on this slate.</small></div>';
     const activeIds = new Set(events.map(function (event) { return String(eventId(event) || ''); }).filter(Boolean));
     const followed = currentFollowed().filter(function (item) { return activeIds.has(String(item.id || '')); });
     return '<section class="railSection nextDecisionSection">' + sectionHead('Next decision', next ? tier : 'No active match') +
@@ -556,7 +553,7 @@
   function skeleton(route, title) {
     state.route = route;
     const rows = Array.from({length:6}, function () { return '<div class="skeletonRow"></div>'; }).join('');
-    root.innerHTML = shell(pageTitle('Loading', title || 'SlipTrace', 'Retrieving the latest football data.'), '<section class="railSection"><div class="skeletonBlock"></div></section>', 'loadingRoute') +
+    root.innerHTML = shell(pageTitle('Loading', title || 'Slate XI', 'Retrieving the latest football data.'), '<section class="railSection"><div class="skeletonBlock"></div></section>', 'loadingRoute') +
       '';
     const host = root.querySelector('.mainView');
     if (host) host.insertAdjacentHTML('beforeend', '<section class="matchSection">' + rows + '</section>');
@@ -722,7 +719,7 @@
     const row = boardRowFor(event);
     const official = picksFor(event);
     if (!row && !official.length) return '';
-    return '<section class="modelSpotlight"><div class="modelIdentity"><span>SlipTrace decision model</span><strong>' +
+    return '<section class="modelSpotlight"><div class="modelIdentity"><span>Slate XI decision model</span><strong>' +
       esc(row?.grade || 'Tracked') + '</strong><small>' + esc(row?.tier || 'OFFICIAL PICK') + '</small></div>' +
       (row ? '<div class="modelFacts"><div><span>Structure</span><b>' + esc(row.structure || '—') +
         '</b></div><div><span>Starting XI</span><b>' + esc(row.xiStatus || '—') +
@@ -949,7 +946,7 @@
         esc(item.line || '—') + ' @ ' + esc(item.odds || '—') + '</b></div><div class="pickResult ' + resultState(result) +
         '"><strong>' + esc(result) + '</strong><span>' + (pl === null ? '—' : (pl > 0 ? '+' : '') + pl.toFixed(2) + 'u') + '</span></div></div>';
     }).join('');
-    const content = pageTitle('Decision record','Official picks','Open positions and settled SlipTrace model history.') +
+    const content = pageTitle('Decision record','Official picks','Open positions and settled Slate XI model history.') +
       '<div class="performanceGrid"><div><span>Total P/L</span><strong class="' + (totalPL >= 0 ? 'positive' : 'negative') + '">' +
       (totalPL > 0 ? '+' : '') + totalPL.toFixed(2) + 'u</strong></div><div><span>Win rate</span><strong>' +
       (settled.length ? Math.round(wins / settled.length * 100) : 0) + '%</strong></div><div><span>Open</span><strong>' +
@@ -1015,7 +1012,7 @@
   }
   function renderError(route, error) {
     state.route = route;
-    root.innerHTML = shell(pageTitle('Connection issue','Data unavailable','SlipTrace could not retrieve this view.') +
+    root.innerHTML = shell(pageTitle('Connection issue','Data unavailable','Slate XI could not retrieve this view.') +
       '<div class="statusBanner"><b>' + esc(error.message || String(error)) + '</b><span>Check the connection and try again.</span></div>' +
       '<button class="primaryButton" type="button" onclick="location.reload()">Retry</button>',
       '<section class="railSection"><p class="railCopy">The installed shell remains available while live data reconnects.</p></section>', 'errorRoute');

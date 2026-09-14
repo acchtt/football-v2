@@ -238,11 +238,11 @@ async function handleTest(request, env) {
   const { record } = await registryCall(env, "/get", { endpoint });
   if (!record) return json({ ok: false, error: "Push subscription is not registered" }, 404, env, request);
   await sendPush(env, record, {
-    title: "SlipTrace push test",
+    title: "Slate XI push test",
     body: "Background notifications are connected on this device.",
     type: "test",
     tag: "sliptrace-test",
-    url: `${SITE_URL}#today`,
+    url: `${SITE_URL}#board`,
     timestamp: Date.now(),
   });
   return json({ ok: true, delivered: true }, 200, env, request);

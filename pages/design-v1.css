@@ -39,10 +39,8 @@ img{display:block}
   display:flex;align-items:center;gap:18px
 }
 .brand{display:flex;align-items:center;gap:11px;flex:0 0 auto}
-.brandMark{
-  width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
-  background:var(--red);color:#10090b;font-size:12px;font-weight:950;letter-spacing:-.03em
-}
+.brandMark{width:40px;height:40px;display:block;flex:0 0 auto}
+.brandMark img{width:100%;height:100%;object-fit:contain}
 .brandWords{display:grid;gap:1px}
 .brandWords b{font-size:12px;letter-spacing:.13em}
 .brandWords small{color:var(--dim);font-size:10px;letter-spacing:.02em}
@@ -480,8 +478,8 @@ body{
 .pageTop p{font-size:13px;line-height:1.65}
 .sectionHead h2{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.08em}
 .sectionHead h2:before{
-  content:"";width:7px;height:7px;border-radius:2px;flex:0 0 auto;
-  background:linear-gradient(135deg,var(--cyan),var(--red));box-shadow:0 0 14px rgba(72,203,226,.28)
+  content:"";width:14px;height:2px;border-radius:2px;flex:0 0 auto;
+  background:linear-gradient(90deg,var(--cyan),var(--red))
 }
 .sectionHead span{font-size:10px}
 .competitionHead{min-height:42px}
@@ -492,11 +490,6 @@ body{
 .matchTime small,.matchScore small,.signalBadge small{font-size:10px}
 .matchScore strong{font-size:19px}
 .railCopy,.railEmpty{font-size:11px;line-height:1.65}
-.emptyState:before{
-  content:"◇";width:40px;height:40px;margin-bottom:4px;display:grid;place-items:center;
-  border:1px solid var(--line-strong);border-radius:12px;background:var(--surface-2);
-  color:var(--cyan);font-size:18px
-}
 
 
 /* Tactical scouting desk */
@@ -509,11 +502,7 @@ body{
     radial-gradient(circle at 92% 11%,rgba(255,79,97,.075),transparent 26rem);
   background-size:44px 44px,44px 44px,auto,auto
 }
-.brandMark{position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(255,79,97,.18)}
-.brandMark:after{
-  content:"";position:absolute;width:22px;height:22px;right:-10px;bottom:-10px;
-  border:1px solid rgba(8,11,15,.42);border-radius:50%
-}
+.brandMark{filter:drop-shadow(0 8px 14px rgba(72,203,226,.14))}
 .boardHomeRoute .pageTop{
   position:relative;min-height:112px;padding:20px 22px;overflow:hidden;align-items:center;
   border:1px solid var(--line);border-radius:var(--radius);
@@ -550,18 +539,14 @@ body{
 @keyframes boardCardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 .boardFixture{
   position:relative;z-index:1;min-height:104px;padding:13px 54px 13px 14px;
-  display:grid;grid-template-columns:112px minmax(330px,1fr) 112px 24px;align-items:center;gap:17px;
+  display:grid;grid-template-columns:84px minmax(330px,1fr) 112px 24px;align-items:center;gap:17px;
   border:0;background:transparent;transition:transform .16s ease,background .16s ease
 }
 .boardFixture:before{display:none}
 .boardFixture:hover{transform:translateY(-1px);background:rgba(255,255,255,.025)}
-.fixtureSignal{display:flex;align-items:center;gap:10px}
-.fixtureSignalIcon{
-  width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto;border-radius:11px;
-  border:1px solid currentColor;background:rgba(255,255,255,.025)
+.fixtureSignal{
+  display:grid;align-content:center;gap:3px;padding-left:12px;border-left:3px solid currentColor
 }
-.fixtureSignalIcon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}
-.fixtureSignal>div{display:grid;gap:1px}
 .fixtureSignal small{font-size:10px;font-weight:850;letter-spacing:.1em}
 .fixtureSignal strong{font-size:22px;line-height:1}
 .tier-focus .fixtureSignal{color:#ff7583}.tier-watchlist .fixtureSignal{color:#67d7e9}
@@ -571,7 +556,6 @@ body{
   color:var(--muted);font-size:9px
 }
 .fixtureCompetition img{width:15px;height:15px;object-fit:contain}
-.fixtureCompetition i{color:var(--cyan);font-size:8px;font-style:normal}
 .fixtureCompetition b{min-width:0;overflow:hidden;font-weight:680;white-space:nowrap;text-overflow:ellipsis}
 .fixtureTeams{
   min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
@@ -611,8 +595,7 @@ body{
   border:1px solid rgba(72,203,226,.13);border-radius:50%
 }
 .nextDecisionTop{position:relative;display:flex;align-items:center;justify-content:space-between}
-.nextSignal{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:850;letter-spacing:.09em}
-.nextSignal svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7}
+.nextSignal{padding-left:8px;border-left:2px solid currentColor;font-size:9px;font-weight:850;letter-spacing:.09em}
 .nextSignal.focus{color:#ff7583}.nextSignal.watch{color:#67d7e9}
 .nextDecisionTop>strong{font-size:22px;color:#f3f6f8}
 .nextTeams{position:relative;display:grid;grid-template-columns:1fr 22px 1fr;align-items:start;gap:5px}
@@ -630,14 +613,13 @@ body{
 .nextCountdown strong{color:var(--cyan);font-size:11px}
 .nextCountdown.live strong{color:#ff7583}
 .nextDecisionEmpty{min-height:170px;display:grid;place-content:center;justify-items:center;gap:5px;text-align:center}
-.nextDecisionEmpty>span{font-size:25px;color:var(--cyan)}
 .nextDecisionEmpty strong{font-size:13px}.nextDecisionEmpty small{color:var(--muted);font-size:10px}
 
 @media(max-width:1260px){
   :root{--rail:160px;--context:264px}
   .mainView{padding-left:22px;padding-right:22px}
   .matchRow{grid-template-columns:72px minmax(190px,1fr) 108px 78px;gap:10px}
-  .boardFixture{grid-template-columns:100px minmax(290px,1fr) 100px 20px;gap:12px}
+  .boardFixture{grid-template-columns:80px minmax(290px,1fr) 100px 20px;gap:12px}
   .fixtureTeams .teamLine{grid-template-columns:36px minmax(0,1fr)}
   .fixtureTeams .away{grid-template-columns:minmax(0,1fr) 36px}
   .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:36px;height:36px}
@@ -678,9 +660,8 @@ body{
     min-height:100px;padding:10px 40px 10px 9px;
     grid-template-columns:58px minmax(0,1fr) 72px;gap:8px
   }
-  .fixtureSignal{display:grid;justify-items:center;gap:4px}
-  .fixtureSignalIcon{width:30px;height:30px;border-radius:9px}.fixtureSignalIcon svg{width:18px;height:18px}
-  .fixtureSignal>div{justify-items:center}.fixtureSignal small{font-size:8px}.fixtureSignal strong{font-size:17px}
+  .fixtureSignal{justify-items:start;gap:2px;padding-left:7px}
+  .fixtureSignal small{font-size:8px}.fixtureSignal strong{font-size:17px}
   .fixtureMatch{gap:4px}
   .fixtureCompetition{justify-content:flex-start;margin-left:37px;font-size:8px}
   .fixtureCompetition img{width:13px;height:13px}

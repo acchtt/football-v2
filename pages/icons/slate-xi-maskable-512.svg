@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Slate XI</title>
+  <rect width="64" height="64" fill="#081016"/>
+  <circle cx="32" cy="32" r="19" fill="none" stroke="#45d2e7" stroke-width="2.5"/>
+  <path d="M32 13v38" fill="none" stroke="#45d2e7" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="3" fill="#081016" stroke="#45d2e7" stroke-width="2"/>
+  <path d="m19 22 8.5 20m0-20L19 42" fill="none" stroke="#45d2e7" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M44 22v20" fill="none" stroke="#ff596b" stroke-width="4" stroke-linecap="round"/>
+</svg>

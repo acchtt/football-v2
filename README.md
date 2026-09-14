@@ -1,6 +1,6 @@
 # football-v2
 
-SlipTrace Football Control now uses a hybrid deployment:
+Slate XI now uses a hybrid deployment:
 
 - GitHub Pages hosts the frontend UI from `pages/`.
 - GitHub Actions deploys the Pages site on frontend changes.

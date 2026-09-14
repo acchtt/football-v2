@@ -1,4 +1,4 @@
-// SlipTrace production configuration + BSD compatibility/runtime guard.
+// Slate XI production configuration + BSD compatibility/runtime guard.
 // Private credentials remain in the Cloudflare Worker.
 (() => {
   'use strict';

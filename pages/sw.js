@@ -1,24 +1,25 @@
-const CACHE='sliptrace-shell-v20';
+const CACHE='slate-xi-shell-v21';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
   BASE,
   asset('index.html'),
   asset('offline.html'),
-  asset('design-v1.css?v=7'),
+  asset('design-v1.css?v=8'),
   asset('alerts-center.css?v=2'),
-  asset('manifest.webmanifest?v=4'),
-  asset('icons/sliptrace-192.png'),
-  asset('icons/sliptrace-512.png'),
-  asset('icons/sliptrace-maskable-512.png'),
+  asset('manifest.webmanifest?v=5'),
+  asset('icons/slate-xi.svg'),
+  asset('icons/slate-xi-192.svg'),
+  asset('icons/slate-xi-512.svg'),
+  asset('icons/slate-xi-maskable-512.svg'),
   asset('ict-slate-fetch.js?v=1'),
   asset('config.js?v=5'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
-  asset('app-v2.js?v=7'),
+  asset('app-v2.js?v=8'),
   asset('status-sync.js?v=4'),
-  asset('pwa-v2.js?v=3'),
-  asset('alerts-center.js?v=2')
+  asset('pwa-v2.js?v=4'),
+  asset('alerts-center.js?v=3')
 ];
 
 self.addEventListener('install',event=>{
@@ -40,10 +41,10 @@ self.addEventListener('activate',event=>{
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
   if(event.data?.type==='TEST_NOTIFICATION'){
-    event.waitUntil(self.registration.showNotification('SlipTrace test',{
+    event.waitUntil(self.registration.showNotification('Slate XI test',{
       body:'Notifications are working on this device.',
-      icon:asset('icons/sliptrace-192.png'),
-      badge:asset('icons/sliptrace-192.png'),
+      icon:asset('icons/slate-xi-192.svg'),
+      badge:asset('icons/slate-xi-192.svg'),
       tag:'sliptrace-local-test',
       data:{url:asset('#board')}
     }));
@@ -92,12 +93,12 @@ self.addEventListener('push',event=>{
   let payload={};
   try{payload=event.data?.json()||{};}catch{payload={body:event.data?.text()||''};}
   const matchId=String(payload.matchId||payload.match_id||'');
-  const title=payload.title||'SlipTrace Football';
+  const title=payload.title||'Slate XI Football';
   const destination=payload.url||self.registration.scope+(matchId?'#match/'+encodeURIComponent(matchId):'#board');
   const options={
     body:payload.body||'A selected match has an update.',
-    icon:asset('icons/sliptrace-192.png'),
-    badge:asset('icons/sliptrace-192.png'),
+    icon:asset('icons/slate-xi-192.svg'),
+    badge:asset('icons/slate-xi-192.svg'),
     tag:payload.tag||'sliptrace-'+(matchId||'update'),
     renotify:true,
     requireInteraction:false,

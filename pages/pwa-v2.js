@@ -118,7 +118,7 @@
       await api('/api/push/unsubscribe',{method:'POST',body:JSON.stringify({endpoint:sub.endpoint})});
       await sub.unsubscribe().catch(()=>false);
       return {ok:true,unsubscribed:true};
-    }catch(error){console.warn('SlipTrace push sync failed',error);return {ok:false,reason:'sync',error};}
+    }catch(error){console.warn('Slate XI push sync failed',error);return {ok:false,reason:'sync',error};}
   }
 
   async function toggleFollow(id,title,href,button){
@@ -132,11 +132,11 @@
     try{
       const result=await enablePushFromGesture();
       if(result.ok)toast('Match alerts enabled.');
-      else if(result.reason==='ios-install')toast('Match saved. Install SlipTrace to Home Screen before enabling iPhone push.');
+      else if(result.reason==='ios-install')toast('Match saved. Install Slate XI to Home Screen before enabling iPhone push.');
       else if(result.reason==='denied')toast('Match saved, but notification permission is blocked.');
       else if(result.reason==='unsupported')toast('Match saved. This browser does not support Web Push.');
       else toast('Match saved. Push service is not ready yet.');
-    }catch(error){console.warn('SlipTrace push enable failed',error);toast('Match saved, but push setup failed. Open PWA status for details.');}
+    }catch(error){console.warn('Slate XI push enable failed',error);toast('Match saved, but push setup failed. Open PWA status for details.');}
     button?.removeAttribute('aria-busy');decorate();
   }
 
@@ -217,13 +217,13 @@
     let sheet=$('.pwaSheet');if(!sheet){sheet=document.createElement('div');sheet.className='pwaSheet hidden';document.body.appendChild(sheet);}
     const d=await diagnostics();
     let instructions='';
-    if(isStandalone())instructions='SlipTrace is already running as an installed web app.';
+    if(isStandalone())instructions='Slate XI is already running as an installed web app.';
     else if(isiOS())instructions='On iPhone/iPad, open the site in Safari (or another browser on iOS 16.4+), tap Share, then choose Add to Home Screen. Open the new Home Screen app before enabling push.';
     else if(isAndroid()&&isLikelyWebView())instructions='This appears to be an in-app browser. Open the page in the full Chrome app first; PWA installation is commonly disabled inside embedded browsers.';
-    else if(isAndroid())instructions='Open SlipTrace in the full Chrome app, then use Chrome menu → Install and create shortcut → Install app. If the native prompt is available, the Install button above can trigger the same browser installer.';
+    else if(isAndroid())instructions='Open Slate XI in the full Chrome app, then use Chrome menu → Install and create shortcut → Install app. If the native prompt is available, the Install button above can trigger the same browser installer.';
     else instructions='Use your browser’s install or add-to-home-screen command. Installation support varies by desktop browser.';
     const androidHelp=isAndroid()?`<div class="pwaTrouble"><strong>Android / Xiaomi install check</strong><ol><li>Make sure this page is open in the full Chrome app, not the ChatGPT in-app browser.</li><li>On Xiaomi / HyperOS: Settings → Apps → Manage apps → Chrome → Other permissions → <b>Home screen shortcuts</b> → Allow.</li><li>Return to Chrome and use ⋮ → Install and create shortcut → Install app.</li><li>If Chrome explicitly reports a WebAPK install failure, verify Google Play Store / Google Play services are signed in and working, then retry.</li></ol></div>`:'';
-    sheet.innerHTML=`<div class="pwaSheetCard" role="dialog" aria-modal="true" aria-labelledby="pwaSheetTitle"><h3 id="pwaSheetTitle">${mode==='push'?'Push notification status':'Install SlipTrace'}</h3><p>${instructions}</p><div class="pwaChecks">${checkRow('Secure HTTPS',d.secureContext?'Ready':'Unavailable',d.secureContext?'ok':'bad')}${checkRow('Web app manifest',d.manifest?'Ready':'Issue',d.manifest?'ok':'bad')}${checkRow('192×192 icon',d.icon192?'Ready':'Issue',d.icon192?'ok':'bad')}${checkRow('512×512 icon',d.icon512?'Ready':'Issue',d.icon512?'ok':'bad')}${checkRow('Service worker',d.serviceWorker==='ready'||d.serviceWorker==='registered'?'Ready':'Issue',d.serviceWorker==='ready'||d.serviceWorker==='registered'?'ok':'bad')}${checkRow('Browser context',d.webView?'In-app browser':'Full browser',d.webView?'warn':'ok')}${checkRow('Native install prompt',d.installPrompt?'Available':'Not offered',d.installPrompt?'ok':'warn')}${checkRow('Web Push API',d.pushApi?'Supported':'Unsupported',d.pushApi?'ok':'warn')}${checkRow('Notification permission',d.notificationPermission,d.notificationPermission==='granted'?'ok':d.notificationPermission==='denied'?'bad':'warn')}${checkRow('Push subscription',d.subscription?'Active':'Not active',d.subscription?'ok':'warn')}${checkRow('Push backend',d.backend?'Ready':'Unavailable',d.backend?'ok':'bad')}</div>${d.manifestError?`<p class="pwaDiagError">Manifest check: ${String(d.manifestError).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</p>`:''}${androidHelp}<div class="pwaSheetActions"><button type="button" data-copy>Copy link</button><button type="button" data-copy-diag>Copy diagnostics</button><button type="button" class="primary" data-test ${d.subscription&&d.backend?'':'disabled'}>Send test push</button><button type="button" data-close>Close</button></div></div>`;
+    sheet.innerHTML=`<div class="pwaSheetCard" role="dialog" aria-modal="true" aria-labelledby="pwaSheetTitle"><h3 id="pwaSheetTitle">${mode==='push'?'Push notification status':'Install Slate XI'}</h3><p>${instructions}</p><div class="pwaChecks">${checkRow('Secure HTTPS',d.secureContext?'Ready':'Unavailable',d.secureContext?'ok':'bad')}${checkRow('Web app manifest',d.manifest?'Ready':'Issue',d.manifest?'ok':'bad')}${checkRow('192×192 icon',d.icon192?'Ready':'Issue',d.icon192?'ok':'bad')}${checkRow('512×512 icon',d.icon512?'Ready':'Issue',d.icon512?'ok':'bad')}${checkRow('Service worker',d.serviceWorker==='ready'||d.serviceWorker==='registered'?'Ready':'Issue',d.serviceWorker==='ready'||d.serviceWorker==='registered'?'ok':'bad')}${checkRow('Browser context',d.webView?'In-app browser':'Full browser',d.webView?'warn':'ok')}${checkRow('Native install prompt',d.installPrompt?'Available':'Not offered',d.installPrompt?'ok':'warn')}${checkRow('Web Push API',d.pushApi?'Supported':'Unsupported',d.pushApi?'ok':'warn')}${checkRow('Notification permission',d.notificationPermission,d.notificationPermission==='granted'?'ok':d.notificationPermission==='denied'?'bad':'warn')}${checkRow('Push subscription',d.subscription?'Active':'Not active',d.subscription?'ok':'warn')}${checkRow('Push backend',d.backend?'Ready':'Unavailable',d.backend?'ok':'bad')}</div>${d.manifestError?`<p class="pwaDiagError">Manifest check: ${String(d.manifestError).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</p>`:''}${androidHelp}<div class="pwaSheetActions"><button type="button" data-copy>Copy link</button><button type="button" data-copy-diag>Copy diagnostics</button><button type="button" class="primary" data-test ${d.subscription&&d.backend?'':'disabled'}>Send test push</button><button type="button" data-close>Close</button></div></div>`;
     sheet.addEventListener('click',e=>{if(e.target===sheet||e.target.closest('[data-close]'))sheet.classList.add('hidden');},{once:false});
     $('[data-copy]',sheet)?.addEventListener('click',async e=>{try{await navigator.clipboard.writeText(location.href);e.currentTarget.textContent='Copied';}catch{toast('Could not copy the link.');}});
     $('[data-copy-diag]',sheet)?.addEventListener('click',async e=>{try{const report={...d,url:location.href,userAgent:navigator.userAgent,timestamp:new Date().toISOString()};await navigator.clipboard.writeText(JSON.stringify(report,null,2));e.currentTarget.textContent='Diagnostics copied';}catch{toast('Could not copy diagnostics.');}});
@@ -240,12 +240,12 @@
     const host=$('.headerInner');if(!host)return;
     let btn=$('.pwaInstallBtn',host);
     if(!btn){
-      btn=document.createElement('button');btn.type='button';btn.className='pwaInstallBtn';btn.textContent='Install';btn.setAttribute('aria-label','Install SlipTrace web app');
+      btn=document.createElement('button');btn.type='button';btn.className='pwaInstallBtn';btn.textContent='Install';btn.setAttribute('aria-label','Install Slate XI web app');
       btn.addEventListener('click',async()=>{
-        if(isStandalone()){toast('SlipTrace is already installed.');return;}
+        if(isStandalone()){toast('Slate XI is already installed.');return;}
         if(installPrompt){
           const prompt=installPrompt;installPrompt=null;
-          try{await prompt.prompt();const choice=await prompt.userChoice;if(choice?.outcome==='accepted')toast('Installing SlipTrace…');else showPwaSheet('install');}
+          try{await prompt.prompt();const choice=await prompt.userChoice;if(choice?.outcome==='accepted')toast('Installing Slate XI…');else showPwaSheet('install');}
           catch(error){console.warn('Install prompt failed',error);showPwaSheet('install');}
           injectInstallButton();return;
         }
@@ -267,7 +267,7 @@
   }
 
   window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;injectInstallButton();});
-  window.addEventListener('appinstalled',()=>{installPrompt=null;injectInstallButton();toast('SlipTrace installed.');});
+  window.addEventListener('appinstalled',()=>{installPrompt=null;injectInstallButton();toast('Slate XI installed.');});
   window.addEventListener('hashchange',()=>requestAnimationFrame(decorate));
   window.addEventListener('sliptrace:followed-changed',()=>{requestAnimationFrame(decorate);syncPushSelection();});
   window.addEventListener('sliptrace:alert-settings-changed',()=>syncPushSelection());
@@ -276,7 +276,7 @@
   const app=document.getElementById('app');
   if(app)new MutationObserver(()=>requestAnimationFrame(decorate)).observe(app,{childList:true,subtree:true});
 
-  registerSW().then(()=>syncPushSelection()).catch(error=>console.warn('SlipTrace service worker registration failed',error));
+  registerSW().then(()=>syncPushSelection()).catch(error=>console.warn('Slate XI service worker registration failed',error));
   getPushConfig(true);
   window.SlipTracePWA={
     diagnostics,

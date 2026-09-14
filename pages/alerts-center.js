@@ -56,7 +56,7 @@
       if (!response.ok) throw new Error(`Push sync HTTP ${response.status}`);
       return { ok: true };
     } catch (error) {
-      console.warn('SlipTrace alert settings sync failed', error);
+      console.warn('Slate XI alert settings sync failed', error);
       return { ok: false, reason: 'sync', error };
     } finally {
       syncing = false;
@@ -128,21 +128,21 @@
   function renderSetup(status) {
     const d = status.d;
     if (d?.subscription && d?.backend) {
-      return '<div class="alertsSetup is-active"><div><strong>Device alerts are active</strong><small>SlipTrace can notify you even when the app is closed.</small></div><span aria-hidden="true">✓</span></div>';
+      return '<div class="alertsSetup is-active"><div><strong>Device alerts are active</strong><small>Slate XI can notify you even when the app is closed.</small></div><span aria-hidden="true">✓</span></div>';
     }
     let text = 'Enable alerts on this device';
     let note = 'Followed matches will receive the alert types selected below.';
     let disabled = false;
     if (!ids().length) { text = 'Follow a match first'; note = 'Choose at least one match before creating a push subscription.'; disabled = true; }
-    else if (d?.notificationPermission === 'denied') { text = 'Notifications are blocked'; note = 'Allow notifications for SlipTrace in your browser or site settings.'; disabled = true; }
-    else if (d && !d.pushApi) { text = 'Web Push unsupported'; note = 'Open SlipTrace in a browser that supports Web Push.'; disabled = true; }
+    else if (d?.notificationPermission === 'denied') { text = 'Notifications are blocked'; note = 'Allow notifications for Slate XI in your browser or site settings.'; disabled = true; }
+    else if (d && !d.pushApi) { text = 'Web Push unsupported'; note = 'Open Slate XI in a browser that supports Web Push.'; disabled = true; }
     else if (d && !d.backend) { text = 'Push service unavailable'; note = 'The server is not ready for subscriptions right now.'; disabled = true; }
     return `<div class="alertsSetup"><div><strong>Background alerts</strong><small>${escapeHtml(note)}</small></div><button type="button" data-enable-push ${disabled ? 'disabled' : ''}>${escapeHtml(text)}</button></div>`;
   }
 
   function enableFailureMessage(result) {
     if (!result) return 'Could not enable alerts.';
-    if (result.reason === 'ios-install') return 'Install SlipTrace to your Home Screen, open the installed app, then enable alerts.';
+    if (result.reason === 'ios-install') return 'Install Slate XI to your Home Screen, open the installed app, then enable alerts.';
     if (result.reason === 'denied') return 'Notification permission is blocked in the browser.';
     if (result.reason === 'unsupported') return 'This browser does not support Web Push.';
     if (result.reason === 'backend') return 'The push backend is not ready.';
