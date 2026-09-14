@@ -26,14 +26,49 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Generate PWA raster icons
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v rsvg-convert >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq librsvg2-bin
+          fi
+          rsvg-convert -w 192 -h 192 pages/icons/sliptrace.svg -o pages/icons/sliptrace-192.png
+          rsvg-convert -w 512 -h 512 pages/icons/sliptrace.svg -o pages/icons/sliptrace-512.png
+          rsvg-convert -w 512 -h 512 pages/icons/sliptrace-maskable.svg -o pages/icons/sliptrace-maskable-512.png
+
+      - name: Validate PWA artifact
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('pages')
+          manifest=json.loads((root/'manifest.webmanifest').read_text(encoding='utf-8'))
+          assert manifest['name'] and manifest['short_name']
+          assert manifest['start_url'].startswith('./')
+          assert manifest['display'] in {'standalone','fullscreen','minimal-ui'}
+          sizes={i.get('sizes') for i in manifest['icons']}
+          assert '192x192' in sizes and '512x512' in sizes
+          for icon in manifest['icons']:
+              p=root/icon['src'].replace('./','',1)
+              assert p.exists(), f'missing manifest icon: {p}'
+          for required in ['index.html','sw.js','offline.html','pwa-v2.js','mobile-v2.css']:
+              assert (root/required).exists(), f'missing {required}'
+          print('PWA artifact validated')
+          PY
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
           path: pages
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
