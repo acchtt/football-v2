@@ -2,10 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>SlipTrace Football</title>
   <meta name="description" content="SlipTrace football matchday, model board, standings and live data powered by BSD." />
   <meta name="theme-color" content="#090b0f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SlipTrace" />
+  <link rel="manifest" href="./manifest.webmanifest?v=1" />
+  <link rel="icon" href="./icons/sliptrace.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://football-v2.acchtt.workers.dev" crossorigin />
   <link rel="preconnect" href="https://sports.bzzoiro.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,6 +21,7 @@
   <link rel="stylesheet" href="./app-polish.css?v=3" />
   <link rel="stylesheet" href="./graphics-v2.css?v=1" />
   <link rel="stylesheet" href="./graphics-v3.css?v=1" />
+  <link rel="stylesheet" href="./mobile-v1.css?v=1" />
 </head>
 <body>
   <main id="app" aria-live="polite"></main>
@@ -27,5 +34,6 @@
   <script src="./strict-board-guard.js?v=4" defer></script>
   <script src="./status-sync.js?v=4" defer></script>
   <script src="./graphics-v3.js?v=1" defer></script>
+  <script src="./pwa-v1.js?v=1" defer></script>
 </body>
 </html>
