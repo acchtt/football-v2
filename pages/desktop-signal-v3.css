@@ -1,0 +1,109 @@
+/* SlipTrace desktop signal v3 — compact two-row model badge */
+
+@media (min-width:1101px){
+  body.desktopFrontV2 .matchMeta{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    text-align:left!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:29px 25px!important;
+    width:112px!important;
+    min-width:112px!important;
+    height:54px!important;
+    min-height:54px!important;
+    padding:0!important;
+    border:1px solid #2a343d!important;
+    border-radius:5px!important;
+    overflow:hidden!important;
+    background:#0d1217!important;
+    box-shadow:none!important;
+    font-size:0!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge:before,
+  body.desktopFrontV2 .matchMeta .signalBadge:after{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    min-height:0!important;
+    padding:0 10px!important;
+    line-height:1!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge:before{
+    content:attr(data-grade)!important;
+    border:0!important;
+    border-bottom:1px solid #2a343d!important;
+    background:#171d23!important;
+    color:#eef2f5!important;
+    font-size:14px!important;
+    font-weight:800!important;
+    letter-spacing:-.015em!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge:after{
+    content:attr(data-tier)!important;
+    background:#0d1217!important;
+    color:#8e9ba6!important;
+    font-size:9px!important;
+    font-weight:800!important;
+    letter-spacing:.085em!important;
+    text-transform:uppercase!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge.grade-a:before{
+    background:#3a2026!important;
+    color:#ff9aa5!important;
+  }
+  body.desktopFrontV2 .matchMeta .signalBadge.grade-b:before{
+    background:#14343c!important;
+    color:#91e6f1!important;
+  }
+  body.desktopFrontV2 .matchMeta .signalBadge.grade-c:before{
+    background:#29331f!important;
+    color:#d3e99a!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge[data-tier*="FOCUS"]{
+    border-color:#553039!important;
+  }
+  body.desktopFrontV2 .matchMeta .signalBadge[data-tier*="FOCUS"]:before{
+    border-bottom-color:#553039!important;
+  }
+  body.desktopFrontV2 .matchMeta .signalBadge[data-tier*="FOCUS"]:after{
+    color:#ef7481!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge[data-tier*="WATCHLIST"]{
+    border-color:#28505a!important;
+  }
+  body.desktopFrontV2 .matchMeta .signalBadge[data-tier*="WATCHLIST"]:before{
+    border-bottom-color:#28505a!important;
+  }
+  body.desktopFrontV2 .matchMeta .signalBadge[data-tier*="WATCHLIST"]:after{
+    color:#68cfdf!important;
+  }
+
+  body.desktopFrontV2 .matchMeta .signalBadge:hover{
+    border-color:#46525e!important;
+    background:#10161c!important;
+  }
+
+  body.desktopFrontV2[data-front-density="compact"] .matchMeta .signalBadge{
+    width:104px!important;
+    min-width:104px!important;
+    height:50px!important;
+    min-height:50px!important;
+    grid-template-rows:27px 23px!important;
+  }
+
+  body.desktopFrontV2[data-front-density="analyst"] .matchMeta .signalBadge{
+    width:118px!important;
+    min-width:118px!important;
+  }
+}
