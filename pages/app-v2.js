@@ -358,7 +358,12 @@
   }
   function boardStatus(row) {
     const event = eventForBoardRow(row);
-    return event ? statusKey(event) : 'upcoming';
+    if (event) return statusKey(event);
+    const declared = String(row && (row.status || row.matchStatus) || '').toLowerCase();
+    if (['finished','ft','ended','complete','completed','final'].includes(declared)) return 'finished';
+    const kickoff = Date.parse(row && (row.kickoff || row.displayKickoff));
+    if (Number.isFinite(kickoff) && Date.now() > kickoff + 3 * 60 * 60 * 1000) return 'finished';
+    return 'upcoming';
   }
   function boardMatchBlock(row) {
     const event = eventForBoardRow(row);
@@ -428,10 +433,11 @@
     catch { return []; }
   }
   function matchdayContext(events) {
-    const boardRows = boardRowsForDate();
+    const boardRows = boardRowsForDate().filter(function (row) { return boardStatus(row) !== 'finished'; });
     const focusRows = boardRows.filter(function (row) { return String(row.tier).toUpperCase() === 'FOCUS'; });
     const liveCount = events.filter(isLive).length;
-    const followed = currentFollowed();
+    const activeIds = new Set(events.map(function (event) { return String(eventId(event) || ''); }).filter(Boolean));
+    const followed = currentFollowed().filter(function (item) { return activeIds.has(String(item.id || '')); });
     let focusHtml = focusRows.slice(0, 5).map(function (row, index) {
       const event = eventForBoardRow(row);
       return '<a class="focusItem" href="' + (event && eventId(event) ? '#match/' + eventId(event) : '#board') + '">' +
@@ -449,42 +455,23 @@
         return '<a class="followedItem" href="' + esc(item.href || '#board') + '">' + esc(item.title || 'Selected match') + '</a>';
       }).join('') : '<button class="railAction" type="button" data-open-alerts>Choose matches to receive alerts</button>') + '</section>';
   }
-  function boardOverview(focusCount, watchCount, counts) {
-    const total = Math.max(counts.all, 1);
-    const focusAngle = Math.round(focusCount / total * 360);
-    const focusWidth = Math.round(focusCount / total * 100);
-    const watchWidth = Math.round(watchCount / total * 100);
-    return '<section class="boardOverview" aria-label="Board overview">' +
-      '<div class="signalVisual"><div class="signalRing" style="--focus-angle:' + focusAngle + 'deg"><div><strong>' +
-      counts.all + '</strong><span>board matches</span></div></div><div class="signalLegend">' +
-      '<div><i class="focusDot"></i><span>Focus</span><strong>' + focusCount + '</strong></div>' +
-      '<div><i class="watchDot"></i><span>Watchlist</span><strong>' + watchCount + '</strong></div></div></div>' +
-      '<div class="overviewDetails"><span class="visualEyebrow">Signal distribution</span>' +
-      '<div class="signalBar"><div><span>Focus</span><b>' + focusCount + '</b></div><i><em class="focusFill" style="width:' + focusWidth + '%"></em></i></div>' +
-      '<div class="signalBar"><div><span>Watchlist</span><b>' + watchCount + '</b></div><i><em class="watchFill" style="width:' + watchWidth + '%"></em></i></div>' +
-      '<div class="stateGraphics">' +
-      '<div class="stateGraphic live"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"></path></svg><span>Live now</span><strong>' + counts.live + '</strong></div>' +
-      '<div class="stateGraphic upcoming"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg><span>Upcoming</span><strong>' + counts.upcoming + '</strong></div>' +
-      '<div class="stateGraphic finished"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4 4L19 7"></path><circle cx="12" cy="12" r="9"></circle></svg><span>Finished</span><strong>' + counts.finished + '</strong></div>' +
-      '</div></div></section>';
-  }
-
   function renderMatchday() {
     state.route = 'board';
+    if (state.statusFilter === 'finished') {
+      state.statusFilter = 'all';
+      writeStore('sliptrace.statusFilter.v3', 'all', sessionStorage);
+    }
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
-      return tier === 'FOCUS' || tier === 'WATCHLIST';
+      return (tier === 'FOCUS' || tier === 'WATCHLIST') && boardStatus(row) !== 'finished';
     }).sort(function (a, b) {
       return (Date.parse(a.kickoff || a.displayKickoff) || 0) - (Date.parse(b.kickoff || b.displayKickoff) || 0);
     });
     const counts = {
       all: boardRows.length,
       live: boardRows.filter(function (row) { return boardStatus(row) === 'live'; }).length,
-      upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length,
-      finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length
+      upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length
     };
-    const focusCount = boardRows.filter(function (row) { return String(row.tier || '').toUpperCase() === 'FOCUS'; }).length;
-    const watchCount = boardRows.filter(function (row) { return String(row.tier || '').toUpperCase() === 'WATCHLIST'; }).length;
     const filtered = boardRows.filter(function (row) {
       if (state.statusFilter !== 'all' && boardStatus(row) !== state.statusFilter) return false;
       const tier = String(row.tier || '').toUpperCase();
@@ -502,7 +489,7 @@
         '" aria-pressed="' + (state.signalFilter === key) + '">' + label + '</button>';
     };
     const controls = '<div class="filterBar"><div class="statusFilters" aria-label="Match status">' +
-      statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','Finished') +
+      statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') +
       '</div><div class="signalFilters" aria-label="Model signal">' +
       signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
     const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true">↻</span> Sync board</button>';
@@ -510,8 +497,7 @@
     const content = pageTitle('Model board', title,
       'Focus and Watchlist decisions first, enriched with BSD score and match status. Times shown in ICT.', actions) +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      dateStrip() +
-      boardOverview(focusCount, watchCount, counts) + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
+      dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       (filtered.length ? groupedBoardRows(filtered) : '<div class="emptyState"><strong>No matching board entries</strong><span>Try another status, signal, or date.</span></div>') +
       '</section>';
     root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
