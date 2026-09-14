@@ -1,4 +1,4 @@
-const CACHE='sliptrace-shell-v1';
+const CACHE='sliptrace-shell-v2';
 const BASE=new URL('./',self.location.href).pathname;
 const SHELL=[
   BASE,
@@ -8,7 +8,17 @@ const SHELL=[
   `${BASE}graphics-v2.css?v=1`,
   `${BASE}graphics-v3.css?v=1`,
   `${BASE}mobile-v1.css?v=1`,
-  `${BASE}manifest.webmanifest`,
+  `${BASE}ict-slate-fetch.js?v=1`,
+  `${BASE}config.js?v=5`,
+  `${BASE}strict-board-filter.js?v=2`,
+  `${BASE}canonical-live-source.js?v=2`,
+  `${BASE}app-v2.js?v=1`,
+  `${BASE}matchday-polish.js?v=5`,
+  `${BASE}strict-board-guard.js?v=4`,
+  `${BASE}status-sync.js?v=4`,
+  `${BASE}graphics-v3.js?v=1`,
+  `${BASE}pwa-v1.js?v=1`,
+  `${BASE}manifest.webmanifest?v=1`,
   `${BASE}icons/sliptrace.svg`,
   `${BASE}icons/sliptrace-maskable.svg`
 ];
