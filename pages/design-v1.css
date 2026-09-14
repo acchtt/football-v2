@@ -534,28 +534,7 @@ body{
 }
 .boardHomeRoute .eyebrow{color:#75dced}
 .boardHomeRoute .matchSection{border-color:#2a3844;background:rgba(9,14,19,.84)}
-.boardCompetition+.boardCompetition{border-top:1px solid #2a3844}
-.boardCompetitionHead{
-  position:relative;min-height:52px;padding:0 16px;overflow:hidden;
-  background:linear-gradient(90deg,rgba(72,203,226,.065),transparent 55%),#0b1016
-}
-.boardCompetitionHead:after{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:linear-gradient(var(--cyan),var(--red))
-}
-.leagueEmblem{
-  width:31px;height:31px;display:grid;place-items:center;flex:0 0 auto;
-  border:1px solid var(--line-strong);border-radius:9px;background:#111923
-}
-.leagueEmblem img{width:22px;height:22px;object-fit:contain}
-.leagueEmblem.fallback{color:var(--cyan);font-size:11px}
-.boardCompetitionHead>div{display:grid;gap:2px}
-.boardCompetitionHead strong{font-size:13px;letter-spacing:.01em}
-.boardCompetitionHead span{font-size:10px}
-.boardCompetitionHead a{
-  position:relative;z-index:1;padding:6px 9px;border:1px solid #2d424e;border-radius:7px;
-  background:rgba(72,203,226,.045)
-}
+
 .boardMatchList{display:grid;gap:9px;padding:10px;background:rgba(5,9,13,.54)}
 .boardMatchCard{
   position:relative;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#10171f;
@@ -586,6 +565,14 @@ body{
 .fixtureSignal small{font-size:10px;font-weight:850;letter-spacing:.1em}
 .fixtureSignal strong{font-size:22px;line-height:1}
 .tier-focus .fixtureSignal{color:#ff7583}.tier-watchlist .fixtureSignal{color:#67d7e9}
+.fixtureMatch{min-width:0;display:grid;gap:9px}
+.fixtureCompetition{
+  min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;
+  color:var(--muted);font-size:9px
+}
+.fixtureCompetition img{width:15px;height:15px;object-fit:contain}
+.fixtureCompetition i{color:var(--cyan);font-size:8px;font-style:normal}
+.fixtureCompetition b{min-width:0;overflow:hidden;font-weight:680;white-space:nowrap;text-overflow:ellipsis}
 .fixtureTeams{
   min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
   align-items:center;gap:10px
@@ -685,9 +672,6 @@ body{
   }
   .boardHomeRoute .pageTop h1{font-size:27px}
   .boardHomeRoute .pageTop:before{right:-42px}.boardHomeRoute .pageTop:after{right:39px}
-  .boardCompetitionHead{min-height:49px;padding:0 11px}
-  .boardCompetitionHead a{display:none}
-  .leagueEmblem{width:29px;height:29px}.leagueEmblem img{width:20px;height:20px}
   .boardMatchList{gap:7px;padding:7px}
   .boardMatchCard{border-radius:10px}
   .matchRow.boardFixture{
@@ -697,6 +681,9 @@ body{
   .fixtureSignal{display:grid;justify-items:center;gap:4px}
   .fixtureSignalIcon{width:30px;height:30px;border-radius:9px}.fixtureSignalIcon svg{width:18px;height:18px}
   .fixtureSignal>div{justify-items:center}.fixtureSignal small{font-size:8px}.fixtureSignal strong{font-size:17px}
+  .fixtureMatch{gap:4px}
+  .fixtureCompetition{justify-content:flex-start;margin-left:37px;font-size:8px}
+  .fixtureCompetition img{width:13px;height:13px}
   .fixtureTeams{grid-template-columns:1fr;gap:5px}
   .fixtureVersus{display:none}
   .fixtureTeams .teamLine,.fixtureTeams .away{grid-template-columns:30px minmax(0,1fr);gap:7px}

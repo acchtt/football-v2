@@ -365,6 +365,10 @@
     if (Number.isFinite(kickoff) && Date.now() > kickoff + 3 * 60 * 60 * 1000) return 'finished';
     return 'upcoming';
   }
+  function boardKickoff(row) {
+    const event = eventForBoardRow(row);
+    return event ? eventKickoff(event) : row && (row.kickoff || row.displayKickoff);
+  }
   function boardMatchBlock(row, index) {
     const event = eventForBoardRow(row);
     const id = event && eventId(event);
@@ -376,7 +380,9 @@
       home: teamName(event, 'home'),
       away: teamName(event, 'away')
     } : splitMatch(row.match);
-    const kickoff = event ? eventKickoff(event) : row.kickoff || row.displayKickoff;
+    const kickoff = boardKickoff(row);
+    const competition = row.competition || (event && leagueName(event)) || 'Competition';
+    const lid = event && leagueId(event);
     const primary = status === 'live' ? scoreText(event) : formatTime(kickoff);
     const secondary = status === 'live' ? liveClock(event) : 'ICT kickoff';
     const statusName = status === 'live' ? 'Live' : 'Upcoming';
@@ -392,34 +398,20 @@
     return '<article class="boardMatchCard ' + tierClass + '" style="--order:' + (index || 0) + '">' + open +
       '<div class="fixtureSignal"><span class="fixtureSignalIcon">' + signalIcon + '</span><div><small>' + esc(tier) +
       '</small><strong>' + esc(grade) + '</strong></div></div>' +
-      '<div class="fixtureTeams"><div class="teamLine home">' +
+      '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
       '<span class="fixtureVersus">VS</span><div class="teamLine away">' +
       crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
+      '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '<i aria-hidden="true">◆</i>') +
+      '<b>' + esc(competition) + '</b></span></div>' +
       '<div class="fixtureState"><span class="fixtureStatus ' + status + '">' + stateIcon + esc(statusName) + '</span>' +
       '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small></div>' +
       (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
       close + '</article>';
   }
-  function groupedBoardRows(boardRows) {
-    const groups = new Map();
-    boardRows.forEach(function (row) {
-      const key = row.competition || 'Other';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(row);
-    });
-    let html = '';
-    groups.forEach(function (group, competition) {
-      const event = eventForBoardRow(group[0]);
-      const lid = event && leagueId(event);
-      html += '<section class="competitionGroup boardCompetition"><header class="competitionHead boardCompetitionHead">' +
-        (lid ? '<span class="leagueEmblem"><img src="' + image('league', lid) + '" alt="" loading="lazy"></span>' :
-          '<span class="leagueEmblem fallback" aria-hidden="true">◆</span>') +
-        '<div><strong>' + esc(competition) + '</strong><span>' + group.length + ' active decision' + (group.length === 1 ? '' : 's') + '</span></div>' +
-        (lid ? '<a href="#league/' + lid + '">Open league</a>' : '') + '</header>' +
-        '<div class="matchList boardMatchList">' + group.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
-    });
-    return html;
+  function boardMatchList(boardRows) {
+    return '<div class="matchList boardMatchList chronologicalBoardList">' +
+      boardRows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div>';
   }
 
   function groupedMatches(events) {
@@ -473,7 +465,7 @@
       const aFocus = String(a.tier || '').toUpperCase() === 'FOCUS' ? 0 : 1;
       const bFocus = String(b.tier || '').toUpperCase() === 'FOCUS' ? 0 : 1;
       if (aFocus !== bFocus) return aFocus - bFocus;
-      return (Date.parse(a.kickoff || a.displayKickoff) || Infinity) - (Date.parse(b.kickoff || b.displayKickoff) || Infinity);
+      return (Date.parse(boardKickoff(a)) || Infinity) - (Date.parse(boardKickoff(b)) || Infinity);
     });
     const next = boardRows[0] || null;
     const nextEvent = next && eventForBoardRow(next);
@@ -517,7 +509,12 @@
       const tier = String(row.tier || '').toUpperCase();
       return (tier === 'FOCUS' || tier === 'WATCHLIST') && boardStatus(row) !== 'finished';
     }).sort(function (a, b) {
-      return (Date.parse(a.kickoff || a.displayKickoff) || 0) - (Date.parse(b.kickoff || b.displayKickoff) || 0);
+      const left = Date.parse(boardKickoff(a));
+      const right = Date.parse(boardKickoff(b));
+      if (!Number.isFinite(left) && !Number.isFinite(right)) return 0;
+      if (!Number.isFinite(left)) return 1;
+      if (!Number.isFinite(right)) return -1;
+      return left - right;
     });
     const counts = {
       all: boardRows.length,
@@ -550,7 +547,7 @@
       'Focus and Watchlist decisions first, enriched with BSD score and match status. Times shown in ICT.', actions) +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
-      (filtered.length ? groupedBoardRows(filtered) : '<div class="emptyState"><strong>No matching board entries</strong><span>Try another status, signal, or date.</span></div>') +
+      (filtered.length ? boardMatchList(filtered) : '<div class="emptyState"><strong>No matching board entries</strong><span>Try another status, signal, or date.</span></div>') +
       '</section>';
     root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
     bindGlobal();
