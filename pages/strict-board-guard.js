@@ -11,6 +11,8 @@
   let queued = false;
   let busy = false;
   let suppressObserver = false;
+  let lastBoardSignature = null;
+  let refreshTimer = null;
 
   function norm(v='') {
     return String(v).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
@@ -51,6 +53,32 @@
 
   function readCache(){for(const key of CACHE_KEYS){try{const v=JSON.parse(localStorage.getItem(key)||'null');if(v&&Array.isArray(v.schedule))return v;}catch{}}return null;}
 
+  function boardSignature(value){
+    const rows=(value?.schedule||[])
+      .filter(row=>{
+        const tier=String(row?.tier||'').toUpperCase();
+        return tier==='FOCUS'||tier==='WATCHLIST';
+      })
+      .map(row=>[
+        String(row?.id||''),String(row?.slateDate||''),String(row?.match||''),String(row?.competition||''),
+        String(row?.kickoff||row?.displayKickoff||''),String(row?.tier||''),String(row?.grade||''),String(row?.structure||''),
+        String(row?.xiStatus||''),String(row?.marketStatus||'')
+      ].join('|'))
+      .sort();
+    return rows.join('\n');
+  }
+
+  function requestMatchdayRefresh(nextBoard){
+    window.dispatchEvent(new CustomEvent('sliptrace:board-refresh',{detail:{board:nextBoard,at:Date.now()}}));
+    const hash=location.hash||'#today';
+    if(hash!=='#today'&&hash!=='#')return;
+    clearTimeout(refreshTimer);
+    refreshTimer=setTimeout(()=>{
+      const refresh=document.getElementById('refreshToday');
+      if(refresh&&!refresh.disabled)refresh.click();
+    },180);
+  }
+
   async function ensureBoard(force=false) {
     if(!force&&board?.schedule&&Date.now()-boardAt<BOARD_TTL)return board;
     if(loading)return loading;
@@ -58,10 +86,19 @@
       try{
         const r=await fetch(`${API}/api/dashboard-data?strict_guard=${Date.now()}`,{cache:'no-store'});
         const p=await r.json();
-        if(r.ok&&Array.isArray(p?.schedule)){board=p;boardAt=Date.now();return board;}
+        if(r.ok&&Array.isArray(p?.schedule)){
+          const nextSignature=boardSignature(p);
+          const changed=lastBoardSignature!==null&&nextSignature!==lastBoardSignature;
+          board=p;
+          boardAt=Date.now();
+          lastBoardSignature=nextSignature;
+          if(changed)requestMatchdayRefresh(p);
+          return board;
+        }
       }catch{}
       if(!board?.schedule)board=readCache();
       if(board?.schedule&&!boardAt)boardAt=Date.now()-BOARD_TTL;
+      if(lastBoardSignature===null&&board?.schedule)lastBoardSignature=boardSignature(board);
       return board||{schedule:[]};
     })().finally(()=>{loading=null;});
     return loading;
