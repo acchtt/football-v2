@@ -1,11 +1,11 @@
-const CACHE='slate-xi-shell-v21';
+const CACHE='slate-xi-shell-v22';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
   BASE,
   asset('index.html'),
   asset('offline.html'),
-  asset('design-v1.css?v=8'),
+  asset('design-v1.css?v=9'),
   asset('alerts-center.css?v=2'),
   asset('manifest.webmanifest?v=5'),
   asset('icons/slate-xi.svg'),
@@ -16,7 +16,7 @@ const SHELL=[
   asset('config.js?v=5'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
-  asset('app-v2.js?v=8'),
+  asset('app-v2.js?v=9'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=4'),
   asset('alerts-center.js?v=3')

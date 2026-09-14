@@ -539,7 +539,7 @@ body{
 @keyframes boardCardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 .boardFixture{
   position:relative;z-index:1;min-height:104px;padding:13px 54px 13px 14px;
-  display:grid;grid-template-columns:84px minmax(330px,1fr) 112px 24px;align-items:center;gap:17px;
+  display:grid;grid-template-columns:84px minmax(330px,1fr) 24px;align-items:center;gap:17px;
   border:0;background:transparent;transition:transform .16s ease,background .16s ease
 }
 .boardFixture:before{display:none}
@@ -558,7 +558,7 @@ body{
 .fixtureCompetition img{width:15px;height:15px;object-fit:contain}
 .fixtureCompetition b{min-width:0;overflow:hidden;font-weight:680;white-space:nowrap;text-overflow:ellipsis}
 .fixtureTeams{
-  min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
+  min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr);
   align-items:center;gap:10px
 }
 .fixtureTeams .teamLine{grid-template-columns:42px minmax(0,1fr);gap:11px}
@@ -569,7 +569,6 @@ body{
 .fixtureTeams .away{grid-template-columns:minmax(0,1fr) 42px}
 .fixtureTeams .away img,.fixtureTeams .away .crestFallback{grid-column:2;grid-row:1}
 .fixtureTeams .away span{grid-column:1;grid-row:1;text-align:right}
-.fixtureVersus{color:#5f6d79;font-size:10px;font-weight:850;text-align:center}
 .fixtureState{min-width:0;display:grid;justify-items:center;gap:3px;text-align:center;font-variant-numeric:tabular-nums}
 .fixtureStatus{
   display:flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;
@@ -619,7 +618,7 @@ body{
   :root{--rail:160px;--context:264px}
   .mainView{padding-left:22px;padding-right:22px}
   .matchRow{grid-template-columns:72px minmax(190px,1fr) 108px 78px;gap:10px}
-  .boardFixture{grid-template-columns:80px minmax(290px,1fr) 100px 20px;gap:12px}
+  .boardFixture{grid-template-columns:80px minmax(290px,1fr) 20px;gap:12px}
   .fixtureTeams .teamLine{grid-template-columns:36px minmax(0,1fr)}
   .fixtureTeams .away{grid-template-columns:minmax(0,1fr) 36px}
   .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:36px;height:36px}
@@ -657,21 +656,22 @@ body{
   .boardMatchList{gap:7px;padding:7px}
   .boardMatchCard{border-radius:10px}
   .matchRow.boardFixture{
-    min-height:100px;padding:10px 40px 10px 9px;
-    grid-template-columns:58px minmax(0,1fr) 72px;gap:8px
+    min-height:108px;padding:10px 40px 10px 9px;
+    grid-template-columns:54px minmax(0,1fr);gap:8px
   }
   .fixtureSignal{justify-items:start;gap:2px;padding-left:7px}
   .fixtureSignal small{font-size:8px}.fixtureSignal strong{font-size:17px}
   .fixtureMatch{gap:4px}
-  .fixtureCompetition{justify-content:flex-start;margin-left:37px;font-size:8px}
+  .fixtureCompetition{justify-content:center;margin-left:0;font-size:8px}
   .fixtureCompetition img{width:13px;height:13px}
-  .fixtureTeams{grid-template-columns:1fr;gap:5px}
-  .fixtureVersus{display:none}
-  .fixtureTeams .teamLine,.fixtureTeams .away{grid-template-columns:30px minmax(0,1fr);gap:7px}
-  .fixtureTeams .away img,.fixtureTeams .away .crestFallback{grid-column:1;grid-row:1}
-  .fixtureTeams .away span{grid-column:2;grid-row:1;text-align:left}
-  .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:30px;height:30px}
-  .fixtureTeams .teamLine span{font-size:12px}
+  .fixtureTeams{grid-template-columns:minmax(0,1fr) 66px minmax(0,1fr);gap:5px}
+  .fixtureTeams .teamLine,.fixtureTeams .away{
+    display:grid;grid-template-columns:1fr;justify-items:center;gap:4px;text-align:center
+  }
+  .fixtureTeams .away img,.fixtureTeams .away .crestFallback,
+  .fixtureTeams .away span{grid-column:1;grid-row:auto;text-align:center}
+  .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:32px;height:32px}
+  .fixtureTeams .teamLine span{max-width:100%;font-size:10px;text-align:center}
   .fixtureState{gap:2px}.fixtureStatus{padding:2px 5px;font-size:8px}.fixtureState>strong{font-size:18px}
   .fixtureState>small{font-size:8px}.fixtureArrow{display:none}
   .boardFixture>.notifyToggle{right:2px}

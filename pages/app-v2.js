@@ -398,12 +398,12 @@
       '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong></div>' +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
-      '<span class="fixtureVersus">VS</span><div class="teamLine away">' +
+      '<div class="fixtureState"><span class="fixtureStatus ' + status + '">' + stateIcon + esc(statusName) + '</span>' +
+      '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small></div>' +
+      '<div class="teamLine away">' +
       crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
       '<b>' + esc(competition) + '</b></span></div>' +
-      '<div class="fixtureState"><span class="fixtureStatus ' + status + '">' + stateIcon + esc(statusName) + '</span>' +
-      '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small></div>' +
       (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
       close + '</article>';
   }
