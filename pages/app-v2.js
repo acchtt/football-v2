@@ -356,16 +356,6 @@
       '<div class="matchScore"><strong>' + esc(scoreText(event)) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' +
         esc(isLive(event) ? liveClock(event) : statusLabel(event)) + '</small></div></a>';
   }
-  function decisionStrip(row) {
-    if (!row) return '';
-    return '<div class="decisionStrip" aria-label="SlipTrace readiness">' +
-      '<div><span>Structure</span><b>' + esc(row.structure || '—') + '</b></div>' +
-      '<div><span>Starting XI</span><b>' + esc(row.xiStatus || '—') + '</b></div>' +
-      '<div><span>Market</span><b>' + esc(row.marketStatus || '—') + '</b></div>' +
-      '<div><span>Coverage</span><b>' + esc(row.coverageStatus || '—') + '</b></div>' +
-      (row.frozenPreSummary ? '<p><strong>Frozen PRE</strong>' + esc(row.frozenPreSummary) + '</p>' : '') +
-      '</div>';
-  }
   function boardStatus(row) {
     const event = eventForBoardRow(row);
     return event ? statusKey(event) : 'upcoming';
@@ -373,7 +363,7 @@
   function boardMatchBlock(row) {
     const event = eventForBoardRow(row);
     if (event) {
-      return '<article class="boardMatchCard">' + matchRow(event) + decisionStrip(row) + '</article>';
+      return '<article class="boardMatchCard">' + matchRow(event) + '</article>';
     }
     const teams = splitMatch(row.match);
     const kickoff = row.kickoff || row.displayKickoff;
@@ -386,7 +376,7 @@
       '<div class="matchMeta"><span class="signalBadge ' + signalClass(row.grade) + '"><b>' + esc(row.grade || '—') +
       '</b><small>' + esc(tier || 'MODEL') + '</small></span></div>' +
       '<div class="matchScore"><strong>VS</strong><small>BSD pending</small></div></div>';
-    return '<article class="boardMatchCard">' + fallback + decisionStrip(row) + '</article>';
+    return '<article class="boardMatchCard">' + fallback + '</article>';
   }
   function groupedBoardRows(boardRows) {
     const groups = new Map();
@@ -459,6 +449,26 @@
         return '<a class="followedItem" href="' + esc(item.href || '#board') + '">' + esc(item.title || 'Selected match') + '</a>';
       }).join('') : '<button class="railAction" type="button" data-open-alerts>Choose matches to receive alerts</button>') + '</section>';
   }
+  function boardOverview(focusCount, watchCount, counts) {
+    const total = Math.max(counts.all, 1);
+    const focusAngle = Math.round(focusCount / total * 360);
+    const focusWidth = Math.round(focusCount / total * 100);
+    const watchWidth = Math.round(watchCount / total * 100);
+    return '<section class="boardOverview" aria-label="Board overview">' +
+      '<div class="signalVisual"><div class="signalRing" style="--focus-angle:' + focusAngle + 'deg"><div><strong>' +
+      counts.all + '</strong><span>board matches</span></div></div><div class="signalLegend">' +
+      '<div><i class="focusDot"></i><span>Focus</span><strong>' + focusCount + '</strong></div>' +
+      '<div><i class="watchDot"></i><span>Watchlist</span><strong>' + watchCount + '</strong></div></div></div>' +
+      '<div class="overviewDetails"><span class="visualEyebrow">Signal distribution</span>' +
+      '<div class="signalBar"><div><span>Focus</span><b>' + focusCount + '</b></div><i><em class="focusFill" style="width:' + focusWidth + '%"></em></i></div>' +
+      '<div class="signalBar"><div><span>Watchlist</span><b>' + watchCount + '</b></div><i><em class="watchFill" style="width:' + watchWidth + '%"></em></i></div>' +
+      '<div class="stateGraphics">' +
+      '<div class="stateGraphic live"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"></path></svg><span>Live now</span><strong>' + counts.live + '</strong></div>' +
+      '<div class="stateGraphic upcoming"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg><span>Upcoming</span><strong>' + counts.upcoming + '</strong></div>' +
+      '<div class="stateGraphic finished"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4 4L19 7"></path><circle cx="12" cy="12" r="9"></circle></svg><span>Finished</span><strong>' + counts.finished + '</strong></div>' +
+      '</div></div></section>';
+  }
+
   function renderMatchday() {
     state.route = 'board';
     const boardRows = boardRowsForDate().filter(function (row) {
@@ -501,11 +511,7 @@
       'Focus and Watchlist decisions first, enriched with BSD score and match status. Times shown in ICT.', actions) +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() +
-      '<div class="performanceGrid boardHomeMetrics"><div><span>Focus</span><strong>' + focusCount + '</strong></div>' +
-      '<div><span>Watchlist</span><strong>' + watchCount + '</strong></div>' +
-      '<div><span>Live now</span><strong class="liveValue">' + counts.live + '</strong></div>' +
-      '<div><span>Board total</span><strong>' + counts.all + '</strong></div></div>' +
-      controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
+      boardOverview(focusCount, watchCount, counts) + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       (filtered.length ? groupedBoardRows(filtered) : '<div class="emptyState"><strong>No matching board entries</strong><span>Try another status, signal, or date.</span></div>') +
       '</section>';
     root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
