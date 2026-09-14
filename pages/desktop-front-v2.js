@@ -186,6 +186,15 @@
     if(label&&dateStrip)label.textContent=activeDateText(dateStrip).replace(' · ICT','');
   }
 
+  function syncBoardSignal(){
+    const panel=$('.desktopFrontWorkspace .sideCol .panel');
+    if(!panel)return;
+    const values=$$('.kpi strong',panel);
+    if(values[0])values[0].textContent=String(countTier('FOCUS'));
+    if(values[1])values[1].textContent=String(statusCount('live'));
+    if(values[2])values[2].textContent=String(totalCount());
+  }
+
   function buildTopFocus(){
     const side=$('.desktopFrontWorkspace .sideCol');
     if(!side)return;
@@ -229,6 +238,7 @@
     ensurePageHead();
     setDensity(density());
     applySignalFilter();
+    syncBoardSignal();
     buildTopFocus();
   }
 
