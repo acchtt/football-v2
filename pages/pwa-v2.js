@@ -4,6 +4,8 @@
   const API=window.SLIPTRACE_API||'https://football-v2.acchtt.workers.dev';
   const STORE='sliptrace.followedMatches.v2';
   const LEGACY_STORE='sliptrace.followedMatches.v1';
+  const SETTINGS_STORE='sliptrace.pushSettings.v1';
+  const DEFAULT_SETTINGS={kickoff:true,goal:true,ht:true,ft:true};
   let installPrompt=null;
   let toastTimer=null;
   let swPromise=null;
@@ -26,6 +28,10 @@
       if(legacy){const parsed=JSON.parse(legacy)||{};localStorage.setItem(STORE,JSON.stringify(parsed));return parsed;}
     }catch{}
     return {};
+  }
+  function pushSettings(){
+    try{return {...DEFAULT_SETTINGS,...(JSON.parse(localStorage.getItem(SETTINGS_STORE)||'{}')||{})};}
+    catch{return {...DEFAULT_SETTINGS};}
   }
   function save(value){
     try{localStorage.setItem(STORE,JSON.stringify(value));}catch{}
@@ -66,8 +72,10 @@
     }
     return swPromise;
   }
-  function getPushConfig(){
-    if(!pushConfigPromise)pushConfigPromise=api('/api/push/config').catch(error=>({ok:false,enabled:false,error:error.message}));
+  function getPushConfig(force=false){
+    if(force||!pushConfigPromise){
+      pushConfigPromise=api('/api/push/config').catch(error=>({ok:false,enabled:false,error:error.message}));
+    }
     return pushConfigPromise;
   }
   async function existingSubscription(){
@@ -75,13 +83,18 @@
   }
   async function postSubscription(path,sub,extra={}){
     if(!sub)return null;
-    return api(path,{method:'POST',body:JSON.stringify({subscription:sub.toJSON?sub.toJSON():sub,matches:selectedIds(),...extra})});
+    return api(path,{method:'POST',body:JSON.stringify({
+      subscription:sub.toJSON?sub.toJSON():sub,
+      matches:selectedIds(),
+      settings:pushSettings(),
+      ...extra
+    })});
   }
 
   async function enablePushFromGesture(){
     if(isiOS()&&!isStandalone())return {ok:false,reason:'ios-install'};
     if(!supportsPush())return {ok:false,reason:'unsupported'};
-    const config=await getPushConfig();
+    const config=await getPushConfig(true);
     if(!config?.enabled||!config?.vapidPublicKey)return {ok:false,reason:'backend',detail:config?.error||'Push backend is not ready.'};
     let permission=Notification.permission;
     if(permission==='default')permission=await Notification.requestPermission();
@@ -97,15 +110,14 @@
 
   async function syncPushSelection(){
     const sub=await existingSubscription();
-    if(!sub)return;
+    if(!sub)return {ok:false,reason:'no-subscription'};
     const ids=selectedIds();
     try{
-      if(ids.length){await postSubscription('/api/push/sync',sub);}
-      else{
-        await api('/api/push/unsubscribe',{method:'POST',body:JSON.stringify({endpoint:sub.endpoint})});
-        await sub.unsubscribe().catch(()=>false);
-      }
-    }catch(error){console.warn('SlipTrace push sync failed',error);}
+      if(ids.length){await postSubscription('/api/push/sync',sub);return {ok:true,matches:ids.length};}
+      await api('/api/push/unsubscribe',{method:'POST',body:JSON.stringify({endpoint:sub.endpoint})});
+      await sub.unsubscribe().catch(()=>false);
+      return {ok:true,unsubscribed:true};
+    }catch(error){console.warn('SlipTrace push sync failed',error);return {ok:false,reason:'sync',error};}
   }
 
   async function toggleFollow(id,title,href,button){
@@ -156,7 +168,7 @@
   async function diagnostics(){
     let sw='unsupported',subscription=false,config={enabled:false};
     try{const reg=await registerSW();sw=reg.active||reg.waiting||reg.installing?'ready':'registered';subscription=!!(await reg.pushManager?.getSubscription?.());}catch(error){sw=error.message||'failed';}
-    try{config=await getPushConfig();}catch{}
+    try{config=await getPushConfig(true);}catch{}
     return {
       secureContext:window.isSecureContext,
       standalone:isStandalone(),
@@ -224,14 +236,24 @@
   window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;injectInstallButton();});
   window.addEventListener('appinstalled',()=>{installPrompt=null;injectInstallButton();toast('SlipTrace installed.');});
   window.addEventListener('hashchange',()=>requestAnimationFrame(decorate));
-  window.addEventListener('sliptrace:followed-changed',()=>requestAnimationFrame(decorate));
+  window.addEventListener('sliptrace:followed-changed',()=>{requestAnimationFrame(decorate);syncPushSelection();});
+  window.addEventListener('sliptrace:alert-settings-changed',()=>syncPushSelection());
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){registerSW().catch(()=>{});syncPushSelection();requestAnimationFrame(decorate);}});
 
   const app=document.getElementById('app');
   if(app)new MutationObserver(()=>requestAnimationFrame(decorate)).observe(app,{childList:true,subtree:true});
 
   registerSW().then(()=>syncPushSelection()).catch(error=>console.warn('SlipTrace service worker registration failed',error));
-  pushConfigPromise=api('/api/push/config').catch(error=>({enabled:false,error:error.message}));
-  window.SlipTracePWA={diagnostics,showStatus:()=>showPwaSheet('push'),sendTestNotification,getSelectedMatches:()=>Object.values(followed()),getSubscription:existingSubscription};
+  getPushConfig(true);
+  window.SlipTracePWA={
+    diagnostics,
+    showStatus:()=>showPwaSheet('push'),
+    sendTestNotification,
+    enablePush:enablePushFromGesture,
+    syncPushSelection,
+    refreshPushConfig:()=>getPushConfig(true),
+    getSelectedMatches:()=>Object.values(followed()),
+    getSubscription:existingSubscription
+  };
   requestAnimationFrame(decorate);
 })();
