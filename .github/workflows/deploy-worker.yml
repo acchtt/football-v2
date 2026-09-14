@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "wrangler.jsonc"
+      - "package.json"
       - "backend/cloudflare-worker/**"
       - ".github/workflows/deploy-worker.yml"
   workflow_dispatch:
@@ -25,6 +26,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package.json
+
+      - name: Install Worker dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
       - name: Validate Cloudflare credentials
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
@@ -38,7 +49,7 @@ jobs:
           echo "Cloudflare credentials are available to this workflow."
 
       - name: Deploy Worker
-        run: npx --yes wrangler@4 deploy --config wrangler.jsonc
+        run: npx wrangler@4 deploy --config wrangler.jsonc
 
       - name: Smoke test production API
         shell: bash
@@ -68,3 +79,4 @@ jobs:
           check_json "BSD events" "$BASE/api/bsd/events?date_from=$TODAY&date_to=$TODAY&limit=5"
           check_json "BSD live" "$BASE/api/bsd/live"
           check_json "dashboard" "$BASE/api/dashboard-data"
+          check_json "push config" "$BASE/api/push/config"
