@@ -6,6 +6,7 @@
   const STOP = new Set(['fc','cf','sc','ac','afc','club','united','city','town','athletic','sporting','football','calcio']);
   const CACHE_KEYS = ['sliptrace.dashboard.compat.v2','sliptrace.dashboard.compat.v1','sliptrace.dashboard.v4'];
   const BOARD_TTL = 12_000;
+  const FALLBACK_GRACE_MS = 15 * 60_000;
   let board = null;
   let boardAt = 0;
   let boardPromise = null;
@@ -61,6 +62,12 @@
     return t?.name||t?.team_name||t?.display_name||event?.[`${side}_team_name`]||event?.[`${side}_name`]||(typeof t==='string'?t:'');
   }
 
+  function eventKickoff(event){
+    return event?.event_date||event?.kickoff||event?.kickoff_at||event?.date||event?.time?.kickoff_at||'';
+  }
+
+  function rowKickoff(row){return row?.kickoff||row?.displayKickoff||'';}
+
   function readCache(){for(const k of CACHE_KEYS){try{const v=JSON.parse(localStorage.getItem(k)||'null');if(v&&Array.isArray(v.schedule))return v;}catch{}}return null;}
   async function getBoard(force=false){
     if(!force&&board?.schedule&&Date.now()-boardAt<BOARD_TTL)return board;
@@ -89,6 +96,58 @@
     });
   }
 
+  function shouldFallback(row){
+    const kickoff=Date.parse(rowKickoff(row));
+    // Before kickoff (and briefly after), Airtable can lead BSD fixture discovery.
+    // Do not leave a synthetic scheduled row hanging deep into a live match.
+    return !Number.isFinite(kickoff)||Date.now()<=kickoff+FALLBACK_GRACE_MS;
+  }
+
+  function syntheticEvent(row){
+    const teams=splitMatch(row?.match||'');
+    if(!teams.home||!teams.away)return null;
+    const kickoff=rowKickoff(row);
+    return {
+      status:'upcoming',
+      event_date:kickoff||null,
+      kickoff_at:kickoff||null,
+      home_team:{name:teams.home},
+      away_team:{name:teams.away},
+      home_team_name:teams.home,
+      away_team_name:teams.away,
+      league:{name:row?.competition||'Competition'},
+      league_name:row?.competition||'Competition',
+      round_label:'Board sync',
+      time:{status:'upcoming',period:'Board sync',kickoff_at:kickoff||null},
+      __boardFallback:true,
+      __boardRowId:String(row?.id||''),
+    };
+  }
+
+  function mergeBoardRows(source,rows){
+    const matched=source.filter(event=>matchEvent(event,rows));
+    const missing=rows
+      .filter(row=>!matched.some(event=>matchEvent(event,[row])))
+      .filter(shouldFallback)
+      .map(syntheticEvent)
+      .filter(Boolean);
+    return [...matched,...missing].sort((a,b)=>{
+      const left=Date.parse(eventKickoff(a)),right=Date.parse(eventKickoff(b));
+      if(!Number.isFinite(left)&&!Number.isFinite(right))return 0;
+      if(!Number.isFinite(left))return 1;
+      if(!Number.isFinite(right))return -1;
+      return left-right;
+    });
+  }
+
+  window.addEventListener('sliptrace:board-refresh',event=>{
+    const next=event?.detail?.board;
+    if(next&&Array.isArray(next.schedule)){
+      board=next;
+      boardAt=Date.now();
+    }
+  });
+
   window.fetch=async function strictBoardFetch(input,init){
     const response=await previousFetch(input,init);
     let url;try{url=new URL(typeof input==='string'?input:input.url,location.href);}catch{return response;}
@@ -106,8 +165,8 @@
         const tier=String(r?.tier||'').toUpperCase();
         return r?.slateDate===from&&(tier==='FOCUS'||tier==='WATCHLIST');
       });
-      const filtered=source.filter(event=>matchEvent(event,rows));
-      const out={...payload,data:{...data,results:filtered,events:filtered,count:filtered.length,next:null,previous:null},strictBoardOnly:true,boardRows:rows.length};
+      const merged=mergeBoardRows(source,rows);
+      const out={...payload,data:{...data,results:merged,events:merged,count:merged.length,next:null,previous:null},strictBoardOnly:true,boardRows:rows.length,boardFallbackRows:merged.filter(x=>x.__boardFallback).length};
       const headers=new Headers(response.headers);headers.set('Content-Type','application/json; charset=utf-8');headers.set('Cache-Control','no-store');
       return new Response(JSON.stringify(out),{status:response.status,statusText:response.statusText,headers});
     }catch{return response;}
