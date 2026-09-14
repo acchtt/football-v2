@@ -1,0 +1,155 @@
+/* SlipTrace desktop v5 — football operations workspace */
+
+.desktopOpsWorkspace,.desktopLeftRail,.desktopDensity{display:none}
+
+@media (min-width:1101px){
+  :root{--desktop-rail:190px;--desktop-side:318px;--desktop-gap:18px}
+  body{background:linear-gradient(180deg,#090c10,#080a0d 36%,#090b0f)}
+  body.desktopOpsActive .shell{max-width:1680px;padding:18px 24px 54px}
+
+  /* Header becomes a restrained application bar. */
+  body.desktopOpsActive .appHeader{background:rgba(8,11,15,.97);border-bottom-color:#202a33}
+  body.desktopOpsActive .headerInner{max-width:1680px;height:60px;padding:0 24px;gap:24px}
+  body.desktopOpsActive .brandMark{width:32px;height:32px;border-radius:8px;clip-path:none;background:linear-gradient(145deg,#ff5265,#c9344a)}
+  body.desktopOpsActive .brand{font-family:Inter,sans-serif;font-size:13px;letter-spacing:.12em}
+  body.desktopOpsActive .topNav a{height:60px;padding:0 12px;font-size:12px;font-weight:750}
+  body.desktopOpsActive .topNav a.active{border-bottom-color:var(--cyan)}
+  body.desktopOpsActive .headerSearch{width:min(330px,25vw)}
+  body.desktopOpsActive .headerSearch input{height:38px;border-radius:8px;background:#0c1218;border-color:#26313b}
+
+  /* Compact page masthead. */
+  body[data-st-route="today"].desktopOpsActive .pageHead{min-height:76px;margin:0 0 14px;padding:14px 16px;align-items:center;border:0;border-bottom:1px solid #202a33;border-radius:0;background:transparent;box-shadow:none}
+  body[data-st-route="today"].desktopOpsActive .pageHead:before,
+  body[data-st-route="today"].desktopOpsActive .pageHead:after{display:none}
+  body[data-st-route="today"].desktopOpsActive .pageHead .eyebrow{font-size:9px;letter-spacing:.17em;color:#6ed7e9}
+  body[data-st-route="today"].desktopOpsActive .pageHead h1{margin:4px 0 0;font-size:31px;line-height:1;font-weight:800;letter-spacing:-.04em}
+  body[data-st-route="today"].desktopOpsActive .pageHead .subtle{margin:5px 0 0;font-size:11px;color:#71808e}
+  body[data-st-route="today"].desktopOpsActive .pageHead .toolBtn{height:38px;padding:0 14px;border-radius:8px;background:#0d141b;border-color:#2a3742;font-size:11px}
+
+  /* Three-column workspace: date rail | fixtures | model rail. */
+  body.desktopOpsActive .desktopOpsWorkspace{display:grid;grid-template-columns:var(--desktop-rail) minmax(0,1fr);gap:var(--desktop-gap);align-items:start}
+  body.desktopOpsActive .desktopLeftRail{display:block;position:sticky;top:78px;min-width:0}
+  body.desktopOpsActive .desktopRailBlock{padding:12px 12px 10px;border-bottom:1px solid #202a33}
+  body.desktopOpsActive .desktopRailLabel{display:block;margin-bottom:3px;color:#657280;font:800 9px/1 Inter,sans-serif;letter-spacing:.15em;text-transform:uppercase}
+  body.desktopOpsActive .desktopRailTitle{color:#eef3f7;font:800 14px/1.2 Inter,sans-serif}
+  body.desktopOpsActive .desktopRailMeta{display:block;margin-top:5px;color:#667482;font:700 9px/1.3 Inter,sans-serif}
+  body.desktopOpsActive .desktopLeftRailInner{overflow:hidden;border:1px solid #202b35;border-radius:10px;background:#0b1016}
+
+  body.desktopOpsActive .desktopOpsWorkspace>.layout{display:grid;grid-template-columns:minmax(680px,1fr) var(--desktop-side);gap:var(--desktop-gap);align-items:start;min-width:0}
+  body.desktopOpsActive .desktopOpsWorkspace .mainCol,
+  body.desktopOpsActive .desktopOpsWorkspace .sideCol{min-width:0}
+  body.desktopOpsActive .desktopOpsWorkspace .sideCol{display:block;position:sticky;top:78px;margin:0}
+  body.desktopOpsActive .desktopOpsWorkspace .sideCol .panel+.panel{margin-top:12px}
+
+  /* Date selector becomes navigation rather than another dashboard strip. */
+  body.desktopOpsActive .desktopLeftRail .dateStrip{display:grid;grid-template-columns:1fr;margin:0;padding:6px;border:0;border-radius:0;overflow:visible;background:transparent}
+  body.desktopOpsActive .desktopLeftRail .dateBtn,
+  body.desktopOpsActive .desktopLeftRail .dateBtn:nth-child(n){display:grid;grid-template-columns:54px 1fr;align-items:center;min-height:43px;padding:7px 9px;border:0;border-bottom:1px solid #182129;border-radius:6px;background:transparent;box-shadow:none;text-align:left}
+  body.desktopOpsActive .desktopLeftRail .dateBtn:last-child{border-bottom:0}
+  body.desktopOpsActive .desktopLeftRail .dateBtn:hover{background:#111921}
+  body.desktopOpsActive .desktopLeftRail .dateBtn.active{background:linear-gradient(90deg,rgba(73,207,232,.11),rgba(73,207,232,.025));box-shadow:inset 2px 0 var(--cyan)}
+  body.desktopOpsActive .desktopLeftRail .dateBtn small{grid-column:2;margin:0;color:#74818e;font-size:9px;font-weight:850;letter-spacing:.1em}
+  body.desktopOpsActive .desktopLeftRail .dateBtn strong{grid-column:1;grid-row:1;font-size:12px;font-weight:800;color:#cbd4dc;font-variant-numeric:tabular-nums}
+  body.desktopOpsActive .desktopLeftRail .dateBtn.active small{color:#88e2f1}
+  body.desktopOpsActive .desktopLeftRail .dateBtn.active strong{color:#fff}
+
+  /* Functional density control. */
+  body.desktopOpsActive .desktopDensity{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:7px;border-top:1px solid #202a33}
+  body.desktopOpsActive .desktopDensity button{height:31px;padding:0 3px;border:1px solid transparent;border-radius:6px;background:transparent;color:#6f7d8a;font:800 8px/1 Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+  body.desktopOpsActive .desktopDensity button:hover{background:#111921;color:#aab5c0}
+  body.desktopOpsActive .desktopDensity button.active{border-color:#32414e;background:#131c24;color:#e8f1f6}
+
+  /* Primary fixtures panel: flatter, more terminal-like. */
+  body.desktopOpsActive .mainCol>.panel{border:1px solid #202b35;border-radius:10px;background:#0b1016;box-shadow:none;overflow:hidden}
+  body.desktopOpsActive .mainCol>.panel>.panelHead{height:43px;padding:0 14px;background:#0d1319;border-bottom:1px solid #222d37}
+  body.desktopOpsActive .mainCol>.panel>.panelHead h2{font-size:10px;letter-spacing:.15em}
+  body.desktopOpsActive .mainCol>.panel>.panelHead>span{min-width:26px;padding:4px 7px;border:1px solid #2a3640;border-radius:99px;background:#090e13;text-align:center;font-size:9px}
+
+  body.desktopOpsActive .matchStatusTabsHost{background:transparent}
+  body.desktopOpsActive .matchStatusTabs{display:flex;gap:0;padding:0 12px;border-bottom:1px solid #202a33;background:#0a0f14}
+  body.desktopOpsActive .matchStatusTab{position:relative;min-height:44px;height:44px;padding:0 14px;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#71808e}
+  body.desktopOpsActive .matchStatusTab:hover{color:#c4ced7}
+  body.desktopOpsActive .matchStatusTab.active{color:#f2f6f9!important;background:transparent!important}
+  body.desktopOpsActive .matchStatusTab.active:after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--cyan);box-shadow:0 0 10px rgba(73,207,232,.35)}
+  body.desktopOpsActive .matchStatusTab.status-live.active:after{background:var(--red);box-shadow:0 0 10px rgba(255,82,101,.35)}
+  body.desktopOpsActive .matchStatusTab .statusDot{width:6px;height:6px}
+  body.desktopOpsActive .matchStatusTab strong{font-size:9px;letter-spacing:.11em}
+  body.desktopOpsActive .matchStatusTab b{min-width:20px;height:18px;padding:0 5px;border:0;background:#151e27;font-size:8px}
+
+  body.desktopOpsActive .matchStatusPane .chronoMatches{display:block;padding:0;background:#0b1016}
+  body.desktopOpsActive .matchStatusPane .chronoMatches>.matchRow{position:relative;display:grid;grid-template-columns:78px minmax(0,1fr) 132px 86px;gap:12px;min-height:78px;margin:0;padding:10px 52px 10px 14px;border:0;border-bottom:1px solid #1d2730;border-radius:0;background:transparent;box-shadow:none;transform:none}
+  body.desktopOpsActive .matchStatusPane .chronoMatches>.matchRow:last-child{border-bottom:0}
+  body.desktopOpsActive .matchStatusPane .chronoMatches>.matchRow:first-child{border-top:0}
+  body.desktopOpsActive .matchStatusPane .chronoMatches>.matchRow:hover{transform:none;background:linear-gradient(90deg,rgba(73,207,232,.045),rgba(73,207,232,.01));box-shadow:none;border-color:#25323d}
+  body.desktopOpsActive .matchStatusPane .chronoMatches>.matchRow:after{left:0;top:12px;bottom:12px;width:2px;border-radius:0;background:#394552;opacity:.35}
+  body.desktopOpsActive .matchStatusPane .matchRow[data-signal-tier*="FOCUS"]:after{background:var(--red);opacity:.9;box-shadow:0 0 12px rgba(255,82,101,.22)}
+  body.desktopOpsActive .matchStatusPane .matchRow[data-signal-tier*="WATCHLIST"]:after{background:var(--cyan);opacity:.7}
+
+  body.desktopOpsActive .matchTime{font-size:12px;font-weight:800;color:#d9e1e8}
+  body.desktopOpsActive .matchTime small{margin-top:4px;font-size:8px;color:#596674}
+  body.desktopOpsActive .teams{gap:4px}
+  body.desktopOpsActive .matchStatusPane .teamLine{grid-template-columns:28px minmax(0,1fr);gap:9px}
+  body.desktopOpsActive .matchStatusPane .teamLine img{width:27px;height:27px;padding:1px;border:0;border-radius:0;background:transparent;box-shadow:none;filter:none}
+  body.desktopOpsActive .matchStatusPane .teamLine span{font-size:13px;font-weight:760;letter-spacing:-.01em}
+  body.desktopOpsActive .matchCompetition{margin:2px 0 0 37px;padding:0;border:0;border-radius:0;background:transparent;color:#657481;font-size:8px;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+  body.desktopOpsActive .matchCompetition:before{display:none}
+
+  body.desktopOpsActive .matchMeta{text-align:left}
+  body.desktopOpsActive .matchMeta .signalBadge{min-width:100px;grid-template-columns:34px minmax(58px,auto);border:0;border-radius:5px;background:#10171e;box-shadow:none}
+  body.desktopOpsActive .matchMeta .signalBadge:before,
+  body.desktopOpsActive .matchMeta .signalBadge:after{min-height:26px}
+  body.desktopOpsActive .matchMeta .signalBadge:before{font-size:9px;border-right:1px solid #26323c;background:#18222b}
+  body.desktopOpsActive .matchMeta .signalBadge:after{font-size:7px;padding:0 6px}
+  body.desktopOpsActive .matchMeta .signalBadge.grade-a:before{background:#3d1d24;color:#ff9aa6}
+  body.desktopOpsActive .matchMeta .signalBadge.grade-b:before{background:#14333a;color:#8be4f2}
+  body.desktopOpsActive .matchMeta .signalBadge.grade-c:before{background:#28331d;color:#cfea91}
+
+  body.desktopOpsActive .matchStatusPane .matchScore{min-width:0;padding:0 0 0 14px;border:0;border-left:1px solid #24303a;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+  body.desktopOpsActive .matchStatusPane .matchScore:before{display:none}
+  body.desktopOpsActive .matchStatusPane .matchScore strong{font-size:19px;letter-spacing:-.035em}
+  body.desktopOpsActive .matchStatusPane .matchScore small{font-size:9px;color:#7c8995}
+  body.desktopOpsActive .matchStatusPane .matchRow.is-live-row .matchScore{border-color:#3b2730;box-shadow:none}
+  body.desktopOpsActive [data-status-pane="scheduled"] .matchScore strong{font-size:0}
+  body.desktopOpsActive [data-status-pane="scheduled"] .matchScore strong:after{content:"VS";font-size:10px;font-weight:900;letter-spacing:.12em;color:#65727e}
+
+  body.desktopOpsActive .matchRow>.notifyToggle{top:50%;right:11px;transform:translateY(-50%);width:31px;min-width:31px;height:31px;min-height:31px;border:0;border-radius:50%;background:transparent!important;color:#65727e;box-shadow:none}
+  body.desktopOpsActive .matchRow>.notifyToggle:hover{background:#151e26!important;color:#9ce7f2}
+  body.desktopOpsActive .matchRow>.notifyToggle.selected{background:rgba(73,207,232,.09)!important;color:var(--cyan)}
+  body.desktopOpsActive .matchRow>.notifyToggle:before{font-size:14px}
+
+  /* Right-hand model / operations rail. */
+  body.desktopOpsActive .sideCol .panel{border:1px solid #202b35;border-radius:10px;background:#0b1016;box-shadow:none;overflow:hidden}
+  body.desktopOpsActive .sideCol .panelHead{height:40px;padding:0 12px;background:#0d1319;border-bottom:1px solid #202a33}
+  body.desktopOpsActive .sideCol .panelHead h3{font-size:9px;letter-spacing:.15em}
+  body.desktopOpsActive .sideCol .kpis{grid-template-columns:repeat(3,1fr)}
+  body.desktopOpsActive .sideCol .kpi{min-height:74px;padding:12px 10px;border-right:1px solid #1e2831}
+  body.desktopOpsActive .sideCol .kpi span{font-size:8px;color:#667482}
+  body.desktopOpsActive .sideCol .kpi strong{margin-top:5px;font-size:24px}
+  body.desktopOpsActive .sideCol .kpi:nth-child(1) strong{color:var(--red)}
+  body.desktopOpsActive .sideCol .kpi:nth-child(2) strong{color:var(--cyan)}
+  body.desktopOpsActive .sideCol .kpi:nth-child(3) strong{color:var(--lime)}
+  body.desktopOpsActive .sideList{padding:0}
+  body.desktopOpsActive .sideItem{min-height:50px;padding:9px 11px;border-bottom:1px solid #1d2730;background:transparent}
+  body.desktopOpsActive .sideItem:hover{background:#111820}
+  body.desktopOpsActive .sideItem strong{font-size:11px;font-weight:760}
+  body.desktopOpsActive .sideItem span{font-size:9px;color:#677583}
+  body.desktopOpsActive .sideItem b{font-size:11px}
+
+  /* Density modes. */
+  body.desktopOpsActive[data-desktop-density="compact"] .matchStatusPane .chronoMatches>.matchRow{min-height:66px;padding-top:7px;padding-bottom:7px}
+  body.desktopOpsActive[data-desktop-density="compact"] .matchStatusPane .teamLine img{width:23px;height:23px}
+  body.desktopOpsActive[data-desktop-density="compact"] .matchStatusPane .teamLine{grid-template-columns:24px minmax(0,1fr)}
+  body.desktopOpsActive[data-desktop-density="compact"] .matchCompetition{margin-left:33px}
+  body.desktopOpsActive[data-desktop-density="compact"] .matchStatusPane .teamLine span{font-size:12px}
+
+  body.desktopOpsActive[data-desktop-density="analyst"] .matchStatusPane .chronoMatches>.matchRow{grid-template-columns:74px minmax(0,1fr) 150px 86px;min-height:72px}
+  body.desktopOpsActive[data-desktop-density="analyst"] .matchMeta .signalBadge{min-width:120px;grid-template-columns:38px minmax(74px,auto)}
+  body.desktopOpsActive[data-desktop-density="analyst"] .matchCompetition{color:#7c8c99}
+
+  body.desktopOpsActive .statusEmpty{min-height:180px;display:grid;place-items:center;color:#65727f;background:#0b1016}
+}
+
+@media (min-width:1450px){
+  :root{--desktop-rail:205px;--desktop-side:335px;--desktop-gap:20px}
+  body.desktopOpsActive .matchStatusPane .chronoMatches>.matchRow{grid-template-columns:82px minmax(0,1fr) 145px 92px;padding-left:16px}
+}
