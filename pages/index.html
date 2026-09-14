@@ -1,51 +1,34 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>SlipTrace Football</title>
-  <meta name="description" content="SlipTrace football matchday, model board, standings and live data powered by BSD." />
-  <meta name="theme-color" content="#090b0f" />
-  <meta name="color-scheme" content="dark" />
-  <meta name="format-detection" content="telephone=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="SlipTrace" />
-  <link rel="manifest" href="./manifest.webmanifest?v=3" />
-  <link rel="icon" href="./icons/sliptrace.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="./icons/sliptrace-192.png" />
-  <link rel="preconnect" href="https://football-v2.acchtt.workers.dev" crossorigin />
-  <link rel="preconnect" href="https://sports.bzzoiro.com" crossorigin />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./app-v2.css?v=1" />
-  <link rel="stylesheet" href="./app-polish.css?v=3" />
-  <link rel="stylesheet" href="./graphics-v2.css?v=1" />
-  <link rel="stylesheet" href="./graphics-v3.css?v=1" />
-  <link rel="stylesheet" href="./mobile-v1.css?v=1" />
-  <link rel="stylesheet" href="./mobile-v2.css?v=2" />
-  <link rel="stylesheet" href="./mobile-v3.css?v=1" />
-  <link rel="stylesheet" href="./mobile-v4.css?v=1" />
-  <link rel="stylesheet" href="./alerts-center.css?v=2" />
-  <link rel="stylesheet" href="./desktop-front-v2.css?v=2" />
-  <link rel="stylesheet" href="./desktop-signal-v3.css?v=1" />
+  <meta name="description" content="Live football scores, model signals, picks, standings, lineups and match alerts powered by BSD.">
+  <meta name="theme-color" content="#080b0f">
+  <meta name="color-scheme" content="dark">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SlipTrace">
+  <link rel="manifest" href="./manifest.webmanifest?v=3">
+  <link rel="icon" href="./icons/sliptrace.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/sliptrace-192.png">
+  <link rel="preconnect" href="https://football-v2.acchtt.workers.dev" crossorigin>
+  <link rel="preconnect" href="https://sports.bzzoiro.com" crossorigin>
+  <link rel="stylesheet" href="./design-v1.css?v=1">
+  <link rel="stylesheet" href="./alerts-center.css?v=2">
 </head>
 <body>
   <main id="app" aria-live="polite"></main>
   <script src="./ict-slate-fetch.js?v=1"></script>
   <script src="./config.js?v=5"></script>
-  <script src="./strict-board-filter.js?v=3"></script>
+  <script src="./strict-board-filter.js?v=2"></script>
   <script src="./canonical-live-source.js?v=2"></script>
-  <script src="./app-v2.js?v=1" defer></script>
-  <script src="./matchday-polish.js?v=5" defer></script>
-  <script src="./strict-board-guard.js?v=5" defer></script>
+  <script src="./app-v2.js?v=2" defer></script>
   <script src="./status-sync.js?v=4" defer></script>
-  <script src="./graphics-v3.js?v=1" defer></script>
   <script src="./pwa-v2.js?v=3" defer></script>
   <script src="./alerts-center.js?v=2" defer></script>
-  <script src="./mobile-layout-v3.js?v=1" defer></script>
-  <script src="./desktop-front-v2.js?v=2" defer></script>
 </body>
 </html>
