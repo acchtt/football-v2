@@ -499,10 +499,162 @@ body{
 }
 
 
+/* Tactical scouting desk */
+body{
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(rgba(72,203,226,.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(72,203,226,.022) 1px,transparent 1px),
+    radial-gradient(circle at 16% -6%,rgba(72,203,226,.095),transparent 29rem),
+    radial-gradient(circle at 92% 11%,rgba(255,79,97,.075),transparent 26rem);
+  background-size:44px 44px,44px 44px,auto,auto
+}
+.brandMark{position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(255,79,97,.18)}
+.brandMark:after{
+  content:"";position:absolute;width:22px;height:22px;right:-10px;bottom:-10px;
+  border:1px solid rgba(8,11,15,.42);border-radius:50%
+}
+.boardHomeRoute .pageTop{
+  position:relative;min-height:112px;padding:20px 22px;overflow:hidden;align-items:center;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:
+    linear-gradient(115deg,rgba(72,203,226,.08),transparent 42%),
+    linear-gradient(295deg,rgba(255,79,97,.07),transparent 38%),
+    #0d131a
+}
+.boardHomeRoute .pageTop:before,.boardHomeRoute .pageTop:after{
+  content:"";position:absolute;pointer-events:none;border:1px solid rgba(130,144,157,.09);border-radius:50%
+}
+.boardHomeRoute .pageTop:before{width:170px;height:170px;right:17%;top:-93px}
+.boardHomeRoute .pageTop:after{width:8px;height:8px;right:calc(17% + 81px);top:26px;background:rgba(72,203,226,.18)}
+.boardHomeRoute .pageTop>div,.boardHomeRoute .pageActions{position:relative;z-index:1}
+.boardHomeRoute .pageTop h1{
+  font-family:"Arial Narrow","Roboto Condensed",Inter,system-ui,sans-serif;
+  font-size:35px;font-stretch:condensed;letter-spacing:-.035em;text-transform:uppercase
+}
+.boardHomeRoute .eyebrow{color:#75dced}
+.boardHomeRoute .matchSection{border-color:#2a3844;background:rgba(9,14,19,.84)}
+.boardCompetition+.boardCompetition{border-top:1px solid #2a3844}
+.boardCompetitionHead{
+  position:relative;min-height:52px;padding:0 16px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(72,203,226,.065),transparent 55%),#0b1016
+}
+.boardCompetitionHead:after{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(var(--cyan),var(--red))
+}
+.leagueEmblem{
+  width:31px;height:31px;display:grid;place-items:center;flex:0 0 auto;
+  border:1px solid var(--line-strong);border-radius:9px;background:#111923
+}
+.leagueEmblem img{width:22px;height:22px;object-fit:contain}
+.leagueEmblem.fallback{color:var(--cyan);font-size:11px}
+.boardCompetitionHead>div{display:grid;gap:2px}
+.boardCompetitionHead strong{font-size:13px;letter-spacing:.01em}
+.boardCompetitionHead span{font-size:10px}
+.boardCompetitionHead a{
+  position:relative;z-index:1;padding:6px 9px;border:1px solid #2d424e;border-radius:7px;
+  background:rgba(72,203,226,.045)
+}
+.boardMatchList{display:grid;gap:9px;padding:10px;background:rgba(5,9,13,.54)}
+.boardMatchCard{
+  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#10171f;
+  animation:boardCardIn .28s ease both;animation-delay:calc(var(--order) * 35ms)
+}
+.boardMatchCard:first-child{border-top:1px solid var(--line)}
+.boardMatchCard.tier-focus{border-color:rgba(255,79,97,.34)}
+.boardMatchCard.tier-watchlist{border-color:rgba(72,203,226,.28)}
+.boardMatchCard:after{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.7;
+  background:radial-gradient(circle at 8% 50%,rgba(255,255,255,.035),transparent 28%)
+}
+@keyframes boardCardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.boardFixture{
+  position:relative;z-index:1;min-height:104px;padding:13px 54px 13px 14px;
+  display:grid;grid-template-columns:112px minmax(330px,1fr) 112px 24px;align-items:center;gap:17px;
+  border:0;background:transparent;transition:transform .16s ease,background .16s ease
+}
+.boardFixture:before{display:none}
+.boardFixture:hover{transform:translateY(-1px);background:rgba(255,255,255,.025)}
+.fixtureSignal{display:flex;align-items:center;gap:10px}
+.fixtureSignalIcon{
+  width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto;border-radius:11px;
+  border:1px solid currentColor;background:rgba(255,255,255,.025)
+}
+.fixtureSignalIcon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}
+.fixtureSignal>div{display:grid;gap:1px}
+.fixtureSignal small{font-size:10px;font-weight:850;letter-spacing:.1em}
+.fixtureSignal strong{font-size:22px;line-height:1}
+.tier-focus .fixtureSignal{color:#ff7583}.tier-watchlist .fixtureSignal{color:#67d7e9}
+.fixtureTeams{
+  min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
+  align-items:center;gap:10px
+}
+.fixtureTeams .teamLine{grid-template-columns:42px minmax(0,1fr);gap:11px}
+.fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{
+  width:42px;height:42px;filter:drop-shadow(0 7px 10px rgba(0,0,0,.28))
+}
+.fixtureTeams .teamLine span{font-size:15px;font-weight:780}
+.fixtureTeams .away{grid-template-columns:minmax(0,1fr) 42px}
+.fixtureTeams .away img,.fixtureTeams .away .crestFallback{grid-column:2;grid-row:1}
+.fixtureTeams .away span{grid-column:1;grid-row:1;text-align:right}
+.fixtureVersus{color:#5f6d79;font-size:10px;font-weight:850;text-align:center}
+.fixtureState{min-width:0;display:grid;justify-items:center;gap:3px;text-align:center;font-variant-numeric:tabular-nums}
+.fixtureStatus{
+  display:flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;
+  color:var(--muted);background:#18212a;font-size:9px;font-weight:850;letter-spacing:.07em;text-transform:uppercase
+}
+.fixtureStatus svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fixtureStatus.live{color:#ff7a87;background:rgba(255,79,97,.1)}
+.fixtureStatus.live svg{animation:pulse 1.8s infinite}
+.fixtureState>strong{font-size:23px;line-height:1.15}
+.fixtureState>small{color:var(--muted);font-size:10px}
+.fixtureArrow{display:grid;place-items:center;color:#71808c}
+.fixtureArrow svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.boardFixture:hover .fixtureArrow{color:var(--cyan);transform:translateX(2px)}
+.boardFixture>.notifyToggle{right:8px}
+.nextDecisionSection>.sectionHead{margin-bottom:11px}
+.nextDecision{
+  position:relative;display:grid;gap:13px;padding:14px;overflow:hidden;
+  border:1px solid #31414e;border-radius:13px;
+  background:linear-gradient(145deg,rgba(72,203,226,.075),transparent 48%),#10171f
+}
+.nextDecision:before{
+  content:"";position:absolute;width:120px;height:120px;right:-58px;top:-58px;
+  border:1px solid rgba(72,203,226,.13);border-radius:50%
+}
+.nextDecisionTop{position:relative;display:flex;align-items:center;justify-content:space-between}
+.nextSignal{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:850;letter-spacing:.09em}
+.nextSignal svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7}
+.nextSignal.focus{color:#ff7583}.nextSignal.watch{color:#67d7e9}
+.nextDecisionTop>strong{font-size:22px;color:#f3f6f8}
+.nextTeams{position:relative;display:grid;grid-template-columns:1fr 22px 1fr;align-items:start;gap:5px}
+.nextTeams>div{min-width:0;display:grid;justify-items:center;gap:7px;text-align:center}
+.nextTeams img,.nextTeams .crestFallback{width:43px;height:43px;object-fit:contain;filter:drop-shadow(0 7px 10px rgba(0,0,0,.3))}
+.nextTeams span{max-width:100%;overflow:hidden;font-size:10px;font-weight:750;white-space:nowrap;text-overflow:ellipsis}
+.nextTeams i{padding-top:17px;color:#64727e;font-size:9px;font-style:normal;font-weight:850;text-align:center}
+.nextMeta{display:flex;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid #26333e;font-size:9px}
+.nextMeta span{min-width:0;overflow:hidden;color:var(--muted);white-space:nowrap;text-overflow:ellipsis}
+.nextMeta b{flex:0 0 auto}
+.nextCountdown{
+  display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border-radius:9px;
+  background:#0a1016;color:var(--muted);font-size:9px
+}
+.nextCountdown strong{color:var(--cyan);font-size:11px}
+.nextCountdown.live strong{color:#ff7583}
+.nextDecisionEmpty{min-height:170px;display:grid;place-content:center;justify-items:center;gap:5px;text-align:center}
+.nextDecisionEmpty>span{font-size:25px;color:var(--cyan)}
+.nextDecisionEmpty strong{font-size:13px}.nextDecisionEmpty small{color:var(--muted);font-size:10px}
+
 @media(max-width:1260px){
   :root{--rail:160px;--context:264px}
   .mainView{padding-left:22px;padding-right:22px}
   .matchRow{grid-template-columns:72px minmax(190px,1fr) 108px 78px;gap:10px}
+  .boardFixture{grid-template-columns:100px minmax(290px,1fr) 100px 20px;gap:12px}
+  .fixtureTeams .teamLine{grid-template-columns:36px minmax(0,1fr)}
+  .fixtureTeams .away{grid-template-columns:minmax(0,1fr) 36px}
+  .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:36px;height:36px}
+  .fixtureTeams .teamLine span{font-size:13px}
   .boardRow{grid-template-columns:minmax(190px,1.2fr) 75px repeat(4,minmax(68px,.55fr));gap:8px}
 }
 @media(max-width:1050px){
@@ -528,6 +680,33 @@ body{
   .mobileNav .navItem.active{background:rgba(72,203,226,.06);color:var(--cyan)}
 }
 @media(max-width:760px){
+  .boardHomeRoute .pageTop{
+    min-height:116px;margin-left:-3px;margin-right:-3px;padding:16px;border-radius:11px;align-items:flex-start
+  }
+  .boardHomeRoute .pageTop h1{font-size:27px}
+  .boardHomeRoute .pageTop:before{right:-42px}.boardHomeRoute .pageTop:after{right:39px}
+  .boardCompetitionHead{min-height:49px;padding:0 11px}
+  .boardCompetitionHead a{display:none}
+  .leagueEmblem{width:29px;height:29px}.leagueEmblem img{width:20px;height:20px}
+  .boardMatchList{gap:7px;padding:7px}
+  .boardMatchCard{border-radius:10px}
+  .matchRow.boardFixture{
+    min-height:100px;padding:10px 40px 10px 9px;
+    grid-template-columns:58px minmax(0,1fr) 72px;gap:8px
+  }
+  .fixtureSignal{display:grid;justify-items:center;gap:4px}
+  .fixtureSignalIcon{width:30px;height:30px;border-radius:9px}.fixtureSignalIcon svg{width:18px;height:18px}
+  .fixtureSignal>div{justify-items:center}.fixtureSignal small{font-size:8px}.fixtureSignal strong{font-size:17px}
+  .fixtureTeams{grid-template-columns:1fr;gap:5px}
+  .fixtureVersus{display:none}
+  .fixtureTeams .teamLine,.fixtureTeams .away{grid-template-columns:30px minmax(0,1fr);gap:7px}
+  .fixtureTeams .away img,.fixtureTeams .away .crestFallback{grid-column:1;grid-row:1}
+  .fixtureTeams .away span{grid-column:2;grid-row:1;text-align:left}
+  .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:30px;height:30px}
+  .fixtureTeams .teamLine span{font-size:12px}
+  .fixtureState{gap:2px}.fixtureStatus{padding:2px 5px;font-size:8px}.fixtureState>strong{font-size:18px}
+  .fixtureState>small{font-size:8px}.fixtureArrow{display:none}
+  .boardFixture>.notifyToggle{right:2px}
   .pageTop p{font-size:12px}
   .teamLine span{font-size:13px}
   .matchCompetition,.matchTime small,.matchScore small{font-size:9px}
@@ -547,7 +726,7 @@ body{
   .mainView{padding:18px 11px 28px}
   .pageTop{min-height:70px;margin-bottom:15px;align-items:flex-start}
   .pageTop h1{font-size:25px}
-  .pageTop p{font-size:10px}
+  .pageTop p{font-size:12px}
   .pageActions{padding-top:14px}
   .primaryButton{min-height:38px;padding:0 10px}
   .dateStrip{

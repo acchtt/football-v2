@@ -365,23 +365,41 @@
     if (Number.isFinite(kickoff) && Date.now() > kickoff + 3 * 60 * 60 * 1000) return 'finished';
     return 'upcoming';
   }
-  function boardMatchBlock(row) {
+  function boardMatchBlock(row, index) {
     const event = eventForBoardRow(row);
-    if (event) {
-      return '<article class="boardMatchCard">' + matchRow(event) + '</article>';
-    }
-    const teams = splitMatch(row.match);
-    const kickoff = row.kickoff || row.displayKickoff;
-    const tier = String(row.tier || '').toUpperCase();
-    const fallback = '<div class="matchRow is-upcoming-row boardPendingRow">' +
-      '<div class="matchTime"><strong>' + esc(formatTime(kickoff)) + '</strong><small>ICT</small></div>' +
-      '<div class="teams"><div class="teamLine">' + crest('team', null, teams.home || 'H') + '<span>' + esc(teams.home || row.match || 'Home') + '</span></div>' +
-      '<div class="teamLine">' + crest('team', null, teams.away || 'A') + '<span>' + esc(teams.away || 'Away') + '</span></div>' +
-      '<div class="matchCompetition">' + esc(row.competition || 'Competition') + '</div></div>' +
-      '<div class="matchMeta"><span class="signalBadge ' + signalClass(row.grade) + '"><b>' + esc(row.grade || '—') +
-      '</b><small>' + esc(tier || 'MODEL') + '</small></span></div>' +
-      '<div class="matchScore"><strong>VS</strong><small>BSD pending</small></div></div>';
-    return '<article class="boardMatchCard">' + fallback + '</article>';
+    const id = event && eventId(event);
+    const status = event ? statusKey(event) : boardStatus(row);
+    const tier = String(row.tier || 'WATCHLIST').toUpperCase();
+    const tierClass = tier === 'FOCUS' ? 'tier-focus' : 'tier-watchlist';
+    const grade = row.grade || '—';
+    const teams = event ? {
+      home: teamName(event, 'home'),
+      away: teamName(event, 'away')
+    } : splitMatch(row.match);
+    const kickoff = event ? eventKickoff(event) : row.kickoff || row.displayKickoff;
+    const primary = status === 'live' ? scoreText(event) : formatTime(kickoff);
+    const secondary = status === 'live' ? liveClock(event) : 'ICT kickoff';
+    const statusName = status === 'live' ? 'Live' : 'Upcoming';
+    const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (id ? '' : 'boardPendingRow') + '" ' +
+      (id ? 'href="#match/' + id + '" ' : '') +
+      'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"';
+    const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
+    const close = id ? '</a>' : '</div>';
+    const signalIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>';
+    const stateIcon = status === 'live' ?
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"></path></svg>' :
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
+    return '<article class="boardMatchCard ' + tierClass + '" style="--order:' + (index || 0) + '">' + open +
+      '<div class="fixtureSignal"><span class="fixtureSignalIcon">' + signalIcon + '</span><div><small>' + esc(tier) +
+      '</small><strong>' + esc(grade) + '</strong></div></div>' +
+      '<div class="fixtureTeams"><div class="teamLine home">' +
+      crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
+      '<span class="fixtureVersus">VS</span><div class="teamLine away">' +
+      crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
+      '<div class="fixtureState"><span class="fixtureStatus ' + status + '">' + stateIcon + esc(statusName) + '</span>' +
+      '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small></div>' +
+      (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
+      close + '</article>';
   }
   function groupedBoardRows(boardRows) {
     const groups = new Map();
@@ -394,11 +412,12 @@
     groups.forEach(function (group, competition) {
       const event = eventForBoardRow(group[0]);
       const lid = event && leagueId(event);
-      html += '<section class="competitionGroup"><header class="competitionHead">' +
-        (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
-        '<div><strong>' + esc(competition) + '</strong><span>' + group.length + ' board match' + (group.length === 1 ? '' : 'es') + '</span></div>' +
-        (lid ? '<a href="#league/' + lid + '">Competition</a>' : '') + '</header>' +
-        '<div class="matchList boardMatchList">' + group.map(boardMatchBlock).join('') + '</div></section>';
+      html += '<section class="competitionGroup boardCompetition"><header class="competitionHead boardCompetitionHead">' +
+        (lid ? '<span class="leagueEmblem"><img src="' + image('league', lid) + '" alt="" loading="lazy"></span>' :
+          '<span class="leagueEmblem fallback" aria-hidden="true">◆</span>') +
+        '<div><strong>' + esc(competition) + '</strong><span>' + group.length + ' active decision' + (group.length === 1 ? '' : 's') + '</span></div>' +
+        (lid ? '<a href="#league/' + lid + '">Open league</a>' : '') + '</header>' +
+        '<div class="matchList boardMatchList">' + group.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
     });
     return html;
   }
@@ -432,28 +451,61 @@
     try { return Object.values(JSON.parse(localStorage.getItem('sliptrace.followedMatches.v2') || '{}') || {}); }
     catch { return []; }
   }
+  function countdownText(value) {
+    const kickoff = Date.parse(value);
+    if (!Number.isFinite(kickoff)) return 'Kickoff pending';
+    const minutes = Math.max(0, Math.ceil((kickoff - Date.now()) / 60000));
+    if (minutes < 1) return 'Starting now';
+    if (minutes < 60) return 'Starts in ' + minutes + 'm';
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    if (hours < 24) return 'Starts in ' + hours + 'h' + (rest ? ' ' + rest + 'm' : '');
+    return 'Starts in ' + Math.floor(hours / 24) + 'd';
+  }
   function matchdayContext(events) {
-    const boardRows = boardRowsForDate().filter(function (row) { return boardStatus(row) !== 'finished'; });
-    const focusRows = boardRows.filter(function (row) { return String(row.tier).toUpperCase() === 'FOCUS'; });
-    const liveCount = events.filter(isLive).length;
+    const boardRows = boardRowsForDate().filter(function (row) {
+      const tier = String(row.tier || '').toUpperCase();
+      return (tier === 'FOCUS' || tier === 'WATCHLIST') && boardStatus(row) !== 'finished';
+    }).sort(function (a, b) {
+      const aLive = boardStatus(a) === 'live' ? 0 : 1;
+      const bLive = boardStatus(b) === 'live' ? 0 : 1;
+      if (aLive !== bLive) return aLive - bLive;
+      const aFocus = String(a.tier || '').toUpperCase() === 'FOCUS' ? 0 : 1;
+      const bFocus = String(b.tier || '').toUpperCase() === 'FOCUS' ? 0 : 1;
+      if (aFocus !== bFocus) return aFocus - bFocus;
+      return (Date.parse(a.kickoff || a.displayKickoff) || Infinity) - (Date.parse(b.kickoff || b.displayKickoff) || Infinity);
+    });
+    const next = boardRows[0] || null;
+    const nextEvent = next && eventForBoardRow(next);
+    const nextId = nextEvent && eventId(nextEvent);
+    const nextStatus = next ? boardStatus(next) : 'upcoming';
+    const nextTeams = nextEvent ? {home:teamName(nextEvent, 'home'), away:teamName(nextEvent, 'away')} :
+      splitMatch(next && next.match);
+    const kickoff = next && (nextEvent ? eventKickoff(nextEvent) : next.kickoff || next.displayKickoff);
+    const tier = String(next && next.tier || 'WATCHLIST').toUpperCase();
+    const nextBody = next ? (
+      (nextId ? '<a class="nextDecision" href="#match/' + nextId + '">' : '<div class="nextDecision">') +
+      '<div class="nextDecisionTop"><span class="nextSignal ' + (tier === 'FOCUS' ? 'focus' : 'watch') +
+      '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>' +
+      esc(tier) + '</span><strong>' + esc(next.grade || '—') + '</strong></div>' +
+      '<div class="nextTeams"><div>' + crest('team', nextEvent && teamId(nextEvent, 'home'), nextTeams.home || 'Home') +
+      '<span>' + esc(nextTeams.home || 'Home') + '</span></div><i>VS</i><div>' +
+      crest('team', nextEvent && teamId(nextEvent, 'away'), nextTeams.away || 'Away') +
+      '<span>' + esc(nextTeams.away || 'Away') + '</span></div></div>' +
+      '<div class="nextMeta"><span>' + esc(next.competition || (nextEvent && leagueName(nextEvent)) || 'Competition') +
+      '</span><b>' + esc(formatTime(kickoff)) + ' ICT</b></div>' +
+      '<div class="nextCountdown ' + nextStatus + '"><span>' + (nextStatus === 'live' ? 'Live decision' : 'Decision window') + '</span><strong ' +
+      (nextStatus === 'live' ? 'data-clock-id="' + (nextId || '') + '"' : 'data-countdown="' + esc(kickoff || '') + '"') + '>' +
+      esc(nextStatus === 'live' ? liveClock(nextEvent) : countdownText(kickoff)) + '</strong></div>' +
+      (nextId ? '</a>' : '</div>')
+    ) : '<div class="nextDecisionEmpty"><span>◇</span><strong>Board clear</strong><small>No active decisions on this slate.</small></div>';
     const activeIds = new Set(events.map(function (event) { return String(eventId(event) || ''); }).filter(Boolean));
     const followed = currentFollowed().filter(function (item) { return activeIds.has(String(item.id || '')); });
-    let focusHtml = focusRows.slice(0, 5).map(function (row, index) {
-      const event = eventForBoardRow(row);
-      return '<a class="focusItem" href="' + (event && eventId(event) ? '#match/' + eventId(event) : '#board') + '">' +
-        '<span>' + String(index + 1).padStart(2, '0') + '</span><div><strong>' + esc(row.match || 'Match') +
-        '</strong><small>' + esc(pick(row.competition, formatTime(row.kickoff), '')) + '</small></div><b>' + esc(row.grade || '—') + '</b></a>';
-    }).join('');
-    return '<section class="railSection">' + sectionHead('Board pulse', 'Decision slate') +
-      '<div class="metricGrid"><div><span>Focus</span><strong>' + focusRows.length + '</strong></div>' +
-      '<div><span>Live</span><strong class="liveValue">' + liveCount + '</strong></div>' +
-      '<div><span>Matches</span><strong>' + events.length + '</strong></div></div></section>' +
-      '<section class="railSection">' + sectionHead('Top focus', 'Model-ranked') +
-      (focusHtml || '<div class="railEmpty">No Focus matches on this slate.</div>') + '</section>' +
-      '<section class="railSection">' + sectionHead('Following', followed.length + ' selected') +
+    return '<section class="railSection nextDecisionSection">' + sectionHead('Next decision', next ? tier : 'No active match') +
+      nextBody + '</section><section class="railSection">' + sectionHead('Following', followed.length + ' active') +
       (followed.length ? followed.slice(0, 4).map(function (item) {
         return '<a class="followedItem" href="' + esc(item.href || '#board') + '">' + esc(item.title || 'Selected match') + '</a>';
-      }).join('') : '<button class="railAction" type="button" data-open-alerts>Choose matches to receive alerts</button>') + '</section>';
+      }).join('') : '<button class="railAction" type="button" data-open-alerts>Choose active match alerts</button>') + '</section>';
   }
   function renderMatchday() {
     state.route = 'board';
@@ -1034,6 +1086,9 @@
       const id = String(node.dataset.clockId || '');
       const event = state.today.concat(state.live).find(function (item) { return String(eventId(item)) === id; });
       if (event && isLive(event)) node.textContent = liveClock(event);
+    });
+    root.querySelectorAll('[data-countdown]').forEach(function (node) {
+      node.textContent = countdownText(node.dataset.countdown);
     });
   }
 

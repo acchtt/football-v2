@@ -1,11 +1,11 @@
-const CACHE='sliptrace-shell-v18';
+const CACHE='sliptrace-shell-v19';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
   BASE,
   asset('index.html'),
   asset('offline.html'),
-  asset('design-v1.css?v=5'),
+  asset('design-v1.css?v=6'),
   asset('alerts-center.css?v=2'),
   asset('manifest.webmanifest?v=4'),
   asset('icons/sliptrace-192.png'),
@@ -15,7 +15,7 @@ const SHELL=[
   asset('config.js?v=5'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
-  asset('app-v2.js?v=5'),
+  asset('app-v2.js?v=6'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=3'),
   asset('alerts-center.js?v=2')
