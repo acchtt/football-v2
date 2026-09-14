@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "SlipTrace Football",
+  "short_name": "SlipTrace",
+  "description": "Football matchday, live scores and SlipTrace model board.",
+  "start_url": "./#today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090b0f",
+  "theme_color": "#090b0f",
+  "categories": ["sports", "utilities"],
+  "icons": [
+    {
+      "src": "./icons/sliptrace.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/sliptrace-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
