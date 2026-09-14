@@ -24,6 +24,8 @@
   }
   function isStandalone(){return matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}
   function isiOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent);}
+  function isAndroid(){return /android/i.test(navigator.userAgent);}
+  function isLikelyWebView(){return /; wv\)|\bwv\b|version\/\d+\.\d+.*chrome/i.test(navigator.userAgent);}
 
   async function ensurePermission(){
     if(!('Notification' in window))return 'unsupported';
@@ -87,13 +89,28 @@
     injectInstallButton();
   }
 
-  function iosSheet(){
+  function installSheet(){
     let sheet=document.querySelector('.iosInstallSheet');
     if(sheet)return sheet;
     sheet=document.createElement('div');sheet.className='iosInstallSheet hidden';
-    sheet.innerHTML='<div class="iosInstallCard"><h3>Install SlipTrace</h3><p>In Safari, tap Share, then choose <b>Add to Home Screen</b>. SlipTrace will open like an app.</p><button type="button">Got it</button></div>';
-    sheet.addEventListener('click',e=>{if(e.target===sheet||e.target.closest('button'))sheet.classList.add('hidden');});
+    sheet.addEventListener('click',e=>{if(e.target===sheet||e.target.closest('[data-close-install]'))sheet.classList.add('hidden');});
     document.body.appendChild(sheet);return sheet;
+  }
+
+  function showInstallHelp(){
+    const sheet=installSheet();
+    if(isiOS()){
+      sheet.innerHTML='<div class="iosInstallCard"><h3>Install SlipTrace</h3><p>Open this page in <b>Safari</b>, tap the Share button, then choose <b>Add to Home Screen</b>. SlipTrace will launch like an app.</p><button type="button" data-close-install>Got it</button></div>';
+    }else{
+      const webviewNote=isLikelyWebView()?'<p><b>You are likely viewing SlipTrace inside an in-app browser.</b> Android does not allow the PWA install prompt here.</p>':'';
+      sheet.innerHTML=`<div class="iosInstallCard"><h3>Install SlipTrace</h3>${webviewNote}<p>Open this page in <b>Chrome</b>. Then tap <b>⋮</b> → <b>Add to Home screen</b> or <b>Install app</b>.</p><p style="margin-top:8px">If you opened this link from ChatGPT, use the browser/open-external option first.</p><button type="button" data-copy-install>Copy website link</button><button type="button" data-close-install>Got it</button></div>`;
+      const copy=sheet.querySelector('[data-copy-install]');
+      copy?.addEventListener('click',async()=>{
+        try{await navigator.clipboard.writeText(location.href);copy.textContent='Link copied';}
+        catch{toast('Copy failed. Open the page menu and choose Open in browser.');}
+      });
+    }
+    sheet.classList.remove('hidden');
   }
 
   function injectInstallButton(){
@@ -102,16 +119,27 @@
     if(!btn){
       btn=document.createElement('button');btn.type='button';btn.className='pwaInstallBtn';btn.textContent='Install';
       btn.addEventListener('click',async()=>{
+        if(isStandalone()){toast('SlipTrace is already installed.');return;}
         if(installPrompt){
-          installPrompt.prompt();
-          try{await installPrompt.userChoice;}catch{}
-          installPrompt=null;btn.classList.remove('show');return;
+          const prompt=installPrompt;
+          installPrompt=null;
+          try{
+            await prompt.prompt();
+            const choice=await prompt.userChoice;
+            if(choice?.outcome==='accepted')toast('Installing SlipTrace…');
+            else{toast('Install was not completed.');showInstallHelp();}
+          }catch(err){
+            console.warn('SlipTrace native install prompt failed',err);
+            toast('Native install is unavailable in this browser.');
+            showInstallHelp();
+          }
+          injectInstallButton();return;
         }
-        if(isiOS()&&!isStandalone())iosSheet().classList.remove('hidden');
+        showInstallHelp();
       });
       host.appendChild(btn);
     }
-    btn.classList.toggle('show',!isStandalone()&&(!!installPrompt||isiOS()));
+    btn.classList.toggle('show',!isStandalone()&&(!!installPrompt||isiOS()||isAndroid()));
   }
 
   async function registerSW(){
