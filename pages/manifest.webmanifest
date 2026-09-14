@@ -2,16 +2,22 @@
   "id": "./",
   "name": "SlipTrace Football",
   "short_name": "SlipTrace",
-  "description": "Football matchday, live scores, picks and SlipTrace model signals.",
+  "description": "SlipTrace model board, live match context, official picks and alerts.",
   "lang": "en",
   "dir": "ltr",
-  "start_url": "./#today",
+  "start_url": "./#board",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#090b0f",
   "theme_color": "#090b0f",
-  "categories": ["sports", "utilities"],
+  "categories": [
+    "sports",
+    "utilities"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {
@@ -34,8 +40,41 @@
     }
   ],
   "shortcuts": [
-    {"name": "Matchday", "short_name": "Matchday", "url": "./#today", "icons": [{"src": "./icons/sliptrace-192.png", "sizes": "192x192", "type": "image/png"}]},
-    {"name": "Model Board", "short_name": "Board", "url": "./#board", "icons": [{"src": "./icons/sliptrace-192.png", "sizes": "192x192", "type": "image/png"}]},
-    {"name": "Picks", "short_name": "Picks", "url": "./#picks", "icons": [{"src": "./icons/sliptrace-192.png", "sizes": "192x192", "type": "image/png"}]}
+    {
+      "name": "Decision Board",
+      "short_name": "Board",
+      "url": "./#board",
+      "icons": [
+        {
+          "src": "./icons/sliptrace-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Picks",
+      "short_name": "Picks",
+      "url": "./#picks",
+      "icons": [
+        {
+          "src": "./icons/sliptrace-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Explore",
+      "short_name": "Explore",
+      "url": "./#leagues",
+      "icons": [
+        {
+          "src": "./icons/sliptrace-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

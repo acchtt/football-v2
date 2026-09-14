@@ -218,16 +218,15 @@
   }
 
   function routeName() {
-    const hash = location.hash || '#today';
+    const hash = location.hash || '#board';
     if (/^#match\//.test(hash)) return 'match';
     if (/^#league\//.test(hash)) return 'league';
     if (/^#team\//.test(hash)) return 'team';
     if (/^#search\//.test(hash)) return 'search';
-    return hash.slice(1) || 'today';
+    return hash.slice(1) || 'board';
   }
   function routeGroup(route) {
-    if (route === 'today' || route === 'match') return 'today';
-    if (route === 'board') return 'board';
+    if (route === 'board' || route === 'today' || route === 'match') return 'board';
     if (route === 'picks') return 'picks';
     return 'explore';
   }
@@ -239,7 +238,6 @@
   }
   function navigation(className) {
     return '<nav class="' + className + '" aria-label="Primary navigation">' +
-      navItem('today', 'Scores', '#today', '◉') +
       navItem('board', 'Board', '#board', '◆') +
       navItem('picks', 'Picks', '#picks', '✓') +
       navItem('explore', 'Explore', '#leagues', '⌕') +
@@ -248,7 +246,7 @@
   function header() {
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
-      '<a class="brand" href="#today"><span class="brandMark">ST</span><span class="brandWords"><b>SLIPTRACE</b><small>Match intelligence</small></span></a>' +
+      '<a class="brand" href="#board"><span class="brandMark">ST</span><span class="brandWords"><b>SLIPTRACE</b><small>Match intelligence</small></span></a>' +
       '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams or players" placeholder="Search teams or players" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
@@ -340,7 +338,7 @@
     const tier = String(board && board.tier || '').toUpperCase();
     const grade = board && board.grade || '—';
     const status = statusKey(event);
-    const href = id ? '#match/' + id : '#today';
+    const href = id ? '#match/' + id : '#board';
     const period = pick(eventTime(event).period, event.round_label, '');
     return '<a class="matchRow is-' + status + '-row" href="' + href + '" data-live-event="' + (id || '') +
       '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '">' +
@@ -358,6 +356,58 @@
       '<div class="matchScore"><strong>' + esc(scoreText(event)) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' +
         esc(isLive(event) ? liveClock(event) : statusLabel(event)) + '</small></div></a>';
   }
+  function decisionStrip(row) {
+    if (!row) return '';
+    return '<div class="decisionStrip" aria-label="SlipTrace readiness">' +
+      '<div><span>Structure</span><b>' + esc(row.structure || '—') + '</b></div>' +
+      '<div><span>Starting XI</span><b>' + esc(row.xiStatus || '—') + '</b></div>' +
+      '<div><span>Market</span><b>' + esc(row.marketStatus || '—') + '</b></div>' +
+      '<div><span>Coverage</span><b>' + esc(row.coverageStatus || '—') + '</b></div>' +
+      (row.frozenPreSummary ? '<p><strong>Frozen PRE</strong>' + esc(row.frozenPreSummary) + '</p>' : '') +
+      '</div>';
+  }
+  function boardStatus(row) {
+    const event = eventForBoardRow(row);
+    return event ? statusKey(event) : 'upcoming';
+  }
+  function boardMatchBlock(row) {
+    const event = eventForBoardRow(row);
+    if (event) {
+      return '<article class="boardMatchCard">' + matchRow(event) + decisionStrip(row) + '</article>';
+    }
+    const teams = splitMatch(row.match);
+    const kickoff = row.kickoff || row.displayKickoff;
+    const tier = String(row.tier || '').toUpperCase();
+    const fallback = '<div class="matchRow is-upcoming-row boardPendingRow">' +
+      '<div class="matchTime"><strong>' + esc(formatTime(kickoff)) + '</strong><small>ICT</small></div>' +
+      '<div class="teams"><div class="teamLine">' + crest('team', null, teams.home || 'H') + '<span>' + esc(teams.home || row.match || 'Home') + '</span></div>' +
+      '<div class="teamLine">' + crest('team', null, teams.away || 'A') + '<span>' + esc(teams.away || 'Away') + '</span></div>' +
+      '<div class="matchCompetition">' + esc(row.competition || 'Competition') + '</div></div>' +
+      '<div class="matchMeta"><span class="signalBadge ' + signalClass(row.grade) + '"><b>' + esc(row.grade || '—') +
+      '</b><small>' + esc(tier || 'MODEL') + '</small></span></div>' +
+      '<div class="matchScore"><strong>VS</strong><small>BSD pending</small></div></div>';
+    return '<article class="boardMatchCard">' + fallback + decisionStrip(row) + '</article>';
+  }
+  function groupedBoardRows(boardRows) {
+    const groups = new Map();
+    boardRows.forEach(function (row) {
+      const key = row.competition || 'Other';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(row);
+    });
+    let html = '';
+    groups.forEach(function (group, competition) {
+      const event = eventForBoardRow(group[0]);
+      const lid = event && leagueId(event);
+      html += '<section class="competitionGroup"><header class="competitionHead">' +
+        (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
+        '<div><strong>' + esc(competition) + '</strong><span>' + group.length + ' board match' + (group.length === 1 ? '' : 'es') + '</span></div>' +
+        (lid ? '<a href="#league/' + lid + '">Competition</a>' : '') + '</header>' +
+        '<div class="matchList boardMatchList">' + group.map(boardMatchBlock).join('') + '</div></section>';
+    });
+    return html;
+  }
+
   function groupedMatches(events) {
     const groups = new Map();
     events.forEach(function (event) {
@@ -398,7 +448,7 @@
         '<span>' + String(index + 1).padStart(2, '0') + '</span><div><strong>' + esc(row.match || 'Match') +
         '</strong><small>' + esc(pick(row.competition, formatTime(row.kickoff), '')) + '</small></div><b>' + esc(row.grade || '—') + '</b></a>';
     }).join('');
-    return '<section class="railSection">' + sectionHead('Matchday pulse', 'Live operational view') +
+    return '<section class="railSection">' + sectionHead('Board pulse', 'Decision slate') +
       '<div class="metricGrid"><div><span>Focus</span><strong>' + focusRows.length + '</strong></div>' +
       '<div><span>Live</span><strong class="liveValue">' + liveCount + '</strong></div>' +
       '<div><span>Matches</span><strong>' + events.length + '</strong></div></div></section>' +
@@ -406,27 +456,33 @@
       (focusHtml || '<div class="railEmpty">No Focus matches on this slate.</div>') + '</section>' +
       '<section class="railSection">' + sectionHead('Following', followed.length + ' selected') +
       (followed.length ? followed.slice(0, 4).map(function (item) {
-        return '<a class="followedItem" href="' + esc(item.href || '#today') + '">' + esc(item.title || 'Selected match') + '</a>';
+        return '<a class="followedItem" href="' + esc(item.href || '#board') + '">' + esc(item.title || 'Selected match') + '</a>';
       }).join('') : '<button class="railAction" type="button" data-open-alerts>Choose matches to receive alerts</button>') + '</section>';
   }
   function renderMatchday() {
-    state.route = 'today';
-    const sorted = state.today.slice().sort(function (a, b) {
-      return (Date.parse(eventKickoff(a)) || 0) - (Date.parse(eventKickoff(b)) || 0);
+    state.route = 'board';
+    const boardRows = boardRowsForDate().filter(function (row) {
+      const tier = String(row.tier || '').toUpperCase();
+      return tier === 'FOCUS' || tier === 'WATCHLIST';
+    }).sort(function (a, b) {
+      return (Date.parse(a.kickoff || a.displayKickoff) || 0) - (Date.parse(b.kickoff || b.displayKickoff) || 0);
     });
     const counts = {
-      all: sorted.length,
-      live: sorted.filter(isLive).length,
-      upcoming: sorted.filter(function (event) { return statusKey(event) === 'upcoming'; }).length,
-      finished: sorted.filter(isFinished).length
+      all: boardRows.length,
+      live: boardRows.filter(function (row) { return boardStatus(row) === 'live'; }).length,
+      upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length,
+      finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length
     };
-    const filtered = sorted.filter(function (event) {
-      if (state.statusFilter !== 'all' && statusKey(event) !== state.statusFilter) return false;
-      const tier = String(boardRowFor(event)?.tier || '').toUpperCase();
+    const focusCount = boardRows.filter(function (row) { return String(row.tier || '').toUpperCase() === 'FOCUS'; }).length;
+    const watchCount = boardRows.filter(function (row) { return String(row.tier || '').toUpperCase() === 'WATCHLIST'; }).length;
+    const filtered = boardRows.filter(function (row) {
+      if (state.statusFilter !== 'all' && boardStatus(row) !== state.statusFilter) return false;
+      const tier = String(row.tier || '').toUpperCase();
       if (state.signalFilter === 'focus') return tier === 'FOCUS';
       if (state.signalFilter === 'watchlist') return tier === 'WATCHLIST';
       return true;
     });
+    const matchedEvents = boardRows.map(eventForBoardRow).filter(Boolean);
     const statusButton = function (key, label) {
       return '<button type="button" class="' + (state.statusFilter === key ? 'active' : '') + '" data-status-filter="' + key +
         '" aria-pressed="' + (state.statusFilter === key) + '"><span>' + label + '</span><b>' + counts[key] + '</b></button>';
@@ -439,15 +495,20 @@
       statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','Finished') +
       '</div><div class="signalFilters" aria-label="Model signal">' +
       signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
-    const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true">↻</span> Sync</button>';
-    let content = pageTitle('Scores', state.date === todayKey() ? 'Today’s matches' : formatDate(state.date, true),
-      'BSD scores with the SlipTrace decision layer. Times shown in ICT.', actions) +
-      (state.error ? '<div class="statusBanner"><b>Live data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      dateStrip() + controls +
-      '<section class="matchSection">' + sectionHead('Match list', filtered.length + ' shown') +
-      (filtered.length ? groupedMatches(filtered) : '<div class="emptyState"><strong>No matching fixtures</strong><span>Try another status, signal, or date.</span></div>') +
+    const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true">↻</span> Sync board</button>';
+    const title = state.date === todayKey() ? 'Today’s decision board' : formatDate(state.date, true);
+    const content = pageTitle('Model board', title,
+      'Focus and Watchlist decisions first, enriched with BSD score and match status. Times shown in ICT.', actions) +
+      (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
+      dateStrip() +
+      '<div class="performanceGrid boardHomeMetrics"><div><span>Focus</span><strong>' + focusCount + '</strong></div>' +
+      '<div><span>Watchlist</span><strong>' + watchCount + '</strong></div>' +
+      '<div><span>Live now</span><strong class="liveValue">' + counts.live + '</strong></div>' +
+      '<div><span>Board total</span><strong>' + counts.all + '</strong></div></div>' +
+      controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
+      (filtered.length ? groupedBoardRows(filtered) : '<div class="emptyState"><strong>No matching board entries</strong><span>Try another status, signal, or date.</span></div>') +
       '</section>';
-    root.innerHTML = shell(content, matchdayContext(sorted), 'matchdayRoute');
+    root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
     bindGlobal();
   }
 
@@ -472,7 +533,7 @@
   async function loadMatchday(date, silent) {
     state.date = date || state.date;
     state.error = '';
-    if (!silent && !state.today.length) skeleton('today', 'Loading matchday');
+    if (!silent && !state.today.length) skeleton('board', 'Loading decision board');
     try {
       const results = await Promise.all([
         api('/api/bsd/events?date_from=' + encodeURIComponent(state.date) + '&date_to=' + encodeURIComponent(state.date) + '&limit=200'),
@@ -485,7 +546,7 @@
     } catch (error) {
       state.error = error.message || String(error);
     }
-    if (routeName() === 'today') renderMatchday();
+    if (routeName() === 'board') renderMatchday();
   }
 
   function parseStats(raw) {
@@ -642,8 +703,8 @@
       const currentScore = score(event);
       const scoreDisplay = currentScore.home !== null && currentScore.away !== null ?
         currentScore.home + ' – ' + currentScore.away : formatTime(eventKickoff(event));
-      const hero = '<a class="backLink" href="#today">← Scores</a><section class="matchHero">' +
-        '<div class="matchContext"><a href="' + (leagueId(event) ? '#league/' + leagueId(event) : '#today') + '">' +
+      const hero = '<a class="backLink" href="#board">← Board</a><section class="matchHero">' +
+        '<div class="matchContext"><a href="' + (leagueId(event) ? '#league/' + leagueId(event) : '#board') + '">' +
         esc(leagueName(event)) + '</a><span>' + esc(pick(event.round_label, event.stage_name, 'Match')) + '</span></div>' +
         '<div class="matchHeroMain"><div class="heroTeam">' + crest('team', teamId(event,'home'), teamName(event,'home')) +
         '<span>' + esc(teamName(event,'home')) + '</span></div><div class="heroScore"><strong>' + esc(scoreDisplay) +
@@ -814,37 +875,6 @@
     } catch (error) { renderError('search', error); }
   }
 
-  function boardPage() {
-    state.route = 'board';
-    const items = boardRowsForDate();
-    const eventLink = function (row) {
-      const event = eventForBoardRow(row);
-      return event && eventId(event) ? '#match/' + eventId(event) : '#today';
-    };
-    const body = items.map(function (row) {
-      return '<a class="boardRow" href="' + eventLink(row) + '"><div class="boardMatch"><strong>' + esc(row.match || 'Match') +
-        '</strong><span>' + esc(row.competition || '') + ' · ' + esc(formatTime(row.kickoff || row.displayKickoff)) + ' ICT</span></div>' +
-        '<div class="boardGrade ' + signalClass(row.grade) + '"><b>' + esc(row.grade || '—') + '</b><span>' + esc(row.tier || '—') + '</span></div>' +
-        '<div class="boardFact"><span>Structure</span><b>' + esc(row.structure || '—') + '</b></div>' +
-        '<div class="boardFact"><span>XI</span><b>' + esc(row.xiStatus || '—') + '</b></div>' +
-        '<div class="boardFact"><span>Market</span><b>' + esc(row.marketStatus || '—') + '</b></div>' +
-        '<div class="boardFact coverage"><span>Coverage</span><b>' + esc(row.coverageStatus || '—') + '</b></div><span class="rowArrow">→</span>' +
-        (row.frozenPreSummary ? '<p>' + esc(row.frozenPreSummary) + '</p>' : '') + '</a>';
-    }).join('');
-    const focus = items.filter(function (row) { return String(row.tier).toUpperCase() === 'FOCUS'; }).length;
-    const watch = items.filter(function (row) { return String(row.tier).toUpperCase() === 'WATCHLIST'; }).length;
-    const content = pageTitle('Model board','Decision workspace','Every model signal, readiness check, and frozen PRE note in one view.') +
-      dateStrip() + '<div class="boardMetrics"><div><span>Focus</span><strong>' + focus + '</strong></div>' +
-      '<div><span>Watchlist</span><strong>' + watch + '</strong></div><div><span>Total</span><strong>' + items.length + '</strong></div></div>' +
-      '<section class="contentSection boardSection">' + sectionHead('Focus & watchlist',items.length + ' matches') +
-      (body || '<div class="emptyState"><strong>No board rows</strong><span>There are no Focus or Watchlist decisions for this date.</span></div>') + '</section>';
-    const context = '<section class="railSection">' + sectionHead('Reading the board','Decision states') +
-      '<div class="legendList"><div><i class="legend focus"></i><span><b>Focus</b>Primary match candidates</span></div>' +
-      '<div><i class="legend watch"></i><span><b>Watchlist</b>Monitor before action</span></div>' +
-      '<div><i class="legend ready"></i><span><b>Readiness</b>XI, market and coverage checks</span></div></div></section>';
-    root.innerHTML = shell(content, context, 'boardRoute');
-    bindGlobal();
-  }
   function resultState(value) {
     const result = String(value || 'PENDING').toUpperCase();
     if (['PENDING','OPEN',''].includes(result)) return 'open';
@@ -902,11 +932,7 @@
     root.querySelectorAll('[data-date]').forEach(function (button) {
       button.addEventListener('click', function () {
         state.date = button.dataset.date;
-        if (routeName() === 'board') {
-          boardPage();
-        } else {
-          loadMatchday(state.date, true);
-        }
+        loadMatchday(state.date, true);
       });
     });
     root.querySelectorAll('[data-status-filter]').forEach(function (button) {
@@ -955,17 +981,15 @@
     bindGlobal();
   }
   async function render() {
-    const hash = location.hash || '#today';
+    const hash = location.hash || '#board';
     state.route = routeName();
-    if (hash === '#schedule') { location.hash = '#today'; return; }
-    if (hash === '#today' || hash === '#') {
-      if (!state.today.length) await loadMatchday(state.date, false);
-      else renderMatchday();
+    if (hash === '#today' || hash === '#schedule' || hash === '#') {
+      location.hash = '#board';
       return;
     }
     if (hash === '#board') {
-      if (!state.board) await loadBoard();
-      boardPage();
+      if (!state.today.length || !state.board) await loadMatchday(state.date, false);
+      else renderMatchday();
       return;
     }
     if (hash === '#picks') {
@@ -988,13 +1012,13 @@
       searchPage(query);
       return;
     }
-    location.hash = '#today';
+    location.hash = '#board';
   }
   async function refreshLive() {
     if (document.visibilityState === 'hidden') return;
     state.refreshTick += 1;
     try {
-      if (state.refreshTick % 6 === 0 && routeName() === 'today' && state.date === todayKey()) {
+      if (state.refreshTick % 6 === 0 && routeName() === 'board' && state.date === todayKey()) {
         await loadMatchday(state.date, true);
         return;
       }
@@ -1007,10 +1031,10 @@
         const current = byId.get(String(eventId(event)));
         return current ? Object.assign({}, event, current, {status:'live'}) : event;
       });
-      if (routeName() === 'today') renderMatchday();
+      if (routeName() === 'board') renderMatchday();
     } catch (error) {
       state.error = error.message || String(error);
-      if (routeName() === 'today') renderMatchday();
+      if (routeName() === 'board') renderMatchday();
     }
   }
   function tickClocks() {
@@ -1023,7 +1047,7 @@
 
   window.addEventListener('hashchange', render);
   window.addEventListener('sliptrace:followed-changed', function () {
-    if (routeName() === 'today') renderMatchday();
+    if (routeName() === 'board') renderMatchday();
   });
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') refreshLive();

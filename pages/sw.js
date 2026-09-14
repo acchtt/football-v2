@@ -1,13 +1,13 @@
-const CACHE='sliptrace-shell-v15';
+const CACHE='sliptrace-shell-v16';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
   BASE,
   asset('index.html'),
   asset('offline.html'),
-  asset('design-v1.css?v=2'),
+  asset('design-v1.css?v=3'),
   asset('alerts-center.css?v=2'),
-  asset('manifest.webmanifest?v=3'),
+  asset('manifest.webmanifest?v=4'),
   asset('icons/sliptrace-192.png'),
   asset('icons/sliptrace-512.png'),
   asset('icons/sliptrace-maskable-512.png'),
@@ -15,7 +15,7 @@ const SHELL=[
   asset('config.js?v=5'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
-  asset('app-v2.js?v=2'),
+  asset('app-v2.js?v=3'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=3'),
   asset('alerts-center.js?v=2')
@@ -45,7 +45,7 @@ self.addEventListener('message',event=>{
       icon:asset('icons/sliptrace-192.png'),
       badge:asset('icons/sliptrace-192.png'),
       tag:'sliptrace-local-test',
-      data:{url:asset('#today')}
+      data:{url:asset('#board')}
     }));
   }
 });
@@ -93,7 +93,7 @@ self.addEventListener('push',event=>{
   try{payload=event.data?.json()||{};}catch{payload={body:event.data?.text()||''};}
   const matchId=String(payload.matchId||payload.match_id||'');
   const title=payload.title||'SlipTrace Football';
-  const destination=payload.url||self.registration.scope+(matchId?'#match/'+encodeURIComponent(matchId):'#today');
+  const destination=payload.url||self.registration.scope+(matchId?'#match/'+encodeURIComponent(matchId):'#board');
   const options={
     body:payload.body||'A selected match has an update.',
     icon:asset('icons/sliptrace-192.png'),
@@ -109,7 +109,7 @@ self.addEventListener('push',event=>{
 
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
-  const target=new URL(event.notification?.data?.url||'#today',self.registration.scope).href;
+  const target=new URL(event.notification?.data?.url||'#board',self.registration.scope).href;
   event.waitUntil((async()=>{
     const windows=await clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of windows){
