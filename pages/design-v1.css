@@ -470,6 +470,7 @@ img{display:block}
   .boardRow{grid-template-columns:minmax(190px,1.2fr) 75px repeat(4,minmax(68px,.55fr));gap:8px}
 }
 @media(max-width:1050px){
+  body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
   .appFrame{grid-template-columns:1fr}
   .primaryRail{display:none}
   .contentFrame{grid-template-columns:minmax(0,1fr)}
@@ -477,6 +478,18 @@ img{display:block}
   .headerInner{padding:0 16px}
   .brandWords small{display:none}
   .headerSearch{width:min(420px,48vw)}
+  .mobileNav{
+    position:fixed;left:0;right:0;bottom:0;z-index:110;height:calc(62px + env(safe-area-inset-bottom));
+    padding:3px 7px env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--line);background:rgba(8,12,17,.97);backdrop-filter:blur(14px)
+  }
+  .mobileNav .navItem{
+    min-height:55px;padding:4px;display:grid;place-content:center;justify-items:center;gap:3px;border-radius:8px
+  }
+  .mobileNav .navItem>span{width:auto;font-size:11px}
+  .mobileNav .navItem b{font-size:8px}
+  .mobileNav .navItem.active:after{display:none}
+  .mobileNav .navItem.active{background:rgba(72,203,226,.06);color:var(--cyan)}
 }
 @media(max-width:760px){
   :root{--header:58px}
