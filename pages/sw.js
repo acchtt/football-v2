@@ -1,4 +1,4 @@
-const CACHE='sliptrace-shell-v2';
+const CACHE='sliptrace-shell-v3';
 const BASE=new URL('./',self.location.href).pathname;
 const SHELL=[
   BASE,
@@ -8,9 +8,11 @@ const SHELL=[
   `${BASE}graphics-v2.css?v=1`,
   `${BASE}graphics-v3.css?v=1`,
   `${BASE}mobile-v1.css?v=1`,
-  `${BASE}manifest.webmanifest`,
+  `${BASE}manifest.webmanifest?v=2`,
   `${BASE}icons/sliptrace.svg`,
-  `${BASE}icons/sliptrace-maskable.svg`,
+  `${BASE}icons/sliptrace-192.svg`,
+  `${BASE}icons/sliptrace-512.svg`,
+  `${BASE}icons/sliptrace-maskable-512.svg`,
   `${BASE}ict-slate-fetch.js?v=1`,
   `${BASE}config.js?v=5`,
   `${BASE}strict-board-filter.js?v=2`,
@@ -75,8 +77,8 @@ self.addEventListener('push',event=>{
   const title=payload.title||'SlipTrace Football';
   const options={
     body:payload.body||'A selected match has an update.',
-    icon:`${BASE}icons/sliptrace.svg`,
-    badge:`${BASE}icons/sliptrace.svg`,
+    icon:`${BASE}icons/sliptrace-192.svg`,
+    badge:`${BASE}icons/sliptrace-192.svg`,
     tag:payload.tag||`sliptrace-${matchId||'update'}`,
     renotify:true,
     data:{url:payload.url||`${BASE}${matchId?`#match/${matchId}`:'#today'}`}
