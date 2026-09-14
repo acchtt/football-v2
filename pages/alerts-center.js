@@ -37,12 +37,13 @@
     } catch { return null; }
   }
   async function syncNow() {
-    if (syncing) return;
-    const sub = await subscription();
-    if (!sub) return;
+    if (syncing) return { ok: false, reason: 'busy' };
     syncing = true;
     try {
-      await fetch(`${API}/api/push/sync`, {
+      if (window.SlipTracePWA?.syncPushSelection) return await window.SlipTracePWA.syncPushSelection();
+      const sub = await subscription();
+      if (!sub) return { ok: false, reason: 'no-subscription' };
+      const response = await fetch(`${API}/api/push/sync`, {
         method: 'POST',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
@@ -52,13 +53,17 @@
           settings: settings(),
         }),
       });
+      if (!response.ok) throw new Error(`Push sync HTTP ${response.status}`);
+      return { ok: true };
     } catch (error) {
       console.warn('SlipTrace alert settings sync failed', error);
+      return { ok: false, reason: 'sync', error };
     } finally {
       syncing = false;
     }
   }
   function scheduleSync() {
+    if (window.SlipTracePWA?.syncPushSelection) return;
     clearTimeout(syncTimer);
     syncTimer = setTimeout(syncNow, 250);
   }
@@ -83,38 +88,65 @@
     btn.classList.toggle('hasAlerts', count > 0);
   }
 
-  function labelFor(item, id) {
-    return String(item?.title || `Match ${id}`);
-  }
-  function renderMatchRows() {
-    const all = followed();
-    const entries = Object.entries(all).filter(([id]) => /^\d+$/.test(id));
-    if (!entries.length) return '<div class="alertsEmpty"><strong>No followed matches</strong><span>Use the bell on a match to add it here.</span></div>';
-    return entries.map(([id, item]) => `
-      <div class="alertsMatch" data-alert-match="${id}">
-        <a href="${item?.href || `#match/${id}`}" data-open-match>${escapeHtml(labelFor(item, id))}</a>
-        <button type="button" data-remove-match="${id}" aria-label="Remove alerts for ${escapeAttr(labelFor(item, id))}">Remove</button>
-      </div>`).join('');
+  function labelFor(item, id) { return String(item?.title || `Match ${id}`); }
+  function safeHref(item, id) {
+    const value = String(item?.href || '');
+    return /^#match\/\d+$/.test(value) ? value : `#match/${id}`;
   }
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
   function escapeAttr(value) { return escapeHtml(value); }
+  function renderMatchRows() {
+    const all = followed();
+    const entries = Object.entries(all).filter(([id]) => /^\d+$/.test(id));
+    if (!entries.length) return '<div class="alertsEmpty"><strong>No followed matches</strong><span>Tap the bell on a match first, then enable device alerts here.</span></div>';
+    return entries.map(([id, item]) => `
+      <div class="alertsMatch" data-alert-match="${id}">
+        <a href="${safeHref(item, id)}" data-open-match>${escapeHtml(labelFor(item, id))}</a>
+        <button type="button" data-remove-match="${id}" aria-label="Remove alerts for ${escapeAttr(labelFor(item, id))}">Remove</button>
+      </div>`).join('');
+  }
 
   function preferenceRow(key, title, note) {
     const enabled = settings()[key] !== false;
     return `<label class="alertsPref"><span><strong>${title}</strong><small>${note}</small></span><input type="checkbox" data-alert-pref="${key}" ${enabled ? 'checked' : ''}><i aria-hidden="true"></i></label>`;
   }
 
-  async function statusText() {
+  async function readStatus() {
     try {
       const d = await window.SlipTracePWA?.diagnostics?.();
-      if (!d) return 'PWA status unavailable';
-      if (d.subscription && d.backend) return 'Background push connected';
-      if (d.notificationPermission === 'denied') return 'Notifications blocked by browser';
-      if (!d.backend) return 'Push backend unavailable';
-      return 'Push not enabled on this device';
-    } catch { return 'Could not read push status'; }
+      if (!d) return { d: null, text: 'PWA status unavailable', tone: 'bad' };
+      if (d.subscription && d.backend) return { d, text: 'Background push connected', tone: 'ok' };
+      if (d.notificationPermission === 'denied') return { d, text: 'Notifications blocked by browser', tone: 'bad' };
+      if (!d.pushApi) return { d, text: 'Web Push unsupported in this browser', tone: 'bad' };
+      if (!d.backend) return { d, text: 'Push backend unavailable', tone: 'bad' };
+      return { d, text: 'Push ready — enable it on this device', tone: 'warn' };
+    } catch { return { d: null, text: 'Could not read push status', tone: 'bad' }; }
+  }
+
+  function renderSetup(status) {
+    const d = status.d;
+    if (d?.subscription && d?.backend) {
+      return '<div class="alertsSetup is-active"><div><strong>Device alerts are active</strong><small>SlipTrace can notify you even when the app is closed.</small></div><span aria-hidden="true">✓</span></div>';
+    }
+    let text = 'Enable alerts on this device';
+    let note = 'Followed matches will receive the alert types selected below.';
+    let disabled = false;
+    if (!ids().length) { text = 'Follow a match first'; note = 'Choose at least one match before creating a push subscription.'; disabled = true; }
+    else if (d?.notificationPermission === 'denied') { text = 'Notifications are blocked'; note = 'Allow notifications for SlipTrace in your browser or site settings.'; disabled = true; }
+    else if (d && !d.pushApi) { text = 'Web Push unsupported'; note = 'Open SlipTrace in a browser that supports Web Push.'; disabled = true; }
+    else if (d && !d.backend) { text = 'Push service unavailable'; note = 'The server is not ready for subscriptions right now.'; disabled = true; }
+    return `<div class="alertsSetup"><div><strong>Background alerts</strong><small>${escapeHtml(note)}</small></div><button type="button" data-enable-push ${disabled ? 'disabled' : ''}>${escapeHtml(text)}</button></div>`;
+  }
+
+  function enableFailureMessage(result) {
+    if (!result) return 'Could not enable alerts.';
+    if (result.reason === 'ios-install') return 'Install SlipTrace to your Home Screen, open the installed app, then enable alerts.';
+    if (result.reason === 'denied') return 'Notification permission is blocked in the browser.';
+    if (result.reason === 'unsupported') return 'This browser does not support Web Push.';
+    if (result.reason === 'backend') return 'The push backend is not ready.';
+    return result.detail || 'Could not enable alerts on this device.';
   }
 
   async function openCenter() {
@@ -124,14 +156,17 @@
       sheet.className = 'alertsCenterSheet hidden';
       document.body.appendChild(sheet);
     }
-    const st = await statusText();
+    const status = await readStatus();
+    const d = status.d || {};
     sheet.innerHTML = `
       <div class="alertsCenterCard" role="dialog" aria-modal="true" aria-labelledby="alertsCenterTitle">
         <div class="alertsCenterHead">
           <div><span class="alertsEyebrow">MATCH ALERTS</span><h3 id="alertsCenterTitle">Notification center</h3></div>
           <button type="button" class="alertsClose" data-alert-close aria-label="Close notification center">×</button>
         </div>
-        <div class="alertsConnection"><span class="alertsStatusDot"></span><strong>${escapeHtml(st)}</strong><button type="button" data-push-status>Details</button></div>
+        <div class="alertsConnection is-${status.tone}"><span class="alertsStatusDot"></span><strong>${escapeHtml(status.text)}</strong><button type="button" data-push-status>Details</button></div>
+        ${renderSetup(status)}
+        <div class="alertsInlineStatus" role="status" aria-live="polite"></div>
         <section class="alertsSection">
           <div class="alertsSectionTitle"><strong>Followed matches</strong><span>${ids().length}</span></div>
           <div class="alertsMatches">${renderMatchRows()}</div>
@@ -146,7 +181,7 @@
           </div>
         </section>
         <div class="alertsActions">
-          <button type="button" data-test-push>Send test</button>
+          <button type="button" class="primary" data-test-push ${d.subscription && d.backend ? '' : 'disabled'}>Send test push</button>
           <button type="button" class="danger" data-clear-alerts ${ids().length ? '' : 'disabled'}>Clear followed</button>
         </div>
       </div>`;
@@ -158,19 +193,48 @@
       if (event.target === sheet || event.target.closest('[data-alert-close]')) { sheet.classList.add('hidden'); return; }
       const remove = event.target.closest('[data-remove-match]');
       if (remove) {
-        const all = followed(); delete all[remove.dataset.removeMatch]; saveFollowed(all); scheduleSync(); openCenter(); return;
+        const all = followed(); delete all[remove.dataset.removeMatch]; saveFollowed(all); scheduleSync(); await openCenter(); return;
       }
       if (event.target.closest('[data-clear-alerts]')) {
-        saveFollowed({}); scheduleSync(); openCenter(); return;
+        saveFollowed({}); scheduleSync(); await syncNow(); await openCenter(); return;
       }
       if (event.target.closest('[data-push-status]')) {
         window.SlipTracePWA?.showStatus?.(); return;
       }
+      const enable = event.target.closest('[data-enable-push]');
+      if (enable) {
+        const output = $('.alertsInlineStatus', sheet);
+        enable.disabled = true; enable.textContent = 'Enabling…';
+        if (output) output.textContent = 'Requesting notification permission and registering this device…';
+        try {
+          const result = await window.SlipTracePWA?.enablePush?.();
+          if (result?.ok) {
+            await syncNow();
+            if (output) output.textContent = 'Background alerts are connected.';
+            await openCenter();
+          } else {
+            enable.disabled = false; enable.textContent = 'Try again';
+            if (output) output.textContent = enableFailureMessage(result);
+          }
+        } catch (error) {
+          enable.disabled = false; enable.textContent = 'Try again';
+          if (output) output.textContent = error?.message || 'Could not enable alerts.';
+        }
+        return;
+      }
       const test = event.target.closest('[data-test-push]');
       if (test) {
+        const output = $('.alertsInlineStatus', sheet);
         test.disabled = true; test.textContent = 'Sending…';
-        try { await window.SlipTracePWA?.sendTestNotification?.(); test.textContent = 'Test sent'; }
-        catch { test.textContent = 'Unavailable'; }
+        try {
+          await window.SlipTracePWA?.sendTestNotification?.();
+          test.textContent = 'Test sent';
+          if (output) output.textContent = 'Test push sent. It should appear as a system notification.';
+        } catch (error) {
+          test.disabled = false; test.textContent = 'Send test push';
+          if (output) output.textContent = error?.message || 'Test push was unavailable.';
+        }
+        return;
       }
       const open = event.target.closest('[data-open-match]');
       if (open) sheet.classList.add('hidden');
@@ -182,14 +246,12 @@
   }
 
   function refresh() { ensureButton(); }
-  window.addEventListener('sliptrace:followed-changed', () => { refresh(); scheduleSync(); });
-  window.addEventListener('sliptrace:alert-settings-changed', scheduleSync);
+  window.addEventListener('sliptrace:followed-changed', refresh);
   window.addEventListener('hashchange', refresh);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { refresh(); scheduleSync(); } });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
   const app = document.getElementById('app');
   if (app) new MutationObserver(() => requestAnimationFrame(refresh)).observe(app, { childList: true, subtree: true });
 
   window.SlipTraceAlerts = { open: openCenter, settings, sync: syncNow };
   requestAnimationFrame(refresh);
-  scheduleSync();
 })();
