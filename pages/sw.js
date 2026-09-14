@@ -1,4 +1,4 @@
-const CACHE='sliptrace-shell-v13';
+const CACHE='sliptrace-shell-v14';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>`${BASE}${name}`;
 const SHELL=[
@@ -22,11 +22,11 @@ const SHELL=[
   asset('icons/sliptrace-maskable-512.png'),
   asset('ict-slate-fetch.js?v=1'),
   asset('config.js?v=5'),
-  asset('strict-board-filter.js?v=2'),
+  asset('strict-board-filter.js?v=3'),
   asset('canonical-live-source.js?v=2'),
   asset('app-v2.js?v=1'),
   asset('matchday-polish.js?v=5'),
-  asset('strict-board-guard.js?v=4'),
+  asset('strict-board-guard.js?v=5'),
   asset('status-sync.js?v=4'),
   asset('graphics-v3.js?v=1'),
   asset('pwa-v2.js?v=3'),
