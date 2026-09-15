@@ -249,7 +249,7 @@
   function header() {
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
-      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Matchday intelligence</small></span></a>' +
+      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg?v=2" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Matchday intelligence</small></span></a>' +
       '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams or players" placeholder="Search teams or players" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
