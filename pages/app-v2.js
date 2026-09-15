@@ -372,6 +372,7 @@
   function boardMatchBlock(row, index) {
     const event = eventForBoardRow(row);
     const id = event && eventId(event);
+    const unsupported = !id;
     const status = event ? statusKey(event) : boardStatus(row);
     const tier = String(row.tier || 'WATCHLIST').toUpperCase();
     const tierClass = tier === 'FOCUS' ? 'tier-focus' : 'tier-watchlist';
@@ -383,23 +384,34 @@
     const kickoff = boardKickoff(row);
     const competition = row.competition || (event && leagueName(event)) || 'Competition';
     const lid = event && leagueId(event);
-    const primary = status === 'live' ? scoreText(event) : formatTime(kickoff);
-    const secondary = status === 'live' ? liveClock(event) : 'ICT kickoff';
-    const statusName = status === 'live' ? 'Live' : 'Upcoming';
-    const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (id ? '' : 'boardPendingRow') + '" ' +
+    const hasManualScore = unsupported && row.manualScore &&
+      Number.isInteger(Number(row.manualScore.home)) && Number.isInteger(Number(row.manualScore.away));
+    const primary = hasManualScore ? Number(row.manualScore.home) + '–' + Number(row.manualScore.away) :
+      status === 'live' ? scoreText(event) : formatTime(kickoff);
+    const secondary = hasManualScore ? 'Manual score' : status === 'live' ? liveClock(event) : 'ICT kickoff';
+    const statusName = hasManualScore ? 'Custom' : unsupported ? 'No feed' : status === 'live' ? 'Live' : 'Upcoming';
+    const statusClass = hasManualScore ? 'manual' : status;
+    const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
+    const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
       'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"';
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
-    const stateIcon = status === 'live' ?
+    const stateIcon = hasManualScore ?
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 4 4 12-12-4-4L4 16Z"></path><path d="m13 7 4 4M4 20l5-1"></path></svg>' :
+      status === 'live' ?
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"></path></svg>' :
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
+    const manualControl = unsupported ?
+      '<button type="button" class="manualScoreButton" data-manual-score="' + esc(manualKey) + '">' +
+      (hasManualScore ? 'Edit score' : 'Add score') + '</button>' : '';
     return '<article class="boardMatchCard ' + tierClass + '" style="--order:' + (index || 0) + '">' + open +
       '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong></div>' +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
-      '<div class="fixtureState"><span class="fixtureStatus ' + status + '">' + stateIcon + esc(statusName) + '</span>' +
-      '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small></div>' +
+      '<div class="fixtureState"><span class="fixtureStatus ' + statusClass + '">' + stateIcon + esc(statusName) + '</span>' +
+      '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small>' +
+      manualControl + '</div>' +
       '<div class="teamLine away">' +
       crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
@@ -959,6 +971,89 @@
     bindGlobal();
   }
 
+  function manualScoreRow(key) {
+    return boardRowsForDate().find(function (row) {
+      return encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || '')) === key;
+    });
+  }
+  function closeManualScoreEditor() {
+    const sheet = document.querySelector('.manualScoreSheet');
+    if (sheet) sheet.remove();
+    document.body.classList.remove('manualScoreOpen');
+  }
+  function openManualScoreEditor(key) {
+    const row = manualScoreRow(key);
+    if (!row || eventId(eventForBoardRow(row))) return;
+    closeManualScoreEditor();
+    const teams = splitMatch(row.match);
+    const existing = row.manualScore &&
+      Number.isInteger(Number(row.manualScore.home)) && Number.isInteger(Number(row.manualScore.away));
+    const sheet = document.createElement('div');
+    sheet.className = 'manualScoreSheet';
+    sheet.innerHTML = '<section class="manualScoreDialog" role="dialog" aria-modal="true" aria-labelledby="manualScoreTitle">' +
+      '<header><div><span>Unsupported match</span><h2 id="manualScoreTitle">Custom score</h2></div>' +
+      '<button type="button" class="manualScoreClose" aria-label="Close score editor">×</button></header>' +
+      '<p class="manualScoreIntro">This match has no live data feed. Add its score manually to keep your board current.</p>' +
+      '<form><div class="manualScoreTeams">' +
+      '<label><span>' + esc(teams.home || 'Home') + '</span><input name="home" type="number" min="0" max="99" step="1" inputmode="numeric" required value="' +
+      (existing ? esc(Number(row.manualScore.home)) : '') + '" aria-label="' + esc((teams.home || 'Home') + ' score') + '"></label>' +
+      '<b aria-hidden="true">–</b>' +
+      '<label><span>' + esc(teams.away || 'Away') + '</span><input name="away" type="number" min="0" max="99" step="1" inputmode="numeric" required value="' +
+      (existing ? esc(Number(row.manualScore.away)) : '') + '" aria-label="' + esc((teams.away || 'Away') + ' score') + '"></label>' +
+      '</div><p class="manualScoreNote">Manual entries are labelled <strong>Custom</strong> and never replace supported live scores.</p>' +
+      '<p class="manualScoreError" role="alert" aria-live="assertive"></p>' +
+      '<footer>' + (existing ? '<button type="button" class="manualScoreClear">Clear score</button>' : '<span></span>') +
+      '<div><button type="button" class="manualScoreCancel">Cancel</button><button type="submit" class="manualScoreSave">Save score</button></div>' +
+      '</footer></form></section>';
+    document.body.appendChild(sheet);
+    document.body.classList.add('manualScoreOpen');
+    const form = sheet.querySelector('form');
+    const errorNode = sheet.querySelector('.manualScoreError');
+    const close = function () {
+      document.removeEventListener('keydown', onKey);
+      closeManualScoreEditor();
+    };
+    const onKey = function (event) { if (event.key === 'Escape') close(); };
+    const setBusy = function (busy) {
+      sheet.classList.toggle('is-busy', busy);
+      sheet.querySelectorAll('button,input').forEach(function (control) { control.disabled = busy; });
+    };
+    const persist = async function (action) {
+      errorNode.textContent = '';
+      const payload = {
+        match: row.match,
+        kickoff: row.kickoff || row.displayKickoff,
+        action: action
+      };
+      if (action !== 'clear') {
+        const home = Number(form.elements.home.value);
+        const away = Number(form.elements.away.value);
+        if (!Number.isInteger(home) || !Number.isInteger(away) || home < 0 || away < 0 || home > 99 || away > 99) {
+          errorNode.textContent = 'Enter a whole number from 0 to 99 for both teams.';
+          return;
+        }
+        payload.home = home;
+        payload.away = away;
+      }
+      setBusy(true);
+      try {
+        await api('/api/manual-score', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+        close();
+        await loadMatchday(state.date, true);
+      } catch (error) {
+        setBusy(false);
+        errorNode.textContent = error.message || 'Could not save this score. Try again.';
+      }
+    };
+    form.addEventListener('submit', function (event) { event.preventDefault(); persist('save'); });
+    sheet.querySelector('.manualScoreClear')?.addEventListener('click', function () { persist('clear'); });
+    sheet.querySelector('.manualScoreClose').addEventListener('click', close);
+    sheet.querySelector('.manualScoreCancel').addEventListener('click', close);
+    sheet.addEventListener('click', function (event) { if (event.target === sheet) close(); });
+    document.addEventListener('keydown', onKey);
+    setTimeout(function () { form.elements.home.focus(); }, 0);
+  }
+
   function bindGlobal() {
     const search = document.getElementById('globalSearch');
     if (search) search.addEventListener('submit', function (event) {
@@ -1008,6 +1103,13 @@
     });
     root.querySelectorAll('[data-open-alerts]').forEach(function (button) {
       button.addEventListener('click', function () { window.SlipTraceAlerts?.open?.(); });
+    });
+    root.querySelectorAll('[data-manual-score]').forEach(function (button) {
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openManualScoreEditor(button.dataset.manualScore);
+      });
     });
   }
   function renderError(route, error) {
