@@ -19,6 +19,9 @@
     signalFilter: readStore('sliptrace.signalFilter.v3', 'all', localStorage),
     pickFilter: readStore('sliptrace.pickFilter.v3', 'open', sessionStorage),
     matchClockAnchor: new Map(),
+    matchdayCache: new Map(),
+    matchdayRequest: 0,
+    boardPromise: null,
     clockTimer: null,
     liveTimer: null
   };
@@ -573,30 +576,61 @@
   }
   async function loadBoard(force) {
     if (state.board && !force) return state.board;
+    if (state.boardPromise && !force) return state.boardPromise;
+    const request = api('/api/dashboard-data' + (force ? '?refresh=' + Date.now() : ''));
+    state.boardPromise = request;
     try {
-      state.board = await api('/api/dashboard-data' + (force ? '?refresh=' + Date.now() : ''));
+      state.board = await request;
       return state.board;
     } catch {
       return state.board;
+    } finally {
+      if (state.boardPromise === request) state.boardPromise = null;
     }
   }
-  async function loadMatchday(date, silent) {
-    state.date = date || state.date;
+  async function loadMatchday(date, silent, force) {
+    const requestedDate = date || state.date;
+    const requestId = ++state.matchdayRequest;
+    const cached = state.matchdayCache.get(requestedDate);
+    const cacheAge = cached ? Date.now() - cached.loadedAt : Infinity;
+    const cacheTtl = requestedDate === todayKey() ? 60000 : 600000;
+    const fresh = cached && cacheAge < cacheTtl;
+
+    state.date = requestedDate;
     state.error = '';
-    if (!silent && !state.today.length) skeleton('board', 'Loading decision board');
+    state.today = cached ? cached.events.slice() : [];
+    if (requestedDate !== todayKey()) state.live = [];
+
+    if (!silent && !state.today.length && !state.board) {
+      skeleton('board', 'Loading decision board');
+    } else if (routeName() === 'board') {
+      renderMatchday();
+    }
+
+    if (fresh && !force) {
+      if (!state.board) await loadBoard(false);
+      if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+      return state.today;
+    }
+
     try {
       const results = await Promise.all([
-        api('/api/bsd/events?date_from=' + encodeURIComponent(state.date) + '&date_to=' + encodeURIComponent(state.date) + '&limit=200'),
-        api('/api/bsd/live'),
-        loadBoard(Boolean(silent))
+        api('/api/bsd/events?date_from=' + encodeURIComponent(requestedDate) + '&date_to=' + encodeURIComponent(requestedDate) + '&limit=200'),
+        requestedDate === todayKey() ? api('/api/bsd/live').catch(function () { return state.live; }) : Promise.resolve([]),
+        loadBoard(Boolean(force))
       ]);
-      state.today = rows(results[0]);
+      const events = rows(results[0]);
+      state.matchdayCache.set(requestedDate, {events:events.slice(), loadedAt:Date.now()});
+      if (requestId !== state.matchdayRequest || state.date !== requestedDate) return events;
+      state.today = events;
       state.live = rows(results[1]);
       state.lastSync = Date.now();
     } catch (error) {
+      if (requestId !== state.matchdayRequest || state.date !== requestedDate) return [];
       state.error = error.message || String(error);
     }
-    if (routeName() === 'board') renderMatchday();
+    if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+    return state.today;
   }
 
   function parseStats(raw) {
@@ -1039,7 +1073,7 @@
       try {
         await api('/api/manual-score', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         close();
-        await loadMatchday(state.date, true);
+        await loadMatchday(state.date, true, true);
       } catch (error) {
         setBusy(false);
         errorNode.textContent = error.message || 'Could not save this score. Try again.';
@@ -1064,8 +1098,8 @@
     });
     root.querySelectorAll('[data-date]').forEach(function (button) {
       button.addEventListener('click', function () {
-        state.date = button.dataset.date;
-        loadMatchday(state.date, true);
+        if (button.dataset.date === state.date) return;
+        loadMatchday(button.dataset.date, true);
       });
     });
     root.querySelectorAll('[data-status-filter]').forEach(function (button) {
@@ -1090,7 +1124,7 @@
       });
     });
     document.getElementById('refreshToday')?.addEventListener('click', function () {
-      loadMatchday(state.date, true);
+      loadMatchday(state.date, true, true);
     });
     root.querySelectorAll('.tabBtn').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -1156,10 +1190,11 @@
   }
   async function refreshLive() {
     if (document.visibilityState === 'hidden') return;
+    if (routeName() === 'board' && state.date !== todayKey()) return;
     state.refreshTick += 1;
     try {
       if (state.refreshTick % 6 === 0 && routeName() === 'board' && state.date === todayKey()) {
-        await loadMatchday(state.date, true);
+        await loadMatchday(state.date, true, true);
         return;
       }
       const payload = await api('/api/bsd/live');
@@ -1171,6 +1206,9 @@
         const current = byId.get(String(eventId(event)));
         return current ? Object.assign({}, event, current, {status:'live'}) : event;
       });
+      if (state.date === todayKey()) {
+        state.matchdayCache.set(state.date, {events:state.today.slice(), loadedAt:Date.now()});
+      }
       if (routeName() === 'board') renderMatchday();
     } catch (error) {
       state.error = error.message || String(error);
@@ -1197,5 +1235,5 @@
   });
   state.clockTimer = setInterval(tickClocks, 1000);
   state.liveTimer = setInterval(refreshLive, 10000);
-  Promise.all([loadBoard(), loadMatchday(state.date, false)]).catch(render);
+  loadMatchday(state.date, false).catch(render);
 })();
