@@ -249,7 +249,7 @@
   function header() {
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
-      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Football decision board</small></span></a>' +
+      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Matchday intelligence</small></span></a>' +
       '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams or players" placeholder="Search teams or players" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
@@ -273,14 +273,10 @@
       (meta ? '<span>' + esc(meta) + '</span>' : '') + '</div>' +
       (actions || '') + '</div>';
   }
-  function activeBoardCount(date) {
+  function boardDateCount(date) {
     return (state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
-      if (row.slateDate !== date || (tier !== 'FOCUS' && tier !== 'WATCHLIST')) return false;
-      const declared = String(row.status || row.matchStatus || '').toLowerCase();
-      if (['finished','ft','ended','complete','completed','final'].includes(declared)) return false;
-      const kickoff = Date.parse(row.kickoff || row.displayKickoff);
-      return !Number.isFinite(kickoff) || Date.now() <= kickoff + 3 * 60 * 60 * 1000;
+      return row.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST');
     }).length;
   }
   function dateStrip() {
@@ -289,13 +285,13 @@
       const date = todayKey(offset);
       const d = new Date(date + 'T12:00:00Z');
       const weekday = offset === 0 ? 'Today' : new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
-      const count = activeBoardCount(date);
+      const count = boardDateCount(date);
       const active = state.date === date;
       const unavailable = count === 0 && !active;
       const label = weekday + ' ' + d.getUTCDate() + ' ' +
         new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d);
       html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
-        '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no active board matches')) +
+        '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no ranked board matches')) +
         '" aria-pressed="' + active + '"' + (unavailable ? ' disabled' : '') + '><small>' + weekday + '</small><strong>' +
         d.getUTCDate() + '</strong><span>' + new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) +
         '</span>' + (count ? '<b class="dateCount">' + count + '</b>' : '') + '</button>';
@@ -406,10 +402,12 @@
     const lid = event && leagueId(event);
     const hasManualScore = unsupported && row.manualScore &&
       Number.isInteger(Number(row.manualScore.home)) && Number.isInteger(Number(row.manualScore.away));
+    const finished = status === 'finished';
     const primary = hasManualScore ? Number(row.manualScore.home) + '–' + Number(row.manualScore.away) :
-      status === 'live' ? scoreText(event) : formatTime(kickoff);
-    const secondary = hasManualScore ? 'Manual score' : status === 'live' ? liveClock(event) : 'ICT kickoff';
-    const statusName = hasManualScore ? 'Custom' : unsupported ? 'No feed' : status === 'live' ? 'Live' : 'Upcoming';
+      finished && !unsupported ? scoreText(event) : finished ? '—' : status === 'live' ? scoreText(event) : formatTime(kickoff);
+    const secondary = hasManualScore ? (finished ? 'Manual FT' : 'Manual score') :
+      finished ? (unsupported ? 'Score needed' : 'Full time') : status === 'live' ? liveClock(event) : 'ICT kickoff';
+    const statusName = hasManualScore ? 'Custom' : finished ? 'FT' : unsupported ? 'No feed' : status === 'live' ? 'Live' : 'Upcoming';
     const statusClass = hasManualScore ? 'manual' : status;
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
@@ -419,6 +417,8 @@
     const close = id ? '</a>' : '</div>';
     const stateIcon = hasManualScore ?
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 4 4 12-12-4-4L4 16Z"></path><path d="m13 7 4 4M4 20l5-1"></path></svg>' :
+      finished ?
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"></path><path d="M6 5h11l-2 4 2 4H6"></path></svg>' :
       status === 'live' ?
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"></path></svg>' :
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
@@ -530,13 +530,9 @@
   }
   function renderMatchday() {
     state.route = 'board';
-    if (state.statusFilter === 'finished') {
-      state.statusFilter = 'all';
-      writeStore('sliptrace.statusFilter.v3', 'all', sessionStorage);
-    }
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
-      return (tier === 'FOCUS' || tier === 'WATCHLIST') && boardStatus(row) !== 'finished';
+      return tier === 'FOCUS' || tier === 'WATCHLIST';
     }).sort(function (a, b) {
       const left = Date.parse(boardKickoff(a));
       const right = Date.parse(boardKickoff(b));
@@ -548,7 +544,8 @@
     const counts = {
       all: boardRows.length,
       live: boardRows.filter(function (row) { return boardStatus(row) === 'live'; }).length,
-      upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length
+      upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length,
+      finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length
     };
     const filtered = boardRows.filter(function (row) {
       if (state.statusFilter !== 'all' && boardStatus(row) !== state.statusFilter) return false;
@@ -567,7 +564,7 @@
         '" aria-pressed="' + (state.signalFilter === key) + '">' + label + '</button>';
     };
     const controls = '<div class="filterBar"><div class="statusFilters" aria-label="Match status">' +
-      statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') +
+      statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
       '</div><div class="signalFilters" aria-label="Model signal">' +
       signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
     const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true">↻</span> Sync board</button>';
@@ -578,7 +575,7 @@
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       (filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
-        '<div class="emptyState"><strong>No active board matches</strong><span>This date has no open ranked entries. Empty dates are disabled above.</span></div>') +
+        '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>') +
       '</section>';
     root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
     bindGlobal();
@@ -1117,8 +1114,11 @@
     });
     root.querySelectorAll('[data-date]').forEach(function (button) {
       button.addEventListener('click', function () {
-        if (button.dataset.date === state.date) return;
-        loadMatchday(button.dataset.date, true);
+        const nextDate = button.dataset.date;
+        if (nextDate === state.date) return;
+        state.statusFilter = nextDate < todayKey() ? 'finished' : 'all';
+        writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
+        loadMatchday(nextDate, true);
       });
     });
     root.querySelectorAll('[data-status-filter]').forEach(function (button) {

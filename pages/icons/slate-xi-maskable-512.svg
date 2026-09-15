@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title id="title">Slate XI</title>
-  <rect width="64" height="64" fill="#081016"/>
-  <circle cx="32" cy="32" r="19" fill="none" stroke="#45d2e7" stroke-width="2.5"/>
-  <path d="M32 13v38" fill="none" stroke="#45d2e7" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="3" fill="#081016" stroke="#45d2e7" stroke-width="2"/>
-  <path d="m19 22 8.5 20m0-20L19 42" fill="none" stroke="#45d2e7" stroke-width="3.5" stroke-linecap="round"/>
-  <path d="M44 22v20" fill="none" stroke="#ff596b" stroke-width="4" stroke-linecap="round"/>
+  <title id="title">Slate XI folded match sheet</title>
+  <rect width="64" height="64" rx="0" fill="#07100c"/>
+  <path d="M13 10h28l10 10v24L32 54 13 42Z" fill="#f2e7ce"/>
+  <path d="M18 16h20l7 7v17L32 47 18 37Z" fill="#12251a"/>
+  <path d="M38 16v8h8Z" fill="#f0a23a"/>
+  <path d="m24 27 6 9m0-9-6 9" fill="none" stroke="#f2e7ce" stroke-width="3.8" stroke-linecap="square"/>
+  <path d="M33 27v9m4 -9v9" fill="none" stroke="#f0a23a" stroke-width="3.8"/>
+  <path d="M21 41h22" fill="none" stroke="#84cb60" stroke-width="2"/>
 </svg>

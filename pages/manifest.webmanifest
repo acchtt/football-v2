@@ -12,8 +12,8 @@
     "standalone",
     "minimal-ui"
   ],
-  "background_color": "#090b0f",
-  "theme_color": "#090b0f",
+  "background_color": "#07100c",
+  "theme_color": "#07100c",
   "categories": [
     "sports",
     "utilities"
@@ -21,19 +21,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "./icons/slate-xi-192.svg",
+      "src": "./icons/slate-xi-192.svg?v=2",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./icons/slate-xi-512.svg",
+      "src": "./icons/slate-xi-512.svg?v=2",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./icons/slate-xi-maskable-512.svg",
+      "src": "./icons/slate-xi-maskable-512.svg?v=2",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
@@ -46,7 +46,7 @@
       "url": "./#board",
       "icons": [
         {
-          "src": "./icons/slate-xi-192.svg",
+          "src": "./icons/slate-xi-192.svg?v=2",
           "sizes": "192x192",
           "type": "image/svg+xml"
         }
@@ -58,7 +58,7 @@
       "url": "./#picks",
       "icons": [
         {
-          "src": "./icons/slate-xi-192.svg",
+          "src": "./icons/slate-xi-192.svg?v=2",
           "sizes": "192x192",
           "type": "image/svg+xml"
         }
@@ -70,7 +70,7 @@
       "url": "./#leagues",
       "icons": [
         {
-          "src": "./icons/slate-xi-192.svg",
+          "src": "./icons/slate-xi-192.svg?v=2",
           "sizes": "192x192",
           "type": "image/svg+xml"
         }
