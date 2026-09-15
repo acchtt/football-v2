@@ -1,22 +1,22 @@
-const CACHE='slate-xi-shell-v27';
+const CACHE='slate-xi-shell-v28';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
   BASE,
   asset('index.html'),
   asset('offline.html'),
-  asset('design-v1.css?v=12'),
+  asset('design-v1.css?v=13'),
   asset('alerts-center.css?v=2'),
-  asset('manifest.webmanifest?v=6'),
-  asset('icons/slate-xi.svg?v=2'),
-  asset('icons/slate-xi-192.svg?v=2'),
-  asset('icons/slate-xi-512.svg?v=2'),
-  asset('icons/slate-xi-maskable-512.svg?v=2'),
+  asset('manifest.webmanifest?v=7'),
+  asset('icons/slate-xi.svg?v=3'),
+  asset('icons/slate-xi-192.svg?v=3'),
+  asset('icons/slate-xi-512.svg?v=3'),
+  asset('icons/slate-xi-maskable-512.svg?v=3'),
   asset('ict-slate-fetch.js?v=1'),
   asset('config.js?v=5'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
-  asset('app-v2.js?v=14'),
+  asset('app-v2.js?v=15'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=4'),
   asset('alerts-center.js?v=3')
