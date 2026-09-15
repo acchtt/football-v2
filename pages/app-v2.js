@@ -273,15 +273,32 @@
       (meta ? '<span>' + esc(meta) + '</span>' : '') + '</div>' +
       (actions || '') + '</div>';
   }
+  function activeBoardCount(date) {
+    return (state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
+      const tier = String(row.tier || '').toUpperCase();
+      if (row.slateDate !== date || (tier !== 'FOCUS' && tier !== 'WATCHLIST')) return false;
+      const declared = String(row.status || row.matchStatus || '').toLowerCase();
+      if (['finished','ft','ended','complete','completed','final'].includes(declared)) return false;
+      const kickoff = Date.parse(row.kickoff || row.displayKickoff);
+      return !Number.isFinite(kickoff) || Date.now() <= kickoff + 3 * 60 * 60 * 1000;
+    }).length;
+  }
   function dateStrip() {
     let html = '<div class="dateStrip" aria-label="Match date">';
     [-3,-2,-1,0,1,2,3].forEach(function (offset) {
       const date = todayKey(offset);
       const d = new Date(date + 'T12:00:00Z');
       const weekday = offset === 0 ? 'Today' : new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
-      html += '<button type="button" class="dateBtn ' + (state.date === date ? 'active' : '') + '" data-date="' + date +
-        '" aria-pressed="' + (state.date === date) + '"><small>' + weekday + '</small><strong>' +
-        d.getUTCDate() + '</strong><span>' + new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + '</span></button>';
+      const count = activeBoardCount(date);
+      const active = state.date === date;
+      const unavailable = count === 0 && !active;
+      const label = weekday + ' ' + d.getUTCDate() + ' ' +
+        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d);
+      html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
+        '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no active board matches')) +
+        '" aria-pressed="' + active + '"' + (unavailable ? ' disabled' : '') + '><small>' + weekday + '</small><strong>' +
+        d.getUTCDate() + '</strong><span>' + new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) +
+        '</span>' + (count ? '<b class="dateCount">' + count + '</b>' : '') + '</button>';
     });
     return html + '</div>';
   }
@@ -559,7 +576,9 @@
       'Focus and Watchlist decisions first, enriched with BSD score and match status. Times shown in ICT.', actions) +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
-      (filtered.length ? boardMatchList(filtered) : '<div class="emptyState"><strong>No matching board entries</strong><span>Try another status, signal, or date.</span></div>') +
+      (filtered.length ? boardMatchList(filtered) : boardRows.length ?
+        '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
+        '<div class="emptyState"><strong>No active board matches</strong><span>This date has no open ranked entries. Empty dates are disabled above.</span></div>') +
       '</section>';
     root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
     bindGlobal();

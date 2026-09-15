@@ -121,11 +121,18 @@ img{display:block}
 }
 .dateBtn:last-child{border-right:0}
 .dateBtn:hover{background:var(--surface-2);color:var(--text)}
+.dateBtn.unavailable{opacity:.32;cursor:not-allowed;filter:saturate(.35)}
+.dateBtn.unavailable:hover{background:transparent;color:var(--muted)}
 .dateBtn.active{background:var(--surface-2);color:var(--text)}
 .dateBtn.active:after{content:"";position:absolute;left:18px;right:18px;bottom:0;height:2px;background:var(--cyan)}
 .dateBtn small{font-size:10px;font-weight:760;text-transform:uppercase;letter-spacing:.08em}
 .dateBtn strong{font-size:18px;line-height:1;font-variant-numeric:tabular-nums}
 .dateBtn span{color:var(--dim);font-size:10px;text-transform:uppercase}
+.dateCount{
+  position:absolute;right:7px;top:7px;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center;
+  border:1px solid rgba(72,203,226,.22);border-radius:999px;background:rgba(72,203,226,.08);
+  color:var(--cyan);font-size:9px;font-weight:850;font-variant-numeric:tabular-nums
+}
 .filterBar{
   margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px
 }
