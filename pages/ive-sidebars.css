@@ -15,23 +15,48 @@
 
   .primaryRail::before,
   .contextRail::before{
-    content:"";
     position:absolute;
     inset:0;
     z-index:-2;
-    background-repeat:no-repeat;
-    background-position:center top;
-    background-size:cover;
-    filter:saturate(.84) contrast(1.03);
-    opacity:.78;
+    display:flex;
+    white-space:pre-line;
+    pointer-events:none;
   }
 
   .primaryRail::before{
-    background-image:url('./media/ive-left-sidebar.jpg?v=1');
+    content:"IVE\A\A YUJIN\A GAEUL\A REI\A WONYOUNG\A LIZ\A LEESEO";
+    padding:34px 20px;
+    align-items:flex-start;
+    justify-content:flex-start;
+    background:
+      radial-gradient(circle at 18% 18%,rgba(255,79,97,.16),transparent 34%),
+      radial-gradient(circle at 72% 58%,rgba(72,203,226,.10),transparent 31%),
+      linear-gradient(180deg,#0a0e13 0%,#0b1118 48%,#080b0f 100%);
+    color:#dfe6eb;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:34px;
+    font-weight:700;
+    line-height:1.06;
+    letter-spacing:.06em;
+    text-shadow:0 10px 28px rgba(0,0,0,.5);
   }
 
   .contextRail::before{
-    background-image:url('./media/ive-right-sidebar.jpg?v=1');
+    content:"IVE\A\A I'VE MINE\A\A OFF THE RECORD\A EITHER WAY\A BADDIE\A\A ANYPLACE · ANYTIME · TOGETHER";
+    padding:34px 22px;
+    align-items:flex-start;
+    justify-content:flex-start;
+    background:
+      radial-gradient(circle at 82% 22%,rgba(72,203,226,.15),transparent 33%),
+      radial-gradient(circle at 35% 66%,rgba(255,79,97,.11),transparent 30%),
+      linear-gradient(180deg,#0a0e13 0%,#0b1118 48%,#080b0f 100%);
+    color:#dfe6eb;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:27px;
+    font-weight:700;
+    line-height:1.16;
+    letter-spacing:.045em;
+    text-shadow:0 10px 28px rgba(0,0,0,.5);
   }
 
   .primaryRail::after,
@@ -41,24 +66,23 @@
     inset:0;
     z-index:-1;
     pointer-events:none;
+    opacity:.9;
   }
 
   .primaryRail::after{
     background:
-      linear-gradient(90deg,rgba(8,11,15,.05) 0%,rgba(8,11,15,.18) 56%,rgba(8,11,15,.98) 100%),
-      linear-gradient(180deg,rgba(8,11,15,.22) 0%,transparent 18%,transparent 72%,rgba(8,11,15,.82) 100%);
+      linear-gradient(90deg,transparent 0%,rgba(8,11,15,.18) 58%,rgba(8,11,15,.98) 100%),
+      repeating-linear-gradient(180deg,transparent 0 118px,rgba(255,255,255,.035) 119px,transparent 120px);
   }
 
   .contextRail::after{
     background:
-      linear-gradient(270deg,rgba(8,11,15,.05) 0%,rgba(8,11,15,.18) 56%,rgba(8,11,15,.98) 100%),
-      linear-gradient(180deg,rgba(8,11,15,.22) 0%,transparent 18%,transparent 72%,rgba(8,11,15,.82) 100%);
+      linear-gradient(270deg,transparent 0%,rgba(8,11,15,.18) 58%,rgba(8,11,15,.98) 100%),
+      repeating-linear-gradient(180deg,transparent 0 136px,rgba(255,255,255,.03) 137px,transparent 138px);
   }
 }
 
 @media (min-width:1051px) and (max-width:1260px){
-  .primaryRail::before,
-  .contextRail::before{
-    opacity:.62;
-  }
+  .primaryRail::before{font-size:28px;padding:28px 15px}
+  .contextRail::before{font-size:22px;padding:28px 16px}
 }
