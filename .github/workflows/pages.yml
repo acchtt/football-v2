@@ -39,6 +39,28 @@ jobs:
           rsvg-convert -w 512 -h 512 pages/icons/sliptrace.svg -o pages/icons/sliptrace-512.png
           rsvg-convert -w 512 -h 512 pages/icons/sliptrace-maskable.svg -o pages/icons/sliptrace-maskable-512.png
 
+      - name: Bundle IVE sidebar portraits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pages/media/ive
+          fetch_portrait() {
+            local url="$1"
+            local out="$2"
+            curl -L --fail --retry 3 --retry-delay 2 --connect-timeout 20 \
+              -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36' \
+              -e 'https://www.uhdpaper.com/' \
+              "$url" -o "$out"
+            test "$(stat -c%s "$out")" -gt 10000
+          }
+          fetch_portrait 'https://img.uhdpaper.com/wallpaper/yujin-ive-4th-fan-concert-311%405%40n-phone-hd.jpg' pages/media/ive/yujin.jpg
+          fetch_portrait 'https://img.uhdpaper.com/wallpaper/liz-ive-4th-fan-concert-295%405%40n-phone-hd.jpg' pages/media/ive/liz.jpg
+          fetch_portrait 'https://img.uhdpaper.com/wallpaper/rei-ive-4th-fan-concert-309%405%40n-phone-hd.jpg' pages/media/ive/rei.jpg
+          fetch_portrait 'https://img.uhdpaper.com/wallpaper/wonyoung-ive-4th-fan-concert-310%405%40n-phone-hd.jpg' pages/media/ive/wonyoung.jpg
+          fetch_portrait 'https://img.uhdpaper.com/wallpaper/gaeul-ive-4th-fan-concert-292%405%40n-phone-hd.jpg' pages/media/ive/gaeul.jpg
+          fetch_portrait 'https://img.uhdpaper.com/wallpaper/leeseo-ive-4th-fan-concert-294%405%40n-phone-hd.jpg' pages/media/ive/leeseo.jpg
+          file pages/media/ive/*.jpg
+
       - name: Validate PWA artifact
         shell: bash
         run: |
@@ -63,6 +85,9 @@ jobs:
               'alerts-center.js','alerts-center.css','ive-sidebars.css','ive-sidebars.js'
           ]:
               assert (root/required).exists(), f'missing {required}'
+          for member in ['yujin','liz','rei','wonyoung','gaeul','leeseo']:
+              p=root/'media'/'ive'/f'{member}.jpg'
+              assert p.exists() and p.stat().st_size > 10000, f'missing/invalid IVE portrait: {p}'
           print('PWA artifact validated')
           PY
           for js in pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/matchday-behavior.js pages/strict-board-filter.js pages/strict-board-guard.js pages/ive-sidebars.js pages/sw.js; do
