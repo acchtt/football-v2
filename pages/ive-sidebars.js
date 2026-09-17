@@ -16,7 +16,7 @@
 
   function build(side, entries) {
     const rail = document.createElement('aside');
-    rail.className = `iveRailDecor iveRailDecor--${side}`;
+    rail.className = `iveEditorialRail iveEditorialRail--${side}`;
     rail.setAttribute('aria-hidden', 'true');
 
     entries.forEach(([name, url], index) => {
@@ -27,18 +27,23 @@
       rail.appendChild(portrait);
     });
 
+    const names = document.createElement('div');
+    names.className = 'iveRailNames';
+    names.innerHTML = entries.map(([name]) => `<span>${name}</span>`).join('');
+    rail.appendChild(names);
+
     const mark = document.createElement('div');
     mark.className = 'iveRailMark';
     mark.innerHTML = side === 'left'
-      ? '<strong>IVE</strong><span>YUJIN · GAEUL · REI · WONYOUNG · LIZ · LEESEO</span>'
-      : '<strong>IVE</strong><span>ANYPLACE · ANYTIME · TOGETHER</span>';
+      ? '<strong>IVE</strong><span>SIX DREAMS · ONE BIGGER TOMORROW</span><i class="iveRailRule"></i>'
+      : '<strong>IVE</strong><span>ANYPLACE · ANYTIME · TOGETHER</span><i class="iveRailRule"></i>';
     rail.appendChild(mark);
 
     document.body.appendChild(rail);
   }
 
   function init() {
-    if (document.querySelector('.iveRailDecor')) return;
+    document.querySelectorAll('.iveRailDecor,.iveEditorialRail').forEach(node => node.remove());
     build('left', members.left);
     build('right', members.right);
     document.documentElement.classList.add('iveRailsReady');

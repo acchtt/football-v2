@@ -1,4 +1,4 @@
-const CACHE='slate-xi-shell-v35';
+const CACHE='slate-xi-shell-v36';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -7,7 +7,7 @@ const SHELL=[
   asset('offline.html'),
   asset('design-v1.css?v=13'),
   asset('alerts-center.css?v=2'),
-  asset('ive-sidebars.css?v=4'),
+  asset('ive-sidebars.css?v=5'),
   asset('manifest.webmanifest?v=7'),
   asset('icons/slate-xi.svg?v=3'),
   asset('icons/slate-xi-192.svg?v=3'),
@@ -24,7 +24,7 @@ const SHELL=[
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=2'),
-  asset('ive-sidebars.js?v=2'),
+  asset('ive-sidebars.js?v=3'),
   asset('app-v2.js?v=16'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=4'),

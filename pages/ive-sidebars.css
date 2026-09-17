@@ -1,8 +1,10 @@
+/* IVE editorial desktop frame */
+.iveEditorialRail{display:none}
+.headerNav{display:none}
+
 @media (min-width:1051px){
   .primaryRail,
-  .contextRail{
-    display:none!important;
-  }
+  .contextRail{display:none!important}
 
   .appFrame{
     width:min(100%,1220px)!important;
@@ -10,217 +12,239 @@
     margin-inline:auto!important;
   }
 
-  .contentFrame{
-    grid-template-columns:minmax(0,1fr)!important;
+  .contentFrame{grid-template-columns:minmax(0,1fr)!important}
+
+  .headerInner{gap:15px}
+  .headerNav{
+    display:flex;
+    align-self:stretch;
+    align-items:center;
+    gap:4px;
+    flex:0 0 auto;
+  }
+  .headerNav a{
+    position:relative;
+    height:100%;
+    padding:0 10px;
+    display:flex;
+    align-items:center;
+    color:#8997a5;
+    font-size:11px;
+    font-weight:740;
+    white-space:nowrap;
+  }
+  .headerNav a:hover,
+  .headerNav a.active{color:#f3f6f8}
+  .headerNav a.active::after{
+    content:"";
+    position:absolute;
+    left:10px;
+    right:10px;
+    bottom:0;
+    height:2px;
+    background:var(--cyan);
+    box-shadow:0 0 12px rgba(72,203,226,.35);
+  }
+  .headerSearch{
+    width:min(370px,29vw);
+    margin-left:auto;
+    margin-right:0;
   }
 }
 
-.iveRailDecor{display:none}
-
 @media (min-width:1320px){
   :root{
-    --ive-left:clamp(210px,16vw,280px);
-    --ive-right:clamp(220px,17vw,300px);
+    --ive-stage:min(1120px,calc(100vw - 300px));
+    --ive-gutter:max(150px,calc((100vw - var(--ive-stage))/2));
   }
 
+  html{background:#05080c}
   body{
     position:relative;
     overflow-x:hidden;
+    background:
+      radial-gradient(circle at 10% 20%,rgba(255,50,76,.055),transparent 26%),
+      radial-gradient(circle at 91% 24%,rgba(49,198,225,.05),transparent 25%),
+      #080b0f;
   }
 
+  #app,
   .appHeader,
   .appFrame{
     position:relative;
     z-index:2;
   }
 
-  .iveRailDecor{
+  .headerInner,
+  .appFrame{width:var(--ive-stage)!important}
+
+  .iveEditorialRail{
     position:fixed;
     top:0;
     bottom:0;
     z-index:1;
-    display:grid;
-    grid-template-rows:repeat(3,minmax(0,1fr));
+    display:block;
+    width:calc(var(--ive-gutter) + 74px);
     overflow:hidden;
     pointer-events:none;
-    background:#070a0e;
+    isolation:isolate;
+    background:#05080c;
   }
 
-  .iveRailDecor--left{
+  .iveEditorialRail--left{
     left:0;
-    width:var(--ive-left);
-    border-right:1px solid rgba(72,203,226,.08);
+    border-right:1px solid rgba(76,210,231,.09);
   }
 
-  .iveRailDecor--right{
+  .iveEditorialRail--right{
     right:0;
-    width:var(--ive-right);
-    border-left:1px solid rgba(255,79,97,.08);
+    border-left:1px solid rgba(255,73,98,.09);
   }
 
   .ivePortrait{
-    position:relative;
-    min-height:0;
+    --portrait-y:16%;
+    position:absolute;
+    width:116%;
+    height:46%;
     overflow:hidden;
     background-image:var(--ive-photo);
     background-repeat:no-repeat;
-    background-position:center 18%;
+    background-position:center var(--portrait-y);
     background-size:cover;
-    filter:grayscale(1) saturate(.5) contrast(1.08) brightness(.73);
-    transform:translateZ(0) scale(1.015);
+    filter:grayscale(.78) saturate(.58) contrast(1.18) brightness(.58);
+    opacity:.92;
+    transform:translateZ(0) scale(1.025);
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 82%,transparent 100%);
+    mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 82%,transparent 100%);
   }
 
-  .iveRailDecor--left .ivePortrait:nth-child(2),
-  .iveRailDecor--right .ivePortrait:nth-child(2){
-    background-position:center 12%;
-  }
-
-  .iveRailDecor--left .ivePortrait:nth-child(3),
-  .iveRailDecor--right .ivePortrait:nth-child(3){
-    background-position:center 10%;
-  }
-
-  .ivePortrait::before,
   .ivePortrait::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(180deg,rgba(4,7,11,.08),transparent 44%,rgba(4,7,11,.24)),
+      radial-gradient(circle at 45% 30%,rgba(255,255,255,.10),transparent 34%);
+    mix-blend-mode:screen;
+  }
+
+  .iveEditorialRail--left .ivePortrait{left:-8%}
+  .iveEditorialRail--left .ivePortrait--1{top:-5%;--portrait-y:12%}
+  .iveEditorialRail--left .ivePortrait--2{top:27%;left:-15%;--portrait-y:9%;opacity:.84}
+  .iveEditorialRail--left .ivePortrait--3{top:60%;left:-4%;--portrait-y:12%}
+
+  .iveEditorialRail--right .ivePortrait{right:-8%}
+  .iveEditorialRail--right .ivePortrait--1{top:-6%;--portrait-y:11%}
+  .iveEditorialRail--right .ivePortrait--2{top:25%;right:-15%;--portrait-y:8%;opacity:.86}
+  .iveEditorialRail--right .ivePortrait--3{top:59%;right:-2%;--portrait-y:10%}
+
+  .iveEditorialRail::before,
+  .iveEditorialRail::after{
     content:"";
     position:absolute;
     inset:0;
     pointer-events:none;
   }
 
-  .iveRailDecor--left .ivePortrait::before{
+  .iveEditorialRail::before{
+    z-index:3;
     background:
-      radial-gradient(circle at 14% 18%,rgba(255,65,84,.22),transparent 33%),
-      radial-gradient(circle at 88% 76%,rgba(36,190,220,.18),transparent 34%),
-      linear-gradient(90deg,rgba(5,8,12,.08) 0%,rgba(5,8,12,.08) 54%,rgba(8,11,15,.70) 89%,#080b0f 100%);
-    mix-blend-mode:screen;
-    opacity:.82;
+      repeating-linear-gradient(165deg,transparent 0 56px,rgba(255,255,255,.018) 57px,transparent 58px),
+      linear-gradient(180deg,rgba(5,8,12,.24),transparent 15%,transparent 77%,rgba(5,8,12,.48));
+    mix-blend-mode:normal;
   }
 
-  .iveRailDecor--right .ivePortrait::before{
-    background:
-      radial-gradient(circle at 82% 20%,rgba(36,190,220,.19),transparent 34%),
-      radial-gradient(circle at 20% 76%,rgba(255,65,84,.20),transparent 34%),
-      linear-gradient(270deg,rgba(5,8,12,.06) 0%,rgba(5,8,12,.08) 54%,rgba(8,11,15,.72) 89%,#080b0f 100%);
-    mix-blend-mode:screen;
-    opacity:.82;
-  }
-
-  .ivePortrait::after{
-    background:
-      linear-gradient(180deg,rgba(8,11,15,.35) 0%,transparent 16%,transparent 72%,rgba(8,11,15,.56) 100%),
-      repeating-linear-gradient(180deg,transparent 0 96px,rgba(255,255,255,.018) 97px,transparent 98px);
-  }
-
-  .iveRailDecor--left::after,
-  .iveRailDecor--right::after{
-    content:"";
-    position:absolute;
-    inset:0;
+  .iveEditorialRail--left::after{
     z-index:4;
-    pointer-events:none;
+    background:
+      radial-gradient(circle at 5% 10%,rgba(255,43,72,.34),transparent 30%),
+      radial-gradient(circle at 28% 82%,rgba(28,190,222,.30),transparent 34%),
+      linear-gradient(90deg,rgba(2,5,8,.08) 0%,rgba(4,7,11,.10) 45%,rgba(8,11,15,.70) 78%,#080b0f 100%);
+    mix-blend-mode:screen;
   }
 
-  .iveRailDecor--left::after{
-    background:linear-gradient(90deg,transparent 0%,transparent 62%,rgba(8,11,15,.44) 82%,#080b0f 100%);
+  .iveEditorialRail--right::after{
+    z-index:4;
+    background:
+      radial-gradient(circle at 94% 14%,rgba(27,193,224,.32),transparent 30%),
+      radial-gradient(circle at 72% 82%,rgba(255,43,72,.34),transparent 36%),
+      linear-gradient(270deg,rgba(2,5,8,.08) 0%,rgba(4,7,11,.10) 45%,rgba(8,11,15,.72) 78%,#080b0f 100%);
+    mix-blend-mode:screen;
   }
 
-  .iveRailDecor--right::after{
-    background:linear-gradient(270deg,transparent 0%,transparent 62%,rgba(8,11,15,.44) 82%,#080b0f 100%);
+  .iveRailNames{
+    position:absolute;
+    z-index:6;
+    top:20%;
+    display:grid;
+    gap:9px;
+    color:#a9b7c2;
+    font-size:8px;
+    font-weight:760;
+    letter-spacing:.22em;
+    line-height:1;
+    text-transform:uppercase;
+    text-shadow:0 4px 16px #000;
   }
+
+  .iveEditorialRail--left .iveRailNames{left:22px}
+  .iveEditorialRail--right .iveRailNames{right:22px;text-align:right}
 
   .iveRailMark{
     position:absolute;
     left:22px;
     right:22px;
-    bottom:26px;
-    z-index:5;
+    bottom:22px;
+    z-index:6;
     display:grid;
-    gap:7px;
-    color:#dfe6eb;
-    text-shadow:0 8px 24px rgba(0,0,0,.72);
+    gap:8px;
+    color:#edf1f4;
+    text-shadow:0 8px 24px rgba(0,0,0,.82);
   }
 
-  .iveRailDecor--right .iveRailMark{
-    text-align:right;
-  }
+  .iveEditorialRail--right .iveRailMark{text-align:right}
 
   .iveRailMark strong{
     font-family:Georgia,"Times New Roman",serif;
-    font-size:38px;
-    font-weight:600;
-    letter-spacing:.08em;
+    font-size:42px;
+    font-weight:500;
+    letter-spacing:.10em;
     line-height:1;
   }
 
   .iveRailMark span{
-    color:#8d9aa6;
-    font-size:8px;
+    color:#9aa7b2;
+    font-size:7px;
     font-weight:760;
-    letter-spacing:.18em;
-    line-height:1.6;
+    letter-spacing:.24em;
+    line-height:1.7;
     text-transform:uppercase;
   }
+
+  .iveRailRule{
+    display:block;
+    width:44px;
+    height:1px;
+    margin-top:3px;
+    background:linear-gradient(90deg,#f7fafc,transparent);
+    opacity:.62;
+  }
+
+  .iveEditorialRail--right .iveRailRule{
+    margin-left:auto;
+    transform:scaleX(-1);
+  }
 }
 
-@media (min-width:1320px) and (max-width:1480px){
-  :root{
-    --ive-left:205px;
-    --ive-right:215px;
-  }
-  .iveRailMark{left:16px;right:16px;bottom:20px}
-  .iveRailMark strong{font-size:30px}
-  .iveRailMark span{font-size:7px}
+@media (min-width:1320px) and (max-width:1499px){
+  :root{--ive-stage:calc(100vw - 300px)}
+  .iveRailNames{top:17%}
+  .iveRailMark{left:16px;right:16px;bottom:17px}
+  .iveRailMark strong{font-size:32px}
+  .iveRailMark span{font-size:6px}
 }
 
-/* Reference-aligned IVE portrait rails */
-.headerNav{display:none}
-@media (min-width:1051px){
-  .headerInner{gap:15px}
-  .headerNav{display:flex;align-self:stretch;align-items:center;gap:4px;flex:0 0 auto}
-  .headerNav a{
-    position:relative;height:100%;padding:0 10px;display:flex;align-items:center;
-    color:#8997a5;font-size:11px;font-weight:740;white-space:nowrap
-  }
-  .headerNav a:hover{color:#f3f6f8}
-  .headerNav a.active{color:#f3f6f8}
-  .headerNav a.active:after{
-    content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;
-    background:var(--cyan);box-shadow:0 0 12px rgba(72,203,226,.35)
-  }
-  .headerSearch{width:min(370px,29vw);margin-left:auto;margin-right:0}
-}
-@media (min-width:1320px){
-  .headerInner,
-  .appFrame{
-    width:min(calc(100% - var(--ive-left) - var(--ive-right) + 72px),1120px)!important
-  }
-  .ivePortrait{
-    filter:grayscale(.92) saturate(.52) contrast(1.18) brightness(.50);
-    transform:translateZ(0) scale(1.025)
-  }
-  .iveRailDecor--left .ivePortrait::before{
-    background:
-      radial-gradient(circle at 8% 14%,rgba(255,49,75,.24),transparent 37%),
-      radial-gradient(circle at 84% 82%,rgba(30,187,220,.16),transparent 38%),
-      linear-gradient(90deg,rgba(4,7,10,.13) 0%,rgba(4,7,10,.18) 48%,rgba(8,11,15,.80) 90%,#080b0f 100%);
-    mix-blend-mode:normal;opacity:1
-  }
-  .iveRailDecor--right .ivePortrait::before{
-    background:
-      radial-gradient(circle at 92% 16%,rgba(30,187,220,.18),transparent 37%),
-      radial-gradient(circle at 16% 80%,rgba(255,49,75,.22),transparent 39%),
-      linear-gradient(270deg,rgba(4,7,10,.13) 0%,rgba(4,7,10,.18) 48%,rgba(8,11,15,.82) 90%,#080b0f 100%);
-    mix-blend-mode:normal;opacity:1
-  }
-  .ivePortrait::after{
-    background:
-      linear-gradient(180deg,rgba(8,11,15,.58) 0%,transparent 20%,transparent 67%,rgba(8,11,15,.72) 100%),
-      repeating-linear-gradient(180deg,transparent 0 96px,rgba(255,255,255,.014) 97px,transparent 98px)
-  }
-  .iveRailMark{bottom:22px}
-  .iveRailMark strong{font-size:34px}
-}
 @media (max-width:1319px){
-  .headerNav{display:none}
+  .headerNav,
+  .iveEditorialRail{display:none!important}
 }
