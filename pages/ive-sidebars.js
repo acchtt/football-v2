@@ -13,6 +13,7 @@
       ['LEESEO', './media/ive/leeseo.jpg']
     ]
   };
+  const roster = ['YUJIN','GAEUL','REI','WONYOUNG','LIZ','LEESEO'];
 
   function build(side, entries) {
     const rail = document.createElement('aside');
@@ -27,10 +28,33 @@
       rail.appendChild(portrait);
     });
 
-    const names = document.createElement('div');
-    names.className = 'iveRailNames';
-    names.innerHTML = entries.map(([name]) => `<span>${name}</span>`).join('');
-    rail.appendChild(names);
+    if (side === 'left') {
+      const names = document.createElement('div');
+      names.className = 'iveRailNames';
+      names.innerHTML = roster.map(name => `<span>${name}</span>`).join('');
+      rail.appendChild(names);
+    }
+
+    const motto = document.createElement('div');
+    motto.className = 'iveRailMotto';
+    motto.innerHTML = side === 'left'
+      ? '<b>IVE</b><span>For a brighter<br>tomorrow</span>'
+      : '<b>IVE</b><span>Always more<br>than a game</span>';
+    rail.appendChild(motto);
+
+    if (side === 'right') {
+      const hand = document.createElement('div');
+      hand.className = 'iveRailHand';
+      hand.innerHTML = 'For<br>a brighter<br>tomorrow';
+      rail.appendChild(hand);
+    }
+
+    const kicker = document.createElement('div');
+    kicker.className = 'iveRailKicker';
+    kicker.innerHTML = side === 'left'
+      ? 'Six dreams<br>one bigger tomorrow'
+      : 'Anyplace<br>anytime · together';
+    rail.appendChild(kicker);
 
     const mark = document.createElement('div');
     mark.className = 'iveRailMark';
