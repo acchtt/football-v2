@@ -172,3 +172,55 @@
   .iveRailMark strong{font-size:30px}
   .iveRailMark span{font-size:7px}
 }
+
+/* Reference-aligned IVE portrait rails */
+.headerNav{display:none}
+@media (min-width:1051px){
+  .headerInner{gap:15px}
+  .headerNav{display:flex;align-self:stretch;align-items:center;gap:4px;flex:0 0 auto}
+  .headerNav a{
+    position:relative;height:100%;padding:0 10px;display:flex;align-items:center;
+    color:#8997a5;font-size:11px;font-weight:740;white-space:nowrap
+  }
+  .headerNav a:hover{color:#f3f6f8}
+  .headerNav a.active{color:#f3f6f8}
+  .headerNav a.active:after{
+    content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;
+    background:var(--cyan);box-shadow:0 0 12px rgba(72,203,226,.35)
+  }
+  .headerSearch{width:min(370px,29vw);margin-left:auto;margin-right:0}
+}
+@media (min-width:1320px){
+  .headerInner,
+  .appFrame{
+    width:min(calc(100% - var(--ive-left) - var(--ive-right) + 72px),1120px)!important
+  }
+  .ivePortrait{
+    filter:grayscale(.92) saturate(.52) contrast(1.18) brightness(.50);
+    transform:translateZ(0) scale(1.025)
+  }
+  .iveRailDecor--left .ivePortrait::before{
+    background:
+      radial-gradient(circle at 8% 14%,rgba(255,49,75,.24),transparent 37%),
+      radial-gradient(circle at 84% 82%,rgba(30,187,220,.16),transparent 38%),
+      linear-gradient(90deg,rgba(4,7,10,.13) 0%,rgba(4,7,10,.18) 48%,rgba(8,11,15,.80) 90%,#080b0f 100%);
+    mix-blend-mode:normal;opacity:1
+  }
+  .iveRailDecor--right .ivePortrait::before{
+    background:
+      radial-gradient(circle at 92% 16%,rgba(30,187,220,.18),transparent 37%),
+      radial-gradient(circle at 16% 80%,rgba(255,49,75,.22),transparent 39%),
+      linear-gradient(270deg,rgba(4,7,10,.13) 0%,rgba(4,7,10,.18) 48%,rgba(8,11,15,.82) 90%,#080b0f 100%);
+    mix-blend-mode:normal;opacity:1
+  }
+  .ivePortrait::after{
+    background:
+      linear-gradient(180deg,rgba(8,11,15,.58) 0%,transparent 20%,transparent 67%,rgba(8,11,15,.72) 100%),
+      repeating-linear-gradient(180deg,transparent 0 96px,rgba(255,255,255,.014) 97px,transparent 98px)
+  }
+  .iveRailMark{bottom:22px}
+  .iveRailMark strong{font-size:34px}
+}
+@media (max-width:1319px){
+  .headerNav{display:none}
+}

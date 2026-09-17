@@ -250,6 +250,12 @@
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
       '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg?v=3" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Football decision board</small></span></a>' +
+      '<nav class="headerNav" aria-label="Desktop navigation">' +
+      '<a class="' + (routeGroup(state.route) === 'board' ? 'active' : '') + '" href="#board">Matchday</a>' +
+      '<a class="' + (routeGroup(state.route) === 'picks' ? 'active' : '') + '" href="#picks">Picks</a>' +
+      '<a class="' + (state.route === 'leagues' || state.route === 'league' ? 'active' : '') + '" href="#leagues">Competitions</a>' +
+      '<a class="' + (state.route === 'teams' || state.route === 'team' ? 'active' : '') + '" href="#teams">Teams</a>' +
+      '</nav>' +
       '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams or players" placeholder="Search teams or players" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
