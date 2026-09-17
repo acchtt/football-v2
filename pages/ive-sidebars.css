@@ -1,0 +1,64 @@
+@media (min-width:1051px){
+  .primaryRail,
+  .contextRail{
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    background:#080b0f;
+  }
+
+  .primaryRail > *,
+  .contextRail > *{
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+  .primaryRail::before,
+  .contextRail::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-2;
+    background-repeat:no-repeat;
+    background-position:center top;
+    background-size:cover;
+    filter:saturate(.84) contrast(1.03);
+    opacity:.78;
+  }
+
+  .primaryRail::before{
+    background-image:url('./media/ive-left-sidebar.jpg?v=1');
+  }
+
+  .contextRail::before{
+    background-image:url('./media/ive-right-sidebar.jpg?v=1');
+  }
+
+  .primaryRail::after,
+  .contextRail::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    pointer-events:none;
+  }
+
+  .primaryRail::after{
+    background:
+      linear-gradient(90deg,rgba(8,11,15,.05) 0%,rgba(8,11,15,.18) 56%,rgba(8,11,15,.98) 100%),
+      linear-gradient(180deg,rgba(8,11,15,.22) 0%,transparent 18%,transparent 72%,rgba(8,11,15,.82) 100%);
+  }
+
+  .contextRail::after{
+    background:
+      linear-gradient(270deg,rgba(8,11,15,.05) 0%,rgba(8,11,15,.18) 56%,rgba(8,11,15,.98) 100%),
+      linear-gradient(180deg,rgba(8,11,15,.22) 0%,transparent 18%,transparent 72%,rgba(8,11,15,.82) 100%);
+  }
+}
+
+@media (min-width:1051px) and (max-width:1260px){
+  .primaryRail::before,
+  .contextRail::before{
+    opacity:.62;
+  }
+}
