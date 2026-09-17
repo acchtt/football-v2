@@ -456,3 +456,147 @@
   .iveEditorialRail--right .iveRailKicker{right:16px}
   .iveRailMark strong{font-size:34px}
 }
+
+
+/* Simplified poster hierarchy */
+@media (min-width:1320px){
+  .boardHomeRoute .pageTop::after{content:none!important}
+  .boardHomeRoute .pageTop::before{width:48px;opacity:.72}
+
+  .iveRailMotto,
+  .iveRailHand,
+  .iveRailKicker{display:none!important}
+
+  .ivePortrait{
+    filter:grayscale(.96) saturate(.42) contrast(1.22) brightness(.42);
+    opacity:.88;
+  }
+
+  .iveEditorialRail--left::after{
+    mix-blend-mode:normal!important;
+    background:
+      radial-gradient(circle at 0 8%,rgba(238,46,75,.27),transparent 30%),
+      radial-gradient(circle at 8% 86%,rgba(29,180,210,.22),transparent 36%),
+      linear-gradient(90deg,rgba(3,6,9,.16) 0%,rgba(5,8,12,.24) 54%,rgba(8,11,15,.84) 83%,#080b0f 100%);
+  }
+
+  .iveEditorialRail--right::after{
+    mix-blend-mode:normal!important;
+    background:
+      radial-gradient(circle at 100% 9%,rgba(28,183,214,.25),transparent 31%),
+      radial-gradient(circle at 94% 84%,rgba(236,45,74,.26),transparent 38%),
+      linear-gradient(270deg,rgba(3,6,9,.16) 0%,rgba(5,8,12,.24) 54%,rgba(8,11,15,.85) 83%,#080b0f 100%);
+  }
+
+  .iveRailNames{
+    top:31%;
+    left:22px!important;
+    gap:10px;
+    color:rgba(194,205,214,.72);
+    font-size:7px;
+    letter-spacing:.27em;
+  }
+
+  .iveRailMark{
+    left:22px;
+    right:22px;
+    bottom:28px;
+    gap:9px;
+  }
+
+  .iveRailMark strong{
+    font-size:43px;
+    font-style:normal;
+    letter-spacing:.12em;
+  }
+
+  .iveRailMark span{
+    max-width:180px;
+    color:rgba(182,194,204,.72);
+    font-size:6px;
+    letter-spacing:.26em;
+  }
+
+  .iveRailFeature,
+  .iveRailFooter{
+    position:absolute;
+    z-index:7;
+    right:22px;
+    pointer-events:none;
+    text-align:right;
+    text-shadow:0 8px 30px rgba(0,0,0,.9);
+  }
+
+  .iveRailFeature{
+    top:74px;
+    width:150px;
+    display:grid;
+    justify-items:end;
+    gap:8px;
+  }
+
+  .iveRailFeature .kicker{
+    color:rgba(168,184,196,.68);
+    font-size:6px;
+    font-weight:760;
+    letter-spacing:.38em;
+    line-height:1.5;
+    text-transform:uppercase;
+  }
+
+  .iveRailFeature strong{
+    color:rgba(231,237,241,.9);
+    font-family:"Segoe Script","Bradley Hand",Georgia,serif;
+    font-size:42px;
+    font-weight:500;
+    font-style:italic;
+    letter-spacing:-.06em;
+    line-height:.9;
+  }
+
+  .iveRailFeature small{
+    color:rgba(184,196,205,.76);
+    font-size:7px;
+    font-weight:730;
+    letter-spacing:.28em;
+    line-height:1.75;
+    text-transform:uppercase;
+  }
+
+  .iveRailFeature::after{
+    content:"";
+    width:54px;
+    height:1px;
+    margin-top:3px;
+    background:linear-gradient(270deg,rgba(223,233,239,.72),transparent);
+  }
+
+  .iveRailFooter{
+    bottom:30px;
+    color:rgba(170,183,193,.68);
+    font-size:6px;
+    font-weight:740;
+    letter-spacing:.28em;
+    line-height:1.7;
+    text-transform:uppercase;
+  }
+
+  .iveRailFooter::before{
+    content:"";
+    display:block;
+    width:50px;
+    height:1px;
+    margin:0 0 9px auto;
+    background:linear-gradient(270deg,rgba(223,233,239,.62),transparent);
+  }
+}
+
+@media (min-width:1320px) and (max-width:1499px){
+  .iveRailNames{left:16px!important}
+  .iveRailMark{left:16px;right:16px;bottom:22px}
+  .iveRailMark strong{font-size:34px}
+  .iveRailFeature{top:68px;right:16px;width:126px}
+  .iveRailFeature strong{font-size:34px}
+  .iveRailFeature small{font-size:6px}
+  .iveRailFooter{right:16px;bottom:22px;font-size:5px}
+}

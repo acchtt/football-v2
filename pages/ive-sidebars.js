@@ -15,53 +15,41 @@
   };
   const roster = ['YUJIN','GAEUL','REI','WONYOUNG','LIZ','LEESEO'];
 
+  function portrait(name, url, index) {
+    const node = document.createElement('div');
+    node.className = `ivePortrait ivePortrait--${index + 1}`;
+    node.dataset.member = name;
+    node.style.setProperty('--ive-photo', `url("${url}")`);
+    return node;
+  }
+
   function build(side, entries) {
     const rail = document.createElement('aside');
     rail.className = `iveEditorialRail iveEditorialRail--${side}`;
     rail.setAttribute('aria-hidden', 'true');
-
-    entries.forEach(([name, url], index) => {
-      const portrait = document.createElement('div');
-      portrait.className = `ivePortrait ivePortrait--${index + 1}`;
-      portrait.dataset.member = name;
-      portrait.style.setProperty('--ive-photo', `url("${url}")`);
-      rail.appendChild(portrait);
-    });
+    entries.forEach(([name, url], index) => rail.appendChild(portrait(name, url, index)));
 
     if (side === 'left') {
       const names = document.createElement('div');
       names.className = 'iveRailNames';
       names.innerHTML = roster.map(name => `<span>${name}</span>`).join('');
       rail.appendChild(names);
+
+      const mark = document.createElement('div');
+      mark.className = 'iveRailMark';
+      mark.innerHTML = '<strong>IVE</strong><span>SIX DREAMS · ONE BIGGER TOMORROW</span><i class="iveRailRule"></i>';
+      rail.appendChild(mark);
+    } else {
+      const feature = document.createElement('div');
+      feature.className = 'iveRailFeature';
+      feature.innerHTML = '<span class="kicker">Music unites people</span><strong>IVE</strong><small>Always more<br>than a game</small>';
+      rail.appendChild(feature);
+
+      const footer = document.createElement('div');
+      footer.className = 'iveRailFooter';
+      footer.innerHTML = 'Anyplace · anytime<br>together';
+      rail.appendChild(footer);
     }
-
-    const motto = document.createElement('div');
-    motto.className = 'iveRailMotto';
-    motto.innerHTML = side === 'left'
-      ? '<b>IVE</b><span>For a brighter<br>tomorrow</span>'
-      : '<b>IVE</b><span>Always more<br>than a game</span>';
-    rail.appendChild(motto);
-
-    if (side === 'right') {
-      const hand = document.createElement('div');
-      hand.className = 'iveRailHand';
-      hand.innerHTML = 'For<br>a brighter<br>tomorrow';
-      rail.appendChild(hand);
-    }
-
-    const kicker = document.createElement('div');
-    kicker.className = 'iveRailKicker';
-    kicker.innerHTML = side === 'left'
-      ? 'Six dreams<br>one bigger tomorrow'
-      : 'Anyplace<br>anytime · together';
-    rail.appendChild(kicker);
-
-    const mark = document.createElement('div');
-    mark.className = 'iveRailMark';
-    mark.innerHTML = side === 'left'
-      ? '<strong>IVE</strong><span>SIX DREAMS · ONE BIGGER TOMORROW</span><i class="iveRailRule"></i>'
-      : '<strong>IVE</strong><span>ANYPLACE · ANYTIME · TOGETHER</span><i class="iveRailRule"></i>';
-    rail.appendChild(mark);
 
     document.body.appendChild(rail);
   }
