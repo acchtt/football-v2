@@ -3,14 +3,14 @@
 
   const members = {
     left: [
-      ['YUJIN', 'https://img.uhdpaper.com/wallpaper/yujin-ive-4th-fan-concert-311%405%40n-phone-4k.jpg'],
-      ['LIZ', 'https://img.uhdpaper.com/wallpaper/liz-ive-4th-fan-concert-295%405%40n-phone-4k.jpg'],
-      ['REI', 'https://img.uhdpaper.com/wallpaper/rei-ive-4th-fan-concert-309%405%40n-phone-4k.jpg']
+      ['YUJIN', './media/ive/yujin.jpg'],
+      ['LIZ', './media/ive/liz.jpg'],
+      ['REI', './media/ive/rei.jpg']
     ],
     right: [
-      ['WONYOUNG', 'https://img.uhdpaper.com/wallpaper/wonyoung-ive-4th-fan-concert-310%405%40n-phone-4k.jpg'],
-      ['GAEUL', 'https://img.uhdpaper.com/wallpaper/gaeul-ive-4th-fan-concert-292%405%40n-phone-4k.jpg'],
-      ['LEESEO', 'https://img.uhdpaper.com/wallpaper/leeseo-ive-4th-fan-concert-294%405%40n-phone-4k.jpg']
+      ['WONYOUNG', './media/ive/wonyoung.jpg'],
+      ['GAEUL', './media/ive/gaeul.jpg'],
+      ['LEESEO', './media/ive/leeseo.jpg']
     ]
   };
 
