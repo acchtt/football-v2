@@ -64,6 +64,7 @@
     const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
     if (['finished','ended','complete','completed','final','ft','aet','full_time','fulltime'].includes(raw)) return 'finished';
     if (['live','inprogress','in_progress','playing','ongoing','ht','halftime','half_time','break','paused','extra_time','penalties'].includes(raw)) return 'live';
+    if (['status_syncing','syncing'].includes(raw)) return 'syncing';
     if (['postponed','cancelled','canceled','abandoned','suspended'].includes(raw)) return raw;
     return 'upcoming';
   }
@@ -163,6 +164,10 @@
       const timed = timelineStatus(boardRow, now);
       const actual = rawEventStatus(event);
       if (['finished','postponed','cancelled','canceled','abandoned','suspended'].includes(actual)) return event;
+      // canonical-live-source deliberately marks a stale day-feed LIVE row as
+      // status_syncing when it is absent from BSD's dedicated live endpoint.
+      // Preserve that downgrade instead of promoting it back to LIVE by clock.
+      if (actual === 'syncing') return event;
 
       if (timed === 'finished') {
         return Object.assign({}, event, {
