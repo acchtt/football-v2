@@ -1,5 +1,5 @@
-/* Original IVE concept — continuous cinematic side artwork */
-.iveReferenceRail{display:none}
+/* IVE editorial rails — native composition using six isolated portraits. */
+.iveEditorialRail{display:none}
 .headerNav{display:none}
 
 @media (min-width:1051px){
@@ -58,9 +58,8 @@
 
 @media (min-width:1320px){
   :root{
-    /* Match the 1672px reference composition: 266px artwork / 1140px board / 266px artwork. */
-    --ive-stage:68.18vw;
-    --ive-gutter:15.91vw;
+    --ive-gutter:clamp(214px,16vw,320px);
+    --ive-stage:min(1280px,calc(100vw - (var(--ive-gutter) * 2)));
   }
 
   html{background:#05080c}
@@ -71,53 +70,174 @@
   .appFrame{position:relative;z-index:2}
 
   .appHeader{z-index:3}
-
   .headerInner,
   .appFrame{width:var(--ive-stage)!important}
 
-  .iveRailsReady .iveReferenceRail{
+  .iveRailsReady .iveEditorialRail{
     position:fixed;
-    top:0;
-    bottom:0;
+    inset-block:0;
     z-index:1;
     display:block;
     width:var(--ive-gutter);
     overflow:hidden;
     pointer-events:none;
-    background-color:#05080c;
-    background-image:url("./media/ive/ive-original-side-art.webp");
-    background-repeat:no-repeat;
-    background-size:max(100vw,1672px) auto;
-    filter:saturate(1.04) contrast(1.02) brightness(.91);
+    background:#05080c;
+    isolation:isolate;
   }
 
-  .iveReferenceRail--left{left:0;background-position:left top}
-  .iveReferenceRail--right{right:0;background-position:right top}
+  .iveEditorialRail--left{left:0}
+  .iveEditorialRail--right{right:0}
 
-  .iveReferenceRail::before,
-  .iveReferenceRail::after{
+  .iveEditorialRail::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:4;
+    pointer-events:none;
+    background:
+      linear-gradient(180deg,rgba(5,8,12,.08),transparent 12%,transparent 82%,rgba(5,8,12,.52)),
+      repeating-linear-gradient(180deg,transparent 0 118px,rgba(255,255,255,.014) 119px,transparent 120px);
+  }
+
+  .iveEditorialRail::after{
+    content:"";
+    position:absolute;
+    inset-block:0;
+    z-index:5;
+    width:42%;
+    pointer-events:none;
+  }
+
+  .iveEditorialRail--left::after{
+    right:0;
+    background:linear-gradient(90deg,transparent,rgba(8,11,15,.76) 72%,#080b0f);
+  }
+
+  .iveEditorialRail--right::after{
+    left:0;
+    background:linear-gradient(270deg,transparent,rgba(8,11,15,.76) 72%,#080b0f);
+  }
+
+  .ivePortrait{
+    position:absolute;
+    z-index:1;
+    margin:0;
+    width:82%;
+    height:27.5vh;
+    min-height:218px;
+    max-height:292px;
+    overflow:hidden;
+    background-image:var(--ive-photo);
+    background-repeat:no-repeat;
+    background-size:cover;
+    background-position:center 15%;
+    filter:grayscale(.93) saturate(.65) contrast(1.14) brightness(.70);
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10%,#000 86%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0,#000 10%,#000 86%,transparent 100%);
+  }
+
+  .ivePortrait::before,
+  .ivePortrait::after{
     content:"";
     position:absolute;
     inset:0;
     pointer-events:none;
   }
 
-  .iveReferenceRail::before{
-    z-index:1;
+  .ivePortrait::before{mix-blend-mode:color;opacity:.82}
+  .iveEditorialRail--left .ivePortrait::before{
+    background:linear-gradient(145deg,rgba(255,64,82,.30),transparent 48%,rgba(41,200,226,.30));
+  }
+  .iveEditorialRail--right .ivePortrait::before{
+    background:linear-gradient(215deg,rgba(41,200,226,.30),transparent 48%,rgba(255,64,82,.30));
+  }
+
+  .ivePortrait::after{
     background:
-      linear-gradient(180deg,rgba(5,8,12,.08),transparent 18%,transparent 78%,rgba(5,8,12,.28)),
-      repeating-linear-gradient(180deg,transparent 0 119px,rgba(255,255,255,.012) 120px,transparent 121px);
+      linear-gradient(180deg,rgba(4,7,10,.18),transparent 36%,rgba(4,7,10,.48)),
+      linear-gradient(90deg,rgba(4,7,10,.18),transparent 42%,rgba(4,7,10,.18));
   }
 
-  .iveReferenceRail--left::after{
-    z-index:2;
-    background:linear-gradient(90deg,transparent 0%,transparent 56%,rgba(8,11,15,.50) 74%,rgba(8,11,15,.92) 91%,#080b0f 100%);
+  .ivePortrait figcaption{
+    position:absolute;
+    z-index:3;
+    bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:rgba(235,242,247,.88);
+    font-size:8px;
+    font-weight:780;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    text-shadow:0 4px 14px #000;
   }
 
-  .iveReferenceRail--right::after{
-    z-index:2;
-    background:linear-gradient(270deg,transparent 0%,transparent 56%,rgba(8,11,15,.50) 74%,rgba(8,11,15,.92) 91%,#080b0f 100%);
+  .ivePortrait figcaption::before{
+    content:"";
+    width:18px;
+    height:1px;
+    background:currentColor;
+    opacity:.55;
   }
+
+  .iveEditorialRail--left .ivePortrait{left:-4%}
+  .iveEditorialRail--left .ivePortrait figcaption{left:22px}
+  .iveEditorialRail--right .ivePortrait{right:-4%}
+  .iveEditorialRail--right .ivePortrait figcaption{right:22px;flex-direction:row-reverse}
+
+  .ivePortrait--1{top:1.5%}
+  .ivePortrait--2{top:35.5%}
+  .ivePortrait--3{top:69.5%}
+
+  .iveEditorialRail--left .ivePortrait--2{left:3%;width:76%}
+  .iveEditorialRail--right .ivePortrait--2{right:3%;width:76%}
+
+  .iveRailWordmark,
+  .iveRailSlogan,
+  .iveRailMembers{
+    position:absolute;
+    z-index:7;
+    text-transform:uppercase;
+    text-shadow:0 8px 24px rgba(0,0,0,.92);
+  }
+
+  .iveRailWordmark{
+    top:24px;
+    font-family:Georgia,"Times New Roman",serif;
+    color:#f1f3f4;
+    font-size:32px;
+    font-style:italic;
+    letter-spacing:.08em;
+  }
+
+  .iveEditorialRail--left .iveRailWordmark{left:20px}
+  .iveEditorialRail--right .iveRailWordmark{right:20px}
+
+  .iveRailSlogan{
+    top:72px;
+    width:100px;
+    color:#9ba9b4;
+    font-size:7px;
+    font-weight:780;
+    letter-spacing:.28em;
+    line-height:1.85;
+  }
+
+  .iveEditorialRail--left .iveRailSlogan{left:22px}
+  .iveEditorialRail--right .iveRailSlogan{right:22px;text-align:right}
+
+  .iveRailMembers{
+    bottom:18px;
+    color:#73818d;
+    font-size:6px;
+    font-weight:760;
+    letter-spacing:.18em;
+    line-height:1.7;
+  }
+
+  .iveEditorialRail--left .iveRailMembers{left:22px}
+  .iveEditorialRail--right .iveRailMembers{right:22px;text-align:right}
 
   .boardHomeRoute .pageTop{
     position:relative;
@@ -161,14 +281,18 @@
   }
 
   .boardHomeRoute .pageTop .eyebrow{color:#70d9ec;letter-spacing:.24em}
-
-  .boardHomeRoute .pageActions{
-    align-self:flex-end;
-    margin-bottom:12px;
-  }
+  .boardHomeRoute .pageActions{align-self:flex-end;margin-bottom:12px}
 }
 
 @media (max-width:1319px){
   .headerNav,
-  .iveReferenceRail{display:none!important}
+  .iveEditorialRail{display:none!important}
+}
+
+@media (min-width:1320px) and (max-height:780px){
+  .ivePortrait{height:26vh;min-height:184px}
+  .ivePortrait--1{top:1%}
+  .ivePortrait--2{top:36%}
+  .ivePortrait--3{top:71%}
+  .iveRailWordmark{font-size:26px}
 }
