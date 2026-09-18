@@ -58,8 +58,9 @@
 
 @media (min-width:1320px){
   :root{
-    --ive-stage:min(1120px,calc(100vw - 300px));
-    --ive-gutter:max(150px,calc((100vw - var(--ive-stage))/2));
+    /* Match the 1672px reference composition: 266px artwork / 1140px board / 266px artwork. */
+    --ive-stage:68.18vw;
+    --ive-gutter:15.91vw;
   }
 
   html{background:#05080c}
@@ -74,13 +75,13 @@
   .headerInner,
   .appFrame{width:var(--ive-stage)!important}
 
-  .iveReferenceRail{
+  .iveRailsReady .iveReferenceRail{
     position:fixed;
     top:0;
     bottom:0;
     z-index:1;
     display:block;
-    width:calc(var(--ive-gutter) + 86px);
+    width:var(--ive-gutter);
     overflow:hidden;
     pointer-events:none;
     background-color:#05080c;
@@ -165,10 +166,6 @@
     align-self:flex-end;
     margin-bottom:12px;
   }
-}
-
-@media (min-width:1320px) and (max-width:1499px){
-  :root{--ive-stage:calc(100vw - 300px)}
 }
 
 @media (max-width:1319px){

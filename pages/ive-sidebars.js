@@ -11,7 +11,24 @@
       document.body.appendChild(rail);
     });
 
-    document.documentElement.classList.add('iveRailsReady');
+    const root = document.getElementById('app');
+    const updateVisibility = () => {
+      const text = root?.textContent || '';
+      const busy = !root?.children.length ||
+        Boolean(root.querySelector('.skeletonRow')) ||
+        /Loading (?:decision board|matchday|picks|competitions|teams)/i.test(text);
+      document.documentElement.classList.toggle('iveRailsReady', !busy);
+    };
+
+    updateVisibility();
+    if (root) {
+      new MutationObserver(updateVisibility).observe(root, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+    window.addEventListener('hashchange', updateVisibility);
   }
 
   if (document.readyState === 'loading') {
