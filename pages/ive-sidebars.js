@@ -1,66 +1,41 @@
 (() => {
   'use strict';
 
-  const members = {
-    left: [
-      ['Yujin', './media/ive/portraits/yujin.webp'],
-      ['Liz', './media/ive/portraits/liz.webp'],
-      ['Rei', './media/ive/portraits/rei.webp']
-    ],
-    right: [
-      ['Wonyoung', './media/ive/portraits/wonyoung.webp'],
-      ['Gaeul', './media/ive/portraits/gaeul.webp'],
-      ['Leeseo', './media/ive/portraits/leeseo.webp']
-    ]
-  };
-
-  const copy = {
+  const rails = {
     left: {
-      slogan: 'Six dreams<br>one bigger tomorrow',
-      members: 'Yujin · Gaeul · Rei<br>Wonyoung · Liz · Leeseo'
+      image: './media/ive/ive-left-approved.webp',
+      slogan: 'Six dreams<br>one bigger tomorrow'
     },
     right: {
+      image: './media/ive/ive-right-approved.webp',
       slogan: 'Always more<br>than a game',
-      members: 'Anyplace · Anytime<br>Together'
+      footer: 'Anyplace · Anytime<br>Together'
     }
   };
 
   function buildRail(side) {
     const rail = document.createElement('aside');
-    rail.className = `iveEditorialRail iveEditorialRail--${side}`;
+    rail.className = `iveArtRail iveArtRail--${side}`;
     rail.setAttribute('aria-hidden', 'true');
+    rail.style.setProperty('--ive-art', `url("${rails[side].image}")`);
 
-    members[side].forEach(([name, image], index) => {
-      const portrait = document.createElement('figure');
-      portrait.className = `ivePortrait ivePortrait--${index + 1}`;
-      portrait.style.setProperty('--ive-photo', `url("${image}")`);
+    const copy = document.createElement('div');
+    copy.className = 'iveArtCopy';
+    copy.innerHTML = `<strong>IVE</strong><span>${rails[side].slogan}</span>`;
+    rail.appendChild(copy);
 
-      const label = document.createElement('figcaption');
-      label.textContent = name;
-      portrait.appendChild(label);
-      rail.appendChild(portrait);
-    });
-
-    const mark = document.createElement('div');
-    mark.className = 'iveRailWordmark';
-    mark.textContent = 'IVE';
-    rail.appendChild(mark);
-
-    const slogan = document.createElement('div');
-    slogan.className = 'iveRailSlogan';
-    slogan.innerHTML = copy[side].slogan;
-    rail.appendChild(slogan);
-
-    const names = document.createElement('div');
-    names.className = 'iveRailMembers';
-    names.innerHTML = copy[side].members;
-    rail.appendChild(names);
+    if (rails[side].footer) {
+      const footer = document.createElement('div');
+      footer.className = 'iveArtFooter';
+      footer.innerHTML = rails[side].footer;
+      rail.appendChild(footer);
+    }
 
     document.body.appendChild(rail);
   }
 
   function init() {
-    document.querySelectorAll('.iveRailDecor,.iveEditorialRail,.iveReferenceRail').forEach(node => node.remove());
+    document.querySelectorAll('.iveRailDecor,.iveEditorialRail,.iveReferenceRail,.iveArtRail').forEach(node => node.remove());
     buildRail('left');
     buildRail('right');
 
