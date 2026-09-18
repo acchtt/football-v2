@@ -104,7 +104,7 @@
     inset-inline:0;
     z-index:1;
     background:
-      linear-gradient(180deg,rgba(4,7,10,.08),transparent 18%,transparent 80%,rgba(4,7,10,.26)),
+      linear-gradient(180deg,#05080c 0,rgba(5,8,12,.94) 6%,transparent 15%,transparent 84%,rgba(5,8,12,.94) 95%,#05080c 100%),
       repeating-linear-gradient(180deg,transparent 0 118px,rgba(255,255,255,.012) 119px,transparent 120px);
   }
 
@@ -131,7 +131,7 @@
   }
 
   .iveArtRail--left .iveArtCopy{left:22px;bottom:24px}
-  .iveArtRail--right .iveArtCopy{right:22px;top:24px;text-align:right}
+  .iveArtRail--right .iveArtCopy{right:22px;top:84px;text-align:right}
 
   .iveArtCopy strong{
     font-family:Georgia,"Times New Roman",serif;
