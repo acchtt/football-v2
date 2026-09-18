@@ -63,9 +63,9 @@ jobs:
               'alerts-center.js','alerts-center.css','ive-sidebars.css','ive-sidebars.js'
           ]:
               assert (root/required).exists(), f'missing {required}'
-          for member in ['yujin','liz','rei','wonyoung','gaeul','leeseo']:
-              p=root/'media'/'ive'/'portraits'/f'{member}.webp'
-              assert p.exists() and p.stat().st_size > 10000, f'missing/invalid IVE portrait: {p}'
+          for name in ['ive-left-approved.webp','ive-right-approved.webp']:
+              p=root/'media'/'ive'/name
+              assert p.exists() and p.stat().st_size > 50000, f'missing/invalid IVE rail artwork: {p}'
           print('PWA artifact validated')
           PY
           for js in pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/matchday-behavior.js pages/strict-board-filter.js pages/strict-board-guard.js pages/ive-sidebars.js pages/sw.js; do

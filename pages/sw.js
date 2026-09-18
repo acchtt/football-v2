@@ -1,4 +1,4 @@
-const CACHE='slate-xi-shell-v43';
+const CACHE='slate-xi-shell-v44';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -7,24 +7,20 @@ const SHELL=[
   asset('offline.html'),
   asset('design-v1.css?v=13'),
   asset('alerts-center.css?v=2'),
-  asset('ive-sidebars.css?v=11'),
+  asset('ive-sidebars.css?v=12'),
   asset('manifest.webmanifest?v=7'),
   asset('icons/slate-xi.svg?v=3'),
   asset('icons/slate-xi-192.svg?v=3'),
   asset('icons/slate-xi-512.svg?v=3'),
   asset('icons/slate-xi-maskable-512.svg?v=3'),
-  asset('media/ive/portraits/yujin.webp'),
-  asset('media/ive/portraits/liz.webp'),
-  asset('media/ive/portraits/rei.webp'),
-  asset('media/ive/portraits/wonyoung.webp'),
-  asset('media/ive/portraits/gaeul.webp'),
-  asset('media/ive/portraits/leeseo.webp'),
+  asset('media/ive/ive-left-approved.webp'),
+  asset('media/ive/ive-right-approved.webp'),
   asset('ict-slate-fetch.js?v=1'),
   asset('config.js?v=5'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
-  asset('ive-sidebars.js?v=8'),
+  asset('ive-sidebars.js?v=9'),
   asset('app-v2.js?v=16'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=4'),
