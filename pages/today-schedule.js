@@ -1,4 +1,4 @@
-// Schedule front page: ICT today only, split into ended and upcoming/live tabs.
+// Schedule front page: operational ICT board (12:00 today through 06:00 next day), split into ended and upcoming/live tabs.
 (() => {
   const endedStatuses = new Set(["finished", "ft", "full time", "full_time", "fulltime"]);
   let activeBucket = "upcoming";
@@ -18,12 +18,33 @@
     return new Date(a?.displayKickoff || a?.kickoff || 0).getTime() - new Date(b?.displayKickoff || b?.kickoff || 0).getTime();
   }
 
+  function operationalBoardWindow(now = Date.now()) {
+    const shifted = new Date(now + 7 * 60 * 60 * 1000);
+    let day = shifted.toISOString().slice(0, 10);
+    const hour = shifted.getUTCHours();
+
+    // Before 06:00 ICT, keep showing the board that started at noon the previous day.
+    if (hour < 6) {
+      const previous = new Date(Date.parse(`${day}T00:00:00Z`) - 24 * 60 * 60 * 1000);
+      day = previous.toISOString().slice(0, 10);
+    }
+
+    const start = Date.parse(`${day}T12:00:00+07:00`);
+    const end = Date.parse(`${day}T06:00:00+07:00`) + 24 * 60 * 60 * 1000;
+    return { day, start, end };
+  }
+
   renderSchedule = function renderTodaySchedule(rows = data.schedule) {
-    const today = dateKey(new Date());
-    const todayRows = (rows || []).filter((row) => row.slateDate === today).sort(kickoffAsc);
+    const boardWindow = operationalBoardWindow();
+    const today = boardWindow.day;
+    const todayRows = (rows || []).filter((row) => {
+      const value = row?.displayKickoff || row?.kickoff;
+      const time = value ? Date.parse(value) : NaN;
+      return Number.isFinite(time) && time >= boardWindow.start && time < boardWindow.end;
+    }).sort(kickoffAsc);
     const focus = todayRows.filter((row) => row.tier === "FOCUS").length;
 
-    app.innerHTML = `<div class="top"><div><div class="eyebrow">LIVE CONTROL BOARD</div><h1>Schedule</h1><p class="sub">${esc(fmtDate(today))} · ICT. Today only.</p></div><div class="stats"><div class="stat"><small>FOCUS</small><strong>${focus}</strong></div><div class="stat"><small>WATCHLIST</small><strong>${todayRows.length - focus}</strong></div><div class="stat"><small>TIMEZONE</small><strong style="font-size:17px">ICT · GMT+7</strong></div></div></div>${filtersHtml("schedule", todayRows)}<div id="list"></div>`;
+    app.innerHTML = `<div class="top"><div><div class="eyebrow">LIVE CONTROL BOARD</div><h1>Schedule</h1><p class="sub">${esc(fmtDate(today))} · ICT board · 12:00–06:00.</p></div><div class="stats"><div class="stat"><small>FOCUS</small><strong>${focus}</strong></div><div class="stat"><small>WATCHLIST</small><strong>${todayRows.length - focus}</strong></div><div class="stat"><small>TIMEZONE</small><strong style="font-size:17px">ICT · GMT+7</strong></div></div></div>${filtersHtml("schedule", todayRows)}<div id="list"></div>`;
 
     const form = document.getElementById("filters");
     const list = document.getElementById("list");
