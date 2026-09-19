@@ -16,7 +16,7 @@ const SHELL=[
   asset('media/ive/ive-left-approved.webp'),
   asset('media/ive/ive-right-approved.webp'),
   asset('ict-slate-fetch.js?v=1'),
-  asset('config.js?v=6'),
+  asset('config.js?v=7'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
