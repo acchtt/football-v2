@@ -93,6 +93,7 @@
     return pick(
       team.name, team.short_name,
       event && event[side + '_team_name'],
+      event && typeof event[side + '_team'] === 'string' ? event[side + '_team'] : null,
       event && event[side + '_name'],
       event && typeof event[side] === 'string' ? event[side] : null,
       side.toUpperCase()
@@ -233,17 +234,21 @@
     if (route === 'picks') return 'picks';
     return 'explore';
   }
-  function navItem(group, label, href, icon) {
-    const active = routeGroup(state.route) === group;
+  function navItem(route, label, href, icon) {
+    const active = route === 'board' ? routeGroup(state.route) === 'board' :
+      route === 'picks' ? state.route === 'picks' :
+      route === 'leagues' ? (state.route === 'leagues' || state.route === 'league') :
+      route === 'teams' ? (state.route === 'teams' || state.route === 'team') : false;
     return '<a class="navItem ' + (active ? 'active' : '') + '" href="' + href + '"' +
       (active ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + icon +
       '</span><b>' + label + '</b></a>';
   }
   function navigation(className) {
     return '<nav class="' + className + '" aria-label="Primary navigation">' +
-      navItem('board', 'Board', '#board', '◆') +
-      navItem('picks', 'Picks', '#picks', '✓') +
-      navItem('explore', 'Explore', '#leagues', '⌕') +
+      navItem('board', 'Board', '#board', 'B') +
+      navItem('picks', 'Picks', '#picks', 'P') +
+      navItem('leagues', 'Competitions', '#leagues', 'C') +
+      navItem('teams', 'Teams', '#teams', 'T') +
       '</nav>';
   }
   function header() {
@@ -256,7 +261,7 @@
       '<a class="' + (state.route === 'leagues' || state.route === 'league' ? 'active' : '') + '" href="#leagues">Competitions</a>' +
       '<a class="' + (state.route === 'teams' || state.route === 'team' ? 'active' : '') + '" href="#teams">Teams</a>' +
       '</nav>' +
-      '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams or players" placeholder="Search teams or players" autocomplete="off"></form>' +
+      '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams, players, or competitions" placeholder="Search teams, players, competitions…" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
       '</small></span></div></div></header>';
@@ -273,6 +278,14 @@
     return '<div class="pageTop"><div><span class="eyebrow">' + esc(eyebrow) + '</span><h1>' + esc(title) +
       '</h1>' + (description ? '<p>' + esc(description) + '</p>' : '') + '</div>' +
       (actions ? '<div class="pageActions">' + actions + '</div>' : '') + '</div>';
+  }
+  function matchdayHero(actions) {
+    return '<section class="matchdayHero" aria-labelledby="matchdayHeroTitle"><div class="matchdayHeroCopy">' +
+      '<span class="eyebrow">Matchday board</span><h1 id="matchdayHeroTitle">Football V2</h1>' +
+      '<p>Live scores. Smarter picks. A more beautiful game.</p>' +
+      (actions ? '<div class="matchdayHeroActions">' + actions + '</div>' : '') + '</div>' +
+      '<img src="./media/ive/hero-current.webp" alt="" aria-hidden="true" width="476" height="156" fetchpriority="high">' +
+      '<span class="matchdayHeroScript" aria-hidden="true">Game on,<br>together</span></section>';
   }
   function sectionHead(title, meta, actions) {
     return '<div class="sectionHead"><div><h2>' + esc(title) + '</h2>' +
@@ -412,8 +425,8 @@
     const primary = hasManualScore ? Number(row.manualScore.home) + '–' + Number(row.manualScore.away) :
       finished && !unsupported ? scoreText(event) : finished ? '—' : status === 'live' ? scoreText(event) : formatTime(kickoff);
     const secondary = hasManualScore ? (finished ? 'Manual FT' : 'Manual score') :
-      finished ? (unsupported ? 'Score needed' : 'Full time') : status === 'live' ? liveClock(event) : 'ICT kickoff';
-    const statusName = hasManualScore ? 'Custom' : finished ? 'FT' : unsupported ? 'No feed' : status === 'live' ? 'Live' : 'Upcoming';
+      finished ? (unsupported ? 'Score needed' : 'Full time') : status === 'live' ? liveClock(event) : unsupported ? 'No BSD feed' : 'ICT kickoff';
+    const statusName = hasManualScore ? 'Custom' : finished ? 'FT' : status === 'live' ? 'LIVE' : 'PRE';
     const statusClass = hasManualScore ? 'manual' : status;
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
@@ -431,8 +444,7 @@
     const manualControl = unsupported ?
       '<button type="button" class="manualScoreButton" data-manual-score="' + esc(manualKey) + '">' +
       (hasManualScore ? 'Edit score' : 'Add score') + '</button>' : '';
-    return '<article class="boardMatchCard ' + tierClass + '" style="--order:' + (index || 0) + '">' + open +
-      '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong></div>' +
+    return '<article class="boardMatchCard ' + tierClass + '">' + open +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
       '<div class="fixtureState"><span class="fixtureStatus ' + statusClass + '">' + stateIcon + esc(statusName) + '</span>' +
@@ -442,12 +454,28 @@
       crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
       '<b>' + esc(competition) + '</b></span></div>' +
+      '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>MODEL</span></div>' +
       (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
       close + '</article>';
   }
   function boardMatchList(boardRows) {
-    return '<div class="matchList boardMatchList chronologicalBoardList">' +
-      boardRows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div>';
+    const groups = new Map();
+    boardRows.forEach(function (row) {
+      const event = eventForBoardRow(row);
+      const name = row.competition || (event && leagueName(event)) || 'Competition';
+      const id = event && leagueId(event);
+      const key = String(id || '') + ':' + name;
+      if (!groups.has(key)) groups.set(key, {name:name, id:id, event:event, rows:[]});
+      groups.get(key).rows.push(row);
+    });
+    return '<div class="boardCompetitionList">' + Array.from(groups.values()).map(function (group) {
+      return '<section class="boardCompetitionGroup"><header class="boardCompetitionHead">' +
+        (group.id ? '<img src="' + image('league', group.id) + '" alt="" loading="lazy">' : '<span class="competitionMark" aria-hidden="true">◆</span>') +
+        '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' + (group.rows.length === 1 ? '' : 'es') + '</span>' +
+        (group.id ? '<a href="#league/' + group.id + '">View league <span aria-hidden="true">›</span></a>' : '') + '</header>' +
+        '<div class="matchList boardMatchList chronologicalBoardList">' +
+        group.rows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
+    }).join('') + '</div>';
   }
 
   function groupedMatches(events) {
@@ -490,7 +518,15 @@
     if (hours < 24) return 'Starts in ' + hours + 'h' + (rest ? ' ' + rest + 'm' : '');
     return 'Starts in ' + Math.floor(hours / 24) + 'd';
   }
-  function matchdayContext(events) {
+  function contextClock() {
+    const now = new Date();
+    return '<section class="contextClock"><div><span data-context-date>' + esc(new Intl.DateTimeFormat('en-US', {
+      timeZone:TZ, weekday:'short', month:'short', day:'numeric', year:'numeric'
+    }).format(now)) + '</span><strong data-context-clock>' + esc(new Intl.DateTimeFormat('en-GB', {
+      timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false
+    }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div><i aria-hidden="true">✦</i><p>Another great day for football.</p></section>';
+  }
+  function matchdayContext(events, counts) {
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
       return (tier === 'FOCUS' || tier === 'WATCHLIST') && boardStatus(row) !== 'finished';
@@ -528,7 +564,15 @@
     ) : '<div class="nextDecisionEmpty"><strong>Board clear</strong><small>No active decisions on this slate.</small></div>';
     const activeIds = new Set(events.map(function (event) { return String(eventId(event) || ''); }).filter(Boolean));
     const followed = currentFollowed().filter(function (item) { return activeIds.has(String(item.id || '')); });
-    return '<section class="railSection nextDecisionSection">' + sectionHead('Next decision', next ? tier : 'No active match') +
+    const quick = '<section class="railSection quickFilterSection">' + sectionHead('Quick filters', counts.all + ' board matches') +
+      '<div class="contextStatusFilters" role="group" aria-label="Quick match status filters">' +
+      [['all','All matches'],['live','Live now'],['upcoming','Upcoming'],['finished','Finished']].map(function (item) {
+        return '<button type="button" class="' + (state.statusFilter === item[0] ? 'active' : '') + '" data-status-filter="' + item[0] +
+          '" aria-pressed="' + (state.statusFilter === item[0]) + '"><span>' + item[1] + '</span><b>' + counts[item[0]] + '</b></button>';
+      }).join('') + '</div></section>';
+    const feature = '<section class="iveFeatureCard" aria-label="IVE and football feature"><img src="./media/ive/feature-current.webp" alt="" width="230" height="128" loading="lazy">' +
+      '<span>Featured</span><strong>IVE × FOOTBALL</strong><p>Different stages.<br>Same winning mindset.</p></section>';
+    return contextClock() + quick + feature + '<section class="railSection nextDecisionSection">' + sectionHead('Next decision', next ? tier : 'No active match') +
       nextBody + '</section><section class="railSection">' + sectionHead('Following', followed.length + ' active') +
       (followed.length ? followed.slice(0, 4).map(function (item) {
         return '<a class="followedItem" href="' + esc(item.href || '#board') + '">' + esc(item.title || 'Selected match') + '</a>';
@@ -569,21 +613,19 @@
       return '<button type="button" class="' + (state.signalFilter === key ? 'active' : '') + '" data-signal-filter="' + key +
         '" aria-pressed="' + (state.signalFilter === key) + '">' + label + '</button>';
     };
-    const controls = '<div class="filterBar"><div class="statusFilters" aria-label="Match status">' +
-      statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
-      '</div><div class="signalFilters" aria-label="Model signal">' +
+    const controls = '<div class="filterBar"><div class="statusFilters" role="group" aria-label="Match status">' +
+      statusButton('all','All matches') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','Finished') +
+      '</div><div class="signalFilters" role="group" aria-label="Model signal">' +
       signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
     const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true">↻</span> Sync board</button>';
-    const title = state.date === todayKey() ? 'Today’s decision board' : formatDate(state.date, true);
-    const content = pageTitle('Model board', title,
-      'Focus and Watchlist decisions first, enriched with BSD score and match status. Times shown in ICT.', actions) +
+    const content = matchdayHero(actions) +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       (filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
         '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>') +
       '</section>';
-    root.innerHTML = shell(content, matchdayContext(matchedEvents), 'boardHomeRoute');
+    root.innerHTML = shell(content, matchdayContext(matchedEvents, counts), 'boardHomeRoute');
     bindGlobal();
   }
 
@@ -743,6 +785,37 @@
         '</strong><span>' + esc(pick(item.player?.name, item.player_name, item.team?.name, item.team_name, '')) + '</span></div></div>';
     }).join('') + '</div>';
   }
+  function oddsKey(value) {
+    return String(value || '').trim().toLowerCase().replace(/[\s.\/-]+/g, '_').replace(/_+/g, '_');
+  }
+  function oddsText(value) {
+    return String(value || '').replace(/[_-]+/g, ' ').replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+  }
+  function oddsOutcomeLabel(value) {
+    const key = oddsKey(value);
+    const labels = {
+      '1':'Home', home:'Home', home_win:'Home',
+      'x':'Draw', draw:'Draw',
+      '2':'Away', away:'Away', away_win:'Away',
+      yes:'Yes', no:'No', btts_yes:'Yes', btts_no:'No'
+    };
+    if (labels[key]) return labels[key];
+    const total = key.match(/(?:^|_)(over|under)_?(\d+)(?:_(\d+))?(?:_goals?)?$/);
+    if (total) {
+      const line = total[3] ? total[2] + '.' + total[3] :
+        (/^\d+5$/.test(total[2]) && total[2].length > 1 ? total[2].slice(0, -1) + '.' + total[2].slice(-1) : total[2]);
+      return (total[1] === 'over' ? 'Over ' : 'Under ') + line;
+    }
+    return oddsText(value || 'Selection');
+  }
+  function oddsMarketLabel(market, outcome) {
+    const marketKey = oddsKey(market);
+    const outcomeKey = oddsKey(outcome);
+    if (/^(1x2|match_result|full_time_result)$/.test(marketKey) || /^(1|x|2|home|draw|away|home_win|away_win)$/.test(outcomeKey)) return 'Match result';
+    if (marketKey.indexOf('btts') >= 0 || marketKey.indexOf('both_teams') >= 0 || outcomeKey.indexOf('btts_') === 0) return 'Both teams to score';
+    if (marketKey.indexOf('total') >= 0 || marketKey.indexOf('over_under') >= 0 || marketKey.indexOf('goals') >= 0 || /^(over|under)_/.test(outcomeKey)) return 'Total goals';
+    return marketKey === 'odds' || !marketKey ? 'Market odds' : oddsText(market);
+  }
   function oddsHtml(raw) {
     let items = arr(raw);
     if (!items.length && raw && typeof raw === 'object') {
@@ -757,10 +830,19 @@
       items = flattened;
     }
     if (!items.length) return '<div class="emptyState"><span>No current odds returned by BSD.</span></div>';
-    return '<div class="oddsGrid">' + items.slice(0, 18).map(function (odd) {
-      return '<div class="oddCard"><span>' + esc(pick(odd.market, 'Market')) + '</span><small>' +
-        esc(pick(odd.outcome_name, odd.outcome, '')) + '</small><strong>' + esc(pick(odd.decimal_odds, odd.odds, '—')) +
-        '</strong><em>' + esc(pick(odd.bookmaker_name, odd.bookmaker_slug, 'Consensus')) + '</em></div>';
+    const groups = new Map();
+    items.slice(0, 18).forEach(function (odd) {
+      const outcome = pick(odd.outcome_name, odd.outcome, 'Selection');
+      const label = oddsMarketLabel(odd.market, outcome);
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label).push({ odd:odd, outcome:outcome });
+    });
+    return '<div class="oddsGrid">' + Array.from(groups.entries()).map(function (group) {
+      return '<section class="oddsMarket"><h3>' + esc(group[0]) + '</h3><div class="oddsMarketGrid">' + group[1].map(function (item) {
+        return '<div class="oddCard"><span>' + esc(oddsOutcomeLabel(item.outcome)) + '</span><strong>' +
+          esc(pick(item.odd.decimal_odds, item.odd.odds, '—')) + '</strong><em>' +
+          esc(pick(item.odd.bookmaker_name, item.odd.bookmaker_slug, 'Consensus')) + '</em></div>';
+      }).join('') + '</div></section>';
     }).join('') + '</div>';
   }
   function h2hHtml(raw) {
@@ -820,15 +902,22 @@
         '<div class="heroFoot"><span>' + esc(formatDate(eventKickoff(event), true)) + '</span><span>' +
         esc(formatTime(eventKickoff(event))) + ' ICT</span><span>' + esc(pick(event.venue?.name, event.venue_name, 'Venue TBA')) +
         '</span><span>BSD #' + esc(id) + '</span></div></section>';
-      const tabs = '<section class="detailPanel"><div class="tabs" role="tablist">' +
-        '<button class="tabBtn active" data-tab="overview">Overview</button><button class="tabBtn" data-tab="stats">Stats</button>' +
-        '<button class="tabBtn" data-tab="lineups">Lineups</button><button class="tabBtn" data-tab="odds">Odds</button>' +
-        '<button class="tabBtn" data-tab="h2h">H2H</button></div><div class="tabBody" id="matchTab">' +
-        '<div data-pane="overview">' + (data.incidents?.ok ? incidentsHtml(data.incidents.data) : unavailable(data.incidents,'Timeline')) + '</div>' +
-        '<div class="hidden" data-pane="stats">' + (data.stats?.ok ? statsHtml(data.stats.data) : unavailable(data.stats,'Statistics')) + '</div>' +
-        '<div class="hidden" data-pane="lineups">' + (data.lineups?.ok ? lineupsHtml(data.lineups.data,event) : unavailable(data.lineups,'Lineups')) + '</div>' +
-        '<div class="hidden" data-pane="odds">' + (data.odds?.ok ? oddsHtml(data.odds.data) : unavailable(data.odds,'Odds')) + '</div>' +
-        '<div class="hidden" data-pane="h2h">' + (data.h2h?.ok ? h2hHtml(data.h2h.data) : unavailable(data.h2h,'Head-to-head')) + '</div></div></section>';
+      const tabButton = function (key, label, active) {
+        return '<button class="tabBtn ' + (active ? 'active' : '') + '" id="match-tab-' + key + '" role="tab" data-tab="' + key +
+          '" aria-selected="' + active + '" aria-controls="match-panel-' + key + '" tabindex="' + (active ? '0' : '-1') + '">' + label + '</button>';
+      };
+      const tabPane = function (key, content, active) {
+        return '<div class="' + (active ? '' : 'hidden') + '" id="match-panel-' + key + '" role="tabpanel" data-pane="' + key +
+          '" aria-labelledby="match-tab-' + key + '" tabindex="0">' + content + '</div>';
+      };
+      const tabs = '<section class="detailPanel"><div class="tabs" role="tablist" aria-label="Match details">' +
+        tabButton('overview','Overview',true) + tabButton('stats','Stats',false) + tabButton('lineups','Lineups',false) +
+        tabButton('odds','Odds',false) + tabButton('h2h','H2H',false) + '</div><div class="tabBody" id="matchTab">' +
+        tabPane('overview', data.incidents?.ok ? incidentsHtml(data.incidents.data) : unavailable(data.incidents,'Timeline'), true) +
+        tabPane('stats', data.stats?.ok ? statsHtml(data.stats.data) : unavailable(data.stats,'Statistics'), false) +
+        tabPane('lineups', data.lineups?.ok ? lineupsHtml(data.lineups.data,event) : unavailable(data.lineups,'Lineups'), false) +
+        tabPane('odds', data.odds?.ok ? oddsHtml(data.odds.data) : unavailable(data.odds,'Odds'), false) +
+        tabPane('h2h', data.h2h?.ok ? h2hHtml(data.h2h.data) : unavailable(data.h2h,'Head-to-head'), false) + '</div></section>';
       const side = '<section class="railSection">' + sectionHead('Match state', isLive(event) ? 'Live feed' : 'BSD') +
         '<div class="stateList"><div><span>Status</span><b>' + esc(eventStatus(event).toUpperCase()) +
         '</b></div><div><span>Period</span><b>' + esc(pick(eventTime(event).period,'—')) +
@@ -1003,7 +1092,7 @@
     });
     const filterButton = function (key,label,count) {
       return '<button type="button" class="' + (state.pickFilter === key ? 'active' : '') + '" data-pick-filter="' + key +
-        '">' + label + '<b>' + count + '</b></button>';
+        '" aria-pressed="' + (state.pickFilter === key) + '">' + label + '<b>' + count + '</b></button>';
     };
     const rowsHtml = filtered.map(function (item) {
       const result = String(item.result || 'PENDING').toUpperCase();
@@ -1019,7 +1108,7 @@
       (totalPL > 0 ? '+' : '') + totalPL.toFixed(2) + 'u</strong></div><div><span>Win rate</span><strong>' +
       (settled.length ? Math.round(wins / settled.length * 100) : 0) + '%</strong></div><div><span>Open</span><strong>' +
       open.length + '</strong></div><div><span>Settled</span><strong>' + settled.length + '</strong></div></div>' +
-      '<div class="pickFilters">' + filterButton('open','Open',open.length) + filterButton('settled','Settled',settled.length) +
+      '<div class="pickFilters" role="group" aria-label="Pick settlement status">' + filterButton('open','Open',open.length) + filterButton('settled','Settled',settled.length) +
       filterButton('all','All',all.length) + '</div><section class="contentSection">' + sectionHead('Pick ledger',filtered.length + ' shown') +
       (rowsHtml || '<div class="emptyState"><strong>No picks in this view</strong><span>Choose another settlement filter.</span></div>') + '</section>';
     root.innerHTML = shell(content, '<section class="railSection">' + sectionHead('Record notes','Model ledger') +
@@ -1151,13 +1240,28 @@
     document.getElementById('refreshToday')?.addEventListener('click', function () {
       loadMatchday(state.date, true, true);
     });
+    const activateTab = function (button, moveFocus) {
+      root.querySelectorAll('.tabBtn').forEach(function (item) {
+        const active = item === button;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-selected', String(active));
+        item.tabIndex = active ? 0 : -1;
+      });
+      root.querySelectorAll('[data-pane]').forEach(function (pane) {
+        pane.classList.toggle('hidden', pane.dataset.pane !== button.dataset.tab);
+      });
+      if (moveFocus) button.focus();
+    };
     root.querySelectorAll('.tabBtn').forEach(function (button) {
-      button.addEventListener('click', function () {
-        root.querySelectorAll('.tabBtn').forEach(function (item) { item.classList.remove('active'); });
-        root.querySelectorAll('[data-pane]').forEach(function (pane) {
-          pane.classList.toggle('hidden', pane.dataset.pane !== button.dataset.tab);
-        });
-        button.classList.add('active');
+      button.addEventListener('click', function () { activateTab(button, false); });
+      button.addEventListener('keydown', function (event) {
+        if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+        const tabs = Array.from(root.querySelectorAll('.tabBtn'));
+        const current = tabs.indexOf(button);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+          (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+        event.preventDefault();
+        activateTab(tabs[next], true);
       });
     });
     root.querySelectorAll('[data-open-alerts]').forEach(function (button) {
@@ -1241,6 +1345,10 @@
     }
   }
   function tickClocks() {
+    const now = new Date();
+    root.querySelectorAll('[data-context-clock]').forEach(function (node) {
+      node.textContent = new Intl.DateTimeFormat('en-GB', {timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(now);
+    });
     root.querySelectorAll('[data-clock-id]').forEach(function (node) {
       const id = String(node.dataset.clockId || '');
       const event = state.today.concat(state.live).find(function (item) { return String(eventId(item)) === id; });

@@ -1,15 +1,31 @@
 (() => {
   'use strict';
 
+  /*
+   * IVE IMAGE POLICY
+   *
+   * All visible IVE member images must be real photographs
+   * stored as local repository assets.
+   *
+   * Never use AI-generated people or generated faces.
+   *
+   * Allowed:
+   * crop, resize, object-fit, gradients, opacity,
+   * masks and non-generative color grading.
+   */
+
   const rails = {
     left: {
-      image: './media/ive/ive-left-approved.webp',
-      slogan: 'Six dreams<br>one bigger tomorrow'
+      image: './media/ive/wonyoung-left-current.webp',
+      label: 'IVE',
+      slogan: 'Same Passion,<br>Different Stadiums.',
+      note: 'MUSIC CONNECTS PEOPLE.<br>FOOTBALL DOES TOO.'
     },
     right: {
-      image: './media/ive/ive-right-approved.webp',
-      slogan: 'Always more<br>than a game',
-      footer: 'Anyplace · Anytime<br>Together'
+      image: './media/ive/ive-right-current.webp',
+      label: 'Always more<br>than a game ♡',
+      slogan: 'IVE × FOOTBALL',
+      footer: 'IVE × FOOTBALL<br><br>GOOD PEOPLE<br>GREAT MATCHES<br>BRIGHTER DAYS'
     }
   };
 
@@ -21,7 +37,7 @@
 
     const copy = document.createElement('div');
     copy.className = 'iveArtCopy';
-    copy.innerHTML = `<strong>IVE</strong><span>${rails[side].slogan}</span>`;
+    copy.innerHTML = `<strong>${rails[side].label}</strong><span>${rails[side].slogan}</span>${rails[side].note ? `<small>${rails[side].note}</small>` : ''}`;
     rail.appendChild(copy);
 
     if (rails[side].footer) {

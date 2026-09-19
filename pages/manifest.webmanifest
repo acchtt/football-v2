@@ -12,8 +12,8 @@
     "standalone",
     "minimal-ui"
   ],
-  "background_color": "#090b0f",
-  "theme_color": "#090b0f",
+  "background_color": "#08090d",
+  "theme_color": "#08090d",
   "categories": [
     "sports",
     "utilities"

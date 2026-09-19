@@ -141,15 +141,20 @@
   }
 
   function addRowToggle(row){
-    if(row.querySelector(':scope > .notifyToggle'))return;
     const id=row.dataset.liveEvent||String(row.getAttribute('href')||'').match(/#match\/(\d+)/)?.[1];
     if(!id)return;
     const title=matchTitle(row);
+    let host=row.closest('.boardMatchCard,.matchRowShell');
+    if(!host){
+      host=document.createElement('div');host.className='matchRowShell';
+      row.before(host);host.appendChild(row);
+    }
+    if(host.querySelector(':scope > .notifyToggle'))return;
     const btn=document.createElement('button');
     btn.type='button';btn.className='notifyToggle';btn.dataset.notifyId=id;
     btn.setAttribute('aria-label',`Enable alerts for ${title}`);
     btn.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();toggleFollow(id,title,row.getAttribute('href')||`#match/${id}`,btn);});
-    row.appendChild(btn);
+    host.appendChild(btn);
   }
   function addHeroToggle(){
     const foot=$('.matchHero .heroFoot');if(!foot||$('.heroNotify',foot))return;
@@ -261,7 +266,7 @@
     try{
       $$('.matchRow').forEach(addRowToggle);addHeroToggle();
       const all=followed();
-      $$('.notifyToggle[data-notify-id]').forEach(btn=>{const selected=!!all[btn.dataset.notifyId];btn.classList.toggle('selected',selected);btn.setAttribute('aria-pressed',selected?'true':'false');const row=btn.closest('.matchRow');const title=row?matchTitle(row):'this match';btn.setAttribute('aria-label',selected?`Disable alerts for ${title}`:`Enable alerts for ${title}`);btn.title=selected?'Following this match':'Enable match alerts';});
+      $$('.notifyToggle[data-notify-id]').forEach(btn=>{const selected=!!all[btn.dataset.notifyId];btn.classList.toggle('selected',selected);btn.setAttribute('aria-pressed',selected?'true':'false');const host=btn.closest('.boardMatchCard,.matchRowShell');const row=host?.querySelector('.matchRow')||btn.closest('.matchRow');const title=row?matchTitle(row):'this match';btn.setAttribute('aria-label',selected?`Disable alerts for ${title}`:`Enable alerts for ${title}`);btn.title=selected?'Following this match':'Enable match alerts';});
       enhanceSemantics();injectInstallButton();
     }finally{decorating=false;}
   }
