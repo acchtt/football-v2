@@ -174,6 +174,32 @@
     return payload;
   }
 
+  function ictDateKey(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(date);
+    const get = type => parts.find(part => part.type === type)?.value || '';
+    return `${get('year')}-${get('month')}-${get('day')}`;
+  }
+
+  function normalizeDashboardPayload(payload) {
+    if (!payload || !Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) return payload;
+    return {
+      ...payload,
+      schedule: payload.schedule.map(row => {
+        const kickoff = row?.kickoff || row?.displayKickoff || '';
+        const calendarDate = kickoff ? ictDateKey(kickoff) : '';
+        return {
+          ...row,
+          sourceSlateDate: row?.sourceSlateDate || row?.slateDate || '',
+          slateDate: calendarDate || row?.slateDate || ''
+        };
+      })
+    };
+  }
+
   function norm(v='') {
     return String(v).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
       .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club)\b/g, ' ')
@@ -205,6 +231,7 @@
   }
 
   function rememberDashboard(payload) {
+    payload = normalizeDashboardPayload(payload);
     if (!payload || !Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) return;
     boardSnapshot = payload;
     boardSnapshotAt = Date.now();
@@ -214,7 +241,7 @@
   function readCachedDashboard() {
     try {
       const cached = JSON.parse(localStorage.getItem(DASHBOARD_CACHE_KEY) || 'null');
-      if (cached && Array.isArray(cached.schedule) && Array.isArray(cached.picks)) return cached;
+      if (cached && Array.isArray(cached.schedule) && Array.isArray(cached.picks)) return normalizeDashboardPayload(cached);
     } catch {}
     return null;
   }
@@ -234,7 +261,7 @@
       try {
         const response = await timedFetch(`${API}/api/dashboard-data?board_only=${Date.now()}`, { cache: 'no-store' }, 6500);
         if (response.ok) {
-          const payload = await response.json();
+          const payload = normalizeDashboardPayload(await response.json());
           if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
             rememberDashboard(payload);
             return payload;
@@ -330,7 +357,7 @@
       const baseline = boardWatchSignature || boardSignature(boardSnapshot || readCachedDashboard());
       const response = await timedFetch(`${API}/api/dashboard-data?board_watch=${Date.now()}`, { cache: 'no-store' }, 6500);
       if (!response.ok) return;
-      const payload = await response.json();
+      const payload = normalizeDashboardPayload(await response.json());
       if (payload?.ok === false || !Array.isArray(payload?.schedule) || !Array.isArray(payload?.picks)) return;
       const next = boardSignature(payload);
       if (!next) return;
@@ -362,9 +389,11 @@
       try {
         const response = await timedFetch(input, init, 6500);
         if (response.ok) {
-          response.clone().json().then(payload => {
-            if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) rememberDashboard(payload);
-          }).catch(() => {});
+          const payload = normalizeDashboardPayload(await response.clone().json());
+          if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
+            rememberDashboard(payload);
+            return jsonResponse(payload, response);
+          }
           return response;
         }
         return cachedDashboardResponse();
