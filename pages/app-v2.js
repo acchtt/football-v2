@@ -1252,6 +1252,13 @@
   }
 
   window.addEventListener('hashchange', render);
+  window.addEventListener('sliptrace:board-refresh', function (event) {
+    const next = event?.detail?.board;
+    if (!next || !Array.isArray(next.schedule) || !Array.isArray(next.picks)) return;
+    state.board = next;
+    if (routeName() === 'board') renderMatchday();
+    else if (routeName() === 'picks') picksPage();
+  });
   window.addEventListener('sliptrace:followed-changed', function () {
     if (routeName() === 'board') renderMatchday();
   });
