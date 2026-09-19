@@ -452,8 +452,5 @@
   // New Airtable publications should appear without a reload, but Matchday is
   // only rebuilt when the board fingerprint actually changes.
   nativeSetInterval(checkBoardRefresh, 15000);
-  nativeSetInterval(() => {
-    if (document.visibilityState === 'visible') quietLiveRefresh();
-  }, 10000);
   setTimeout(checkBoardRefresh, 2500);
 })();
