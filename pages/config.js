@@ -13,6 +13,8 @@
   let boardSnapshot = null;
   let boardSnapshotAt = 0;
   let boardSnapshotPromise = null;
+  let boardWatchSignature = '';
+  let boardWatchInFlight = false;
 
   window.SLIPTRACE_API = API;
   window.SLIPTRACE_TIME_ZONE = TZ;
@@ -297,6 +299,59 @@
     });
   }
 
+  function boardSignature(payload) {
+    if (!payload || !Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) return '';
+    const compactSchedule = payload.schedule.map(row => [
+      row?.id || '', row?.slateDate || '', row?.match || '', row?.competition || '',
+      row?.kickoff || row?.displayKickoff || '', row?.tier || '', row?.grade || '',
+      row?.structure || '', row?.xiStatus || '', row?.marketStatus || '',
+      row?.coverageStatus || '', row?.frozenPreSummary || '', row?.coverageNotes || '',
+      row?.manualScore?.home ?? '', row?.manualScore?.away ?? ''
+    ]);
+    const compactPicks = payload.picks.map(row => [
+      row?.id || '', row?.pickId || '', row?.match || '', row?.kickoff || '',
+      row?.verdict || '', row?.line ?? '', row?.odds ?? '', row?.result || '', row?.pl ?? ''
+    ]);
+    return JSON.stringify([compactSchedule, compactPicks]);
+  }
+
+  function publishBoardRefresh(payload) {
+    rememberDashboard(payload);
+    boardWatchSignature = boardSignature(payload);
+    window.dispatchEvent(new CustomEvent('sliptrace:board-refresh', { detail: { board: payload } }));
+    const refresh = document.getElementById('refreshToday');
+    if (refresh) refresh.click();
+  }
+
+  async function checkBoardRefresh() {
+    if (boardWatchInFlight || document.visibilityState === 'hidden') return;
+    boardWatchInFlight = true;
+    try {
+      const baseline = boardWatchSignature || boardSignature(boardSnapshot || readCachedDashboard());
+      const response = await timedFetch(`${API}/api/dashboard-data?board_watch=${Date.now()}`, { cache: 'no-store' }, 6500);
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (payload?.ok === false || !Array.isArray(payload?.schedule) || !Array.isArray(payload?.picks)) return;
+      const next = boardSignature(payload);
+      if (!next) return;
+
+      if (!baseline) {
+        boardWatchSignature = next;
+        rememberDashboard(payload);
+        return;
+      }
+      if (next !== baseline) publishBoardRefresh(payload);
+      else {
+        boardWatchSignature = next;
+        rememberDashboard(payload);
+      }
+    } catch {
+      // Keep the mounted board on transient API failure; the next poll retries.
+    } finally {
+      boardWatchInFlight = false;
+    }
+  }
+
   window.fetch = async function sliptraceFetch(input, init) {
     const urlText = typeof input === 'string' ? input : input instanceof Request ? input.url : String(input);
     let url;
@@ -385,10 +440,20 @@
     if (document.visibilityState !== 'visible') return;
     event.stopImmediatePropagation();
     quietLiveRefresh();
+    checkBoardRefresh();
   }, true);
 
   window.addEventListener('focus', event => {
     event.stopImmediatePropagation();
     quietLiveRefresh();
+    checkBoardRefresh();
   }, true);
+
+  // New Airtable publications should appear without a reload, but Matchday is
+  // only rebuilt when the board fingerprint actually changes.
+  nativeSetInterval(checkBoardRefresh, 15000);
+  nativeSetInterval(() => {
+    if (document.visibilityState === 'visible') quietLiveRefresh();
+  }, 10000);
+  setTimeout(checkBoardRefresh, 2500);
 })();
