@@ -90,17 +90,13 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .mainView{padding:14px 14px 50px}
 .contextRail{padding:14px 12px 44px;border-left:1px solid var(--line);background:#0b0c11}
 
-.matchdayHero{position:relative;display:grid;grid-template-columns:minmax(320px,.95fr) minmax(420px,1.25fr);align-items:stretch;min-height:220px;margin-bottom:10px;overflow:hidden;border:1px solid #322d39;border-radius:var(--radius);background:linear-gradient(102deg,#17121b 0%,#211424 48%,#2f1c35 100%);isolation:isolate}
-.matchdayHero:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(9,8,12,.99) 0%,rgba(11,9,14,.96) 26%,rgba(13,10,16,.82) 43%,rgba(16,11,18,.34) 58%,rgba(18,11,20,.08) 72%,transparent 100%)}
-.matchdayHero:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 24%,transparent 74%,rgba(8,9,13,.28))}
-.matchdayHeroCopy{position:relative;z-index:3;width:auto;max-width:520px;padding:24px 28px;display:flex;flex-direction:column;justify-content:center}
-.matchdayHero .eyebrow{margin:0 0 7px;color:#d8b1c8;font-size:8px;letter-spacing:.3em}
-.matchdayHero h1{margin:0;font-family:var(--font-display);font-size:47px;font-weight:500;line-height:.96;letter-spacing:-.04em}
-.matchdayHero p{max-width:300px;margin:11px 0 0;color:#d3cad3;font-size:11px;line-height:1.45}
-.matchdayHeroActions{margin-top:16px}
-.matchdayHeroActions .primaryButton{min-height:36px;border-color:rgba(240,143,189,.35);background:rgba(240,143,189,.08);color:#f6d3e4}
+.matchdayHero{position:relative;min-height:182px;margin-bottom:10px;overflow:hidden;border:1px solid #322d39;border-radius:var(--radius);background:#0a0810;isolation:isolate}
+.matchdayHero:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.018),transparent 28%,transparent 76%,rgba(8,9,13,.22))}
+.matchdayHero:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 38px rgba(8,6,12,.18)}
+.matchdayHeroCopy{display:none}
+.matchdayHero .eyebrow,.matchdayHero h1,.matchdayHero p,.matchdayHeroActions{display:none}
 .primaryButton span{display:inline-flex;vertical-align:middle}.primaryButton span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.matchdayHero>img{position:relative;z-index:0;grid-column:2;align-self:stretch;justify-self:stretch;width:100%;height:100%;min-height:220px;display:block;object-fit:contain;object-position:right center;filter:none}
+.matchdayHero>img{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center center;filter:none}
 
 .dateStrip{display:grid;grid-template-columns:repeat(7,minmax(72px,1fr));gap:6px;margin-bottom:9px;border:0;border-radius:0;overflow:visible;background:transparent}
 .dateBtn{min-height:55px;border:1px solid #2c3038!important;border-radius:8px;background:linear-gradient(180deg,#13161c,#0f1116);color:#a9a4ad;place-content:center;grid-template-columns:1fr;gap:1px}
@@ -210,7 +206,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
   :root{--rail:132px;--context:232px}
   .headerNav a{padding-inline:9px}.headerSearch{width:min(300px,28vw)}
   .mainView{padding-inline:11px}.contextRail{padding-inline:9px}
-  .matchdayHero{grid-template-columns:minmax(300px,.9fr) minmax(390px,1.1fr)}.matchdayHeroCopy{width:auto;max-width:400px;padding:22px 22px 20px}.matchdayHero h1{font-size:40px}.matchdayHero>img{width:100%;object-position:right center}
+  .matchdayHero{min-height:182px}.matchdayHero>img{width:100%;object-position:center center}
   .fixtureTeams{grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr)}
 }
 
@@ -226,7 +222,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 
 @media(max-width:760px){
   .brandWords{display:none}.brandMark{width:32px;height:32px}.headerInner{gap:8px}.headerSearch input{height:42px;font-size:12px}.alertsCenterBtn{width:42px!important;min-width:42px!important;height:42px!important;padding:0!important}
-  .matchdayHero{display:block;min-height:124px;margin-inline:0;border-radius:9px}.matchdayHeroCopy{width:100%;max-width:none;padding:18px 17px}.matchdayHero h1{font-size:32px;line-height:.98}.matchdayHero p{max-width:260px;font-size:10px}.matchdayHero>img{display:none}.matchdayHero:before{background:linear-gradient(110deg,rgba(16,11,18,.98),rgba(48,25,46,.78))}.matchdayHeroActions{position:absolute;right:12px;top:13px;margin:0}.matchdayHeroActions .primaryButton{width:42px;min-width:42px;height:42px;padding:0;font-size:0}.matchdayHeroActions .primaryButton span{margin:0;font-size:16px}
+  .matchdayHero{display:block;min-height:150px;margin-inline:0;border-radius:9px}.matchdayHeroCopy{display:none}.matchdayHero>img{display:block;object-fit:cover;object-position:center center}.matchdayHero:before{background:linear-gradient(110deg,rgba(16,11,18,.98),rgba(48,25,46,.78))}.matchdayHeroActions{position:absolute;right:12px;top:13px;margin:0}.matchdayHeroActions .primaryButton{width:42px;min-width:42px;height:42px;padding:0;font-size:0}.matchdayHeroActions .primaryButton span{margin:0;font-size:16px}
   .dateStrip{display:flex;gap:6px;margin-inline:-12px;padding:0 12px 4px;overflow-x:auto}.dateBtn{flex:0 0 67px;min-height:55px}
   .filterBar{gap:6px}.statusFilters,.signalFilters{display:grid;width:100%;grid-template-columns:repeat(4,1fr);overflow:visible}.signalFilters{grid-template-columns:repeat(3,1fr);margin:0}.signalFilters:before{display:none}.statusFilters button,.signalFilters button{min-width:0;min-height:44px;padding:0 5px;justify-content:center;font-size:9px}.statusFilters button{gap:4px}.statusFilters button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .matchSection{margin-inline:0}.boardCompetitionList{gap:8px}.boardCompetitionGroup{border-radius:8px}.boardCompetitionHead{padding-inline:9px}.boardCompetitionHead>a{font-size:0}.boardCompetitionHead>a span{font-size:15px}

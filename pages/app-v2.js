@@ -289,10 +289,7 @@
       (actions ? '<div class="pageActions">' + actions + '</div>' : '') + '</div>';
   }
   function matchdayHero(actions) {
-    return '<section class="matchdayHero" aria-labelledby="matchdayHeroTitle"><div class="matchdayHeroCopy">' +
-      '<span class="eyebrow">Matchday board</span><h1 id="matchdayHeroTitle">Football V2</h1>' +
-      '<p>Live scores. Smarter picks. A more beautiful game.</p>' +
-      (actions ? '<div class="matchdayHeroActions">' + actions + '</div>' : '') + '</div>' +
+    return '<section class="matchdayHero" aria-label="IVE × Football campaign artwork">' +
       '<img src="./media/ive/matchday-hero-v3.avif?v=1" alt="" aria-hidden="true" width="1000" height="428" fetchpriority="high"></section>';
   }
   function sectionHead(title, meta, actions) {
