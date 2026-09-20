@@ -1,0 +1,62 @@
+.contextRail .youtubeRailPlayer{display:none!important}
+.youtubeHubMount:empty{display:none}
+.youtubeHubMount{position:relative;z-index:2;width:100%;max-width:var(--max,1240px);margin:0 auto;background:#0a0b10}
+.youtubeHubShell{display:grid;grid-template-columns:minmax(0,1fr) var(--context,258px)}
+.youtubePlaylistPlayer{grid-column:1;margin:0 14px 52px;border:1px solid #2d3038;border-radius:3px;background:#0d0f14;color:var(--text,#f5f1f4);overflow:hidden}
+.youtubeHubToggle{width:100%;min-height:64px;padding:10px 14px;border:0;background:#0d0f14;color:inherit;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;text-align:left;cursor:pointer}
+.youtubeHubToggle:hover{background:#11141a}
+.youtubeHubToggle:focus-visible,.youtubeControl:focus-visible,.youtubeQueueItem:focus-visible,.youtubeStart:focus-visible{outline:2px solid var(--focus,#f08fbd);outline-offset:-2px}
+.youtubeHubLabel{display:grid;place-items:center;min-width:48px;height:24px;padding:0 7px;border:1px solid #46404a;border-radius:2px;color:#d5c8d0;font-size:10px;font-weight:800;letter-spacing:.1em}
+.youtubeHubHeading{min-width:0;display:grid;gap:2px}
+.youtubeHubHeading strong{font-size:14px;font-weight:750;letter-spacing:.01em}
+.youtubeHubHeading small{overflow:hidden;color:#89838d;font-size:11px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.youtubeHubChevron{width:18px;height:18px;fill:none;stroke:#b6afb8;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .16s ease}
+.youtubeHubToggle[aria-expanded="true"] .youtubeHubChevron{transform:rotate(180deg)}
+.youtubeHubBody{border-top:1px solid #272a31}
+.youtubeHubBody[hidden]{display:none!important}
+.youtubeHubGrid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(240px,.8fr);min-height:390px}
+.youtubePlayerColumn{min-width:0;padding:14px;border-right:1px solid #272a31}
+.youtubePlayerFrame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border:1px solid #252831;border-radius:2px;background:#000}
+.youtubePlayerFrame>div,.youtubePlayerFrame iframe{display:block;width:100%!important;height:100%!important;border:0}
+.youtubeStart{position:absolute;left:14px;bottom:14px;z-index:2;min-height:44px;padding:0 15px;border:1px solid rgba(240,143,189,.6);border-radius:2px;background:#17121a;color:#f4c0da;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.youtubeStart[hidden]{display:none!important}
+.youtubeNowPlaying{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:13px 1px 11px;border-bottom:1px solid #252831}
+.youtubeNowPlaying>span{grid-column:1/-1;color:#8e8791;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.youtubeNowPlaying strong{min-width:0;overflow:hidden;font-size:14px;font-weight:750;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.youtubeNowPlaying small{align-self:center;color:#aaa4ad;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.youtubeControls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-top:11px}
+.youtubeControl{min-height:44px;padding:0 10px;border:1px solid #343740;border-radius:2px;background:#111319;color:#c7c1c9;font:inherit;font-size:11px;font-weight:750;cursor:pointer}
+.youtubeControl:hover:not(:disabled){border-color:#5a535d;background:#161820;color:#fff}
+.youtubeControl:disabled{opacity:.45;cursor:not-allowed}
+.youtubeControl[aria-pressed="true"]{border-color:rgba(240,143,189,.65);background:#21151e;color:#f3bad6}
+.youtubeQueue{min-width:0;display:grid;grid-template-rows:auto minmax(0,1fr);background:#0b0d12}
+.youtubeQueueHeader{min-height:49px;padding:0 12px;border-bottom:1px solid #272a31;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.youtubeQueueHeader strong{font-size:12px;font-weight:800}.youtubeQueueHeader span{color:#8d8790;font-size:10px;font-variant-numeric:tabular-nums}
+.youtubeQueueList{max-height:430px;margin:0;padding:0;overflow:auto;list-style:none}
+.youtubeQueueList:empty:before{content:"Playlist loads when the player is ready.";min-height:92px;padding:16px;display:flex;align-items:center;color:#817b84;font-size:11px;line-height:1.5}
+.youtubeQueueItem{width:100%;min-height:48px;padding:7px 11px;border:0;border-bottom:1px solid #20232a;background:transparent;color:#aaa4ad;display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:8px;text-align:left;cursor:pointer}
+.youtubeQueueItem:hover{background:#11141a;color:#fff}
+.youtubeQueueItem[aria-current="true"]{box-shadow:inset 2px 0 var(--ive-pink,#f08fbd);background:#151018;color:#fff}
+.youtubeQueueNumber{color:#77717a;font-size:10px;font-variant-numeric:tabular-nums;text-align:right}
+.youtubeQueueTitle{min-width:0;overflow:hidden;font-size:11px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.youtubeQueueNote{margin:0;padding:10px 12px;color:#77717a;font-size:10px;line-height:1.45}
+.youtubeQueueLink{min-height:44px;margin:0 12px 10px;padding:0 10px;border:1px solid #343740;border-radius:2px;color:#c7c1c9;display:inline-flex;align-items:center;font-size:11px;font-weight:750;text-decoration:none}
+.youtubeQueueLink:hover{border-color:#5a535d;background:#161820;color:#fff}.youtubeQueueLink:focus-visible{outline:2px solid var(--focus,#f08fbd);outline-offset:2px}
+.youtubePlayerStatus{position:absolute;inset:auto 12px 12px auto;max-width:70%;padding:6px 8px;border-radius:2px;background:rgba(8,9,13,.88);color:#d2cbd3;font-size:10px;line-height:1.35}
+.youtubePlayerStatus:empty{display:none}
+
+@media(min-width:1320px){.youtubeHubMount{width:var(--stage-width);max-width:none}}
+@media(max-width:1050px){
+  .youtubeHubMount{max-width:none;padding:0 12px calc(84px + env(safe-area-inset-bottom))}
+  .youtubeHubShell{display:block}.youtubePlaylistPlayer{margin:0}
+}
+@media(max-width:760px){
+  .youtubePlaylistPlayer{border-radius:2px}
+  .youtubeHubToggle{min-height:60px;padding-inline:11px;gap:9px}
+  .youtubeHubLabel{min-width:44px}.youtubeHubHeading strong{font-size:13px}.youtubeHubHeading small{font-size:10px}
+  .youtubeHubGrid{display:block;min-height:0}.youtubePlayerColumn{padding:10px;border-right:0;border-bottom:1px solid #272a31}
+  .youtubeNowPlaying{grid-template-columns:1fr}.youtubeNowPlaying strong{white-space:normal}.youtubeNowPlaying small{grid-column:1}
+  .youtubeControls{gap:6px}.youtubeControl{padding-inline:5px;font-size:10px}
+  .youtubeQueueList{max-height:none;overflow:visible}.youtubeQueueItem{min-height:48px}.youtubeQueueTitle{white-space:normal}
+}
+@media(prefers-reduced-motion:reduce){.youtubeHubChevron{transition:none}}
