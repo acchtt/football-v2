@@ -76,8 +76,8 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .alertsCenterBtn.hasAlerts .alertsBell{color:var(--ive-pink)!important}
 .alertsCount,.alertsCenterBtn.hasAlerts .alertsCount{background:#28212a!important;color:#f1c3d9!important}
 
-.appFrame{max-width:none;grid-template-columns:var(--rail) minmax(0,1fr);background:#0a0b10}
-.primaryRail{display:flex!important;padding:14px 10px 16px;border-right:1px solid var(--line);background:#0b0c11}
+.appFrame{max-width:none;grid-template-columns:minmax(0,1fr);background:#0a0b10}
+.primaryRail{display:none!important}
 .sideNav{gap:5px}
 .navItem{min-height:46px;padding:0 12px;border-radius:8px;color:#b2abb5}
 .navItem>span{width:22px;height:22px;display:grid;place-items:center;color:#918995}
