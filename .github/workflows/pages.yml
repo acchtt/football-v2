@@ -38,10 +38,6 @@ jobs:
           rsvg-convert -w 192 -h 192 pages/icons/sliptrace.svg -o pages/icons/sliptrace-192.png
           rsvg-convert -w 512 -h 512 pages/icons/sliptrace.svg -o pages/icons/sliptrace-512.png
           rsvg-convert -w 512 -h 512 pages/icons/sliptrace-maskable.svg -o pages/icons/sliptrace-maskable-512.png
-          rsvg-convert -w 64 -h 64 pages/icons/arc-xi.svg -o pages/icons/arc-xi-64.png
-          rsvg-convert -w 192 -h 192 pages/icons/arc-xi-192.svg -o pages/icons/arc-xi-192.png
-          rsvg-convert -w 512 -h 512 pages/icons/arc-xi-512.svg -o pages/icons/arc-xi-512.png
-          rsvg-convert -w 512 -h 512 pages/icons/arc-xi-maskable-512.svg -o pages/icons/arc-xi-maskable-512.png
 
       - name: Validate PWA artifact
         shell: bash
