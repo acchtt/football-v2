@@ -1,4 +1,4 @@
-const CACHE='slate-xi-shell-v62';
+const CACHE='slate-xi-shell-v63';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -21,7 +21,7 @@ const SHELL=[
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
   asset('ive-sidebars.js?v=16'),
-  asset('app-v2.js?v=27'),
+  asset('app-v2.js?v=28'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=5'),
   asset('alerts-center.js?v=3')

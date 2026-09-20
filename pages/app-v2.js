@@ -531,56 +531,9 @@
       timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false
     }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path></svg></i><p>Another great day for football.</p></section>';
   }
-  function matchdayContext(events, counts) {
-    const boardRows = boardRowsForDate().filter(function (row) {
-      const tier = String(row.tier || '').toUpperCase();
-      return (tier === 'FOCUS' || tier === 'WATCHLIST') && boardStatus(row) !== 'finished';
-    }).sort(function (a, b) {
-      const aLive = boardStatus(a) === 'live' ? 0 : 1;
-      const bLive = boardStatus(b) === 'live' ? 0 : 1;
-      if (aLive !== bLive) return aLive - bLive;
-      const aFocus = String(a.tier || '').toUpperCase() === 'FOCUS' ? 0 : 1;
-      const bFocus = String(b.tier || '').toUpperCase() === 'FOCUS' ? 0 : 1;
-      if (aFocus !== bFocus) return aFocus - bFocus;
-      return (Date.parse(boardKickoff(a)) || Infinity) - (Date.parse(boardKickoff(b)) || Infinity);
-    });
-    const next = boardRows[0] || null;
-    const nextEvent = next && eventForBoardRow(next);
-    const nextId = nextEvent && eventId(nextEvent);
-    const nextStatus = next ? boardStatus(next) : 'upcoming';
-    const nextTeams = nextEvent ? {home:teamName(nextEvent, 'home'), away:teamName(nextEvent, 'away')} :
-      splitMatch(next && next.match);
-    const kickoff = next && (nextEvent ? eventKickoff(nextEvent) : next.kickoff || next.displayKickoff);
-    const tier = String(next && next.tier || 'WATCHLIST').toUpperCase();
-    const nextBody = next ? (
-      (nextId ? '<a class="nextDecision" href="#match/' + nextId + '">' : '<div class="nextDecision">') +
-      '<div class="nextDecisionTop"><span class="nextSignal ' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
-      esc(tier) + '</span><strong>' + esc(next.grade || '—') + '</strong></div>' +
-      '<div class="nextTeams"><div>' + crest('team', nextEvent && teamId(nextEvent, 'home'), nextTeams.home || 'Home') +
-      '<span>' + esc(nextTeams.home || 'Home') + '</span></div><i>VS</i><div>' +
-      crest('team', nextEvent && teamId(nextEvent, 'away'), nextTeams.away || 'Away') +
-      '<span>' + esc(nextTeams.away || 'Away') + '</span></div></div>' +
-      '<div class="nextMeta"><span>' + esc(next.competition || (nextEvent && leagueName(nextEvent)) || 'Competition') +
-      '</span><b>' + esc(formatTime(kickoff)) + ' ICT</b></div>' +
-      '<div class="nextCountdown ' + nextStatus + '"><span>' + (nextStatus === 'live' ? 'Live decision' : 'Decision window') + '</span><strong ' +
-      (nextStatus === 'live' ? 'data-clock-id="' + (nextId || '') + '"' : 'data-countdown="' + esc(kickoff || '') + '"') + '>' +
-      esc(nextStatus === 'live' ? liveClock(nextEvent) : countdownText(kickoff)) + '</strong></div>' +
-      (nextId ? '</a>' : '</div>')
-    ) : '<div class="nextDecisionEmpty"><strong>Board clear</strong><small>No active decisions on this slate.</small></div>';
-    const activeIds = new Set(events.map(function (event) { return String(eventId(event) || ''); }).filter(Boolean));
-    const followed = currentFollowed().filter(function (item) { return activeIds.has(String(item.id || '')); });
-    const quick = '<section class="railSection quickFilterSection">' + sectionHead('Quick filters', counts.all + ' board matches') +
-      '<div class="contextStatusFilters" role="group" aria-label="Quick match status filters">' +
-      [['all','All matches'],['live','Live now'],['upcoming','Upcoming'],['finished','Finished']].map(function (item) {
-        return '<button type="button" class="' + (state.statusFilter === item[0] ? 'active' : '') + '" data-status-filter="' + item[0] +
-          '" aria-pressed="' + (state.statusFilter === item[0]) + '"><span>' + item[1] + '</span><b>' + counts[item[0]] + '</b></button>';
-      }).join('') + '</div></section>';
+  function matchdayContext() {
     const feature = '<section class="iveFeatureCard" aria-label="IVE and football feature"><img src="./media/ive/ive-feature-art.webp?v=2" alt="" width="1200" height="800" loading="lazy"></section>';
-    return contextClock() + quick + feature + '<section class="railSection nextDecisionSection">' + sectionHead('Next decision', next ? tier : 'No active match') +
-      nextBody + '</section><section class="railSection">' + sectionHead('Following', followed.length + ' active') +
-      (followed.length ? followed.slice(0, 4).map(function (item) {
-        return '<a class="followedItem" href="' + esc(item.href || '#board') + '">' + esc(item.title || 'Selected match') + '</a>';
-      }).join('') : '<button class="railAction" type="button" data-open-alerts>Choose active match alerts</button>') + '</section>';
+    return contextClock() + feature;
   }
   function renderMatchday() {
     state.route = 'board';
