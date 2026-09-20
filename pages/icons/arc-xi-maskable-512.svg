@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64" role="img" aria-labelledby="title"><title id="title">ARC XI</title><defs>
+  <linearGradient id="arc" x1="11" y1="43" x2="54" y2="11" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#75506f"/><stop offset=".55" stop-color="#efd2e3"/><stop offset="1" stop-color="#f6a9cf"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="22" y1="20" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#fff8fc"/><stop offset=".5" stop-color="#d7bbcd"/><stop offset="1" stop-color="#9d718d"/>
+  </linearGradient>
+</defs>
+<rect width="64" height="64" fill="#0a0910"/>
+<path d="M11 39C19 23 34 14 50 15" fill="none" stroke="url(#arc)" stroke-width="2.1" stroke-linecap="round"/>
+<path d="M49.5 10 50.8 13.7l3.7 1.3-3.7 1.3-1.3 3.7-1.3-3.7-3.7-1.3 3.7-1.3z" fill="#f6c6df"/>
+<path d="M22 43.5 30.5 21.5 39 43.5M25.4 35.5h10.2M20.5 43.5h5.2M35.3 43.5h5.2" fill="none" stroke="url(#metal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
