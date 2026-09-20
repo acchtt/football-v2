@@ -42,7 +42,8 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq imagemagick
           fi
-          convert pages/icons/arc-xi-transparent-192.png -filter Lanczos -resize 512x512 pages/icons/arc-xi-transparent-512.png
+          identify pages/icons/arc-xi-transparent-512.png
+          convert pages/icons/arc-xi-transparent-512.png -filter Lanczos -resize 192x192 pages/icons/arc-xi-transparent-192.png
           cp pages/icons/arc-xi-transparent-512.png pages/icons/arc-xi-transparent-maskable-512.png
 
       - name: Validate PWA artifact
