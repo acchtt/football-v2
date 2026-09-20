@@ -44,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, pathlib
+          import hashlib, json, pathlib
           root=pathlib.Path('pages')
           manifest=json.loads((root/'manifest.webmanifest').read_text(encoding='utf-8'))
           assert manifest['name'] and manifest['short_name']
@@ -63,9 +63,18 @@ jobs:
               'alerts-center.js','alerts-center.css','ive-sidebars.css','ive-sidebars.js'
           ]:
               assert (root/required).exists(), f'missing {required}'
-          for name in ['ive-left-approved.webp','ive-right-approved.webp']:
+          approved_rails={
+              'ive-left-final.svg':'6d5144c4134f539b40fa50506f7ee8d99618144f',
+              'ive-right-final.svg':'2ccf8409da8894a352b1dcf25b0e16cb7393095a',
+          }
+          for name, expected_blob in approved_rails.items():
               p=root/'media'/'ive'/name
-              assert p.exists() and p.stat().st_size > 50000, f'missing/invalid IVE rail artwork: {p}'
+              assert p.exists() and p.stat().st_size > 2_000_000, f'missing/invalid approved IVE rail artwork: {p}'
+              data=p.read_bytes()
+              actual_blob=hashlib.sha1(f'blob {len(data)}\\0'.encode()+data).hexdigest()
+              assert actual_blob == expected_blob, f'approved IVE rail artwork changed unexpectedly: {name}'
+          sidebars=(root/'ive-sidebars.js').read_text(encoding='utf-8')
+          assert 'ive-left-final.svg?v=2' in sidebars and 'ive-right-final.svg?v=2' in sidebars, 'approved rail URLs are not pinned to v2'
           print('PWA artifact validated')
           PY
           for js in pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/matchday-behavior.js pages/strict-board-filter.js pages/strict-board-guard.js pages/ive-sidebars.js pages/sw.js; do
