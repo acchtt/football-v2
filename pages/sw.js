@@ -1,4 +1,4 @@
-const CACHE='slate-xi-shell-v50';
+const CACHE='slate-xi-shell-v51';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -7,23 +7,23 @@ const SHELL=[
   asset('offline.html'),
   asset('design-v1.css?v=15'),
   asset('alerts-center.css?v=4'),
-  asset('ive-matchday-final.css?v=2'),
+  asset('ive-matchday-final.css?v=3'),
   asset('manifest.webmanifest?v=8'),
   asset('icons/slate-xi.svg?v=3'),
   asset('icons/slate-xi-192.svg?v=3'),
   asset('icons/slate-xi-512.svg?v=3'),
   asset('icons/slate-xi-maskable-512.svg?v=3'),
   asset('media/ive/wonyoung-left-current.webp'),
-  asset('media/ive/ive-right-current.webp'),
-  asset('media/ive/hero-current.webp'),
-  asset('media/ive/feature-current.webp'),
+  asset('media/ive/ive-right-current.webp?v=2'),
+  asset('media/ive/hero-current.webp?v=2'),
+  asset('media/ive/feature-current.webp?v=2'),
   asset('ict-slate-fetch.js?v=1'),
   asset('config.js?v=7'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
-  asset('ive-sidebars.js?v=10'),
-  asset('app-v2.js?v=19'),
+  asset('ive-sidebars.js?v=11'),
+  asset('app-v2.js?v=20'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=5'),
   asset('alerts-center.js?v=3')

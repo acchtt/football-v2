@@ -96,7 +96,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .matchdayHero p{margin:9px 0 0;color:#c7bec9;font-size:11px}
 .matchdayHeroActions{margin-top:14px}
 .matchdayHeroActions .primaryButton{min-height:34px;border-color:rgba(240,143,189,.35);background:rgba(240,143,189,.08);color:#f6d3e4}
-.matchdayHero>img{position:absolute;z-index:0;inset:0 0 0 auto;width:61%;height:100%;object-fit:cover;object-position:right center;filter:saturate(.9) contrast(1.04)}
+.matchdayHero>img{position:absolute;z-index:0;inset:0 0 0 auto;width:61%;height:100%;object-fit:cover;object-position:center 22%;filter:none}
 .matchdayHeroScript{position:absolute;right:14px;bottom:12px;z-index:3;color:#f3a9cf;font-family:var(--font-display);font-size:13px;font-style:italic;line-height:1.05;transform:rotate(-5deg);text-align:right}
 
 .dateStrip{display:grid;grid-template-columns:repeat(7,minmax(72px,1fr));gap:6px;margin-bottom:9px;border:0;border-radius:0;overflow:visible;background:transparent}

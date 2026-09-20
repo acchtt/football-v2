@@ -22,7 +22,7 @@
       note: 'MUSIC CONNECTS PEOPLE.<br>FOOTBALL DOES TOO.'
     },
     right: {
-      image: './media/ive/ive-right-current.webp',
+      image: './media/ive/ive-right-current.webp?v=2',
       label: 'Always more<br>than a game ♡',
       slogan: 'IVE × FOOTBALL',
       footer: 'IVE × FOOTBALL<br><br>GOOD PEOPLE<br>GREAT MATCHES<br>BRIGHTER DAYS'

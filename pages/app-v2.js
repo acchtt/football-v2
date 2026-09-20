@@ -284,7 +284,7 @@
       '<span class="eyebrow">Matchday board</span><h1 id="matchdayHeroTitle">Football V2</h1>' +
       '<p>Live scores. Smarter picks. A more beautiful game.</p>' +
       (actions ? '<div class="matchdayHeroActions">' + actions + '</div>' : '') + '</div>' +
-      '<img src="./media/ive/hero-current.webp" alt="" aria-hidden="true" width="476" height="156" fetchpriority="high">' +
+      '<img src="./media/ive/hero-current.webp?v=2" alt="" aria-hidden="true" width="1920" height="1080" fetchpriority="high">' +
       '<span class="matchdayHeroScript" aria-hidden="true">Game on,<br>together</span></section>';
   }
   function sectionHead(title, meta, actions) {
@@ -570,7 +570,7 @@
         return '<button type="button" class="' + (state.statusFilter === item[0] ? 'active' : '') + '" data-status-filter="' + item[0] +
           '" aria-pressed="' + (state.statusFilter === item[0]) + '"><span>' + item[1] + '</span><b>' + counts[item[0]] + '</b></button>';
       }).join('') + '</div></section>';
-    const feature = '<section class="iveFeatureCard" aria-label="IVE and football feature"><img src="./media/ive/feature-current.webp" alt="" width="230" height="128" loading="lazy">' +
+    const feature = '<section class="iveFeatureCard" aria-label="IVE and football feature"><img src="./media/ive/feature-current.webp?v=2" alt="" width="960" height="640" loading="lazy">' +
       '<span>Featured</span><strong>IVE × FOOTBALL</strong><p>Different stages.<br>Same winning mindset.</p></section>';
     return contextClock() + quick + feature + '<section class="railSection nextDecisionSection">' + sectionHead('Next decision', next ? tier : 'No active match') +
       nextBody + '</section><section class="railSection">' + sectionHead('Following', followed.length + ' active') +
