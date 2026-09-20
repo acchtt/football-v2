@@ -267,8 +267,6 @@
   }
   function shell(content, context, className) {
     return header() + '<div class="appFrame ' + esc(className || '') + '">' +
-      '<aside class="primaryRail">' + navigation('sideNav') +
-      '<div class="railFoot"><span>Times in ICT</span><small>Fast static PWA</small></div></aside>' +
       '<div class="contentFrame"><main class="mainView">' + content + '</main>' +
       (context ? '<aside class="contextRail">' + context + '</aside>' : '') +
       '</div></div>' + navigation('mobileNav');
