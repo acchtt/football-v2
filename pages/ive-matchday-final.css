@@ -36,9 +36,9 @@
   --ft:#85828b;
   --radius:11px;
   --header:58px;
-  --rail:150px;
-  --context:252px;
-  --max:1280px;
+  --rail:146px;
+  --context:258px;
+  --max:1240px;
   --font-display:Georgia,"Times New Roman",serif;
   --font-body:"Noto Sans KR",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
@@ -49,7 +49,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 :focus-visible{outline-color:var(--ive-pink)}
 
 .appHeader{height:var(--header);border-bottom:1px solid #33313b;background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
-.headerInner{width:min(100%,var(--max));max-width:var(--max);margin-inline:auto;padding:0 16px;gap:16px}
+.headerInner{max-width:none;padding:0 14px;gap:16px}
 .brand{gap:9px}
 .brandMark{width:34px;height:34px}
 .brandWords b{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:.08em}
@@ -73,7 +73,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .alertsCenterBtn.hasAlerts .alertsBell{color:var(--ive-pink)!important}
 .alertsCount,.alertsCenterBtn.hasAlerts .alertsCount{background:#28212a!important;color:#f1c3d9!important}
 
-.appFrame{width:min(100%,var(--max));max-width:var(--max);margin-inline:auto;grid-template-columns:var(--rail) minmax(0,1fr);background:#0a0b10}
+.appFrame{max-width:none;grid-template-columns:var(--rail) minmax(0,1fr);background:#0a0b10}
 .primaryRail{display:flex!important;padding:14px 10px 16px;border-right:1px solid var(--line);background:#0b0c11}
 .sideNav{gap:5px}
 .navItem{min-height:46px;padding:0 12px;border-radius:8px;color:#b2abb5}
@@ -87,8 +87,8 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .railFoot{border-top-color:#27252d;text-align:center}
 .railFoot span{color:#d69eb9}.railFoot small{color:#69646e}
 .contentFrame{grid-template-columns:minmax(0,1fr) var(--context);background:#0a0b10}
-.mainView{padding:16px 16px 50px}
-.contextRail{padding:16px 12px 44px;border-left:1px solid var(--line);background:#0b0c11}
+.mainView{padding:14px 14px 50px}
+.contextRail{padding:14px 12px 44px;border-left:1px solid var(--line);background:#0b0c11}
 
 .matchdayHero{position:relative;min-height:156px;margin-bottom:10px;overflow:hidden;border:1px solid #322d39;border-radius:var(--radius);background:linear-gradient(102deg,#17121b 0%,#211424 48%,#2f1c35 100%);isolation:isolate}
 .matchdayHero:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(9,8,12,.86) 0%,rgba(16,11,18,.6) 35%,rgba(18,11,20,.1) 63%,rgba(10,9,14,.12) 100%)}
@@ -128,7 +128,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .boardCompetitionHead{min-height:38px;padding:0 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #292c34;background:linear-gradient(180deg,#15171d,#111319)}
 .boardCompetitionHead img{width:20px;height:20px;object-fit:contain}
 .competitionMark{width:20px;color:var(--ive-pink);text-align:center;font-size:9px}
-.boardCompetitionHead>strong{font-size:12px;font-weight:800}.boardCompetitionHead>span{color:#77727b;font-size:9px}
+.boardCompetitionHead>strong{font-size:11px;font-weight:800}.boardCompetitionHead>span{color:#77727b;font-size:8px}
 .boardCompetitionHead>a{margin-left:auto;color:#e9a6c7;font-size:8px;font-weight:700}
 .boardCompetitionHead>a span{margin-left:4px;font-size:13px}
 .boardMatchList{display:block;padding:0;background:transparent}
@@ -137,14 +137,14 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .boardMatchCard.tier-focus,.boardMatchCard.tier-watchlist{border-left:0}
 .boardMatchCard:has(.is-live-row){border-color:#282a31;background:#121319}
 .boardMatchCard:has(.is-finished-row){background:#0d0f13}
-.boardFixture{min-height:56px;padding:7px 43px 7px 12px;grid-template-columns:minmax(0,1fr) 68px 0;gap:10px}
+.boardFixture{min-height:48px;padding:5px 43px 5px 10px;grid-template-columns:minmax(0,1fr) 62px 0;gap:8px}
 .boardFixture:hover{background:#17171e}
 .fixtureMatch{display:block}
 .fixtureCompetition{display:none}
-.fixtureTeams{grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);gap:12px}
+.fixtureTeams{grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr);gap:10px}
 .fixtureTeams .teamLine{gap:7px}
 .fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:25px;height:25px}
-.fixtureTeams .teamLine span{font-size:11px;font-weight:650}
+.fixtureTeams .teamLine span{font-size:10px;font-weight:600}
 .fixtureTeams .home{grid-template-columns:minmax(0,1fr) 25px}
 .fixtureTeams .home img,.fixtureTeams .home .crestFallback{grid-column:2;grid-row:1}
 .fixtureTeams .home span{grid-column:1;grid-row:1;text-align:right}
@@ -155,10 +155,10 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .fixtureStatus{padding:2px 6px;border:0;border-radius:4px;background:#272a32;color:#a8a5ad;font-size:8px;line-height:1.2}
 .fixtureStatus svg{display:none}
 .fixtureStatus.live{background:var(--live);color:#fff}.fixtureStatus.upcoming{background:transparent;color:#b7b1b8}.fixtureStatus.finished{background:#34343d;color:#c1bdc4}.fixtureStatus.manual{background:rgba(91,200,220,.12);color:#7dd4e3}
-.fixtureState>strong{font-size:15px}.fixtureState>small{font-size:8px;color:#85808a}
+.fixtureState>strong{font-size:13px}.fixtureState>small{font-size:8px;color:#85808a}
 .manualScoreButton{min-height:26px;margin-top:2px;padding:0 7px;border-color:rgba(240,143,189,.3);background:rgba(240,143,189,.07);color:#efacd0;font-size:8px}
 .fixtureSignal{justify-items:center;padding:0;border:0;text-align:center}
-.fixtureSignal small{font-size:8px;color:#b0aab2}.fixtureSignal strong{font-size:15px}.fixtureSignal span{font-size:7px}
+.fixtureSignal small{font-size:7px;color:#b0aab2}.fixtureSignal strong{font-size:14px}.fixtureSignal span{font-size:6px}
 .tier-focus .fixtureSignal{color:#f2accf}.tier-watchlist .fixtureSignal{color:#74cfe0}
 .fixtureArrow{display:none}
 .boardMatchCard>.notifyToggle{right:5px;width:34px;height:34px;border-radius:7px;color:#77717c}
@@ -190,80 +190,28 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 
 .iveArtRail{display:none}
 
-/* Desktop art rails are optional framing. The football app keeps a fixed readable stage.
-   Artwork disappears before the board is allowed to become cramped. */
-@media(min-width:1520px){
-  :root{
-    --stage-width:1280px;
-    --art-rail:min(220px,calc((100vw - var(--stage-width))/2));
-  }
+@media(min-width:1320px){
+  :root{--outer-rail:clamp(180px,13vw,250px);--stage-width:min(1240px,calc(100vw - (var(--outer-rail) * 2)))}
   #app,.appHeader,.appFrame{position:relative;z-index:2}
   .appHeader{background:transparent;border-bottom:0;backdrop-filter:none}
-  .headerInner,.appFrame{width:var(--stage-width);max-width:var(--stage-width);margin-inline:auto}
+  .headerInner,.appFrame{width:var(--stage-width);margin-inline:auto}
   .headerInner{border-bottom:1px solid #33313b;background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
-  .iveRailsReady .iveArtRail{
-    position:fixed;
-    inset-block:0;
-    z-index:1;
-    display:block;
-    width:var(--art-rail);
-    overflow:hidden;
-    pointer-events:none;
-    background:#090a0f;
-    isolation:isolate;
-  }
-  .iveArtRail--left{
-    left:calc(50% - (var(--stage-width)/2) - var(--art-rail));
-    border-right:1px solid #312431;
-  }
-  .iveArtRail--right{
-    right:calc(50% - (var(--stage-width)/2) - var(--art-rail));
-    border-left:1px solid #25283a;
-  }
-  .iveArtRail:before{
-    content:"";
-    position:absolute;
-    inset:0;
-    z-index:1;
-    pointer-events:none;
-    background:linear-gradient(180deg,rgba(7,7,11,.10),transparent 20%,transparent 76%,rgba(7,7,11,.24));
-  }
-  .iveArtRail:after{
-    content:"";
-    position:absolute;
-    inset-block:0;
-    z-index:2;
-    width:28px;
-    pointer-events:none;
-  }
-  .iveArtRail--left:after{right:0;background:linear-gradient(90deg,transparent,#08090d)}
-  .iveArtRail--right:after{left:0;background:linear-gradient(270deg,transparent,#08090d)}
-  .iveArtwork{
-    position:absolute;
-    inset:0;
-    z-index:0;
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    filter:brightness(.82) saturate(.86);
-  }
-  .iveArtRail--left .iveArtwork{object-position:48% center}
-  .iveArtRail--right .iveArtwork{object-position:50% center}
+  .iveRailsReady .iveArtRail{position:fixed;inset-block:0;z-index:1;display:block;width:calc((100vw - var(--stage-width)) / 2);min-width:180px;overflow:hidden;pointer-events:none;background:#0a0b10;isolation:isolate}
+  .iveArtRail--left{left:0;border-right:1px solid #312431}.iveArtRail--right{right:0;border-left:1px solid #25283a}
+  .iveArtRail:after{content:"";position:absolute;inset-block:0;z-index:1;width:24px;pointer-events:none}
+  .iveArtRail--left:after{right:0;background:linear-gradient(90deg,transparent,rgba(8,9,13,.45))}
+  .iveArtRail--right:after{left:0;background:linear-gradient(270deg,transparent,rgba(8,9,13,.45))}
+  .iveArtwork{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;object-position:center center}
 }
 
-@media(max-width:1519px){
-  .iveArtRail{display:none!important}
-  .headerInner,.appFrame{width:min(100%,var(--max));max-width:var(--max);margin-inline:auto}
-  .appHeader{background:rgba(8,9,13,.97);border-bottom:1px solid #33313b;backdrop-filter:blur(8px)}
-}
+@media(max-width:1319px){.iveArtRail{display:none!important}.headerInner,.appFrame{width:100%}}
 
 @media(max-width:1160px) and (min-width:1051px){
-  :root{--rail:136px;--context:226px}
-  .headerNav a{padding-inline:8px}.headerSearch{width:min(280px,27vw)}
-  .mainView{padding-inline:12px}.contextRail{padding-inline:9px}
+  :root{--rail:132px;--context:232px}
+  .headerNav a{padding-inline:9px}.headerSearch{width:min(300px,28vw)}
+  .mainView{padding-inline:11px}.contextRail{padding-inline:9px}
   .matchdayHeroCopy{width:60%;padding-left:22px}.matchdayHero h1{font-size:38px}
-  .fixtureTeams{grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr);gap:8px}
-  .fixtureTeams .teamLine span{font-size:10px}
+  .fixtureTeams{grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr)}
 }
 
 @media(max-width:1050px){
