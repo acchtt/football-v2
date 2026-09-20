@@ -234,21 +234,30 @@
     if (route === 'picks') return 'picks';
     return 'explore';
   }
+  function navigationIcon(name) {
+    const icons = {
+      board: '<path d="M3 11.5 12 4l9 7.5"></path><path d="M5.5 10.5V20h13v-9.5"></path><path d="M9.5 20v-5.5h5V20"></path>',
+      picks: '<path d="M5 19V9"></path><path d="M12 19V5"></path><path d="M19 19v-7"></path><path d="m4 6 4-3 4 3 5-4 3 2"></path>',
+      leagues: '<path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z"></path><path d="M8 6H4v1.5A4.5 4.5 0 0 0 8.5 12"></path><path d="M16 6h4v1.5a4.5 4.5 0 0 1-4.5 4.5"></path><path d="M12 12v4"></path><path d="M8 20h8"></path><path d="M9 16h6v4H9z"></path>',
+      teams: '<circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="9" r="2.5"></circle><path d="M3.5 20v-1.5A5.5 5.5 0 0 1 9 13a5.5 5.5 0 0 1 5.5 5.5V20"></path><path d="M14.5 14.5A4.5 4.5 0 0 1 21 18.5V20"></path>'
+    };
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (icons[name] || icons.board) + '</svg>';
+  }
   function navItem(route, label, href, icon) {
     const active = route === 'board' ? routeGroup(state.route) === 'board' :
       route === 'picks' ? state.route === 'picks' :
       route === 'leagues' ? (state.route === 'leagues' || state.route === 'league') :
       route === 'teams' ? (state.route === 'teams' || state.route === 'team') : false;
     return '<a class="navItem ' + (active ? 'active' : '') + '" href="' + href + '"' +
-      (active ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + icon +
+      (active ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + navigationIcon(icon) +
       '</span><b>' + label + '</b></a>';
   }
   function navigation(className) {
     return '<nav class="' + className + '" aria-label="Primary navigation">' +
-      navItem('board', 'Board', '#board', 'B') +
-      navItem('picks', 'Picks', '#picks', 'P') +
-      navItem('leagues', 'Competitions', '#leagues', 'C') +
-      navItem('teams', 'Teams', '#teams', 'T') +
+      navItem('board', 'Board', '#board', 'board') +
+      navItem('picks', 'Picks', '#picks', 'picks') +
+      navItem('leagues', 'Competitions', '#leagues', 'leagues') +
+      navItem('teams', 'Teams', '#teams', 'teams') +
       '</nav>';
   }
   function header() {
@@ -261,7 +270,7 @@
       '<a class="' + (state.route === 'leagues' || state.route === 'league' ? 'active' : '') + '" href="#leagues">Competitions</a>' +
       '<a class="' + (state.route === 'teams' || state.route === 'team' ? 'active' : '') + '" href="#teams">Teams</a>' +
       '</nav>' +
-      '<form class="headerSearch" id="globalSearch"><span aria-hidden="true">⌕</span><input aria-label="Search teams, players, or competitions" placeholder="Search teams, players, competitions…" autocomplete="off"></form>' +
+      '<form class="headerSearch" id="globalSearch"><span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg></span><input aria-label="Search teams, players, or competitions" placeholder="Search teams, players, competitions…" autocomplete="off"></form>' +
       '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
       (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
       '</small></span></div></div></header>';
@@ -524,7 +533,7 @@
       timeZone:TZ, weekday:'short', month:'short', day:'numeric', year:'numeric'
     }).format(now)) + '</span><strong data-context-clock>' + esc(new Intl.DateTimeFormat('en-GB', {
       timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false
-    }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div><i aria-hidden="true">✦</i><p>Another great day for football.</p></section>';
+    }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path></svg></i><p>Another great day for football.</p></section>';
   }
   function matchdayContext(events, counts) {
     const boardRows = boardRowsForDate().filter(function (row) {
@@ -617,14 +626,16 @@
       statusButton('all','All matches') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','Finished') +
       '</div><div class="signalFilters" role="group" aria-label="Model signal">' +
       signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
-    const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true">↻</span> Sync board</button>';
+    const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg></span> Sync board</button>';
+    const boardBody = state.error && !boardRows.length ?
+      '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. Slate XI will retry without treating this as a zero-match day.</span></div>' :
+      filtered.length ? boardMatchList(filtered) : boardRows.length ?
+        '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
+        '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>';
     const content = matchdayHero(actions) +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
-      (filtered.length ? boardMatchList(filtered) : boardRows.length ?
-        '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
-        '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>') +
-      '</section>';
+      boardBody + '</section>';
     root.innerHTML = shell(content, matchdayContext(matchedEvents, counts), 'boardHomeRoute');
     bindGlobal();
   }
