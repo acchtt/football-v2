@@ -1,19 +1,19 @@
 (() => {
   'use strict';
 
-  /* Finished artwork assets built from real photographs by
-   * scripts/build-ive-artwork.py. No browser-generated poster layers. */
+  /* Approved finished rail artwork assets. Preserve the artwork pixels exactly;
+   * the browser only places/scales these files and adds no poster reconstruction. */
 
   const rails = {
     left: {
-      image: './media/ive/wonyoung-left-art.webp?v=2',
-      width: 560,
-      height: 2100
+      image: './media/ive/wonyoung-left-final.webp?v=1',
+      width: 320,
+      height: 960
     },
     right: {
-      image: './media/ive/ive-right-art.webp?v=2',
-      width: 560,
-      height: 2100
+      image: './media/ive/ive-right-final.webp?v=1',
+      width: 320,
+      height: 960
     }
   };
 
