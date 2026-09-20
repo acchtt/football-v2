@@ -6,13 +6,13 @@
 
   const rails = {
     left: {
-      image: './media/ive/wonyoung-left-art.webp?v=1',
-      width: 1400,
+      image: './media/ive/wonyoung-left-art.webp?v=2',
+      width: 560,
       height: 2100
     },
     right: {
-      image: './media/ive/ive-right-art.webp?v=1',
-      width: 1400,
+      image: './media/ive/ive-right-art.webp?v=2',
+      width: 560,
       height: 2100
     }
   };
