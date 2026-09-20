@@ -11,9 +11,9 @@
       height: 2172
     },
     right: {
-      image: './media/ive/ive-right-final.svg?v=2',
-      width: 724,
-      height: 2172
+      image: './media/ive/ive-right-final.webp?v=3',
+      width: 684,
+      height: 2048
     }
   };
 
