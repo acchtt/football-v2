@@ -194,121 +194,162 @@ def save_webp(canvas: Image.Image, filename: str, quality: int = 94) -> None:
 
 
 def build_wonyoung() -> None:
-    size = (1400, 2100)
-    canvas = vertical_gradient(size, [(0, "#10080f"), (0.42, "#321326"), (0.74, "#160b16"), (1, "#07080d")])
-    add_glow(canvas, (-330, 50, 820, 1300), "#b7377b", 120, 150)
-    add_glow(canvas, (780, 980, 1730, 2230), "#6d3e8e", 110, 165)
-    back = Image.new("RGBA", size)
-    bd = ImageDraw.Draw(back)
-    bd.polygon([(0, 270), (1060, 0), (1400, 0), (1400, 235), (0, 650)], fill=rgba("#f09ac6", 22))
-    bd.polygon([(0, 1530), (1400, 1110), (1400, 1480), (0, 1890)], fill=rgba("#7b2d65", 64))
-    bd.ellipse((810, 180, 1490, 860), outline=rgba("#f6b5d5", 68), width=5)
-    bd.ellipse((890, 265, 1550, 925), outline=rgba("#8f699d", 48), width=2)
-    for x in (92, 112, 132):
-        bd.line((x, 250, x, 1290), fill=rgba("#f7c4dd", 44), width=2)
-    halftone(bd, (1010, 90), 10, 17, 27, "#f8c0dc", 62)
-    canvas.alpha_composite(back)
+    """Build the left rail at the rail's real tall/narrow aspect ratio.
 
-    photo_source = Image.open(MEDIA / "portraits" / "wonyoung.webp")
-    photo = cover(photo_source, size, (0.5, 0.43))
-    photo = grade(photo, color=0.86, contrast=1.08, brightness=0.89)
-    tint = Image.new("RGBA", size, rgba("#9b295f", 25))
-    photo = Image.alpha_composite(photo, tint)
-    mask = soft_polygon_mask(size, [(90, 300), (1180, 165), (1370, 460), (1328, 1805), (1080, 2000), (80, 1720)], 28)
-    edge_fade = Image.new("L", size)
-    ed = ImageDraw.Draw(edge_fade)
-    ed.rectangle((0, 0, 1400, 1810), fill=255)
-    edge_fade = edge_fade.filter(ImageFilter.GaussianBlur(80))
-    mask = ImageChops.multiply(mask, edge_fade)
-    paste_masked(canvas, photo, mask)
-
-    foreground = Image.new("RGBA", size)
-    d = ImageDraw.Draw(foreground)
-    d.rectangle((0, 0, 1400, 208), fill=rgba("#09070b", 164))
-    d.line((72, 209, 1328, 209), fill=rgba("#f4b3d3", 145), width=2)
-    d.polygon([(0, 1660), (1400, 1375), (1400, 2100), (0, 2100)], fill=rgba("#100912", 218))
-    d.polygon([(1020, 0), (1400, 0), (1400, 820), (1270, 930)], fill=rgba("#100912", 80))
-    d.line((1120, 290, 1300, 1380), fill=rgba("#f6bed9", 92), width=3)
-    d.line((1140, 290, 1320, 1380), fill=rgba("#f6bed9", 36), width=1)
-    frame_marks(d, size, rgba("#f7d9e8", 120), margin=48, arm=70, width=2)
-    for center, radius in [((112, 400), 15), ((1230, 1090), 25), ((1178, 1160), 9), ((210, 1450), 18), ((1260, 1530), 13)]:
-        star(d, center, radius, rgba("#fff0f8", 210))
-    d.ellipse((109, 397, 115, 403), fill=rgba("#ffffff"))
-
-    text_tracking(d, (700, 74), "IVE", font(FONT_SERIF_BOLD, 112), rgba("#fff4f8"), 9, anchor="ma")
-    text_tracking(d, (1324, 85), "VOL. 11 / MATCH CULTURE", font(FONT_SANS_BOLD, 18), rgba("#eab2cf", 220), 4, anchor="ra")
-    text_tracking(d, (1324, 140), "REAL FACES · ORIGINAL GAME", font(FONT_SANS, 15), rgba("#d99ab9", 190), 3, anchor="ra")
-
-    vertical_layer = Image.new("RGBA", (250, 1120))
-    vd = ImageDraw.Draw(vertical_layer)
-    vd.text((10, 0), "W\nO\nN\nY\nO\nU\nN\nG", font=font(FONT_SANS_BOLD, 116), fill=rgba("#ffd3e7", 52), spacing=-5)
-    canvas.alpha_composite(vertical_layer, (1136, 255))
-
-    d = ImageDraw.Draw(foreground)
-    d.text((700, 1575), "Wonyoung", font=font(FONT_SCRIPT, 52), fill=rgba("#ffe8f3", 235), anchor="mm", stroke_width=1, stroke_fill=rgba("#6d264d", 150))
-    d.line((335, 1633, 965, 1633), fill=rgba("#f8c4dc", 90), width=2)
-    text_tracking(d, (700, 1778), "FOR A", font(FONT_SANS_BOLD, 28), rgba("#e7a7c6"), 7, anchor="ma")
-    d.text((700, 1820), "BIGGER", font=font(FONT_SERIF_BOLD, 76), fill=rgba("#fff5fa"), anchor="ma")
-    d.text((700, 1902), "TOMORROW", font=font(FONT_SERIF_BOLD, 58), fill=rgba("#fff5fa"), anchor="ma")
-    text_tracking(d, (1324, 1810), "FOOTBALL / ART / IVE", font(FONT_SANS_BOLD, 16), rgba("#e6b2cc"), 4, anchor="ra")
-    text_tracking(d, (1324, 1870), "A BRIGHTER GAME", font(FONT_SANS, 16), rgba("#b97799"), 4, anchor="ra")
-    d.line((1080, 1925, 1324, 1925), fill=rgba("#f2b6d2", 100), width=2)
-    text_tracking(d, (1324, 1956), "SEOUL — 20:26", font(FONT_SANS, 14), rgba("#c990ab"), 3, anchor="ra")
-    heart(d, (1228, 1690), 84, rgba("#fbd2e5", 150), width=4)
-    canvas.alpha_composite(foreground)
-    add_grain(canvas, 0.055, 24)
-    save_webp(canvas, "wonyoung-left-art.webp")
-
-
-def build_right() -> None:
-    size = (1400, 2100)
-    canvas = vertical_gradient(size, [(0, "#cfd7f6"), (0.33, "#aa91c7"), (0.67, "#8d659d"), (1, "#1a1734")])
-    source = Image.open(SOURCES / "ive-group-portrait.jpg")
-    blurred = cover(source, size, (0.5, 0.48)).filter(ImageFilter.GaussianBlur(46))
-    blurred = grade(blurred, color=0.72, contrast=0.78, brightness=0.78)
-    blurred.putalpha(110)
-    canvas.alpha_composite(blurred)
-    add_glow(canvas, (-230, -220, 950, 960), "#fff8ff", 180, 150)
-    add_glow(canvas, (700, 980, 1680, 2100), "#8e7fff", 100, 160)
+    The previous asset was 1400x2100, so CSS object-fit:cover had to crop most
+    of the portrait horizontally. That produced the giant-face/blurry look.
+    This canvas intentionally matches the actual desktop rail instead.
+    """
+    size = (560, 2100)
+    canvas = vertical_gradient(
+        size,
+        [(0, "#10080f"), (0.34, "#29111f"), (0.69, "#1b0c18"), (1, "#08080d")],
+    )
+    add_glow(canvas, (-250, 40, 650, 980), "#b94783", 92, 125)
+    add_glow(canvas, (170, 1080, 860, 1990), "#65458d", 70, 145)
 
     back = Image.new("RGBA", size)
     bd = ImageDraw.Draw(back)
-    bd.text((700, 40), "IVE", font=font(FONT_SERIF_BOLD, 360), fill=rgba("#ffffff", 48), anchor="ma")
-    bd.ellipse((110, 260, 1290, 1480), outline=rgba("#f9f2ff", 100), width=5)
-    bd.ellipse((168, 318, 1232, 1422), outline=rgba("#d7c1ff", 62), width=2)
-    bd.polygon([(0, 470), (1400, 140), (1400, 450), (0, 790)], fill=rgba("#ffffff", 34))
-    bd.polygon([(0, 1420), (1400, 1120), (1400, 1410), (0, 1710)], fill=rgba("#bcd4ff", 30))
-    halftone(bd, (80, 740), 9, 18, 28, "#ffffff", 82)
+    bd.text((280, 10), "IVE", font=font(FONT_SERIF_BOLD, 186), fill=rgba("#f9e9f1", 28), anchor="ma")
+    bd.polygon([(0, 250), (560, 100), (560, 270), (0, 430)], fill=rgba("#f0a5c8", 20))
+    bd.polygon([(0, 1410), (560, 1240), (560, 1540), (0, 1710)], fill=rgba("#7b315e", 38))
+    bd.line((34, 220, 526, 220), fill=rgba("#efb0ce", 92), width=2)
+    bd.line((34, 1508, 526, 1508), fill=rgba("#efb0ce", 76), width=2)
+    for center, radius in [((54, 330), 12), ((500, 390), 8), ((485, 1160), 15), ((72, 1320), 9)]:
+        star(bd, center, radius, rgba("#fff0f8", 185))
     canvas.alpha_composite(back)
 
-    photo = cover(source, size, (0.5, 0.49))
-    photo = grade(photo, color=0.9, contrast=1.05, brightness=0.96)
-    mask = arch_mask(size, inset=110, top=225, bottom=1785)
-    paste_masked(canvas, photo, mask)
+    # Keep the real portrait near native resolution. 720x1280 -> 520x1210
+    # requires essentially no enlargement, so facial detail stays sharp.
+    source = Image.open(MEDIA / "portraits" / "wonyoung.webp")
+    photo = cover(source, (520, 1210), (0.50, 0.39))
+    photo = grade(photo, color=0.94, contrast=1.04, brightness=0.96)
+
+    mask = Image.new("L", photo.size, 0)
+    md = ImageDraw.Draw(mask)
+    md.rounded_rectangle((0, 0, photo.width, photo.height), radius=26, fill=255)
+    # Feather only the bottom edge into the poster, never the face.
+    fade = Image.new("L", photo.size, 255)
+    fd = ImageDraw.Draw(fade)
+    fade_start = 1010
+    for y in range(fade_start, photo.height):
+        a = round(255 * (1 - (y - fade_start) / max(1, photo.height - fade_start)))
+        fd.line((0, y, photo.width, y), fill=max(0, a))
+    mask = ImageChops.multiply(mask, fade)
+
+    shadow = Image.new("RGBA", size)
+    sd = ImageDraw.Draw(shadow)
+    sd.rounded_rectangle((28, 262, 548, 1480), radius=30, fill=rgba("#000000", 120))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(28))
+    canvas.alpha_composite(shadow)
+    paste_masked(canvas, photo, mask, (20, 250))
 
     fg = Image.new("RGBA", size)
     d = ImageDraw.Draw(fg)
-    d.rectangle((0, 0, 1400, 184), fill=rgba("#20172f", 105))
-    d.line((62, 185, 1338, 185), fill=rgba("#ffffff", 150), width=2)
-    d.polygon([(0, 1490), (1400, 1270), (1400, 2100), (0, 2100)], fill=rgba("#17132c", 210))
-    d.polygon([(0, 1840), (1400, 1590), (1400, 1760), (0, 2015)], fill=rgba("#dd9cd4", 42))
-    frame_marks(d, size, rgba("#ffffff", 160), margin=48, arm=68, width=2)
-    text_tracking(d, (70, 62), "IVE / SIX VOICES", font(FONT_SANS_BOLD, 22), rgba("#ffffff"), 6)
-    text_tracking(d, (1330, 72), "FOOTBALL CULTURE  /  02", font(FONT_SANS, 17), rgba("#f4e9ff", 220), 4, anchor="ra")
-    d.text((700, 1555), "Always more", font=font(FONT_SCRIPT_BOLD, 58), fill=rgba("#fffaff"), anchor="mm")
-    d.text((700, 1630), "than a game", font=font(FONT_SCRIPT_BOLD, 58), fill=rgba("#fffaff"), anchor="mm")
-    heart(d, (955, 1596), 64, rgba("#ffd8ef", 230), width=4)
-    text_tracking(d, (700, 1762), "IVE × FOOTBALL", font(FONT_SERIF_BOLD, 33), rgba("#f6e8ff"), 5, anchor="ma")
-    d.line((330, 1844, 1070, 1844), fill=rgba("#e7cfff", 125), width=2)
-    text_tracking(d, (700, 1890), "GOOD PEOPLE · GREAT MATCHES · BRIGHTER DAYS", font(FONT_SANS_BOLD, 16), rgba("#ccbfe0"), 4, anchor="ma")
-    for center, radius in [((124, 320), 24), ((1232, 430), 14), ((1170, 1040), 23), ((250, 1390), 11), ((1280, 1360), 18)]:
-        star(d, center, radius, rgba("#ffffff", 210))
-    d.arc((80, 1080, 620, 1680), 220, 32, fill=rgba("#f6d7f0", 110), width=5)
-    d.arc((820, 730, 1360, 1330), 42, 210, fill=rgba("#cbd9ff", 100), width=4)
-    canvas.alpha_composite(fg)
-    add_grain(canvas, 0.045, 20)
-    save_webp(canvas, "ive-right-art.webp")
 
+    # Edge grading keeps text readable without painting over the face.
+    side = Image.new("RGBA", size)
+    sp = side.load()
+    for x in range(size[0]):
+        edge = min(x, size[0] - 1 - x)
+        a = int(max(0, 78 * (1 - edge / 125)))
+        for y in range(235, 1480):
+            sp[x, y] = (10, 7, 12, a)
+    fg = Image.alpha_composite(fg, side)
+    d = ImageDraw.Draw(fg)
+
+    # Top identity area.
+    text_tracking(d, (280, 50), "IVE", font(FONT_SERIF_BOLD, 98), rgba("#fff2f8"), 7, anchor="ma")
+    d.text((34, 155), "Same Passion,", font=font(FONT_SERIF_ITALIC, 28), fill=rgba("#f8d7e6"))
+    d.text((34, 188), "Different Stadiums.", font=font(FONT_SERIF_ITALIC, 28), fill=rgba("#f8d7e6"))
+    text_tracking(d, (526, 168), "FOOTBALL V2", font(FONT_SANS_BOLD, 12), rgba("#d894b5", 215), 3, anchor="ra")
+
+    # Editorial labels around, not across, the portrait.
+    text_tracking(d, (36, 292), "MUSIC CONNECTS PEOPLE", font(FONT_SANS_BOLD, 11), rgba("#f0b6d1", 190), 3)
+    text_tracking(d, (36, 317), "FOOTBALL DOES TOO", font(FONT_SANS, 11), rgba("#c887a7", 180), 3)
+    d.text((529, 470), "W\nO\nN\nY\nO\nU\nN\nG", font=font(FONT_SANS_BOLD, 16), fill=rgba("#f4bad5", 135), spacing=4, anchor="ra")
+
+    # Signature and clean lower poster block.
+    d.text((280, 1432), "Wonyoung", font=font(FONT_SCRIPT_BOLD, 44), fill=rgba("#ffe7f3"), anchor="mm")
+    d.line((118, 1492, 442, 1492), fill=rgba("#f3b4d1", 92), width=2)
+    d.polygon([(0, 1535), (560, 1440), (560, 2100), (0, 2100)], fill=rgba("#0b0910", 228))
+    d.polygon([(0, 1705), (560, 1600), (560, 1735), (0, 1840)], fill=rgba("#a34c7b", 28))
+
+    text_tracking(d, (280, 1608), "IVE / FOOTBALL", font(FONT_SANS_BOLD, 13), rgba("#d9a4be", 215), 4, anchor="ma")
+    text_tracking(d, (280, 1700), "FOR A", font(FONT_SANS_BOLD, 23), rgba("#e6a9c5"), 7, anchor="ma")
+    d.text((280, 1754), "BIGGER", font=font(FONT_SERIF_BOLD, 56), fill=rgba("#fff5fa"), anchor="ma")
+    d.text((280, 1824), "TOMORROW", font=font(FONT_SERIF_BOLD, 45), fill=rgba("#fff5fa"), anchor="ma")
+    text_tracking(d, (280, 1940), "A BRIGHTER GAME", font(FONT_SANS_BOLD, 12), rgba("#ba809d", 220), 4, anchor="ma")
+    d.line((150, 1990, 410, 1990), fill=rgba("#e5a7c3", 72), width=2)
+    heart(d, (472, 1650), 55, rgba("#f5c8dc", 175), width=3)
+
+    frame_marks(d, size, rgba("#f3c6da", 80), margin=24, arm=38, width=2)
+    canvas.alpha_composite(fg)
+    add_grain(canvas, 0.032, 18)
+    save_webp(canvas, "wonyoung-left-art.webp", 96)
+
+def build_right() -> None:
+    """Build the right rail without zooming/cutting the real group photo."""
+    size = (560, 2100)
+    canvas = vertical_gradient(
+        size,
+        [(0, "#cfd8f2"), (0.30, "#a89bc7"), (0.62, "#7b6a9b"), (1, "#17162d")],
+    )
+    add_glow(canvas, (-180, -180, 620, 760), "#fff8ff", 165, 120)
+    add_glow(canvas, (160, 860, 780, 1650), "#7b78c9", 88, 135)
+
+    source = Image.open(SOURCES / "ive-group-portrait.jpg")
+    back = Image.new("RGBA", size)
+    bd = ImageDraw.Draw(back)
+    bd.text((280, 28), "IVE", font=font(FONT_SERIF_BOLD, 150), fill=rgba("#ffffff", 35), anchor="ma")
+    bd.ellipse((28, 240, 532, 1000), outline=rgba("#fbf5ff", 92), width=3)
+    bd.ellipse((54, 272, 506, 972), outline=rgba("#d8c5f2", 58), width=2)
+    bd.polygon([(0, 330), (560, 210), (560, 390), (0, 520)], fill=rgba("#ffffff", 28))
+    bd.polygon([(0, 1365), (560, 1245), (560, 1485), (0, 1605)], fill=rgba("#d6b6e6", 30))
+    for center, radius in [((70, 295), 12), ((498, 350), 9), ((490, 1120), 13), ((78, 1290), 8)]:
+        star(bd, center, radius, rgba("#ffffff", 200))
+    canvas.alpha_composite(back)
+
+    # Use a moderate crop and keep the complete group composition visible.
+    # The original 1365x2048 file has ample detail at this rendered size.
+    photo = cover(source, (520, 1110), (0.50, 0.45))
+    photo = grade(photo, color=0.94, contrast=1.03, brightness=0.98)
+    mask = Image.new("L", photo.size, 0)
+    md = ImageDraw.Draw(mask)
+    md.rounded_rectangle((0, 0, photo.width, photo.height), radius=30, fill=255)
+
+    shadow = Image.new("RGBA", size)
+    sd = ImageDraw.Draw(shadow)
+    sd.rounded_rectangle((27, 265, 547, 1382), radius=34, fill=rgba("#161020", 105))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(28))
+    canvas.alpha_composite(shadow)
+    paste_masked(canvas, photo, mask, (20, 255))
+
+    fg = Image.new("RGBA", size)
+    d = ImageDraw.Draw(fg)
+    d.rectangle((0, 0, 560, 155), fill=rgba("#1a1427", 92))
+    d.line((28, 155, 532, 155), fill=rgba("#ffffff", 115), width=2)
+
+    text_tracking(d, (30, 52), "IVE / SIX VOICES", font(FONT_SANS_BOLD, 12), rgba("#ffffff"), 4)
+    text_tracking(d, (530, 54), "MATCH CULTURE", font(FONT_SANS, 11), rgba("#f2e8fb", 215), 3, anchor="ra")
+
+    # Dark lower panel holds the slogan instead of covering members.
+    d.polygon([(0, 1385), (560, 1295), (560, 2100), (0, 2100)], fill=rgba("#151327", 224))
+    d.polygon([(0, 1590), (560, 1490), (560, 1645), (0, 1750)], fill=rgba("#cc8dc8", 32))
+    d.text((280, 1508), "Always more", font=font(FONT_SCRIPT_BOLD, 42), fill=rgba("#fffaff"), anchor="mm")
+    d.text((280, 1563), "than a game", font=font(FONT_SCRIPT_BOLD, 42), fill=rgba("#fffaff"), anchor="mm")
+    heart(d, (467, 1540), 53, rgba("#ffd9ef", 220), width=3)
+    text_tracking(d, (280, 1695), "IVE × FOOTBALL", font(FONT_SERIF_BOLD, 22), rgba("#f5eaff"), 4, anchor="ma")
+    d.line((115, 1760, 445, 1760), fill=rgba("#e7d2f3", 100), width=2)
+    text_tracking(d, (280, 1815), "GOOD PEOPLE", font(FONT_SANS_BOLD, 11), rgba("#cfc1dc"), 4, anchor="ma")
+    text_tracking(d, (280, 1843), "GREAT MATCHES", font(FONT_SANS_BOLD, 11), rgba("#cfc1dc"), 4, anchor="ma")
+    text_tracking(d, (280, 1871), "BRIGHTER DAYS", font(FONT_SANS_BOLD, 11), rgba("#cfc1dc"), 4, anchor="ma")
+    d.arc((55, 1620, 505, 2070), 205, 340, fill=rgba("#f5d8ed", 75), width=3)
+    frame_marks(d, size, rgba("#ffffff", 105), margin=24, arm=38, width=2)
+
+    canvas.alpha_composite(fg)
+    add_grain(canvas, 0.028, 17)
+    save_webp(canvas, "ive-right-art.webp", 96)
 
 def build_hero() -> None:
     size = (2400, 900)
