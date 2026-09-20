@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<title id="title">ARC XI</title>
+<defs>
+  <linearGradient id="rose" x1="12" y1="50" x2="55" y2="10" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#80576d"/>
+    <stop offset=".36" stop-color="#d8aebe"/>
+    <stop offset=".63" stop-color="#fff2f5"/>
+    <stop offset="1" stop-color="#e29bb8"/>
+  </linearGradient>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="1.1" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+<path d="M8.5 42.5C14.8 26.1 29.1 15 47.5 14.7" fill="none" stroke="url(#rose)" stroke-width="2.15" stroke-linecap="round"/>
+<path d="M49.8 8.5l1.55 4.35 4.35 1.55-4.35 1.55-1.55 4.35-1.55-4.35-4.35-1.55 4.35-1.55z" fill="#ffddea" filter="url(#glow)"/>
+<path d="M17.5 47.5 30.7 20l13.8 27.5M22.2 37.4h17.3" fill="none" stroke="url(#rose)" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 47.5h7.4M38.6 47.5H46" stroke="url(#rose)" stroke-width="2.15" stroke-linecap="round"/>
+</svg>

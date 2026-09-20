@@ -263,7 +263,7 @@
   function header() {
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
-      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/arc-xi-brand-64.png?v=1" alt=""></span><span class="brandWords"><b>ARC XI</b><small>Live football · Match intelligence</small></span></a>' +
+      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/arc-xi-mark.svg?v=1" alt=""></span><span class="brandWords"><b>ARC XI</b><small>Live football · Match intelligence</small></span></a>' +
       '<nav class="headerNav" aria-label="Desktop navigation">' +
       '<a class="' + (routeGroup(state.route) === 'board' ? 'active' : '') + '" href="#board">Matchday</a>' +
       '<a class="' + (routeGroup(state.route) === 'picks' ? 'active' : '') + '" href="#picks">Picks</a>' +
