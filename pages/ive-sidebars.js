@@ -6,7 +6,7 @@
 
   const rails = {
     left: {
-      image: './media/ive/ive-left-final.svg?v=2',
+      image: './media/ive/ive-left-final.svg?v=3',
       width: 724,
       height: 2172
     },
