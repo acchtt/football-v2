@@ -1,4 +1,4 @@
-const CACHE='arc-xi-shell-v68';
+const CACHE='arc-xi-shell-v69';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -8,11 +8,11 @@ const SHELL=[
   asset('design-v1.css?v=15'),
   asset('alerts-center.css?v=4'),
   asset('ive-matchday-final.css?v=16'),
-  asset('manifest.webmanifest?v=12'),
-  asset('icons/arc-xi-64.png?v=1'),
-  asset('icons/arc-xi-192.png?v=1'),
-  asset('icons/arc-xi-512.png?v=1'),
-  asset('icons/arc-xi-maskable-512.png?v=1'),
+  asset('manifest.webmanifest?v=13'),
+  asset('icons/arc-xi.svg?v=3'),
+  asset('icons/arc-xi-192.svg?v=3'),
+  asset('icons/arc-xi-512.svg?v=3'),
+  asset('icons/arc-xi-maskable-512.svg?v=3'),
   asset('media/ive/matchday-hero-v4.avif?v=1'),
   asset('media/ive/ive-feature-art.webp?v=2'),
   asset('ict-slate-fetch.js?v=1'),
@@ -48,8 +48,8 @@ self.addEventListener('message',event=>{
   if(event.data?.type==='TEST_NOTIFICATION'){
     event.waitUntil(self.registration.showNotification('ARC XI test',{
       body:'Notifications are working on this device.',
-      icon:asset('icons/arc-xi-192.png?v=1'),
-      badge:asset('icons/arc-xi-192.png?v=1'),
+      icon:asset('icons/arc-xi-192.svg?v=3'),
+      badge:asset('icons/arc-xi-192.svg?v=3'),
       tag:'sliptrace-local-test',
       data:{url:asset('#board')}
     }));
@@ -102,8 +102,8 @@ self.addEventListener('push',event=>{
   const destination=payload.url||self.registration.scope+(matchId?'#match/'+encodeURIComponent(matchId):'#board');
   const options={
     body:payload.body||'A selected match has an update.',
-    icon:asset('icons/arc-xi-192.png?v=1'),
-    badge:asset('icons/arc-xi-192.png?v=1'),
+    icon:asset('icons/arc-xi-192.svg?v=3'),
+    badge:asset('icons/arc-xi-192.svg?v=3'),
     tag:payload.tag||'sliptrace-'+(matchId||'update'),
     renotify:true,
     requireInteraction:false,
