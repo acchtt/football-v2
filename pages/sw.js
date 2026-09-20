@@ -1,4 +1,4 @@
-const CACHE='slate-xi-shell-v64';
+const CACHE='arc-xi-shell-v65';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -7,12 +7,12 @@ const SHELL=[
   asset('offline.html'),
   asset('design-v1.css?v=15'),
   asset('alerts-center.css?v=4'),
-  asset('ive-matchday-final.css?v=15'),
-  asset('manifest.webmanifest?v=8'),
-  asset('icons/slate-xi.svg?v=3'),
-  asset('icons/slate-xi-192.svg?v=3'),
-  asset('icons/slate-xi-512.svg?v=3'),
-  asset('icons/slate-xi-maskable-512.svg?v=3'),
+  asset('ive-matchday-final.css?v=16'),
+  asset('manifest.webmanifest?v=9'),
+  asset('icons/arc-xi.svg?v=1'),
+  asset('icons/arc-xi-192.svg?v=1'),
+  asset('icons/arc-xi-512.svg?v=1'),
+  asset('icons/arc-xi-maskable-512.svg?v=1'),
   asset('media/ive/matchday-hero-v4.avif?v=1'),
   asset('media/ive/ive-feature-art.webp?v=2'),
   asset('ict-slate-fetch.js?v=1'),
@@ -21,10 +21,10 @@ const SHELL=[
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
   asset('ive-sidebars.js?v=16'),
-  asset('app-v2.js?v=29'),
+  asset('app-v2.js?v=30'),
   asset('status-sync.js?v=4'),
-  asset('pwa-v2.js?v=5'),
-  asset('alerts-center.js?v=3')
+  asset('pwa-v2.js?v=6'),
+  asset('alerts-center.js?v=4')
 ];
 
 self.addEventListener('install',event=>{
@@ -46,10 +46,10 @@ self.addEventListener('activate',event=>{
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
   if(event.data?.type==='TEST_NOTIFICATION'){
-    event.waitUntil(self.registration.showNotification('Slate XI test',{
+    event.waitUntil(self.registration.showNotification('ARC XI test',{
       body:'Notifications are working on this device.',
-      icon:asset('icons/slate-xi-192.svg'),
-      badge:asset('icons/slate-xi-192.svg'),
+      icon:asset('icons/arc-xi-192.svg'),
+      badge:asset('icons/arc-xi-192.svg'),
       tag:'sliptrace-local-test',
       data:{url:asset('#board')}
     }));
@@ -98,12 +98,12 @@ self.addEventListener('push',event=>{
   let payload={};
   try{payload=event.data?.json()||{};}catch{payload={body:event.data?.text()||''};}
   const matchId=String(payload.matchId||payload.match_id||'');
-  const title=payload.title||'Slate XI Football';
+  const title=payload.title||'ARC XI Football';
   const destination=payload.url||self.registration.scope+(matchId?'#match/'+encodeURIComponent(matchId):'#board');
   const options={
     body:payload.body||'A selected match has an update.',
-    icon:asset('icons/slate-xi-192.svg'),
-    badge:asset('icons/slate-xi-192.svg'),
+    icon:asset('icons/arc-xi-192.svg'),
+    badge:asset('icons/arc-xi-192.svg'),
     tag:payload.tag||'sliptrace-'+(matchId||'update'),
     renotify:true,
     requireInteraction:false,
