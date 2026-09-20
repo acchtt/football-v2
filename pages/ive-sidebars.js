@@ -6,12 +6,12 @@
 
   const rails = {
     left: {
-      image: './media/ive/ive-left-final.svg?v=1',
+      image: './media/ive/ive-left-final.svg?v=2',
       width: 724,
       height: 2172
     },
     right: {
-      image: './media/ive/ive-right-final.svg?v=1',
+      image: './media/ive/ive-right-final.svg?v=2',
       width: 724,
       height: 2172
     }
