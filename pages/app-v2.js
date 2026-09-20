@@ -263,7 +263,7 @@
   function header() {
     const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
-      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/slate-xi.svg?v=3" alt=""></span><span class="brandWords"><b>SLATE XI</b><small>Football decision board</small></span></a>' +
+      '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/arc-xi.svg?v=1" alt=""></span><span class="brandWords"><b>ARC XI</b><small>Live football · Match intelligence</small></span></a>' +
       '<nav class="headerNav" aria-label="Desktop navigation">' +
       '<a class="' + (routeGroup(state.route) === 'board' ? 'active' : '') + '" href="#board">Matchday</a>' +
       '<a class="' + (routeGroup(state.route) === 'picks' ? 'active' : '') + '" href="#picks">Picks</a>' +
@@ -578,7 +578,7 @@
       signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
     const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg></span> Sync board</button>';
     const boardBody = state.error && !boardRows.length ?
-      '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. Slate XI will retry without treating this as a zero-match day.</span></div>' :
+      '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
         '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>';
@@ -593,7 +593,7 @@
   function skeleton(route, title) {
     state.route = route;
     const rows = Array.from({length:6}, function () { return '<div class="skeletonRow"></div>'; }).join('');
-    root.innerHTML = shell(pageTitle('Loading', title || 'Slate XI', 'Retrieving the latest football data.'), '<section class="railSection"><div class="skeletonBlock"></div></section>', 'loadingRoute') +
+    root.innerHTML = shell(pageTitle('Loading', title || 'ARC XI', 'Retrieving the latest football data.'), '<section class="railSection"><div class="skeletonBlock"></div></section>', 'loadingRoute') +
       '';
     const host = root.querySelector('.mainView');
     if (host) host.insertAdjacentHTML('beforeend', '<section class="matchSection">' + rows + '</section>');
@@ -830,7 +830,7 @@
     const row = boardRowFor(event);
     const official = picksFor(event);
     if (!row && !official.length) return '';
-    return '<section class="modelSpotlight"><div class="modelIdentity"><span>Slate XI decision model</span><strong>' +
+    return '<section class="modelSpotlight"><div class="modelIdentity"><span>ARC XI decision model</span><strong>' +
       esc(row?.grade || 'Tracked') + '</strong><small>' + esc(row?.tier || 'OFFICIAL PICK') + '</small></div>' +
       (row ? '<div class="modelFacts"><div><span>Structure</span><b>' + esc(row.structure || '—') +
         '</b></div><div><span>Starting XI</span><b>' + esc(row.xiStatus || '—') +
@@ -1064,7 +1064,7 @@
         esc(item.line || '—') + ' @ ' + esc(item.odds || '—') + '</b></div><div class="pickResult ' + resultState(result) +
         '"><strong>' + esc(result) + '</strong><span>' + (pl === null ? '—' : (pl > 0 ? '+' : '') + pl.toFixed(2) + 'u') + '</span></div></div>';
     }).join('');
-    const content = pageTitle('Decision record','Official picks','Open positions and settled Slate XI model history.') +
+    const content = pageTitle('Decision record','Official picks','Open positions and settled ARC XI model history.') +
       '<div class="performanceGrid"><div><span>Total P/L</span><strong class="' + (totalPL >= 0 ? 'positive' : 'negative') + '">' +
       (totalPL > 0 ? '+' : '') + totalPL.toFixed(2) + 'u</strong></div><div><span>Win rate</span><strong>' +
       (settled.length ? Math.round(wins / settled.length * 100) : 0) + '%</strong></div><div><span>Open</span><strong>' +
@@ -1238,7 +1238,7 @@
   }
   function renderError(route, error) {
     state.route = route;
-    root.innerHTML = shell(pageTitle('Connection issue','Data unavailable','Slate XI could not retrieve this view.') +
+    root.innerHTML = shell(pageTitle('Connection issue','Data unavailable','ARC XI could not retrieve this view.') +
       '<div class="statusBanner"><b>' + esc(error.message || String(error)) + '</b><span>Check the connection and try again.</span></div>' +
       '<button class="primaryButton" type="button" onclick="location.reload()">Retry</button>',
       '<section class="railSection"><p class="railCopy">The installed shell remains available while live data reconnects.</p></section>', 'errorRoute');
