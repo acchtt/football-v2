@@ -290,7 +290,7 @@
   }
   function matchdayHero(actions) {
     return '<section class="matchdayHero" aria-label="IVE × Football campaign artwork">' +
-      '<img src="./media/ive/matchday-hero-v3.avif?v=1" alt="" aria-hidden="true" width="1000" height="428" fetchpriority="high"></section>';
+      '<img src="./media/ive/matchday-hero-v4.avif?v=1" alt="" aria-hidden="true" width="1916" height="821" fetchpriority="high"></section>';
   }
   function sectionHead(title, meta, actions) {
     return '<div class="sectionHead"><div><h2>' + esc(title) + '</h2>' +
