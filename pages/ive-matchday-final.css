@@ -91,8 +91,8 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .contextRail{padding:14px 12px 44px;border-left:1px solid var(--line);background:#0b0c11}
 
 .matchdayHero{position:relative;min-height:156px;margin-bottom:10px;overflow:hidden;border:1px solid #322d39;border-radius:var(--radius);background:linear-gradient(102deg,#17121b 0%,#211424 48%,#2f1c35 100%);isolation:isolate}
-.matchdayHero:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(13,11,16,.98) 0%,rgba(20,13,23,.9) 45%,rgba(28,15,31,.18) 74%,rgba(19,12,22,.38) 100%)}
-.matchdayHero:after{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(circle at 76% 35%,rgba(228,126,190,.17),transparent 35%),linear-gradient(180deg,transparent 70%,rgba(8,9,13,.45))}
+.matchdayHero:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(9,8,12,.86) 0%,rgba(16,11,18,.6) 35%,rgba(18,11,20,.1) 63%,rgba(10,9,14,.12) 100%)}
+.matchdayHero:after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 72%,rgba(8,9,13,.28))}
 .matchdayHeroCopy{position:relative;z-index:3;width:55%;padding:26px 28px 22px}
 .matchdayHero .eyebrow{margin:0 0 6px;color:#d8b1c8;font-size:8px;letter-spacing:.3em}
 .matchdayHero h1{margin:0;font-family:var(--font-display);font-size:43px;font-weight:500;line-height:1;letter-spacing:-.035em}
@@ -100,8 +100,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .matchdayHeroActions{margin-top:14px}
 .matchdayHeroActions .primaryButton{min-height:34px;border-color:rgba(240,143,189,.35);background:rgba(240,143,189,.08);color:#f6d3e4}
 .primaryButton span{display:inline-flex;vertical-align:middle}.primaryButton span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.matchdayHero>img{position:absolute;z-index:0;inset:0 0 0 auto;width:61%;height:100%;object-fit:cover;object-position:center 22%;filter:none}
-.matchdayHeroScript{position:absolute;right:14px;bottom:12px;z-index:3;color:#f3a9cf;font-family:var(--font-display);font-size:13px;font-style:italic;line-height:1.05;transform:rotate(-5deg);text-align:right}
+.matchdayHero>img{position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;filter:none}
 
 .dateStrip{display:grid;grid-template-columns:repeat(7,minmax(72px,1fr));gap:6px;margin-bottom:9px;border:0;border-radius:0;overflow:visible;background:transparent}
 .dateBtn{min-height:55px;border:1px solid #2c3038!important;border-radius:8px;background:linear-gradient(180deg,#13161c,#0f1116);color:#a9a4ad;place-content:center;grid-template-columns:1fr;gap:1px}
@@ -177,10 +176,8 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .contextStatusFilters{padding:5px 8px 8px;display:grid}
 .contextStatusFilters button{min-height:34px;padding:0 7px;border:0;border-bottom:1px solid #25282f;background:transparent;color:#aaa5ae;display:flex;align-items:center;justify-content:space-between;font-size:9px}
 .contextStatusFilters button:last-child{border-bottom:0}.contextStatusFilters button:hover{background:#15171e;color:#fff}.contextStatusFilters button.active{margin:2px -1px;border:0;border-radius:6px;background:linear-gradient(90deg,rgba(154,79,118,.92),rgba(99,49,77,.8));color:#fff}.contextStatusFilters button b{font-size:9px;font-variant-numeric:tabular-nums}
-.iveFeatureCard{position:relative;margin-bottom:10px;padding:8px 8px 12px;overflow:hidden;border:1px solid #34313b;border-radius:9px;background:#121219}
-.iveFeatureCard img{width:100%;height:116px;border-radius:6px;object-fit:cover;object-position:center}
-.iveFeatureCard>span{position:absolute;left:14px;top:102px;padding:3px 6px;border-radius:4px;background:#ac5b87;color:#fff;font-size:6px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.iveFeatureCard strong{display:block;margin:9px 6px 0;color:#f2a9ce;font-size:12px}.iveFeatureCard p{margin:2px 6px 0;color:#c0b9c2;font-family:var(--font-display);font-size:11px;font-style:italic;line-height:1.25}
+.iveFeatureCard{position:relative;margin-bottom:10px;padding:7px;overflow:hidden;border:1px solid #34313b;border-radius:9px;background:#121219}
+.iveFeatureCard img{display:block;width:100%;height:auto;aspect-ratio:3/2;border-radius:5px;object-fit:cover;object-position:center}
 .nextDecisionSection>.sectionHead{margin:0}.nextDecision{margin:8px;border:0;border-radius:7px;background:#14161c}.nextDecisionTop{padding-bottom:6px;border-bottom:1px solid #252831}.nextSignal.focus{color:#f2a5ca}.nextSignal.watch{color:#70cedf}.nextDecisionTop>strong{font-size:18px}.nextTeams img,.nextTeams .crestFallback{width:34px;height:34px}.nextTeams span{font-size:9px}.nextMeta{font-size:8px}.nextCountdown{background:#0f1116}.nextCountdown strong{color:#79d3e3}.nextDecisionEmpty{min-height:110px}.followedItem{margin:0 10px;padding:10px 2px}.railAction{width:calc(100% - 16px);margin:8px;min-height:38px;border-color:#353843;border-radius:7px;background:#15171e;color:#b2acb5;text-align:center}
 
 .pageTop{min-height:66px;margin-bottom:12px}.eyebrow{color:var(--ive-pink)}.pageTop h1,.profileHead h1{font-family:var(--font-display);font-weight:500}.primaryButton,.railAction{border-radius:7px}.primaryButton span{color:var(--ive-pink)}
@@ -201,21 +198,10 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
   .headerInner{border-bottom:1px solid #33313b;background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
   .iveRailsReady .iveArtRail{position:fixed;inset-block:0;z-index:1;display:block;width:calc((100vw - var(--stage-width)) / 2);min-width:180px;overflow:hidden;pointer-events:none;background:#0a0b10;isolation:isolate}
   .iveArtRail--left{left:0;border-right:1px solid #312431}.iveArtRail--right{right:0;border-left:1px solid #25283a}
-  .iveRailPhoto{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover}
-  .iveRailPhoto--left{object-position:50% 42%}
-  .iveRailPhoto--right{object-position:center top}
-  .iveRailOverlay{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(22,8,19,.62) 0%,rgba(32,12,28,.08) 31%,rgba(8,9,13,.03) 58%,rgba(8,9,13,.78) 100%),linear-gradient(90deg,rgba(77,26,62,.18),transparent 48%,rgba(8,9,13,.2))}
-  .iveArtRail--right .iveRailOverlay{background:linear-gradient(180deg,rgba(27,18,62,.52) 0%,rgba(18,13,42,.04) 34%,rgba(8,9,13,.06) 67%,rgba(12,8,28,.76) 100%),linear-gradient(270deg,rgba(31,22,66,.18),transparent 55%,rgba(8,9,13,.18))}
-  .iveArtCopy{position:absolute;z-index:2;display:grid;color:#fff;text-shadow:0 3px 16px rgba(0,0,0,.68)}
-  .iveArtCopy--left{left:22px;right:18px;top:30px;gap:7px}
-  .iveArtCopy--left strong{font-family:var(--font-display);font-size:clamp(42px,3.15vw,62px);font-weight:500;line-height:.85;letter-spacing:.01em}
-  .iveArtCopy--left span{font-family:var(--font-display);font-size:clamp(12px,1vw,17px);font-style:italic;line-height:1.12}
-  .iveArtCopy--left small{margin-top:18px;font-size:6.5px;font-weight:700;letter-spacing:.27em;line-height:1.6}
-  .iveArtCopy--right{left:18px;right:18px;top:28px;justify-items:center;text-align:center}
-  .iveArtCopy--right strong{font-family:"Segoe Script","Bradley Hand",cursive;font-size:clamp(19px,1.55vw,29px);font-weight:400;line-height:1.06;letter-spacing:-.02em;transform:rotate(-3deg)}
-  .iveArtSignature{position:absolute;left:24px;bottom:118px;z-index:2;color:#fff;font-family:"Segoe Script","Bradley Hand",cursive;font-size:clamp(19px,1.45vw,28px);font-style:italic;transform:rotate(-8deg);text-shadow:0 3px 14px rgba(0,0,0,.72)}
-  .iveArtFooter{position:absolute;right:22px;left:22px;bottom:25px;z-index:2;color:#f6e7f1;font-size:6.5px;font-weight:700;letter-spacing:.25em;line-height:1.65;text-shadow:0 2px 9px rgba(0,0,0,.78)}
-  .iveArtRail--left .iveArtFooter{text-align:left}.iveArtRail--right .iveArtFooter{text-align:center}
+  .iveArtRail:after{content:"";position:absolute;inset-block:0;z-index:1;width:24px;pointer-events:none}
+  .iveArtRail--left:after{right:0;background:linear-gradient(90deg,transparent,rgba(8,9,13,.45))}
+  .iveArtRail--right:after{left:0;background:linear-gradient(270deg,transparent,rgba(8,9,13,.45))}
+  .iveArtwork{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;object-position:center center}
 }
 
 @media(max-width:1319px){.iveArtRail{display:none!important}.headerInner,.appFrame{width:100%}}
@@ -240,7 +226,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 
 @media(max-width:760px){
   .brandWords{display:none}.brandMark{width:32px;height:32px}.headerInner{gap:8px}.headerSearch input{height:42px;font-size:12px}.alertsCenterBtn{width:42px!important;min-width:42px!important;height:42px!important;padding:0!important}
-  .matchdayHero{min-height:116px;margin-inline:0;border-radius:9px}.matchdayHeroCopy{width:100%;padding:18px 17px}.matchdayHero h1{font-size:31px}.matchdayHero p{font-size:10px}.matchdayHero>img{display:none}.matchdayHero:before{background:linear-gradient(110deg,rgba(16,11,18,.98),rgba(48,25,46,.78))}.matchdayHeroScript{display:none}.matchdayHeroActions{position:absolute;right:12px;top:13px;margin:0}.matchdayHeroActions .primaryButton{width:42px;min-width:42px;height:42px;padding:0;font-size:0}.matchdayHeroActions .primaryButton span{margin:0;font-size:16px}
+  .matchdayHero{min-height:116px;margin-inline:0;border-radius:9px}.matchdayHeroCopy{width:100%;padding:18px 17px}.matchdayHero h1{font-size:31px}.matchdayHero p{font-size:10px}.matchdayHero>img{display:none}.matchdayHero:before{background:linear-gradient(110deg,rgba(16,11,18,.98),rgba(48,25,46,.78))}.matchdayHeroActions{position:absolute;right:12px;top:13px;margin:0}.matchdayHeroActions .primaryButton{width:42px;min-width:42px;height:42px;padding:0;font-size:0}.matchdayHeroActions .primaryButton span{margin:0;font-size:16px}
   .dateStrip{display:flex;gap:6px;margin-inline:-12px;padding:0 12px 4px;overflow-x:auto}.dateBtn{flex:0 0 67px;min-height:55px}
   .filterBar{gap:6px}.statusFilters,.signalFilters{display:grid;width:100%;grid-template-columns:repeat(4,1fr);overflow:visible}.signalFilters{grid-template-columns:repeat(3,1fr);margin:0}.signalFilters:before{display:none}.statusFilters button,.signalFilters button{min-width:0;min-height:44px;padding:0 5px;justify-content:center;font-size:9px}.statusFilters button{gap:4px}.statusFilters button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .matchSection{margin-inline:0}.boardCompetitionList{gap:8px}.boardCompetitionGroup{border-radius:8px}.boardCompetitionHead{padding-inline:9px}.boardCompetitionHead>a{font-size:0}.boardCompetitionHead>a span{font-size:15px}
