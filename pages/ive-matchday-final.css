@@ -49,8 +49,9 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 :focus-visible{outline-color:var(--ive-pink)}
 
 .appHeader{height:var(--header);border-bottom:1px solid #33313b;background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
-.headerInner{max-width:none;padding:0 14px;gap:16px}
+.headerInner{max-width:none;padding:0 14px;gap:16px;justify-content:flex-start}
 .brand{gap:9px}
+.alertsCenterBtn,.pwaInstallBtn{display:none!important}
 .brandMark{width:34px;height:34px;display:grid;place-items:center;filter:drop-shadow(0 0 9px rgba(240,143,189,.12))}
 .brandMark img{width:34px;height:34px;display:block;object-fit:contain}
 .brandWords{display:flex;align-items:center;gap:9px;white-space:nowrap}
