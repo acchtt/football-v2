@@ -532,8 +532,10 @@
     }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path></svg></i><p>Another great day for football.</p></section>';
   }
   function matchdayContext() {
-    const feature = '<section class="iveFeatureCard" aria-label="IVE and football feature"><img src="./media/ive/ive-feature-art.webp?v=2" alt="" width="1200" height="800" loading="lazy"></section>';
-    return contextClock() + feature;
+    const youtube = '<section class="youtubeRailPlayer" aria-label="YouTube player">' +
+      '<iframe src="https://www.youtube-nocookie.com/embed/6ZUIwj3FgUY?rel=0&modestbranding=1" title="YouTube video player" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>' +
+      '</section>';
+    return contextClock() + youtube;
   }
   function renderMatchday() {
     state.route = 'board';
