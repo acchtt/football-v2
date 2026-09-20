@@ -1,4 +1,4 @@
-const CACHE='arc-xi-shell-v65';
+const CACHE='arc-xi-shell-v66';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -20,7 +20,7 @@ const SHELL=[
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
-  asset('ive-sidebars.js?v=16'),
+  asset('ive-sidebars.js?v=17'),
   asset('app-v2.js?v=30'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=6'),
