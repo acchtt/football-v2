@@ -24,6 +24,7 @@ MEDIA = ROOT / "pages" / "media" / "ive"
 SOURCES = MEDIA / "sources"
 FONTS = Path("C:/Windows/Fonts")
 RNG = random.Random(1106)
+ARTWORK_LAYOUT_REV = 2  # trigger/build marker for native-aspect rail artwork
 
 FONT_SERIF = FONTS / "georgia.ttf"
 FONT_SERIF_BOLD = FONTS / "georgiab.ttf"
