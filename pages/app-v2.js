@@ -261,19 +261,9 @@
       '</nav>';
   }
   function header() {
-    const delayed = Boolean(state.error);
     return '<header class="appHeader"><div class="headerInner">' +
       '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/arc-xi-transparent-512.png?v=2" alt=""></span><span class="brandWords"><b>ARC XI</b><small>Live football · Match intelligence</small></span></a>' +
-      '<nav class="headerNav" aria-label="Desktop navigation">' +
-      '<a class="' + (routeGroup(state.route) === 'board' ? 'active' : '') + '" href="#board">Matchday</a>' +
-      '<a class="' + (routeGroup(state.route) === 'picks' ? 'active' : '') + '" href="#picks">Picks</a>' +
-      '<a class="' + (state.route === 'leagues' || state.route === 'league' ? 'active' : '') + '" href="#leagues">Competitions</a>' +
-      '<a class="' + (state.route === 'teams' || state.route === 'team' ? 'active' : '') + '" href="#teams">Teams</a>' +
-      '</nav>' +
-      '<form class="headerSearch" id="globalSearch"><span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg></span><input aria-label="Search teams, players, or competitions" placeholder="Search teams, players, competitions…" autocomplete="off"></form>' +
-      '<div class="systemState" title="BSD connection status"><i class="dot ' + (delayed ? 'warn' : 'live') + '"></i><span><b>BSD ' + (delayed ? 'DELAYED' : 'LIVE') + '</b><small>' +
-      (state.lastSync ? 'Updated ' + new Date(state.lastSync).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : 'Connecting') +
-      '</small></span></div></div></header>';
+      '</div></header>';
   }
   function shell(content, context, className) {
     return header() + '<div class="appFrame ' + esc(className || '') + '">' +
