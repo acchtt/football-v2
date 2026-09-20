@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Slate XI",
-  "short_name": "Slate XI",
-  "description": "Slate XI football decision board with model signals, live match context, official picks and alerts.",
+  "name": "ARC XI",
+  "short_name": "ARC XI",
+  "description": "ARC XI live football and match intelligence with real-time scores, model signals, official picks and alerts.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./#board",
@@ -21,19 +21,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "./icons/slate-xi-192.svg",
+      "src": "./icons/arc-xi-192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./icons/slate-xi-512.svg",
+      "src": "./icons/arc-xi-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./icons/slate-xi-maskable-512.svg",
+      "src": "./icons/arc-xi-maskable-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
@@ -46,7 +46,7 @@
       "url": "./#board",
       "icons": [
         {
-          "src": "./icons/slate-xi-192.svg",
+          "src": "./icons/arc-xi-192.svg",
           "sizes": "192x192",
           "type": "image/svg+xml"
         }
@@ -58,7 +58,7 @@
       "url": "./#picks",
       "icons": [
         {
-          "src": "./icons/slate-xi-192.svg",
+          "src": "./icons/arc-xi-192.svg",
           "sizes": "192x192",
           "type": "image/svg+xml"
         }
@@ -70,7 +70,7 @@
       "url": "./#leagues",
       "icons": [
         {
-          "src": "./icons/slate-xi-192.svg",
+          "src": "./icons/arc-xi-192.svg",
           "sizes": "192x192",
           "type": "image/svg+xml"
         }
