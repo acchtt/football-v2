@@ -1,0 +1,47 @@
+name: Rebuild IVE artwork
+
+on:
+  push:
+    paths:
+      - "scripts/build-ive-artwork.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        shell: pwsh
+        run: python -m pip install --upgrade pillow
+
+      - name: Build artwork
+        shell: pwsh
+        run: python scripts/build-ive-artwork.py
+
+      - name: Commit rebuilt artwork
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pages/media/ive/wonyoung-left-art.webp pages/media/ive/ive-right-art.webp pages/media/ive/matchday-hero-art.webp pages/media/ive/ive-feature-art.webp
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Rebuild IVE artwork assets"
+            git push
+          } else {
+            Write-Host "No artwork changes"
+          }
