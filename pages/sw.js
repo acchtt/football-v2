@@ -1,4 +1,4 @@
-const CACHE='arc-xi-shell-v82';
+const CACHE='arc-xi-shell-v83';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -17,12 +17,12 @@ const SHELL=[
   asset('media/ive/matchday-hero-v4.avif?v=1'),
   asset('media/ive/ive-feature-art.webp?v=2'),
   asset('ict-slate-fetch.js?v=1'),
-  asset('config.js?v=7'),
+  asset('config.js?v=8'),
   asset('strict-board-filter.js?v=2'),
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
   asset('ive-sidebars.js?v=20'),
-  asset('app-v2.js?v=40'),
+  asset('app-v2.js?v=41'),
   asset('youtube-player.js?v=7'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=6'),
