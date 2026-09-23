@@ -140,14 +140,18 @@ function parseBetLine(row) {
   return undefined;
 }
 
-async function airtableRecords(env, table, fields, sort) {
+async function airtableRecords(env, table, fields, sort, options = {}) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured.");
   const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
   const out = [];
+  const pageSize = Math.max(1, Math.min(100, Number(options.pageSize) || 100));
+  const maxRecords = Math.max(0, Number(options.maxRecords) || 0);
   let offset;
   do {
     const url = new URL(`https://api.airtable.com/v0/${base}/${table}`);
-    url.searchParams.set("pageSize", "100");
+    url.searchParams.set("pageSize", String(pageSize));
+    if (maxRecords) url.searchParams.set("maxRecords", String(maxRecords));
+    if (options.filterByFormula) url.searchParams.set("filterByFormula", options.filterByFormula);
     for (const field of fields) url.searchParams.append("fields[]", field);
     if (sort) {
       url.searchParams.set("sort[0][field]", sort.field);
@@ -161,6 +165,7 @@ async function airtableRecords(env, table, fields, sort) {
     }
     const payload = await response.json();
     out.push(...(payload.records || []));
+    if (maxRecords && out.length >= maxRecords) return out.slice(0, maxRecords);
     offset = payload.offset;
   } while (offset);
   return out;
@@ -217,11 +222,14 @@ function pickMatchesCandidate(pick, candidate) {
 }
 
 async function dashboardData(env) {
+  const coverageWindow = "AND(OR({Board Tier}='FOCUS',{Board Tier}='WATCHLIST'),IS_AFTER({Kickoff ICT},DATEADD(NOW(),-7,'days')),IS_BEFORE({Kickoff ICT},DATEADD(NOW(),14,'days')))";
+  const pickWindow = "AND(IS_AFTER({Kickoff},DATEADD(NOW(),-14,'days')),IS_BEFORE({Kickoff},DATEADD(NOW(),14,'days')))";
+  const manualWindow = "IS_AFTER({Updated At},DATEADD(NOW(),-14,'days'))";
   const [coverageRows, pickRows, decisionRows, manualRows] = await Promise.all([
-    airtableRecords(env, TABLES.coverage, COVERAGE_FIELDS, { field: "Screened At", direction: "desc" }),
-    airtableRecords(env, TABLES.picks, PICK_FIELDS, { field: "Recorded At", direction: "desc" }),
+    airtableRecords(env, TABLES.coverage, COVERAGE_FIELDS, { field: "Screened At", direction: "desc" }, { filterByFormula: coverageWindow, maxRecords: 500 }),
+    airtableRecords(env, TABLES.picks, PICK_FIELDS, { field: "Recorded At", direction: "desc" }, { filterByFormula: pickWindow, maxRecords: 300 }),
     recentOfficialStates(env),
-    airtableRecords(env, TABLES.manualScores, MANUAL_FIELDS, { field: "Updated At", direction: "desc" }),
+    airtableRecords(env, TABLES.manualScores, MANUAL_FIELDS, { field: "Updated At", direction: "desc" }, { filterByFormula: manualWindow, maxRecords: 300 }),
   ]);
 
   const manualScores = new Map();
