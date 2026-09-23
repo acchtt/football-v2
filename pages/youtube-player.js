@@ -232,6 +232,13 @@
     if (expanded) ensurePlayer();
   });
 
+  window.addEventListener('arcxi:open-media', () => {
+    if (!expanded) toggle.click();
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    mount.scrollIntoView({behavior:reduceMotion ? 'auto' : 'smooth', block:'start'});
+    window.setTimeout(() => toggle.focus({preventScroll:true}), reduceMotion ? 0 : 350);
+  });
+
   startButton.addEventListener('click', () => {
     if (!playerReady || !player) return;
     setStatus('Starting playlist…');

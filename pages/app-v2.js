@@ -516,19 +516,65 @@
     if (hours < 24) return 'Starts in ' + hours + 'h' + (rest ? ' ' + rest + 'm' : '');
     return 'Starts in ' + Math.floor(hours / 24) + 'd';
   }
-  function contextClock() {
+  function contextClock(counts) {
     const now = new Date();
+    const safeCounts = counts || {live:0,upcoming:0,finished:0};
     return '<section class="contextClock"><div><span data-context-date>' + esc(new Intl.DateTimeFormat('en-US', {
       timeZone:TZ, weekday:'short', month:'short', day:'numeric', year:'numeric'
     }).format(now)) + '</span><strong data-context-clock>' + esc(new Intl.DateTimeFormat('en-GB', {
       timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false
-    }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path></svg></i><p>Another great day for football.</p></section>';
+    }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div>' +
+      '<i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path></svg></i>' +
+      '<div class="railPulse" aria-label="Slate status"><span><b>' + safeCounts.live + '</b> live</span><span><b>' +
+      safeCounts.upcoming + '</b> upcoming</span><span><b>' + safeCounts.finished + '</b> FT</span></div></section>';
   }
-  function matchdayContext() {
-    const youtube = '<section class="youtubeRailPlayer" aria-label="YouTube player">' +
-      '<iframe src="https://www.youtube-nocookie.com/embed/6ZUIwj3FgUY?rel=0&modestbranding=1" title="YouTube video player" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>' +
-      '</section>';
-    return contextClock() + youtube;
+  function priorityBoardRow(boardRows) {
+    const rows = Array.isArray(boardRows) ? boardRows : [];
+    const choose = function (status, tier) {
+      return rows.find(function (row) {
+        return boardStatus(row) === status && String(row.tier || '').toUpperCase() === tier;
+      });
+    };
+    return choose('live','FOCUS') || choose('live','WATCHLIST') ||
+      choose('upcoming','FOCUS') || choose('upcoming','WATCHLIST') || null;
+  }
+  function matchdayDecision(boardRows) {
+    const row = priorityBoardRow(boardRows);
+    if (!row) {
+      return '<section class="railDecision railDecisionEmpty"><header><span>Next decision</span><b>Slate clear</b></header>' +
+        '<p>No live or upcoming ranked match on this date.</p></section>';
+    }
+    const event = eventForBoardRow(row);
+    const id = event && eventId(event);
+    const status = event ? statusKey(event) : boardStatus(row);
+    const tier = String(row.tier || 'WATCHLIST').toUpperCase();
+    const grade = row.grade || '—';
+    const teams = event ? {home:teamName(event,'home'),away:teamName(event,'away')} : splitMatch(row.match);
+    const kickoff = boardKickoff(row);
+    const competition = row.competition || (event && leagueName(event)) || 'Competition';
+    const live = status === 'live';
+    const primary = live && event ? scoreText(event) : formatTime(kickoff);
+    const secondary = live && event ? liveClock(event) : countdownText(kickoff);
+    const label = live ? 'Live priority' : tier === 'FOCUS' ? 'Next focus' : 'Next watchlist';
+    const body = '<header><span>' + esc(label) + '</span><b class="' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
+      esc(tier) + ' · ' + esc(grade) + '</b></header><div class="railDecisionCompetition">' + esc(competition) + '</div>' +
+      '<div class="railDecisionTeams"><div>' + crest('team', event && teamId(event,'home'), teams.home || 'Home') +
+      '<span>' + esc(teams.home || 'Home') + '</span></div><div>' + crest('team', event && teamId(event,'away'), teams.away || 'Away') +
+      '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
+      '<div class="railDecisionState"><strong>' + esc(primary) + '</strong><span data-countdown="' + esc(kickoff || '') + '">' +
+      esc(secondary) + '</span></div><footer>' + (id ? 'Open match' : 'Ranked slate') +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></footer>';
+    return '<section class="railDecision">' + (id ? '<a href="#match/' + id + '">' + body + '</a>' : body) + '</section>';
+  }
+  function matchdayMedia() {
+    return '<section class="railMedia"><button type="button" data-open-youtube>' +
+      '<span class="railMediaIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z"></path></svg></span>' +
+      '<span class="railMediaCopy"><small>Matchday mix</small><strong>Official IVE playlist</strong><em>Open the player below the board</em></span>' +
+      '<svg class="railMediaArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>' +
+      '</button></section>';
+  }
+  function matchdayContext(boardRows, counts) {
+    return '<div class="matchIntelligenceRail">' + contextClock(counts) + matchdayDecision(boardRows) + matchdayMedia() + '</div>';
   }
   function renderMatchday() {
     state.route = 'board';
@@ -556,7 +602,6 @@
       if (state.signalFilter === 'watchlist') return tier === 'WATCHLIST';
       return true;
     });
-    const matchedEvents = boardRows.map(eventForBoardRow).filter(Boolean);
     const statusButton = function (key, label) {
       return '<button type="button" class="' + (state.statusFilter === key ? 'active' : '') + '" data-status-filter="' + key +
         '" aria-pressed="' + (state.statusFilter === key) + '"><span>' + label + '</span><b>' + counts[key] + '</b></button>';
@@ -586,7 +631,7 @@
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       boardBody + '</section>';
-    root.innerHTML = shell(content, matchdayContext(matchedEvents, counts), 'boardHomeRoute');
+    root.innerHTML = shell(content, matchdayContext(boardRows, counts), 'boardHomeRoute');
     bindGlobal();
   }
 
@@ -1236,6 +1281,11 @@
     });
     root.querySelectorAll('[data-open-alerts]').forEach(function (button) {
       button.addEventListener('click', function () { window.SlipTraceAlerts?.open?.(); });
+    });
+    root.querySelectorAll('[data-open-youtube]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        window.dispatchEvent(new CustomEvent('arcxi:open-media'));
+      });
     });
     root.querySelectorAll('[data-manual-score]').forEach(function (button) {
       button.addEventListener('click', function (event) {
