@@ -1,0 +1,28 @@
+name: Impeccable polish verification
+
+on:
+  push:
+    paths:
+      - .github/workflows/impeccable-polish-verify.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Impeccable detector on homepage
+        shell: bash
+        run: |
+          set +e
+          .github/skills/impeccable/scripts/impeccable detect --json pages/index.html > /tmp/impeccable-detect.json 2>/tmp/impeccable-detect.err
+          code=$?
+          echo "DETECT_EXIT_CODE=$code"
+          echo "=== DETECTOR JSON ==="
+          cat /tmp/impeccable-detect.json
+          echo
+          echo "=== DETECTOR STDERR ==="
+          cat /tmp/impeccable-detect.err
+          exit 0
