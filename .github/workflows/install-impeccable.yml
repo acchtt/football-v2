@@ -1,0 +1,48 @@
+name: Install Impeccable skill
+
+on:
+  push:
+    paths:
+      - .github/workflows/install-impeccable.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout football-v2
+        uses: actions/checkout@v4
+
+      - name: Download pinned Impeccable
+        env:
+          IMPECCABLE_SHA: e0881d2de397d5e9761d7b35ff5017d8f5ebf69b
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/pbakaus/impeccable/archive/$IMPECCABLE_SHA.tar.gz" -o /tmp/impeccable.tar.gz
+          rm -rf /tmp/impeccable-src
+          mkdir -p /tmp/impeccable-src
+          tar -xzf /tmp/impeccable.tar.gz -C /tmp/impeccable-src --strip-components=1
+
+      - name: Install GitHub skill and hook
+        run: |
+          set -euo pipefail
+          rm -rf .github/skills/impeccable
+          mkdir -p .github/skills .github/hooks
+          cp -a /tmp/impeccable-src/.github/skills/impeccable .github/skills/
+          cp /tmp/impeccable-src/.github/hooks/impeccable.json .github/hooks/impeccable.json
+
+      - name: Commit installation
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/skills/impeccable .github/hooks/impeccable.json
+          if git diff --cached --quiet; then
+            echo "Impeccable is already installed at the pinned revision."
+            exit 0
+          fi
+          git commit -m "Install Impeccable design skill"
+          git push
