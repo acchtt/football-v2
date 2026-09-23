@@ -52,11 +52,27 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .headerInner{max-width:none;padding:0 14px;gap:16px;justify-content:flex-start}
 .brand{gap:9px}
 .alertsCenterBtn,.pwaInstallBtn{display:none!important}
-.brandMark{width:34px;height:34px;display:grid;place-items:center;filter:drop-shadow(0 0 9px rgba(240,143,189,.12))}
+.brandMark{width:34px;height:34px;display:grid;place-items:center}
 .brandMark img{width:34px;height:34px;display:block;object-fit:contain}
 .brandWords{display:flex;align-items:center;gap:9px;white-space:nowrap}
-.brandWords b{font-family:var(--font-display);font-size:20px;font-weight:500;letter-spacing:.14em;line-height:1;background:linear-gradient(180deg,#fff8fc 0%,#d8bdce 72%,#b78ca7 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brandWords small{display:block;max-width:105px;padding-left:9px;border-left:1px solid rgba(232,211,225,.22);color:#9f96a0;font-size:6px;font-weight:700;line-height:1.35;letter-spacing:.17em;text-transform:uppercase}
+.brandWords b{font-family:var(--font-display);font-size:20px;font-weight:500;letter-spacing:.14em;line-height:1;color:#f3e7ee}
+.brandWords small{display:block;max-width:118px;padding-left:9px;border-left:1px solid rgba(232,211,225,.22);color:#aaa1aa;font-size:8px;font-weight:700;line-height:1.4;letter-spacing:.13em;text-transform:uppercase}
+.siteMenu{position:relative;margin-left:auto}
+.siteMenu>summary{min-height:38px;padding:0 12px;border:1px solid #343640;border-radius:7px;background:#0e1016;color:#c9c2ca;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:750;cursor:pointer;list-style:none}
+.siteMenu>summary::-webkit-details-marker{display:none}.siteMenu>summary:hover{border-color:#504953;color:#fff;background:#13151b}
+.siteMenu>summary svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .14s ease}
+.siteMenu[open]>summary svg{transform:rotate(180deg)}
+.siteMenuPanel{position:absolute;top:calc(100% + 8px);right:0;z-index:80;width:280px;padding:10px;border:1px solid #343640;border-radius:9px;background:#0d0f14;box-shadow:0 16px 42px rgba(0,0,0,.38)}
+.siteMenuSearch{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-bottom:8px}
+.siteMenuSearch input{min-width:0;height:38px;padding:0 10px;border:1px solid #30333c;border-radius:6px;background:#090b10;color:var(--text);font:inherit;font-size:11px}
+.siteMenuSearch input::placeholder{color:#77717a}.siteMenuSearch input:focus{border-color:#a56687;outline:none}
+.siteMenuSearch button,.siteMenuAction{min-height:38px;border:1px solid #343740;border-radius:6px;background:#12141a;color:#c8c1c9;font:inherit;font-size:10px;font-weight:750;cursor:pointer}
+.siteMenuSearch button{padding:0 10px}.siteMenuSearch button:hover,.siteMenuAction:hover{border-color:#554d57;background:#171920;color:#fff}
+.headerMenuNav{display:grid;gap:3px}.headerMenuNav .navItem{min-height:40px;padding:0 9px;border-radius:6px;background:transparent}
+.headerMenuNav .navItem:hover{background:#151319}.headerMenuNav .navItem.active{background:#211720;box-shadow:inset 0 0 0 1px rgba(240,143,189,.16)}
+.headerMenuNav .navItem b{font-size:11px}.headerMenuNav .navItem>span{width:22px;height:22px}
+.siteMenuAction{width:100%;margin-top:8px;text-align:left;padding:0 10px}
+.siteMenu>summary:focus-visible,.siteMenuSearch input:focus-visible,.siteMenuSearch button:focus-visible,.siteMenuAction:focus-visible{outline:2px solid var(--ive-pink);outline-offset:2px}
 .headerNav{display:flex;align-self:stretch;align-items:center;gap:2px;flex:0 0 auto}
 .headerNav a{position:relative;height:100%;padding:0 13px;display:flex;align-items:center;color:#a8a1aa;font-size:10px;font-weight:700;white-space:nowrap}
 .headerNav a:hover,.headerNav a.active{color:var(--text)}
@@ -105,30 +121,44 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .dateBtn{min-height:55px;border:1px solid #2c3038!important;border-radius:8px;background:linear-gradient(180deg,#13161c,#0f1116);color:#a9a4ad;place-content:center;grid-template-columns:1fr;gap:1px}
 .dateBtn:hover{border-color:#57505a!important;background:#171921}
 .dateBtn.active{border-color:var(--ive-pink)!important;background:linear-gradient(180deg,#231827,#17131a);box-shadow:inset 0 -4px 13px rgba(240,143,189,.13)}
-.dateBtn.active:after{left:12px;right:12px;height:2px;background:var(--ive-pink);box-shadow:0 0 8px rgba(240,143,189,.65)}
-.dateBtn small{font-size:8px;letter-spacing:.12em}.dateBtn strong{font-size:14px}.dateBtn span{font-size:8px}
-.dateCount{right:5px;top:5px;min-width:16px;height:16px;border-color:rgba(240,143,189,.32);background:rgba(240,143,189,.12);color:#f4b5d3;font-size:8px}
+.dateBtn.active:after{left:12px;right:12px;height:2px;background:var(--ive-pink)}
+.dateBtn small{font-size:10px;letter-spacing:.1em}.dateBtn strong{font-size:15px}.dateBtn span{font-size:10px}
+.dateCount{right:5px;top:5px;min-width:18px;height:18px;border-color:rgba(240,143,189,.32);background:rgba(240,143,189,.12);color:#f4b5d3;font-size:9px}
 
-.filterBar{margin-bottom:9px;align-items:center}
-.statusFilters,.signalFilters,.pickFilters,.subNav{gap:5px;padding:0;border:0;border-radius:0;background:transparent}
-.statusFilters button,.signalFilters button,.pickFilters button,.subNav a{min-height:34px;padding:0 14px;border:1px solid #30333b;border-radius:7px;background:#101218;color:#aaa4ad;font-size:9px}
-.statusFilters button b,.pickFilters button b{min-width:17px;height:17px;border-radius:5px;background:#24262e;color:#c0bac3;font-size:8px}
-.statusFilters button:hover,.signalFilters button:hover,.pickFilters button:hover,.subNav a:hover{border-color:#4b4650;color:#fff}
-.statusFilters button.active,.signalFilters button.active,.pickFilters button.active,.subNav a.active{border-color:rgba(240,143,189,.48);background:linear-gradient(90deg,#d870a5,#9a4f76);color:#1b0b14;box-shadow:0 0 18px rgba(240,143,189,.1)}
-.statusFilters button.active b,.pickFilters button.active b{background:rgba(17,9,13,.22);color:#fff}
-.statusFilters button[data-status-filter="live"].active,.signalFilters button[data-signal-filter="focus"].active{color:#1b0b14}
-.signalFilters{margin-left:auto}
-.signalFilters:before{content:"MODEL";align-self:center;margin-right:2px;color:#67636d;font:700 8px var(--font-data);letter-spacing:.1em}
+.filterBar{position:relative;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.statusFilters,.pickFilters,.subNav{gap:5px;padding:0;border:0;border-radius:0;background:transparent}
+.statusFilters button,.pickFilters button,.subNav a{min-height:38px;padding:0 14px;border:1px solid #30333b;border-radius:7px;background:#101218;color:#b5aeb7;font-size:11px}
+.statusFilters button b,.pickFilters button b{min-width:20px;height:20px;border-radius:5px;background:#24262e;color:#cbc4cc;font-size:9px}
+.statusFilters button:hover,.pickFilters button:hover,.subNav a:hover{border-color:#4b4650;color:#fff;background:#15171d}
+.statusFilters button.active,.pickFilters button.active,.subNav a.active{border-color:#6d5162;background:#2b1d27;color:#f6edf2}
+.statusFilters button.active b,.pickFilters button.active b{background:#4a3040;color:#fff}
+.statusFilters button[data-status-filter="live"].active{border-color:#8c485d;color:#ffdbe3}
+.filterActions{margin-left:auto;display:flex;align-items:center;gap:6px}
+.modelFilter{position:relative}
+.modelFilter>summary{min-height:38px;padding:0 11px;border:1px solid #30333b;border-radius:7px;background:#101218;color:#a8a1aa;display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none}
+.modelFilter>summary::-webkit-details-marker{display:none}.modelFilter>summary:hover{border-color:#4b4650;color:#fff;background:#15171d}
+.modelFilter>summary span{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7f7882}
+.modelFilter>summary b{font-size:11px;font-weight:750;color:#e3dce3}
+.modelFilter>summary svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .14s ease}
+.modelFilter[open]>summary svg{transform:rotate(180deg)}
+.modelFilterMenu{position:absolute;top:calc(100% + 7px);right:0;z-index:60;width:236px;padding:7px;border:1px solid #343640;border-radius:8px;background:#0d0f14;box-shadow:0 14px 36px rgba(0,0,0,.34)}
+.modelFilterMenu button{width:100%;min-height:39px;padding:0 9px;border:0;border-radius:6px;background:transparent;color:#b8b1b9;display:flex;align-items:center;justify-content:space-between;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.modelFilterMenu button:hover{background:#15171d;color:#fff}.modelFilterMenu button.active{background:#211720;color:#f5e6ee}
+.modelFilterMenu button svg{width:15px;height:15px;fill:none;stroke:#e99bc1;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modelFilterMenu p{margin:7px 4px 2px;padding-top:8px;border-top:1px solid #282b32;color:#8f8891;font-size:10px;line-height:1.5}.modelFilterMenu p b{color:#d9cfd6}
+.syncBoardButton{min-height:38px;padding:0 11px;border:1px solid #30333b;border-radius:7px;background:#101218;color:#bdb6be;display:flex;align-items:center;gap:7px;font:inherit;font-size:11px;font-weight:750;cursor:pointer}
+.syncBoardButton:hover{border-color:#4b4650;background:#15171d;color:#fff}.syncBoardButton svg{width:15px;height:15px;fill:none;stroke:#e3a6c4;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.modelFilter>summary:focus-visible,.modelFilterMenu button:focus-visible,.syncBoardButton:focus-visible{outline:2px solid var(--ive-pink);outline-offset:2px}
 
 .matchSection{border:0;border-radius:0;overflow:visible;background:transparent}
 .matchSection>.sectionHead{display:none}
 .boardCompetitionList{display:grid;gap:9px}
 .boardCompetitionGroup{overflow:hidden;border:1px solid #2d3038;border-radius:9px;background:#0f1116}
-.boardCompetitionHead{min-height:38px;padding:0 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #292c34;background:linear-gradient(180deg,#15171d,#111319)}
+.boardCompetitionHead{min-height:42px;padding:0 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #292c34;background:linear-gradient(180deg,#15171d,#111319)}
 .boardCompetitionHead img{width:20px;height:20px;object-fit:contain}
 .competitionMark{width:20px;color:var(--ive-pink);text-align:center;font-size:9px}
-.boardCompetitionHead>strong{font-size:11px;font-weight:800}.boardCompetitionHead>span{color:#77727b;font-size:8px}
-.boardCompetitionHead>a{margin-left:auto;color:#e9a6c7;font-size:8px;font-weight:700}
+.boardCompetitionHead>strong{font-size:12px;font-weight:800}.boardCompetitionHead>span{color:#918a94;font-size:10px}
+.boardCompetitionHead>a{margin-left:auto;color:#e7a9c7;font-size:10px;font-weight:700;text-underline-offset:3px}
 .boardCompetitionHead>a span{margin-left:4px;font-size:13px}
 .boardMatchList{display:block;padding:0;background:transparent}
 .boardMatchCard,.boardMatchCard:first-child{border:0;border-top:1px solid #24272e;border-radius:0;background:#101218}
@@ -136,45 +166,47 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .boardMatchCard.tier-focus,.boardMatchCard.tier-watchlist{border-left:0}
 .boardMatchCard:has(.is-live-row){border-color:#282a31;background:#121319}
 .boardMatchCard:has(.is-finished-row){background:#0d0f13}
-.boardFixture{min-height:48px;padding:5px 43px 5px 10px;grid-template-columns:minmax(0,1fr) 62px 0;gap:8px}
+.boardFixture{min-height:58px;padding:7px 43px 7px 10px;grid-template-columns:minmax(0,1fr) 66px 0;gap:9px}
 .boardFixture:hover{background:#17171e}
 .fixtureMatch{display:block}
 .fixtureCompetition{display:none}
-.fixtureTeams{grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr);gap:10px}
+.fixtureTeams{grid-template-columns:minmax(0,1fr) 80px minmax(0,1fr);gap:12px}
 .fixtureTeams .teamLine{gap:7px}
-.fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:25px;height:25px}
-.fixtureTeams .teamLine span{font-size:10px;font-weight:600}
-.fixtureTeams .home{grid-template-columns:minmax(0,1fr) 25px}
+.fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:27px;height:27px}
+.fixtureTeams .teamLine span{font-size:12px;font-weight:650;line-height:1.25}
+.fixtureTeams .home{grid-template-columns:minmax(0,1fr) 27px}
 .fixtureTeams .home img,.fixtureTeams .home .crestFallback{grid-column:2;grid-row:1}
 .fixtureTeams .home span{grid-column:1;grid-row:1;text-align:right}
-.fixtureTeams .away{grid-template-columns:25px minmax(0,1fr)}
+.fixtureTeams .away{grid-template-columns:27px minmax(0,1fr)}
 .fixtureTeams .away img,.fixtureTeams .away .crestFallback{grid-column:1;grid-row:1}
 .fixtureTeams .away span{grid-column:2;grid-row:1;text-align:left}
 .fixtureState{grid-template-columns:1fr;gap:1px}
-.fixtureStatus{padding:2px 6px;border:0;border-radius:4px;background:#272a32;color:#a8a5ad;font-size:8px;line-height:1.2}
+.fixtureStatus{padding:3px 7px;border:0;border-radius:4px;background:#272a32;color:#c0bbc2;font-size:9px;line-height:1.2}
 .fixtureStatus svg{display:none}
 .fixtureStatus.live{background:var(--live);color:#fff}.fixtureStatus.upcoming{background:transparent;color:#b7b1b8}.fixtureStatus.finished{background:#34343d;color:#c1bdc4}.fixtureStatus.manual{background:rgba(91,200,220,.12);color:#7dd4e3}
-.fixtureState>strong{font-size:13px}.fixtureState>small{font-size:8px;color:#85808a}
-.manualScoreButton{min-height:26px;margin-top:2px;padding:0 7px;border-color:rgba(240,143,189,.3);background:rgba(240,143,189,.07);color:#efacd0;font-size:8px}
+.fixtureState>strong{font-size:14px}.fixtureState>small{font-size:10px;color:#9a939d}
+.manualScoreButton{min-height:30px;margin-top:3px;padding:0 8px;border-color:rgba(240,143,189,.3);background:rgba(240,143,189,.07);color:#efacd0;font-size:10px}
 .fixtureSignal{justify-items:center;padding:0;border:0;text-align:center}
-.fixtureSignal small{font-size:7px;color:#b0aab2}.fixtureSignal strong{font-size:14px}.fixtureSignal span{font-size:6px}
+.fixtureSignal small{font-size:9px;color:#bbb4bd}.fixtureSignal strong{font-size:15px}.fixtureSignal span{font-size:9px}
 .tier-focus .fixtureSignal{color:#f2accf}.tier-watchlist .fixtureSignal{color:#74cfe0}
 .fixtureArrow{display:none}
 .boardMatchCard>.notifyToggle{right:5px;width:34px;height:34px;border-radius:7px;color:#77717c}
 .notifyToggle:before{content:"☆";font-size:19px}.notifyToggle.selected{background:rgba(240,143,189,.1);color:#f2a7cc}.notifyToggle.selected:before{content:"★"}
 .is-finished-row{opacity:.78}
 .connectionEmpty span{max-width:440px;line-height:1.5}
+.emptyAction{min-height:38px;margin-top:8px;padding:0 12px;border:1px solid #4b3d47;border-radius:7px;background:#181219;color:#e7c5d6;font:inherit;font-size:11px;font-weight:750;cursor:pointer}.emptyAction:hover{border-color:#6a5261;background:#211720;color:#fff}
+html{scrollbar-color:#4b3a47 #0b0c11;scrollbar-width:thin}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:#0b0c11}::-webkit-scrollbar-thumb{background:#443641;border:2px solid #0b0c11;border-radius:999px}::-webkit-scrollbar-thumb:hover{background:#5c4655}
 
 .contextClock{min-height:104px;margin:0;padding:10px 2px 15px;border:0;border-bottom:1px solid #262832;border-radius:0;background:transparent;display:grid;grid-template-columns:1fr auto;align-items:start}
 .contextClock>div{display:grid;grid-template-columns:auto auto;align-items:end;justify-content:start;column-gap:5px}
-.contextClock span{grid-column:1/-1;color:#aaa4ad;font-size:9px}.contextClock strong{font-family:var(--font-display);font-size:35px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}.contextClock small{padding-bottom:4px;font-size:8px;color:#cbc4cd}
-.contextClock>i{width:23px;height:23px;color:#edb266}.contextClock>i svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}.contextClock>p{grid-column:1/-1;margin:8px 0 0;color:#aaa4ad;font-family:var(--font-display);font-size:10px;font-style:italic}
+.contextClock span{grid-column:1/-1;color:#aaa4ad;font-size:10px}.contextClock strong{font-family:var(--font-display);font-size:35px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}.contextClock small{padding-bottom:4px;font-size:9px;color:#cbc4cd}
+.contextClock>i{width:23px;height:23px;color:#edb266}.contextClock>i svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}.contextClock>p{grid-column:1/-1;margin:8px 0 0;color:#aaa4ad;font-family:var(--font-display);font-size:11px;font-style:italic}
 .railSection{margin:0;padding:14px 0 15px;border:0;border-bottom:1px solid #262832;border-radius:0;background:transparent;overflow:visible}
 .railSection>.sectionHead{min-height:auto;padding:0 2px 10px;border:0}
 .railSection>.sectionHead h2{font-size:10px;text-transform:none;letter-spacing:0}.railSection>.sectionHead span{font-size:8px}
 .contextStatusFilters{padding:0;display:grid}
 .contextStatusFilters button{min-height:32px;padding:0 6px;border:0;border-bottom:1px solid rgba(37,40,47,.72);background:transparent;color:#aaa5ae;display:flex;align-items:center;justify-content:space-between;font-size:9px}
-.contextStatusFilters button:last-child{border-bottom:0}.contextStatusFilters button:hover{background:rgba(255,255,255,.025);color:#fff}.contextStatusFilters button.active{margin:0;padding-left:8px;border:0;border-left:2px solid var(--ive-pink);border-radius:0 4px 4px 0;background:linear-gradient(90deg,rgba(154,79,118,.26),rgba(99,49,77,.06));color:#fff}.contextStatusFilters button b{font-size:9px;font-variant-numeric:tabular-nums}
+.contextStatusFilters button:last-child{border-bottom:0}.contextStatusFilters button:hover{background:rgba(255,255,255,.025);color:#fff}.contextStatusFilters button.active{margin:0;padding-left:8px;border:0;border-radius:4px;background:#211720;color:#fff;box-shadow:inset 0 0 0 1px rgba(240,143,189,.14)}.contextStatusFilters button b{font-size:9px;font-variant-numeric:tabular-nums}
 .iveFeatureCard{position:relative;margin:14px 0;padding:0;overflow:hidden;border:0;border-radius:7px;background:transparent}
 .iveFeatureCard:before,.iveFeatureCard:after{content:"";position:absolute;left:8px;right:8px;z-index:1;height:1px;background:rgba(240,143,189,.15);pointer-events:none}.iveFeatureCard:before{top:0}.iveFeatureCard:after{bottom:0}
 .iveFeatureCard img{display:block;width:100%;height:auto;aspect-ratio:3/2;border-radius:7px;object-fit:cover;object-position:center}
@@ -187,7 +219,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .matchSection,.contentSection,.detailPanel,.profileHead,.matchHero,.modelSpotlight,.entityCard,.playerCard,.performanceGrid,.boardMetrics{border-color:#2c2f37;border-radius:9px;background:#101218}
 .sectionHead{border-bottom-color:#282b32}.competitionHead{background:#12141a}.competitionHead a,.backLink,.profileHead>div>span,.rankItem>b,.transferItem b,.lineupSide>header span,.incident time{color:var(--ive-pink)}
 .matchHero{background:linear-gradient(145deg,#16121a,#101218)}.matchContext{background:#12131a}.matchContext a{color:var(--ive-pink)}
-.modelSpotlight{border-left-color:var(--ive-pink)}.modelIdentity strong,.modelIdentity small{color:#f1a9cc}.tabBtn.active{border-bottom-color:var(--ive-pink)}.statBar i{background:var(--ive-pink)}
+.modelSpotlight{border-left-width:1px;border-left-color:#35303a}.modelIdentity strong,.modelIdentity small{color:#f1a9cc}.tabBtn.active{border-bottom-color:var(--ive-pink)}.statBar i{background:var(--ive-pink)}
 .oddCard{border-radius:7px;background:#0d0f14}.oddCard strong{color:#fff}.performanceGrid .positive{color:var(--lime)}
 .manualScoreDialog,.pwaSheetCard,.alertsCenterCard{border-radius:11px;background:#11131a}.manualScoreDialog>header span,.manualScoreNote strong{color:var(--ive-pink)}.manualScoreTeams input:focus{border-color:var(--ive-pink)}.manualScoreSave{border-color:var(--ive-pink);background:var(--ive-pink);color:#1a0a13}
 
@@ -222,7 +254,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
   :root{--header:58px}
   body{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
   .appFrame{grid-template-columns:1fr}.primaryRail,.contextRail{display:none!important}.contentFrame{grid-template-columns:1fr}
-  .headerInner{padding-inline:12px}.headerNav{display:none}.headerSearch{width:auto;flex:1;margin:0}.systemState>span{display:none}
+  .headerInner{padding-inline:12px}.headerNav{display:none}.headerSearch{width:auto;flex:1;margin:0}.systemState>span{display:none}.siteMenu{display:none}
   .mobileNav{height:calc(64px + env(safe-area-inset-bottom));grid-template-columns:repeat(4,1fr);background:rgba(8,9,13,.98);border-top-color:#302d35}
   .mobileNav .navItem{min-height:57px;border-radius:7px}.mobileNav .navItem.active{background:rgba(240,143,189,.11);color:#f1a8cc}
   .mainView{padding:12px 12px 28px}
@@ -232,15 +264,15 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
   .brandWords{display:none}.brandMark{width:32px;height:32px}.headerInner{gap:8px}.headerSearch input{height:42px;font-size:12px}.alertsCenterBtn{width:42px!important;min-width:42px!important;height:42px!important;padding:0!important}
   .matchdayHero{display:block;aspect-ratio:1916/821;min-height:0;margin-inline:0;border-radius:9px}.matchdayHeroCopy{display:none}.matchdayHero>img{display:block;object-fit:cover;object-position:center center}.matchdayHero:before{background:linear-gradient(110deg,rgba(16,11,18,.98),rgba(48,25,46,.78))}.matchdayHeroActions{position:absolute;right:12px;top:13px;margin:0}.matchdayHeroActions .primaryButton{width:42px;min-width:42px;height:42px;padding:0;font-size:0}.matchdayHeroActions .primaryButton span{margin:0;font-size:16px}
   .dateStrip{display:flex;gap:6px;margin-inline:-12px;padding:0 12px 4px;overflow-x:auto}.dateBtn{flex:0 0 67px;min-height:55px}
-  .filterBar{gap:6px}.statusFilters,.signalFilters{display:grid;width:100%;grid-template-columns:repeat(4,1fr);overflow:visible}.signalFilters{grid-template-columns:repeat(3,1fr);margin:0}.signalFilters:before{display:none}.statusFilters button,.signalFilters button{min-width:0;min-height:44px;padding:0 5px;justify-content:center;font-size:9px}.statusFilters button{gap:4px}.statusFilters button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .filterBar{gap:7px;align-items:stretch;flex-direction:column}.statusFilters{display:grid;width:100%;grid-template-columns:repeat(4,1fr);overflow:visible}.statusFilters button{min-width:0;min-height:44px;padding:0 6px;justify-content:center;font-size:10px;gap:4px}.statusFilters button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.filterActions{width:100%;margin:0;display:grid;grid-template-columns:minmax(0,1fr) auto}.modelFilter>summary{min-height:44px;justify-content:space-between}.modelFilterMenu{left:0;right:auto;width:min(270px,calc(100vw - 24px))}.syncBoardButton{min-height:44px;padding-inline:12px}.syncBoardButton span{display:none}
   .matchSection{margin-inline:0}.boardCompetitionList{gap:8px}.boardCompetitionGroup{border-radius:8px}.boardCompetitionHead{padding-inline:9px}.boardCompetitionHead>a{font-size:0}.boardCompetitionHead>a span{font-size:15px}
-  .boardFixture{min-height:86px;padding:8px 42px 8px 8px;grid-template-columns:minmax(0,1fr) 50px}.fixtureTeams{grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr);gap:5px}.fixtureTeams .teamLine,.fixtureTeams .home,.fixtureTeams .away{display:grid;grid-template-columns:1fr;justify-items:center;gap:3px;text-align:center}.fixtureTeams .home img,.fixtureTeams .home .crestFallback,.fixtureTeams .home span,.fixtureTeams .away img,.fixtureTeams .away .crestFallback,.fixtureTeams .away span{grid-column:1;grid-row:auto;text-align:center}.fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:30px;height:30px}.fixtureTeams .teamLine span{max-width:100%;font-size:10px;text-align:center}.fixtureState>strong{font-size:14px}.fixtureStatus{font-size:8px}.fixtureState>small{font-size:8px}.fixtureSignal small{font-size:7px}.fixtureSignal strong{font-size:14px}.fixtureSignal span{display:none}.boardMatchCard>.notifyToggle{right:2px;width:40px;height:44px}
+  .boardFixture{min-height:90px;padding:9px 42px 9px 8px;grid-template-columns:minmax(0,1fr) 54px}.fixtureTeams{grid-template-columns:minmax(0,1fr) 66px minmax(0,1fr);gap:5px}.fixtureTeams .teamLine,.fixtureTeams .home,.fixtureTeams .away{display:grid;grid-template-columns:1fr;justify-items:center;gap:4px;text-align:center}.fixtureTeams .home img,.fixtureTeams .home .crestFallback,.fixtureTeams .home span,.fixtureTeams .away img,.fixtureTeams .away .crestFallback,.fixtureTeams .away span{grid-column:1;grid-row:auto;text-align:center}.fixtureTeams .teamLine img,.fixtureTeams .teamLine .crestFallback{width:31px;height:31px}.fixtureTeams .teamLine span{max-width:100%;font-size:11px;text-align:center}.fixtureState>strong{font-size:15px}.fixtureStatus{font-size:9px}.fixtureState>small{font-size:9px}.fixtureSignal small{font-size:8px}.fixtureSignal strong{font-size:15px}.fixtureSignal span{display:none}.boardMatchCard>.notifyToggle{right:2px;width:40px;height:44px}
   .manualScoreButton{min-width:44px;min-height:36px;padding:0 7px}
   .pageTop h1{font-size:28px}.matchSection,.contentSection,.detailPanel{margin-left:-12px;margin-right:-12px}.matchHero{margin-inline:-12px}.modelSpotlight{margin-inline:-12px}
 }
 
 @media(max-width:420px){
-  .statusFilters button{font-size:8px}.statusFilters button b{display:none}.dateBtn{flex-basis:64px}
+  .statusFilters button{font-size:9px}.statusFilters button b{display:none}.dateBtn{flex-basis:64px}
   .boardCompetitionHead>span:not(.competitionMark){display:none}.fixtureTeams{grid-template-columns:minmax(0,1fr) 57px minmax(0,1fr)}
   .fixtureTeams .teamLine span{font-size:9px}.fixtureState>strong{font-size:13px}.fixtureSignal{padding:0}.boardFixture{grid-template-columns:minmax(0,1fr) 44px}
 }

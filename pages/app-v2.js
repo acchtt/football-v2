@@ -261,9 +261,14 @@
       '</nav>';
   }
   function header() {
+    const menu = '<details class="siteMenu"><summary><span>Browse</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg></summary>' +
+      '<div class="siteMenuPanel"><form id="globalSearch" class="siteMenuSearch" role="search">' +
+      '<input type="search" autocomplete="off" aria-label="Search teams or competitions" placeholder="Search teams or competitions">' +
+      '<button type="submit">Search</button></form>' + navigation('headerMenuNav') +
+      '<button type="button" class="siteMenuAction" data-open-alerts>Alerts</button></div></details>';
     return '<header class="appHeader"><div class="headerInner">' +
       '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/arc-xi-transparent-512.png?v=2" alt=""></span><span class="brandWords"><b>ARC XI</b><small>Live football · Match intelligence</small></span></a>' +
-      '</div></header>';
+      menu + '</div></header>';
   }
   function shell(content, context, className) {
     return header() + '<div class="appFrame ' + esc(className || '') + '">' +
@@ -276,7 +281,7 @@
       '</h1>' + (description ? '<p>' + esc(description) + '</p>' : '') + '</div>' +
       (actions ? '<div class="pageActions">' + actions + '</div>' : '') + '</div>';
   }
-  function matchdayHero(actions) {
+  function matchdayHero() {
     return '<section class="matchdayHero" aria-label="IVE × Football campaign artwork">' +
       '<img src="./media/ive/matchday-hero-v4.avif?v=1" alt="" aria-hidden="true" width="1916" height="821" fetchpriority="high"></section>';
   }
@@ -558,19 +563,26 @@
     };
     const signalButton = function (key, label) {
       return '<button type="button" class="' + (state.signalFilter === key ? 'active' : '') + '" data-signal-filter="' + key +
-        '" aria-pressed="' + (state.signalFilter === key) + '">' + label + '</button>';
+        '" aria-pressed="' + (state.signalFilter === key) + '"><span>' + label + '</span>' +
+        (state.signalFilter === key ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>' : '') + '</button>';
     };
+    const signalLabel = state.signalFilter === 'focus' ? 'Focus' : state.signalFilter === 'watchlist' ? 'Watchlist' : 'All signals';
     const controls = '<div class="filterBar"><div class="statusFilters" role="group" aria-label="Match status">' +
-      statusButton('all','All matches') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','Finished') +
-      '</div><div class="signalFilters" role="group" aria-label="Model signal">' +
-      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + '</div></div>';
-    const actions = '<button class="primaryButton" id="refreshToday" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg></span> Sync board</button>';
+      statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
+      '</div><div class="filterActions"><details class="modelFilter"><summary><span>Model</span><b>' + signalLabel +
+      '</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg></summary>' +
+      '<div class="modelFilterMenu" role="group" aria-label="Model signal">' +
+      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') +
+      '<p><b>Focus</b> is the strongest ranked slate. <b>Watchlist</b> keeps secondary candidates visible.</p></div></details>' +
+      '<button class="syncBoardButton" id="refreshToday" type="button" aria-label="Sync board">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg><span>Sync</span></button></div></div>';
     const boardBody = state.error && !boardRows.length ?
       '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
-        '<div class="emptyState"><strong>No matches for this filter</strong><span>Choose All, Live, Upcoming, Focus, or Watchlist.</span></div>' :
+        '<div class="emptyState"><strong>No matches for this filter</strong><span>Reset the filters to return to the full ranked slate.</span>' +
+        '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
         '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>';
-    const content = matchdayHero(actions) +
+    const content = matchdayHero() +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       boardBody + '</section>';
@@ -1175,6 +1187,15 @@
     root.querySelectorAll('[data-signal-filter]').forEach(function (button) {
       button.addEventListener('click', function () {
         state.signalFilter = button.dataset.signalFilter;
+        writeStore('sliptrace.signalFilter.v3', state.signalFilter, localStorage);
+        renderMatchday();
+      });
+    });
+    root.querySelectorAll('[data-reset-board-filters]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.statusFilter = 'all';
+        state.signalFilter = 'all';
+        writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
         writeStore('sliptrace.signalFilter.v3', state.signalFilter, localStorage);
         renderMatchday();
       });
