@@ -1,0 +1,29 @@
+name: Impeccable critique scan
+
+on:
+  push:
+    paths:
+      - .github/workflows/impeccable-critique-scan.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Impeccable detector
+        shell: bash
+        run: |
+          set +e
+          .github/skills/impeccable/scripts/impeccable detect --json pages > /tmp/impeccable-detect.json 2>/tmp/impeccable-detect.err
+          code=$?
+          echo "DETECT_EXIT_CODE=$code"
+          echo "=== DETECTOR JSON ==="
+          cat /tmp/impeccable-detect.json
+          echo
+          echo "=== DETECTOR STDERR ==="
+          cat /tmp/impeccable-detect.err
+          exit 0
