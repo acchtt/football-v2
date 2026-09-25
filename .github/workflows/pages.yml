@@ -84,7 +84,7 @@ jobs:
           assert 'ive-left-final.svg?v=3' in sidebars and 'ive-right-final.png?v=5' in sidebars, 'approved rail URLs are not pinned to expected versions'
           print('PWA artifact validated')
           PY
-          for js in pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/matchday-behavior.js pages/strict-board-filter.js pages/strict-board-guard.js pages/ive-sidebars.js pages/sw.js; do
+          for js in pages/app-v2.js pages/youtube-player.js pages/pwa-v2.js pages/alerts-center.js pages/mobile-layout-v3.js pages/desktop-front-v2.js pages/matchday-behavior.js pages/strict-board-filter.js pages/strict-board-guard.js pages/ive-sidebars.js pages/sw.js; do
             node --check "$js"
           done
           echo "PWA JavaScript syntax validated"
