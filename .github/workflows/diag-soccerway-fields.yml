@@ -1,0 +1,75 @@
+name: Diagnose Soccerway score and logo fields
+
+on:
+  push:
+    paths:
+      - .github/workflows/diag-soccerway-fields.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect parsed and raw feed records
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://soccerway-livescore.acchtt.workers.dev"
+          for day in -2 -1 0; do
+            curl --fail --silent --show-error -A "Mozilla/5.0" "$BASE/api/fixtures?day=$day&diag=$GITHUB_RUN_ID" -o "/tmp/parsed$day.json" || true
+            curl --fail --silent --show-error \
+              -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36" \
+              -H "Accept: */*" -H "Accept-Language: en-GB,en;q=0.9" \
+              -H "Referer: https://www.soccerway.com/" -H "Origin: https://www.soccerway.com" \
+              -H "x-fsign: SW9D1eZo" \
+              "https://www.soccerway.com/x/feed/f_1_${day}_3_en_1" -o "/tmp/raw$day.txt" || true
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          targets=[
+            "IFK Varnamo Women","Kristianstads DFF Women",
+            "Hammarby Women","Glasgow Rangers Women",
+            "Rangers W","Hammarby W","Varnamo W","Kristianstad"
+          ]
+          for day in (-2,-1,0):
+              pp=Path("/tmp/parsed%s.json" % day)
+              if pp.exists() and pp.stat().st_size:
+                  try:
+                      p=json.loads(pp.read_text())
+                      print("\nPARSED DAY",day,"count",p.get("count"))
+                      for f in p.get("fixtures",[]):
+                          hay=(str(f.get("homeTeam",""))+" "+str(f.get("awayTeam",""))).lower()
+                          if any(t.lower() in hay for t in targets):
+                              print(json.dumps(f,ensure_ascii=False,sort_keys=True))
+                  except Exception as e: print("PARSED ERROR",day,e)
+              rp=Path("/tmp/raw%s.txt" % day)
+              if not rp.exists() or not rp.stat().st_size: continue
+              raw=rp.read_text(errors="replace")
+              toks=[]
+              for tok in raw.split("¬"):
+                  if tok.startswith("~"): tok=tok[1:]
+                  if "÷" in tok:
+                      k,v=tok.split("÷",1); toks.append((k,v))
+              records=[]; cur=[]; comp=[]
+              for k,v in toks:
+                  if k=="ZA":
+                      comp=[(k,v)]
+                  elif k.startswith("Z"):
+                      comp.append((k,v))
+                  elif k=="AA":
+                      if cur: records.append(cur)
+                      cur=comp.copy()+[(k,v)]
+                  elif cur:
+                      cur.append((k,v))
+              if cur: records.append(cur)
+              print("\nRAW DAY",day,"records",len(records))
+              for rec in records:
+                  vals=dict(rec)
+                  hay=(vals.get("AE","")+" "+vals.get("AF","")).lower()
+                  if any(t.lower() in hay for t in targets):
+                      print("MATCH",vals.get("AE"),"vs",vals.get("AF"),"ID",vals.get("AA"))
+                      print("TOKENS",json.dumps(rec,ensure_ascii=False))
+          PY
