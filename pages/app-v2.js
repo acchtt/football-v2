@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'fallback-v49';
+  window.__ARCXI_BUILD__ = 'right-rail-v50';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -645,7 +645,7 @@
     const safeCounts = counts || {live:0,upcoming:0,finished:0};
     const soccerway = state.soccerwayCache.get(state.date);
     const providerLabel = soccerway && soccerway.matchedCount ? 'BSD + SW' : 'BSD';
-    return '<section class="contextClock"><div><span data-context-date>' + esc(new Intl.DateTimeFormat('en-US', {
+    return '<section class="contextClock railCard"><div><span data-context-date>' + esc(new Intl.DateTimeFormat('en-US', {
       timeZone:TZ, weekday:'short', month:'short', day:'numeric', year:'numeric'
     }).format(now)) + '</span><strong data-context-clock>' + esc(new Intl.DateTimeFormat('en-GB', {
       timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false
@@ -667,7 +667,7 @@
   function matchdayDecision(boardRows) {
     const row = priorityBoardRow(boardRows);
     if (!row) {
-      return '<section class="railDecision railDecisionEmpty"><header><span>Next decision</span><b>Slate clear</b></header>' +
+      return '<section class="railDecision railDecisionEmpty railCard"><header><span>Next match</span><b>Slate clear</b></header>' +
         '<p>No live or upcoming ranked match on this date.</p></section>';
     }
     const event = eventForBoardRow(row);
@@ -685,7 +685,7 @@
       fallback ? (live || finished ? soccerwayScoreText(fallback) : formatTime(kickoff)) : formatTime(kickoff);
     const secondary = event ? (live ? liveClock(event) : finished ? 'Full time' : countdownText(kickoff)) :
       fallback ? (live ? 'SW · ' + soccerwayMinuteText(fallback) : finished ? 'SW · Full time' : countdownText(kickoff)) : countdownText(kickoff);
-    const label = live ? 'Live priority' : tier === 'FOCUS' ? 'Next focus' : 'Next watchlist';
+    const label = live ? 'Live priority' : 'Next match';
     const body = '<header><span>' + esc(label) + '</span><b class="' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
       esc(tier) + ' · ' + esc(grade) + '</b></header><div class="railDecisionCompetition">' + esc(competition) + '</div>' +
       '<div class="railDecisionTeams"><div>' + boardCrest(event, fallback, 'home', teams.home || 'Home') +
@@ -694,17 +694,66 @@
       '<div class="railDecisionState"><strong>' + esc(primary) + '</strong><span data-countdown="' + esc(kickoff || '') + '">' +
       esc(secondary) + '</span></div><footer>' + (id ? 'Open match' : fallback ? 'Soccerway feed' : 'Ranked slate') +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></footer>';
-    return '<section class="railDecision">' + (id ? '<a href="#match/' + id + '">' + body + '</a>' : body) + '</section>';
+    return '<section class="railDecision railCard">' + (id ? '<a href="#match/' + id + '">' + body + '</a>' : body) + '</section>';
+  }
+  function railCompetitionSummary(boardRows) {
+    const groups = new Map();
+    (Array.isArray(boardRows) ? boardRows : []).forEach(function (row) {
+      const event = eventForBoardRow(row);
+      const fallback = event ? null : soccerwayForBoardRow(row);
+      const name = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
+      const id = event && leagueId(event);
+      const logo = fallback && fallback.competitionLogo || '';
+      const key = String(id || '') + ':' + name;
+      if (!groups.has(key)) groups.set(key, {name:name,id:id,logo:logo,count:0});
+      const group = groups.get(key);
+      group.count += 1;
+      if (!group.logo && logo) group.logo = logo;
+    });
+    const items = Array.from(groups.values()).slice(0,5);
+    if (!items.length) return '';
+    return '<section class="railCard railCompetitions"><header class="railCardHead"><strong>Today\'s competitions</strong><span>' +
+      groups.size + ' league' + (groups.size === 1 ? '' : 's') + '</span></header><div class="railCompetitionList">' +
+      items.map(function (group) {
+        const icon = group.id ? '<img src="' + image('league', group.id) + '" alt="" loading="lazy">' :
+          externalLogo(group.logo, group.name, 'competition');
+        const body = icon + '<span>' + esc(group.name) + '</span><b>' + group.count + '</b>';
+        return group.id ? '<a class="railCompetitionItem" href="#league/' + group.id + '">' + body + '</a>' :
+          '<div class="railCompetitionItem">' + body + '</div>';
+      }).join('') + '</div></section>';
+  }
+  function railWatchlist(boardRows) {
+    const rows = (Array.isArray(boardRows) ? boardRows : []).filter(function (row) {
+      return String(row.tier || '').toUpperCase() === 'WATCHLIST' && boardStatus(row) !== 'finished';
+    }).slice(0,3);
+    if (!rows.length) return '';
+    return '<section class="railCard railWatchlist"><header class="railCardHead"><strong>Watchlist</strong><span>' + rows.length +
+      ' next</span></header><div class="railWatchList">' + rows.map(function (row) {
+        const event = eventForBoardRow(row);
+        const fallback = event ? null : soccerwayForBoardRow(row);
+        const id = event && eventId(event);
+        const teams = event ? {home:teamName(event,'home'),away:teamName(event,'away')} : splitMatch(row.match);
+        const time = formatTime(boardKickoff(row));
+        const grade = row.grade || '—';
+        const body = '<span class="railWatchCrests">' + boardCrest(event, fallback, 'home', teams.home || 'Home') +
+          boardCrest(event, fallback, 'away', teams.away || 'Away') + '</span><span class="railWatchMatch"><b>' +
+          esc(teams.home || 'Home') + '</b><i>vs</i><b>' + esc(teams.away || 'Away') + '</b></span><time>' +
+          esc(time) + '</time><em>' + esc(grade) + '</em>';
+        return id ? '<a class="railWatchItem" href="#match/' + id + '">' + body + '</a>' :
+          '<div class="railWatchItem">' + body + '</div>';
+      }).join('') + '</div></section>';
   }
   function matchdayMedia() {
-    return '<section class="railMedia"><button type="button" data-open-youtube>' +
-      '<span class="railMediaIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z"></path></svg></span>' +
-      '<span class="railMediaCopy"><small>Matchday mix</small><strong>Official IVE playlist</strong><em>Open the player below the board</em></span>' +
+    return '<section class="railMedia railCard"><button type="button" data-open-youtube>' +
+      '<span class="railMediaThumb" aria-hidden="true"><img src="./media/ive/ive-feature-art.webp?v=2" alt="" loading="lazy">' +
+      '<i><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z"></path></svg></i></span>' +
+      '<span class="railMediaCopy"><small>IVE Matchday Mix</small><strong>Official IVE playlist</strong><em>Open the player below the board</em></span>' +
       '<svg class="railMediaArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>' +
       '</button></section>';
   }
   function matchdayContext(boardRows, counts) {
-    return '<div class="matchIntelligenceRail">' + contextClock(counts) + matchdayDecision(boardRows) + matchdayMedia() + '</div>';
+    return '<div class="matchIntelligenceRail">' + contextClock(counts) + matchdayDecision(boardRows) +
+      railCompetitionSummary(boardRows) + railWatchlist(boardRows) + matchdayMedia() + '</div>';
   }
   function renderMatchday() {
     state.route = 'board';
