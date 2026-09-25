@@ -18,7 +18,7 @@ jobs:
           set -euo pipefail
           BASE='https://soccerway-livescore.acchtt.workers.dev'
           curl --fail --silent --show-error -A 'Mozilla/5.0' "$BASE/api/fixtures?day=-1&diag=$GITHUB_RUN_ID" -o /tmp/feed.json
-          curl --fail --silent --show-error -A 'Mozilla/5.0' "$BASE/api/board?day=-1&diag=$GITHUB_RUN_ID" -o /tmp/board.json
+          curl --fail --silent --show-error -A 'Mozilla/5.0' "$BASE/api/board?day=0&diag=$GITHUB_RUN_ID" -o /tmp/board.json
           python - <<'PY'
           import json
           from pathlib import Path
