@@ -18,11 +18,13 @@ jobs:
           set -euo pipefail
           curl -fsS -A 'Mozilla/5.0' 'https://football-v2.acchtt.workers.dev/api/dashboard-data' -o /tmp/dashboard.json
           curl -fsS -A 'Mozilla/5.0' 'https://football-v2.acchtt.workers.dev/api/soccerway/board?day=-1' -o /tmp/fallback.json
+          curl -fsS -A 'Mozilla/5.0' 'https://football-v2.acchtt.workers.dev/api/bsd/events?date_from=2026-09-24&date_to=2026-09-24&limit=200' -o /tmp/bsd.json
           python - <<'PY'
           import json,re,unicodedata
           from pathlib import Path
           d=json.loads(Path('/tmp/dashboard.json').read_text())
           f=json.loads(Path('/tmp/fallback.json').read_text())
+          b=json.loads(Path('/tmp/bsd.json').read_text())
           def norm(v):
               s=unicodedata.normalize('NFKD',str(v or ''))
               s=''.join(ch for ch in s if not unicodedata.combining(ch)).lower()
@@ -53,6 +55,25 @@ jobs:
           byid={str(x.get('boardId')):x for x in matched}
           bykey={key(x.get('boardMatch') or ((x.get('homeTeam') or '')+' vs '+(x.get('awayTeam') or ''))):x for x in matched}
           print('dashboard rows',len(rows),'fallback matched',len(matched),'fallback total',f.get('count'))
+          data=b.get('data') if isinstance(b,dict) else {}
+          bevents=(data.get('results') or data.get('events') or []) if isinstance(data,dict) else []
+          def bname(e,side):
+              t=e.get(side+'_team') or e.get(side) or {}
+              if isinstance(t,dict): return t.get('name') or t.get('short_name') or ''
+              return str(t or e.get(side+'_team_name') or e.get(side+'_name') or '')
+          def nscore(a,bb):
+              x,y=norm(a),norm(bb)
+              if not x or not y:return 0
+              if x==y:return 6
+              if x in y or y in x:return 4
+              A=set(x.split());B=set(y.split());ov=len(A&B)/max(len(A),len(B))
+              return 4 if ov>=.75 else 3 if ov>=.5 else 0
+          for r in rows:
+              h,a=split(r.get('match'))
+              hits=[e for e in bevents if nscore(h,bname(e,'home'))+nscore(a,bname(e,'away'))>=6]
+              if hits:
+                  e=hits[0]
+                  print('BSD',r.get('match'),'id=',e.get('id') or e.get('event_id'),'score=',e.get('home_score'),e.get('away_score'),'teams=',bname(e,'home'),'/',bname(e,'away'))
           for r in rows:
               hit=byid.get(str(r.get('id'))) or bykey.get(key(r.get('match')))
               if hit:
