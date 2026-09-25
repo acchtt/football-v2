@@ -1,0 +1,44 @@
+name: Verify Soccerway women's fallback
+
+on:
+  push:
+    paths:
+      - .github/workflows/verify-soccerway-women.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check finished scores and logos
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://soccerway-livescore.acchtt.workers.dev'
+          curl --fail --silent --show-error -A 'Mozilla/5.0' "$BASE/api/board?day=-2&verify=$GITHUB_RUN_ID" -o /tmp/board.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('/tmp/board.json').read_text())
+          rows=p.get('fixtures',[])
+          def find(a,b):
+              for f in rows:
+                  hay=(str(f.get('homeTeam',''))+' '+str(f.get('awayTeam',''))+' '+str(f.get('boardMatch',''))).lower()
+                  if a in hay and b in hay: return f
+              raise AssertionError((a,b,'not found'))
+          checks=[
+              ('hammarby','rangers',(2,0)),
+              ('varnamo','kristian',(0,8)),
+          ]
+          for a,b,score in checks:
+              f=find(a,b)
+              print(json.dumps(f,ensure_ascii=False,sort_keys=True))
+              assert f.get('matchedToSoccerway') is True, f
+              assert (f.get('homeScore'),f.get('awayScore')) == score, f
+              assert str(f.get('homeLogoUrl','')).startswith('https://static.flashscore.com/res/image/data/'), f
+              assert str(f.get('awayLogoUrl','')).startswith('https://static.flashscore.com/res/image/data/'), f
+              assert str(f.get('competitionLogo','')).startswith('https://static.flashscore.com/res/image/data/'), f
+          print('verified finished scores and provider logos')
+          PY
