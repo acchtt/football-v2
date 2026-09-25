@@ -40,7 +40,15 @@ jobs:
               return [str(v or ''),'']
           def key(v):
               a,b=split(v);return norm(a)+'|'+norm(b)
-          rows=[r for r in d.get('schedule',[]) if r.get('slateDate')=='2026-09-24' and str(r.get('tier','')).upper() in ('FOCUS','WATCHLIST')]
+          from datetime import datetime, timezone, timedelta
+          ict=timezone(timedelta(hours=7))
+          def ictday(r):
+              v=r.get('kickoff') or r.get('displayKickoff') or ''
+              try:
+                  return datetime.fromisoformat(v.replace('Z','+00:00')).astimezone(ict).date().isoformat()
+              except Exception:
+                  return r.get('slateDate')
+          rows=[r for r in d.get('schedule',[]) if ictday(r)=='2026-09-24' and str(r.get('tier','')).upper() in ('FOCUS','WATCHLIST')]
           matched=[x for x in f.get('fixtures',[]) if x.get('matchedToSoccerway') is True]
           byid={str(x.get('boardId')):x for x in matched}
           bykey={key(x.get('boardMatch') or ((x.get('homeTeam') or '')+' vs '+(x.get('awayTeam') or ''))):x for x in matched}
