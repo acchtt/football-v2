@@ -214,6 +214,24 @@ async function handleCollection(name, url, request, env) {
   return responseWithMeta(result, env, request);
 }
 
+async function handleSoccerwayBoard(url, request, env) {
+  if (!env.SOCCERWAY_API || typeof env.SOCCERWAY_API.fetch !== "function") {
+    return json({ ok: false, error: "Soccerway fallback binding unavailable" }, 503, env, request);
+  }
+  const day = Number(url.searchParams.get("day") ?? 0);
+  if (!Number.isInteger(day) || day < -7 || day > 7) {
+    return json({ ok: false, error: "day must be an integer from -7 to 7" }, 400, env, request);
+  }
+  const upstream = await env.SOCCERWAY_API.fetch(`https://soccerway.internal/api/board?day=${day}`, {
+    headers: { Accept: "application/json" },
+  });
+  const body = await upstream.text();
+  return new Response(body, {
+    status: upstream.status,
+    headers: { "Content-Type": "application/json; charset=utf-8", ...cors(env, request) },
+  });
+}
+
 async function liveSocket(request, env) {
   if (!env.BSD_API_TOKEN) return new Response("BSD_API_TOKEN missing", { status: 503 });
   if (String(request.headers.get("Upgrade") || "").toLowerCase() !== "websocket") {
@@ -256,6 +274,7 @@ export default {
     if (request.method === "GET" && url.pathname === "/api/bsd/teams") return handleTeams(url, request, env);
     if (request.method === "GET" && url.pathname === "/api/bsd/search") return handleSearch(url, request, env);
     if (request.method === "GET" && url.pathname === "/api/bsd/ws") return liveSocket(request, env);
+    if (request.method === "GET" && url.pathname === "/api/soccerway/board") return handleSoccerwayBoard(url, request, env);
 
     let match = url.pathname.match(/^\/api\/bsd\/match\/(\d+)$/);
     if (request.method === "GET" && match) return handleMatch(match[1], request, env);

@@ -3,7 +3,9 @@
   "name": "football-v2",
   "main": "src/push-entry.js",
   "compatibility_date": "2026-09-12",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "workers_dev": true,
   "vars": {
     "AIRTABLE_BASE_ID": "appWyZJjitSBATXAU",
@@ -13,13 +15,29 @@
   },
   "durable_objects": {
     "bindings": [
-      { "name": "PUSH_REGISTRY", "class_name": "PushRegistry" }
+      {
+        "name": "PUSH_REGISTRY",
+        "class_name": "PushRegistry"
+      }
     ]
   },
   "migrations": [
-    { "tag": "v1_push_registry", "new_sqlite_classes": ["PushRegistry"] }
+    {
+      "tag": "v1_push_registry",
+      "new_sqlite_classes": [
+        "PushRegistry"
+      ]
+    }
   ],
   "triggers": {
-    "crons": ["* * * * *"]
-  }
+    "crons": [
+      "* * * * *"
+    ]
+  },
+  "services": [
+    {
+      "binding": "SOCCERWAY_API",
+      "service": "soccerway-livescore"
+    }
+  ]
 }

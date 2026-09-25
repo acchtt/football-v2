@@ -2,7 +2,6 @@
   'use strict';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
-  const SOCCERWAY_API = window.ARCXI_SOCCERWAY_API || 'https://soccerway-livescore.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
   const root = document.getElementById('app');
   if (!root) return;
@@ -211,11 +210,10 @@
     if (!force && current && Date.now() - current.loadedAt < ttl) return current.fixtures;
     if (state.soccerwayPromises.has(date)) return state.soccerwayPromises.get(date);
 
-    const task = fetch(SOCCERWAY_API + '/api/board?day=' + day + '&t=' + Date.now(), {cache:'no-store'})
-      .then(function (response) {
-        return response.json().catch(function () { return null; }).then(function (payload) {
-          if (!response.ok || !payload || payload.ok === false || !Array.isArray(payload.fixtures)) {
-            throw new Error(pick(payload && payload.error, 'Soccerway HTTP ' + response.status));
+    const task = api('/api/soccerway/board?day=' + day + '&t=' + Date.now())
+      .then(function (payload) {
+          if (!payload || !Array.isArray(payload.fixtures)) {
+            throw new Error(pick(payload && payload.error, 'Soccerway fallback unavailable'));
           }
           const matched = payload.fixtures.filter(function (fixture) { return fixture && fixture.matchedToSoccerway === true; });
           const byId = new Map();
@@ -235,7 +233,6 @@
             error: ''
           });
           return matched;
-        });
       })
       .catch(function (error) {
         const previous = state.soccerwayCache.get(date);
