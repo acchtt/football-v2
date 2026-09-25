@@ -31,6 +31,19 @@ function dayKey(day) {
   const get = (type) => parts.find((x) => x.type === type)?.value || "";
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
+function kickoffDay(row) {
+  const value = row?.displayKickoff || row?.kickoff;
+  if (!value || !Number.isFinite(Date.parse(value))) return String(row?.slateDate || "");
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+  const get = (type) => parts.find((x) => x.type === type)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
 
 function normalizeTeam(value = "") {
   return String(value)
@@ -185,7 +198,7 @@ async function boardApi(url, env, ctx) {
 
   const board = boardRows.filter((row) =>
     ["FOCUS", "WATCHLIST"].includes(String(row.tier || "").toUpperCase()) &&
-    row.slateDate === targetDate
+    kickoffDay(row) === targetDate
   );
   const used = new Set();
 
@@ -224,6 +237,7 @@ async function boardApi(url, env, ctx) {
       competition: row.competition || base.competition,
       boardId: row.id,
       boardMatch: row.match || "",
+      sourceSlateDate: row.slateDate || "",
       boardKickoff: kickoff,
       tier: String(row.tier || "").toUpperCase(),
       grade: row.grade || "",
