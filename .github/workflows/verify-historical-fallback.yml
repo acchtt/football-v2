@@ -12,29 +12,30 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe Board and fallback dates
+      - name: Verify primary ARC XI fallback route
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS 'https://football-v2.acchtt.workers.dev/api/dashboard-data' -o /tmp/dashboard.json
-          for day in -3 -2 -1 0; do
-            curl -fsS -A 'Mozilla/5.0' "https://soccerway-livescore.acchtt.workers.dev/api/board?day=$day&v=$GITHUB_RUN_ID" -o "/tmp/sw$day.json"
-          done
+          curl -fsS -A 'Mozilla/5.0' 'https://football-v2.acchtt.workers.dev/api/soccerway/board?day=-2' -o /tmp/board.json
           python - <<'PY'
           import json
           from pathlib import Path
-          names=['varnamo','kristian','hammarby','rangers','feyenoord','valerenga','wolfsburg','sturm','ajax','aktobe']
-          d=json.loads(Path('/tmp/dashboard.json').read_text())
-          print('BOARD ROWS')
-          for r in d.get('schedule',[]):
-              hay=(str(r.get('match',''))+' '+str(r.get('competition',''))).lower()
-              if any(n in hay for n in names):
-                  print(json.dumps(r,ensure_ascii=False,sort_keys=True))
-          for day in (-3,-2,-1,0):
-              p=json.loads(Path('/tmp/sw%s.json'%day).read_text())
-              print('\nDAY',day,'slateDate=',p.get('slateDate'),'count=',p.get('count'),'matched=',p.get('matchedCount'))
-              for f in p.get('fixtures',[]):
-                  hay=(str(f.get('boardMatch',''))+' '+str(f.get('homeTeam',''))+' '+str(f.get('awayTeam',''))).lower()
-                  if any(n in hay for n in names):
-                      print(json.dumps(f,ensure_ascii=False,sort_keys=True))
+          p=json.loads(Path('/tmp/board.json').read_text())
+          assert p.get('ok') is True, p
+          targets={
+            'IFK Varnamo Women vs Kristianstads DFF Women':(0,8),
+            'Hammarby Women vs Glasgow Rangers Women':(2,0),
+            'Feyenoord Women vs Valerenga Women':(4,1),
+            'VfL Wolfsburg Women vs Sturm Graz Women':(6,1),
+            'Ajax Amsterdam Women vs Aktobe Women':(8,0),
+          }
+          found={f.get('boardMatch'):f for f in p.get('fixtures',[]) if f.get('boardMatch') in targets}
+          assert set(found)==set(targets),(set(targets)-set(found),p.get('matchedCount'))
+          for match,score in targets.items():
+              f=found[match]
+              assert f.get('matchedToSoccerway') is True, f
+              assert (f.get('homeScore'),f.get('awayScore'))==score, f
+              assert f.get('homeLogoUrl') and f.get('awayLogoUrl') and f.get('competitionLogo'), f
+              print(match, f.get('homeScore'), '-', f.get('awayScore'))
+          print('matchedCount=',p.get('matchedCount'))
           PY
