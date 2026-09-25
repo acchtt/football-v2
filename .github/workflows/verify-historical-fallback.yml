@@ -1,0 +1,40 @@
+name: Verify historical Soccerway fallback
+
+on:
+  push:
+    paths:
+      - .github/workflows/verify-historical-fallback.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Board and fallback dates
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS 'https://football-v2.acchtt.workers.dev/api/dashboard-data' -o /tmp/dashboard.json
+          for day in -3 -2 -1 0; do
+            curl -fsS -A 'Mozilla/5.0' "https://soccerway-livescore.acchtt.workers.dev/api/board?day=$day&v=$GITHUB_RUN_ID" -o "/tmp/sw$day.json"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          names=['varnamo','kristian','hammarby','rangers','feyenoord','valerenga','wolfsburg','sturm','ajax','aktobe']
+          d=json.loads(Path('/tmp/dashboard.json').read_text())
+          print('BOARD ROWS')
+          for r in d.get('schedule',[]):
+              hay=(str(r.get('match',''))+' '+str(r.get('competition',''))).lower()
+              if any(n in hay for n in names):
+                  print(json.dumps(r,ensure_ascii=False,sort_keys=True))
+          for day in (-3,-2,-1,0):
+              p=json.loads(Path('/tmp/sw%s.json'%day).read_text())
+              print('\nDAY',day,'slateDate=',p.get('slateDate'),'count=',p.get('count'),'matched=',p.get('matchedCount'))
+              for f in p.get('fixtures',[]):
+                  hay=(str(f.get('boardMatch',''))+' '+str(f.get('homeTeam',''))+' '+str(f.get('awayTeam',''))).lower()
+                  if any(n in hay for n in names):
+                      print(json.dumps(f,ensure_ascii=False,sort_keys=True))
+          PY
