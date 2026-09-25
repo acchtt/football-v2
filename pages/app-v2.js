@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'fallback-v48';
+  window.__ARCXI_BUILD__ = 'fallback-v49';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -301,6 +301,9 @@
   function eventForBoardRow(row) {
     const teams = splitMatch(row.match);
     return state.today.find(function (event) {
+      // Ignore synthetic Board placeholders. They have no BSD event id and were
+      // masking the richer Soccerway fallback (score + logos) for unsupported games.
+      if (!eventId(event)) return false;
       return nameScore(teams.home, teamName(event, 'home')) + nameScore(teams.away, teamName(event, 'away')) >= 6;
     }) || null;
   }
