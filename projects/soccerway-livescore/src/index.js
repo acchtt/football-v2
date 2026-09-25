@@ -35,6 +35,12 @@ function unixIso(value) {
   return Number.isFinite(d.getTime()) ? d.toISOString() : null;
 }
 
+function feedLogoUrl(value) {
+  const file = String(value || "").trim();
+  if (!/^[A-Za-z0-9_-]+\.(?:png|svg|webp)$/i.test(file)) return null;
+  return "https://static.flashscore.com/res/image/data/" + file;
+}
+
 function deriveStatus(row) {
   const code = String(row.AB || "");
   const text = String(row.AC || row.AW || "").trim();
@@ -72,11 +78,21 @@ function parseFeed(raw) {
       matchId: current.AA,
       competition: current._competition?.ZA || "Unknown competition",
       competitionId: current._competition?.ZEE || current._competition?.ZC || "",
+      tournamentId: current._competition?.ZE || "",
+      tournamentStageId: current._competition?.ZC || "",
+      tournamentTemplateId: current._competition?.ZEE || "",
+      competitionPath: current._competition?.ZL || "",
       region: current._competition?.ZY || "",
       kickoffTimestamp: numberOrNull(current.AD),
       kickoffUtcSource: unixIso(current.AD),
       homeTeam: current.AE,
       awayTeam: current.AF,
+      homeTeamId: current.JA || current.PX || "",
+      awayTeamId: current.JB || current.PY || "",
+      homeTeamSlug: current.WU || "",
+      awayTeamSlug: current.WV || "",
+      homeLogoUrl: feedLogoUrl(current.OA),
+      awayLogoUrl: feedLogoUrl(current.OB),
       homeScore: numberOrNull(current.AG),
       awayScore: numberOrNull(current.AH),
       status: status.key,
@@ -140,9 +156,13 @@ function normalizeTeam(value = "") {
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd)\b/g, " ")
+    .replace(/\b(women|woman|ladies|w|femenino|feminine)\b/g, " ")
+    .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd|ifk|bk|ff|dff|ik)\b/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => token.length > 5 && token.endsWith("s") ? token.slice(0, -1) : token)
+    .join(" ")
     .trim();
 }
 

@@ -37,9 +37,13 @@ function normalizeTeam(value = "") {
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd)\b/g, " ")
+    .replace(/\b(women|woman|ladies|w|femenino|feminine)\b/g, " ")
+    .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd|ifk|bk|ff|dff|ik)\b/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => token.length > 5 && token.endsWith("s") ? token.slice(0, -1) : token)
+    .join(" ")
     .trim();
 }
 
@@ -109,6 +113,43 @@ async function readJson(response, label) {
   return payload;
 }
 
+function competitionPageUrl(path) {
+  const clean = String(path || "").trim();
+  if (!/^\/[a-z0-9][a-z0-9/_-]*\/$/i.test(clean)) return null;
+  return "https://www.flashscore.com/football" + clean;
+}
+
+async function fetchCompetitionLogo(path, ctx) {
+  const pageUrl = competitionPageUrl(path);
+  if (!pageUrl) return null;
+  const cache = caches.default;
+  const cacheKey = new Request("https://soccerway-livescore.local/competition-logo?path=" + encodeURIComponent(path));
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    const value = await cached.text();
+    return value || null;
+  }
+  try {
+    const response = await fetch(pageUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36",
+        Accept: "text/html,*/*",
+        "Accept-Language": "en-GB,en;q=0.9",
+      },
+      redirect: "follow",
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const matches = html.match(/https:\/\/static\.flashscore\.com\/res\/image\/data\/[A-Za-z0-9_-]+\.(?:png|svg|webp)/gi) || [];
+    const logo = matches.find((value) => !value.includes("/bookmakers/")) || "";
+    const cacheResponse = new Response(logo, { headers: { "Cache-Control": "public, max-age=604800" } });
+    ctx.waitUntil(cache.put(cacheKey, cacheResponse));
+    return logo || null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchBoard(env) {
   if (!env.BOARD_API || typeof env.BOARD_API.fetch !== "function") {
     throw new Error("BOARD_API service binding is unavailable");
@@ -152,11 +193,17 @@ async function boardApi(url, env, ctx) {
       matchId: `board:${row.id}`,
       competition: row.competition || "",
       competitionId: "",
+      competitionPath: "",
+      competitionLogo: null,
       region: "",
       kickoffTimestamp: kickoff ? Math.floor(Date.parse(kickoff) / 1000) : null,
       kickoffUtcSource: kickoff,
       homeTeam: teams.home,
       awayTeam: teams.away,
+      homeTeamId: "",
+      awayTeamId: "",
+      homeLogoUrl: null,
+      awayLogoUrl: null,
       homeScore: null,
       awayScore: null,
       status: "scheduled",
@@ -179,6 +226,11 @@ async function boardApi(url, env, ctx) {
       structure: row.structure || "",
       matchedToSoccerway: Boolean(matched),
     };
+  });
+  const paths = [...new Set(fixtures.filter((fixture) => fixture.matchedToSoccerway && fixture.competitionPath).map((fixture) => fixture.competitionPath))];
+  const logos = new Map(await Promise.all(paths.map(async (path) => [path, await fetchCompetitionLogo(path, ctx)])));
+  fixtures.forEach((fixture) => {
+    fixture.competitionLogo = fixture.competitionPath ? logos.get(fixture.competitionPath) || null : null;
   });
 
   return json({

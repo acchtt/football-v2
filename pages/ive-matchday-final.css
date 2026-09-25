@@ -156,7 +156,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 .boardCompetitionGroup{overflow:hidden;border:1px solid #2d3038;border-radius:9px;background:#0f1116}
 .boardCompetitionHead{min-height:42px;padding:0 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #292c34;background:linear-gradient(180deg,#15171d,#111319)}
 .boardCompetitionHead img{width:20px;height:20px;object-fit:contain}
-.competitionMark{width:20px;color:var(--ive-pink);text-align:center;font-size:9px}
+.competitionMark{width:20px;height:20px;color:var(--ive-pink);display:grid;place-items:center}.competitionMark svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .boardCompetitionHead>strong{font-size:12px;font-weight:800}.boardCompetitionHead>span{color:#918a94;font-size:10px}
 .boardCompetitionHead>a{margin-left:auto;color:#e7a9c7;font-size:10px;font-weight:700;text-underline-offset:3px}
 .boardCompetitionHead>a span{margin-left:4px;font-size:13px}

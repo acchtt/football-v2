@@ -50,6 +50,7 @@
     return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   }
   function num(value) {
+    if (value === undefined || value === null || value === '') return null;
     const result = Number(value);
     return Number.isFinite(result) ? result : null;
   }
@@ -250,8 +251,11 @@
 
   function normalizeName(value) {
     return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-      .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club)\b/g, ' ')
-      .replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+      .replace(/\b(women|woman|ladies|w|femenino|feminine)\b/g, ' ')
+      .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd|ifk|bk|ff|dff|ik)\b/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(Boolean)
+      .map(function (token) { return token.length > 5 && token.endsWith('s') ? token.slice(0, -1) : token; })
+      .join(' ').trim();
   }
   function splitMatch(value) {
     const text = String(value || '');
@@ -447,6 +451,22 @@
     if (!id) return '<span class="crestFallback" aria-hidden="true">' + esc(String(name || '?').slice(0, 1)) + '</span>';
     return '<img src="' + image(type, id, transparent) + '" alt="" loading="lazy">';
   }
+  function competitionMark() {
+    return '<span class="competitionMark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z"></path><path d="M8 6H4v1.5A4.5 4.5 0 0 0 8.5 12"></path><path d="M16 6h4v1.5a4.5 4.5 0 0 1-4.5 4.5"></path><path d="M12 12v4M8 20h8M9 16h6v4H9z"></path></svg></span>';
+  }
+  function externalLogo(url, name, kind) {
+    const source = String(url || '');
+    if (!/^https:\/\/static\.flashscore\.com\/res\/image\/data\/[A-Za-z0-9_-]+\.(?:png|svg|webp)$/i.test(source)) {
+      return kind === 'competition' ? competitionMark() :
+        '<span class="crestFallback" aria-hidden="true">' + esc(String(name || '?').slice(0, 1)) + '</span>';
+    }
+    return '<img src="' + esc(source) + '" alt="" loading="lazy" referrerpolicy="no-referrer" data-external-logo="' +
+      esc(kind || 'team') + '" data-logo-fallback="' + esc(String(name || '?').slice(0, 1)) + '">';
+  }
+  function boardCrest(event, fallback, side, name) {
+    if (event && teamId(event, side)) return crest('team', teamId(event, side), name);
+    return externalLogo(fallback && fallback[side + 'LogoUrl'], name, 'team');
+  }
   function matchRow(event) {
     const id = eventId(event);
     const board = boardRowFor(event);
@@ -543,13 +563,13 @@
       (hasManualScore ? 'Edit score' : 'Add score') + '</button>' : '';
     return '<article class="boardMatchCard ' + tierClass + '">' + open +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
-      crest('team', event && teamId(event, 'home'), teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
+      boardCrest(event, fallback, 'home', teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
       '<div class="fixtureState"><span class="fixtureStatus ' + statusClass + '">' + stateIcon + esc(statusName) + '</span>' +
       '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small>' +
       manualControl + '</div>' +
       '<div class="teamLine away">' +
-      crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
-      '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
+      boardCrest(event, fallback, 'away', teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
+      '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : (fallback ? externalLogo(fallback.competitionLogo, competition, 'competition') : '')) +
       '<b>' + esc(competition) + '</b></span></div>' +
       '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>' +
       (fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
@@ -560,15 +580,18 @@
     const groups = new Map();
     boardRows.forEach(function (row) {
       const event = eventForBoardRow(row);
-      const name = row.competition || (event && leagueName(event)) || 'Competition';
+      const fallback = event ? null : soccerwayForBoardRow(row);
+      const name = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
       const id = event && leagueId(event);
+      const logo = fallback && fallback.competitionLogo || '';
       const key = String(id || '') + ':' + name;
-      if (!groups.has(key)) groups.set(key, {name:name, id:id, event:event, rows:[]});
+      if (!groups.has(key)) groups.set(key, {name:name, id:id, event:event, logo:logo, rows:[]});
+      else if (!groups.get(key).logo && logo) groups.get(key).logo = logo;
       groups.get(key).rows.push(row);
     });
     return '<div class="boardCompetitionList">' + Array.from(groups.values()).map(function (group) {
       return '<section class="boardCompetitionGroup"><header class="boardCompetitionHead">' +
-        (group.id ? '<img src="' + image('league', group.id) + '" alt="" loading="lazy">' : '<span class="competitionMark" aria-hidden="true">◆</span>') +
+        (group.id ? '<img src="' + image('league', group.id) + '" alt="" loading="lazy">' : externalLogo(group.logo, group.name, 'competition')) +
         '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' + (group.rows.length === 1 ? '' : 'es') + '</span>' +
         (group.id ? '<a href="#league/' + group.id + '">View league <span aria-hidden="true">›</span></a>' : '') + '</header>' +
         '<div class="matchList boardMatchList chronologicalBoardList">' +
@@ -664,8 +687,8 @@
     const label = live ? 'Live priority' : tier === 'FOCUS' ? 'Next focus' : 'Next watchlist';
     const body = '<header><span>' + esc(label) + '</span><b class="' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
       esc(tier) + ' · ' + esc(grade) + '</b></header><div class="railDecisionCompetition">' + esc(competition) + '</div>' +
-      '<div class="railDecisionTeams"><div>' + crest('team', event && teamId(event,'home'), teams.home || 'Home') +
-      '<span>' + esc(teams.home || 'Home') + '</span></div><div>' + crest('team', event && teamId(event,'away'), teams.away || 'Away') +
+      '<div class="railDecisionTeams"><div>' + boardCrest(event, fallback, 'home', teams.home || 'Home') +
+      '<span>' + esc(teams.home || 'Home') + '</span></div><div>' + boardCrest(event, fallback, 'away', teams.away || 'Away') +
       '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<div class="railDecisionState"><strong>' + esc(primary) + '</strong><span data-countdown="' + esc(kickoff || '') + '">' +
       esc(secondary) + '</span></div><footer>' + (id ? 'Open match' : fallback ? 'Soccerway feed' : 'Ranked slate') +
@@ -1399,6 +1422,22 @@
       button.addEventListener('click', function () {
         window.dispatchEvent(new CustomEvent('arcxi:open-media'));
       });
+    });
+    root.querySelectorAll('img[data-external-logo]').forEach(function (img) {
+      img.addEventListener('error', function () {
+        const kind = img.dataset.externalLogo || 'team';
+        const node = document.createElement('span');
+        if (kind === 'competition') {
+          node.className = 'competitionMark';
+          node.setAttribute('aria-hidden','true');
+          node.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z"></path><path d="M8 6H4v1.5A4.5 4.5 0 0 0 8.5 12"></path><path d="M16 6h4v1.5a4.5 4.5 0 0 1-4.5 4.5"></path><path d="M12 12v4M8 20h8M9 16h6v4H9z"></path></svg>';
+        } else {
+          node.className = 'crestFallback';
+          node.setAttribute('aria-hidden','true');
+          node.textContent = img.dataset.logoFallback || '?';
+        }
+        img.replaceWith(node);
+      }, {once:true});
     });
     root.querySelectorAll('[data-manual-score]').forEach(function (button) {
       button.addEventListener('click', function (event) {
