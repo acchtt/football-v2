@@ -174,10 +174,14 @@ async function boardApi(url, env, ctx) {
   if (day === null) return json({ ok: false, error: "day must be an integer from -7 to 7" }, 400);
 
   const targetDate = dayKey(day);
-  const [boardRows, soccerwayFixtures] = await Promise.all([
+  const soccerwayDays = [day - 1, day].filter((value) => value >= -7 && value <= 7);
+  const [boardRows, ...fixtureSets] = await Promise.all([
     fetchBoard(env),
-    fetchSoccerwayFixtures(day, env, ctx),
+    ...soccerwayDays.map((value) => fetchSoccerwayFixtures(value, env, ctx)),
   ]);
+  const soccerwayFixtures = [...new Map(
+    fixtureSets.flat().map((fixture) => [fixture.matchId, fixture])
+  ).values()];
 
   const board = boardRows.filter((row) =>
     ["FOCUS", "WATCHLIST"].includes(String(row.tier || "").toUpperCase()) &&
