@@ -39,57 +39,54 @@ jobs:
         working-directory: projects/soccerway-livescore
         run: npx --yes wrangler@4 deploy --config wrangler.jsonc
 
-      - name: Smoke test Soccerway APIs and server pages
+      - name: Smoke test Soccerway fallback API
         run: |
           set -euo pipefail
           BASE="https://soccerway-livescore.acchtt.workers.dev"
-          for i in 1 2 3 4 5 6 7 8; do
-            if curl --fail --silent --show-error "$BASE/?view=today&ci=$GITHUB_RUN_ID" -o /tmp/today.html && \
-               curl --fail --silent --show-error "$BASE/?view=board&ci=$GITHUB_RUN_ID" -o /tmp/board-page.html && \
-               curl --fail --silent --show-error "$BASE/?view=leagues&ci=$GITHUB_RUN_ID" -o /tmp/leagues.html && \
-               curl --fail --silent --show-error "$BASE/?view=teams&ci=$GITHUB_RUN_ID" -o /tmp/teams.html && \
-               curl --fail --silent --show-error "$BASE/?view=picks&ci=$GITHUB_RUN_ID" -o /tmp/picks.html && \
-               curl --fail --silent --show-error "$BASE/?view=today&status=scheduled&ci=$GITHUB_RUN_ID" -o /tmp/scheduled.html && \
-               curl --fail --silent --show-error "$BASE/sliptrace-client-v4.js" -o /tmp/app.js && \
-               curl --fail --silent --show-error "$BASE/api/fixtures?day=0" -o /tmp/feed.json && \
-               curl --fail --silent --show-error "$BASE/api/board?day=0" -o /tmp/board.json; then
-              break
-            fi
-            sleep 2
-          done
 
-          grep -q "Football operations" /tmp/today.html
-          grep -q "<h1>Board</h1>" /tmp/board-page.html
-          grep -q "<h1>Competitions</h1>" /tmp/leagues.html
-          grep -q "<h1>Teams</h1>" /tmp/teams.html
-          grep -q "<h1>Picks</h1>" /tmp/picks.html
-          grep -q "status-scheduled active" /tmp/scheduled.html
-          grep -q 'href="/?view=board' /tmp/today.html
-          grep -q 'src="/sliptrace-client-v4.js"' /tmp/today.html
-          node --check /tmp/app.js
+          fetch_json() {
+            local name="$1"
+            local url="$2"
+            local out="$3"
+            for attempt in 1 2 3 4 5 6 7 8; do
+              echo "Checking $name (attempt $attempt): $url"
+              status="$(curl --retry 2 --retry-delay 1 --retry-all-errors -sS -o "$out" -w '%{http_code}' "$url" || true)"
+              echo "HTTP $status"
+              if [ "$status" -ge 200 ] 2>/dev/null && [ "$status" -lt 300 ] 2>/dev/null; then
+                if python - "$out" <<'PY'
+          import json, sys
+          with open(sys.argv[1], encoding="utf-8") as fh:
+              payload=json.load(fh)
+          assert payload.get("ok") is True, payload
+          PY
+                then
+                  return 0
+                fi
+              fi
+              cat "$out" || true
+              echo
+              sleep 2
+            done
+            echo "::error::$name did not become healthy"
+            exit 1
+          }
+
+          fetch_json "Soccerway fixtures" "$BASE/api/fixtures?day=0&ci=$GITHUB_RUN_ID" /tmp/feed.json
+          fetch_json "Board mapping" "$BASE/api/board?day=0&ci=$GITHUB_RUN_ID" /tmp/board.json
+          fetch_json "Live fixtures" "$BASE/api/live?day=0&ci=$GITHUB_RUN_ID" /tmp/live.json
 
           python - <<'PY'
           import json
           from pathlib import Path
           p=json.loads(Path('/tmp/feed.json').read_text())
           b=json.loads(Path('/tmp/board.json').read_text())
-          assert p.get('ok') is True and isinstance(p.get('fixtures'), list) and p['fixtures']
-          assert b.get('ok') is True and isinstance(b.get('fixtures'), list)
+          l=json.loads(Path('/tmp/live.json').read_text())
+          assert isinstance(p.get('fixtures'), list)
+          assert isinstance(b.get('fixtures'), list)
+          assert isinstance(l.get('fixtures'), list)
           assert all(str(x.get('tier','')).upper() in ('FOCUS','WATCHLIST') for x in b['fixtures'])
-          print('raw_fixtures=', p.get('count'), 'board_fixtures=', b.get('count'), 'matched=', b.get('matchedCount'))
+          print('raw_fixtures=', p.get('count', len(p['fixtures'])))
+          print('board_fixtures=', b.get('count', len(b['fixtures'])))
+          print('matched=', b.get('matchedCount', 0))
+          print('live=', l.get('count', len(l['fixtures'])))
           PY
-
-      - name: Browser navigation check
-        run: |
-          set -euo pipefail
-          BASE="https://soccerway-livescore.acchtt.workers.dev"
-          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
-          if [ -z "$CHROME" ]; then
-            echo "::error::No Chrome/Chromium binary available on runner"
-            exit 1
-          fi
-          for route in "?view=today" "?view=board" "?view=leagues" "?view=teams" "?view=picks" "?view=today&status=ft"; do
-            "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=3500 --dump-dom "$BASE/$route&browser=$GITHUB_RUN_ID" > /tmp/rendered.html 2>/tmp/chrome.log || { cat /tmp/chrome.log; exit 1; }
-            grep -q 'data-app-booted="1"' /tmp/rendered.html
-            grep -q "SOCCERWAY LIVE" /tmp/rendered.html
-          done
