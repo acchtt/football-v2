@@ -1,4 +1,4 @@
-name: Diagnose Sudan Ethiopia BSD binding
+name: Diagnose Sudan Ethiopia detail feed
 
 on:
   push:
@@ -10,20 +10,23 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe BSD production feeds
+      - name: Probe per-match detail feeds
         run: |
           set -e
-          stamp=$(date +%s)
-          for spec in \
-            "BSD_LIVE|https://football-v2.acchtt.workers.dev/api/bsd/live?t=$stamp" \
-            "BSD_EVENTS|https://football-v2.acchtt.workers.dev/api/bsd/events?date_from=2026-09-25%26date_to=2026-09-25%26limit=200%26t=$stamp" \
-            "DASHBOARD|https://football-v2.acchtt.workers.dev/api/dashboard-data?t=$stamp"
-          do
-            label=${spec%%|*}
-            url=${spec#*|}
+          probe () {
+            label="$1"
+            url="$2"
             echo "===== $label ====="
             tmp=$(mktemp)
-            curl -fsSL --retry 2 "$url" -o "$tmp"
-            jq -c '.. | objects | select((tostring | ascii_downcase | contains("sudan")) or (tostring | ascii_downcase | contains("ethiopia"))) | {id,event_id,match,name,home,away,home_name,away_name,home_team,away_team,home_score,away_score,score,status,minute,current_minute,period,kickoff,start_time,timestamp,competition,league,slateDate,displayKickoff,bsd}' "$tmp" | head -n 120 || true
+            code=$(curl -L -sS -o "$tmp" -w '%{http_code}' \
+              -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36' \
+              -H 'Accept: */*' -H 'Accept-Language: en-GB,en;q=0.9' \
+              -H 'Referer: https://www.flashscore.com/' -H 'Origin: https://www.flashscore.com' \
+              -H 'x-fsign: SW9D1eZo' "$url" || true)
+            echo "HTTP $code bytes $(wc -c < "$tmp")"
+            tr '¬' '\n' < "$tmp" | head -n 260
             rm -f "$tmp"
-          done
+          }
+          probe "FLASHCORE DIRECT DETAIL" "https://www.flashscore.com/x/feed/df_sui_1_dYsi4GbD"
+          probe "FLASHCORE NINJA DETAIL" "https://local-global.flashscore.ninja/2/x/feed/df_sui_1_dYsi4GbD"
+          probe "SOCCERWAY DETAIL" "https://www.soccerway.com/x/feed/df_sui_1_dYsi4GbD"
