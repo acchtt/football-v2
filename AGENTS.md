@@ -39,3 +39,31 @@ Not lazy about: understanding the problem (read it fully and trace the real flow
 - `frontend-design` controls visual decisions: follow the existing project brief and approved visual direction rather than generic UI defaults.
 - Preserve existing behavior and approved assets unless the task explicitly asks to change them.
 
+## ARC XI design skill launch order
+
+Use the smallest skill chain that fits the task. Ponytail remains an always-on implementation constraint.
+
+1. **Ordinary UI fix / redesign**
+   - `frontend-design` — set the visual direction and protect the project brief.
+   - `redesign-existing-projects` — audit the existing UI and identify targeted improvements.
+   - Ponytail `full` — implement the smallest correct diff and verify it.
+
+2. **Brand / campaign / identity work**
+   - `brandkit` — establish or extend the visual world, logo/identity applications, palette, and campaign direction.
+   - `frontend-design` — translate that identity into interface decisions.
+   - `redesign-existing-projects` — reconcile the direction with the existing football-v2 UI.
+   - Ponytail `full` — implement without unrelated rewrites.
+
+3. **Image-first website work**
+   - `imagegen-frontend-web` — create the reference composition(s).
+   - `image-to-code` — extract layout, typography, spacing, colors, components, and media logic from the approved reference.
+   - `frontend-design` + `redesign-existing-projects` — preserve coherence with ARC XI and the existing product.
+   - Ponytail `full` — implement the faithful minimal diff.
+
+### Precedence and boundaries
+
+- The ARC XI brief, approved assets, existing functionality, speed, and information readability override generic style advice from any imported skill.
+- Do not use `design-taste-frontend` or `gpt-taste` as global authorities for this dashboard; they are intentionally not installed.
+- Do not introduce GSAP, new UI libraries, font packages, or other dependencies merely because an imported skill suggests them. Ponytail's dependency ladder wins.
+- For supplied/approved real-person imagery, preserve the actual source pixels whenever practical for overlays/compositing; do not replace or regenerate people unless the task explicitly asks for it.
+
