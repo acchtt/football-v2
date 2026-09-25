@@ -1,0 +1,43 @@
+name: Diagnose Soccerway CAF gaps
+
+on:
+  push:
+    paths:
+      - .github/workflows/diag-soccerway-caf.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Soccerway fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://soccerway-livescore.acchtt.workers.dev"
+          python - <<'PY'
+          import json, urllib.request
+          base="https://soccerway-livescore.acchtt.workers.dev"
+          names=["togo","burundi","sudan","ethiopia","rwanda","liberia","nigeria","madagascar"]
+          def get(url):
+              with urllib.request.urlopen(url,timeout=20) as r:
+                  return json.load(r)
+          for day in (-1,0,1):
+              p=get(f"{base}/api/fixtures?day={day}")
+              print(f"DAY {day} count={p.get('count')}")
+              hits=[]
+              for f in p.get("fixtures",[]):
+                  hay=" ".join(str(f.get(k,"")) for k in ("homeTeam","awayTeam","competition","region")).lower()
+                  if any(n in hay for n in names):
+                      hits.append(f)
+              for f in hits:
+                  print(json.dumps(f,ensure_ascii=False,sort_keys=True))
+          b=get(f"{base}/api/board?day=0")
+          print("BOARD")
+          for f in b.get("fixtures",[]):
+              hay=" ".join(str(f.get(k,"")) for k in ("homeTeam","awayTeam","boardMatch","competition")).lower()
+              if any(n in hay for n in names):
+                  print(json.dumps(f,ensure_ascii=False,sort_keys=True))
+          PY
