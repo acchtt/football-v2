@@ -173,10 +173,18 @@
     for (let day = -7; day <= 7; day += 1) if (todayKey(day) === date) return day;
     return null;
   }
+  function soccerwayFixtureKey(value) {
+    const teams = splitMatch(value || '');
+    return normalizeName(teams.home) + '|' + normalizeName(teams.away);
+  }
   function soccerwayForBoardRow(row) {
     const date = String(row && row.slateDate || state.date || '');
     const cache = state.soccerwayCache.get(date);
-    return cache && cache.byId ? cache.byId.get(String(row && row.id || '')) || null : null;
+    if (!cache) return null;
+    const byId = cache.byId && cache.byId.get(String(row && row.id || ''));
+    if (byId) return byId;
+    const key = soccerwayFixtureKey(row && row.match || '');
+    return key && cache.byFixture ? cache.byFixture.get(key) || null : null;
   }
   function soccerwayStatusKey(fixture) {
     const value = String(fixture && fixture.status || '').toLowerCase();
@@ -210,12 +218,16 @@
           }
           const matched = payload.fixtures.filter(function (fixture) { return fixture && fixture.matchedToSoccerway === true; });
           const byId = new Map();
+          const byFixture = new Map();
           matched.forEach(function (fixture) {
             if (fixture.boardId !== undefined && fixture.boardId !== null) byId.set(String(fixture.boardId), fixture);
+            const key = soccerwayFixtureKey(fixture.boardMatch || ((fixture.homeTeam || '') + ' vs ' + (fixture.awayTeam || '')));
+            if (key && key !== '|') byFixture.set(key, fixture);
           });
           state.soccerwayCache.set(date, {
             fixtures: matched,
             byId: byId,
+            byFixture: byFixture,
             loadedAt: Date.now(),
             matchedCount: matched.length,
             totalCount: Number(payload.count) || payload.fixtures.length,
@@ -227,7 +239,7 @@
       .catch(function (error) {
         const previous = state.soccerwayCache.get(date);
         state.soccerwayCache.set(date, previous ? Object.assign({}, previous, {error:error.message || String(error)}) : {
-          fixtures: [], byId: new Map(), loadedAt: Date.now(), matchedCount: 0, totalCount: 0, error:error.message || String(error)
+          fixtures: [], byId: new Map(), byFixture: new Map(), loadedAt: Date.now(), matchedCount: 0, totalCount: 0, error:error.message || String(error)
         });
         return [];
       })
@@ -474,7 +486,7 @@
     const event = eventForBoardRow(row);
     if (event) return eventKickoff(event);
     const fallback = soccerwayForBoardRow(row);
-    return pick(fallback && fallback.kickoffUtcSource, fallback && fallback.boardKickoff, row && row.kickoff, row && row.displayKickoff);
+    return pick(row && row.displayKickoff, row && row.kickoff, fallback && fallback.boardKickoff, fallback && fallback.kickoffUtcSource);
   }
   function boardMatchBlock(row, index) {
     const event = eventForBoardRow(row);
