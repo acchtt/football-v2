@@ -1,6 +1,76 @@
 import app from "./index.js";
 
 const ZONE = "Asia/Ho_Chi_Minh";
+const LIVE_DETAIL_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36",
+  Accept: "*/*",
+  "Accept-Language": "en-GB,en;q=0.9",
+  Referer: "https://www.soccerway.com/",
+  Origin: "https://www.soccerway.com",
+  "x-fsign": "SW9D1eZo",
+};
+
+function minuteValue(value) {
+  const match = String(value || "").match(/(\d{1,3})(?:\+(\d{1,2}))?/);
+  if (!match) return null;
+  const base = Number(match[1]), extra = Number(match[2] || 0);
+  return { text: match[2] ? match[1] + "+" + match[2] : match[1], order: base + extra };
+}
+
+function parseLiveDetail(raw) {
+  let phase = "";
+  let minute = null;
+  let homeScore = null;
+  let awayScore = null;
+  for (let token of String(raw || "").split("¬")) {
+    if (!token) continue;
+    if (token.startsWith("~")) token = token.slice(1);
+    const divider = token.indexOf("÷");
+    if (divider < 0) continue;
+    const key = token.slice(0, divider);
+    const value = token.slice(divider + 1);
+    if (key === "AC" && /half|extra time|penalt/i.test(value)) phase = value.trim();
+    if (key === "IB" || key === "IBX") {
+      const parsed = minuteValue(value);
+      if (parsed && (!minute || parsed.order > minute.order)) minute = parsed;
+    }
+    if (key === "INX" && Number.isFinite(Number(value))) homeScore = Number(value);
+    if (key === "IOX" && Number.isFinite(Number(value))) awayScore = Number(value);
+  }
+  return { phase, minute: minute?.text || null, minuteOrder: minute?.order ?? null, homeScore, awayScore };
+}
+
+async function liveDetail(matchId) {
+  if (!/^[A-Za-z0-9]{6,12}$/.test(String(matchId || ""))) return null;
+  try {
+    const response = await fetch("https://www.soccerway.com/x/feed/df_sui_1_" + encodeURIComponent(matchId), {
+      headers: LIVE_DETAIL_HEADERS,
+      redirect: "follow",
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return parseLiveDetail(await response.text());
+  } catch {
+    return null;
+  }
+}
+
+async function enrichLiveFixture(fixture) {
+  const detail = await liveDetail(fixture.matchId);
+  if (!detail) return fixture;
+  if (detail.phase) fixture.livePhase = detail.phase;
+  const currentMinute = minuteValue(fixture.minute);
+  if (detail.minute && (!currentMinute || detail.minuteOrder > currentMinute.order)) fixture.minute = detail.minute;
+  if (detail.homeScore !== null && detail.awayScore !== null) {
+    const currentTotal = Number(fixture.homeScore || 0) + Number(fixture.awayScore || 0);
+    const detailTotal = detail.homeScore + detail.awayScore;
+    if (detailTotal >= currentTotal) {
+      fixture.homeScore = detail.homeScore;
+      fixture.awayScore = detail.awayScore;
+    }
+  }
+  return fixture;
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -245,6 +315,10 @@ async function boardApi(url, env, ctx) {
       matchedToSoccerway: Boolean(matched),
     };
   });
+  await Promise.all(fixtures
+    .filter((fixture) => fixture.matchedToSoccerway && fixture.status === "live")
+    .map((fixture) => enrichLiveFixture(fixture)));
+
   const paths = [...new Set(fixtures.filter((fixture) => fixture.matchedToSoccerway && fixture.competitionPath).map((fixture) => fixture.competitionPath))];
   const logos = new Map(await Promise.all(paths.map(async (path) => [path, await fetchCompetitionLogo(path, ctx)])));
   fixtures.forEach((fixture) => {

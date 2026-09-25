@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'right-rail-v50';
+  window.__ARCXI_BUILD__ = 'live-correction-v51';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -200,8 +200,14 @@
   }
   function soccerwayMinuteText(fixture) {
     const minute = fixture && fixture.minute;
-    if (minute !== undefined && minute !== null && String(minute).trim()) return String(minute).replace(/['’]+$/,'') + '′';
-    return String(fixture && fixture.statusText || 'LIVE');
+    const phase = String(fixture && fixture.livePhase || '').trim();
+    const phaseLabel = /^1st half$/i.test(phase) ? '1H' : /^2nd half$/i.test(phase) ? '2H' :
+      /extra time/i.test(phase) ? 'ET' : phase;
+    if (minute !== undefined && minute !== null && String(minute).trim()) {
+      const clock = String(minute).replace(/['’]+$/,'') + '′';
+      return phaseLabel ? phaseLabel + ' · ' + clock : clock;
+    }
+    return phaseLabel || String(fixture && fixture.statusText || 'LIVE');
   }
   async function loadSoccerwayFallback(date, force) {
     const day = soccerwayDayOffset(date);
@@ -509,6 +515,12 @@
     const fallback = soccerwayForBoardRow(row);
     return pick(row && row.displayKickoff, row && row.kickoff, fallback && fallback.boardKickoff, fallback && fallback.kickoffUtcSource);
   }
+  function manualBoardScore(row, event) {
+    if (event || !row || !row.manualScore) return null;
+    const home = Number(row.manualScore.home);
+    const away = Number(row.manualScore.away);
+    return Number.isInteger(home) && Number.isInteger(away) ? {home:home, away:away} : null;
+  }
   function boardMatchBlock(row, index) {
     const event = eventForBoardRow(row);
     const fallback = event ? null : soccerwayForBoardRow(row);
@@ -525,14 +537,17 @@
     const kickoff = boardKickoff(row);
     const competition = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
     const lid = event && leagueId(event);
-    const hasManualScore = unsupported && row.manualScore &&
-      Number.isInteger(Number(row.manualScore.home)) && Number.isInteger(Number(row.manualScore.away));
+    const manualScore = manualBoardScore(row, event);
+    const hasManualScore = Boolean(manualScore);
     const finished = status === 'finished';
+    const canManualScore = !event && (!fallback || status !== 'upcoming');
     let primary;
     let secondary;
     if (hasManualScore) {
-      primary = Number(row.manualScore.home) + '–' + Number(row.manualScore.away);
-      secondary = finished ? 'Manual FT' : 'Manual score';
+      primary = manualScore.home + '–' + manualScore.away;
+      secondary = fallback ?
+        (finished ? 'Manual · Full time' : status === 'live' ? 'Manual · ' + soccerwayMinuteText(fallback) : 'Manual score') :
+        (finished ? 'Manual FT' : 'Manual score');
     } else if (event) {
       primary = finished || status === 'live' ? scoreText(event) : formatTime(kickoff);
       secondary = finished ? 'Full time' : status === 'live' ? liveClock(event) : 'ICT kickoff';
@@ -543,8 +558,8 @@
       primary = finished ? '—' : formatTime(kickoff);
       secondary = finished ? 'Score needed' : 'No live feed';
     }
-    const statusName = hasManualScore ? 'Custom' : finished ? 'FT' : status === 'live' ? 'LIVE' : 'PRE';
-    const statusClass = hasManualScore ? 'manual' : status;
+    const statusName = finished ? 'FT' : status === 'live' ? 'LIVE' : hasManualScore ? 'Custom' : 'PRE';
+    const statusClass = finished ? 'finished' : status === 'live' ? 'live' : hasManualScore ? 'manual' : status;
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
@@ -552,16 +567,16 @@
       (fallback ? ' data-score-source="soccerway"' : '');
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
-    const stateIcon = hasManualScore ?
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 4 4 12-12-4-4L4 16Z"></path><path d="m13 7 4 4M4 20l5-1"></path></svg>' :
-      finished ?
+    const stateIcon = finished ?
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"></path><path d="M6 5h11l-2 4 2 4H6"></path></svg>' :
       status === 'live' ?
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"></path></svg>' :
+      hasManualScore ?
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 4 4 12-12-4-4L4 16Z"></path><path d="m13 7 4 4M4 20l5-1"></path></svg>' :
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
-    const manualControl = unsupported ?
+    const manualControl = canManualScore ?
       '<button type="button" class="manualScoreButton" data-manual-score="' + esc(manualKey) + '">' +
-      (hasManualScore ? 'Edit score' : 'Add score') + '</button>' : '';
+      (hasManualScore ? 'Edit score' : fallback ? 'Correct score' : 'Add score') + '</button>' : '';
     return '<article class="boardMatchCard ' + tierClass + '">' + open +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       boardCrest(event, fallback, 'home', teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
@@ -573,7 +588,7 @@
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : (fallback ? externalLogo(fallback.competitionLogo, competition, 'competition') : '')) +
       '<b>' + esc(competition) + '</b></span></div>' +
       '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>' +
-      (fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
+      (hasManualScore ? 'MANUAL' : fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
       (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
       close + '</article>';
   }
@@ -681,9 +696,13 @@
     const competition = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
     const live = status === 'live';
     const finished = status === 'finished';
-    const primary = event ? (live || finished ? scoreText(event) : formatTime(kickoff)) :
+    const manualScore = manualBoardScore(row, event);
+    const primary = manualScore ? manualScore.home + '–' + manualScore.away :
+      event ? (live || finished ? scoreText(event) : formatTime(kickoff)) :
       fallback ? (live || finished ? soccerwayScoreText(fallback) : formatTime(kickoff)) : formatTime(kickoff);
-    const secondary = event ? (live ? liveClock(event) : finished ? 'Full time' : countdownText(kickoff)) :
+    const secondary = manualScore ?
+      (fallback ? (live ? 'Manual · ' + soccerwayMinuteText(fallback) : finished ? 'Manual · Full time' : countdownText(kickoff)) : 'Manual score') :
+      event ? (live ? liveClock(event) : finished ? 'Full time' : countdownText(kickoff)) :
       fallback ? (live ? 'SW · ' + soccerwayMinuteText(fallback) : finished ? 'SW · Full time' : countdownText(kickoff)) : countdownText(kickoff);
     const label = live ? 'Live priority' : 'Next match';
     const body = '<header><span>' + esc(label) + '</span><b class="' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
@@ -692,7 +711,7 @@
       '<span>' + esc(teams.home || 'Home') + '</span></div><div>' + boardCrest(event, fallback, 'away', teams.away || 'Away') +
       '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<div class="railDecisionState"><strong>' + esc(primary) + '</strong><span data-countdown="' + esc(kickoff || '') + '">' +
-      esc(secondary) + '</span></div><footer>' + (id ? 'Open match' : fallback ? 'Soccerway feed' : 'Ranked slate') +
+      esc(secondary) + '</span></div><footer>' + (manualScore ? 'Manual correction' : id ? 'Open match' : fallback ? 'Soccerway feed' : 'Ranked slate') +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></footer>';
     return '<section class="railDecision railCard">' + (id ? '<a href="#match/' + id + '">' + body + '</a>' : body) + '</section>';
   }
@@ -1320,7 +1339,10 @@
   }
   function openManualScoreEditor(key) {
     const row = manualScoreRow(key);
-    if (!row || eventId(eventForBoardRow(row)) || soccerwayForBoardRow(row)) return;
+    if (!row) return;
+    const event = eventForBoardRow(row);
+    if (eventId(event)) return;
+    const fallback = soccerwayForBoardRow(row);
     closeManualScoreEditor();
     const teams = splitMatch(row.match);
     const existing = row.manualScore &&
@@ -1328,16 +1350,18 @@
     const sheet = document.createElement('div');
     sheet.className = 'manualScoreSheet';
     sheet.innerHTML = '<section class="manualScoreDialog" role="dialog" aria-modal="true" aria-labelledby="manualScoreTitle">' +
-      '<header><div><span>Unsupported match</span><h2 id="manualScoreTitle">Custom score</h2></div>' +
+      '<header><div><span>' + (fallback ? 'Provider correction' : 'Unsupported match') + '</span><h2 id="manualScoreTitle">Custom score</h2></div>' +
       '<button type="button" class="manualScoreClose" aria-label="Close score editor">×</button></header>' +
-      '<p class="manualScoreIntro">BSD and Soccerway do not have a matched live feed for this fixture. Add its score manually to keep your board current.</p>' +
+      '<p class="manualScoreIntro">' + (fallback ?
+        'Soccerway is matched, but its live score can lag. A manual correction overrides the fallback score until you clear it.' :
+        'BSD and Soccerway do not have a matched live feed for this fixture. Add its score manually to keep your board current.') + '</p>' +
       '<form><div class="manualScoreTeams">' +
       '<label><span>' + esc(teams.home || 'Home') + '</span><input name="home" type="number" min="0" max="99" step="1" inputmode="numeric" required value="' +
       (existing ? esc(Number(row.manualScore.home)) : '') + '" aria-label="' + esc((teams.home || 'Home') + ' score') + '"></label>' +
       '<b aria-hidden="true">–</b>' +
       '<label><span>' + esc(teams.away || 'Away') + '</span><input name="away" type="number" min="0" max="99" step="1" inputmode="numeric" required value="' +
       (existing ? esc(Number(row.manualScore.away)) : '') + '" aria-label="' + esc((teams.away || 'Away') + ' score') + '"></label>' +
-      '</div><p class="manualScoreNote">Manual entries are labelled <strong>Custom</strong> and never replace supported live scores.</p>' +
+      '</div><p class="manualScoreNote">Manual corrections override fallback scores only. <strong>BSD always remains authoritative</strong> when available.</p>' +
       '<p class="manualScoreError" role="alert" aria-live="assertive"></p>' +
       '<footer>' + (existing ? '<button type="button" class="manualScoreClear">Clear score</button>' : '<span></span>') +
       '<div><button type="button" class="manualScoreCancel">Cancel</button><button type="submit" class="manualScoreSave">Save score</button></div>' +
