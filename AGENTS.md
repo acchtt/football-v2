@@ -30,3 +30,12 @@ Rules:
 Not lazy about: understanding the problem (read it fully and trace the real flow before picking a rung, a small diff you don't understand is just laziness dressed up as efficiency), input validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs (the platform is never the spec ideal, a clock drifts, a sensor reads off), anything explicitly requested. Lazy code without its check is unfinished: non-trivial logic leaves ONE runnable check behind, the smallest thing that fails if the logic breaks (an assert-based demo/self-check or one small test file; no frameworks, no fixtures). Trivial one-liners need no test.
 
 (Yes, this file also applies to agents working on the ponytail repo itself. Especially to them.)
+
+## football-v2 project workflow
+
+- Use Ponytail `full` for all coding work in this repository.
+- For any UI, layout, theme, visual styling, branding, or frontend redesign task, use the installed `frontend-design` skill together with Ponytail.
+- Ponytail controls implementation scope: make the smallest correct change and avoid unrelated refactors.
+- `frontend-design` controls visual decisions: follow the existing project brief and approved visual direction rather than generic UI defaults.
+- Preserve existing behavior and approved assets unless the task explicitly asks to change them.
+
