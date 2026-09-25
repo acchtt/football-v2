@@ -1,0 +1,72 @@
+name: Diagnose remaining Soccerway fallback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diag-remaining-fallback.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect production feeds and Pages shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -A 'Mozilla/5.0' 'https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=-2' -o /tmp/fm2.json
+          curl -fsS -A 'Mozilla/5.0' 'https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=-1' -o /tmp/fm1.json
+          curl -fsS -A 'Mozilla/5.0' 'https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=0' -o /tmp/f0.json
+          curl -fsS -A 'Mozilla/5.0' 'https://football-v2.acchtt.workers.dev/api/soccerway/board?day=-1' -o /tmp/board.json
+          curl -fsS -A 'Mozilla/5.0' 'https://acchtt.github.io/football-v2/' -o /tmp/page.html
+          curl -fsS -A 'Mozilla/5.0' 'https://acchtt.github.io/football-v2/app-v2.js?v=49' -o /tmp/app.js
+          python - <<'PY'
+          import json,re,unicodedata
+          from pathlib import Path
+          targets=[
+            ('Alianza Atletico Sullana','Sport Boys'),
+            ('Maccabi Hadera Women','Maccabi Holon FC Women'),
+            ('Hapoel Jerusalem Women','Qiryat Gat Women'),
+          ]
+          def norm(v):
+              s=unicodedata.normalize('NFKD',str(v or ''))
+              s=''.join(ch for ch in s if not unicodedata.combining(ch)).lower()
+              s=re.sub(r'\b(women|woman|ladies|w|femenino|feminine)\b',' ',s)
+              s=re.sub(r'\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd|ifk|bk|ff|dff|ik)\b',' ',s)
+              s=re.sub(r'[^a-z0-9]+',' ',s)
+              return ' '.join(t[:-1] if len(t)>5 and t.endswith('s') else t for t in s.split())
+          def score(a,b):
+              x,y=norm(a),norm(b)
+              if not x or not y:return 0
+              if x==y:return 6
+              if x in y or y in x:return 4
+              A=set(x.split());B=set(y.split());ov=len(A&B)/max(len(A),len(B))
+              return 4 if ov>=.75 else 3 if ov>=.5 else 0
+          for fn in ['/tmp/fm2.json','/tmp/fm1.json','/tmp/f0.json']:
+              p=json.loads(Path(fn).read_text())
+              fx=p.get('fixtures') or []
+              print('\nFEED',fn,'count',len(fx),'slateDate',p.get('slateDate'),'day',p.get('day'))
+              for th,ta in targets:
+                  candidates=[]
+                  for f in fx:
+                      sh,sa=score(th,f.get('homeTeam')),score(ta,f.get('awayTeam'))
+                      # show exact/current-logic candidates, plus loose one-side candidates
+                      if sh+sa>=3:
+                          candidates.append((sh+sa,sh,sa,f.get('homeTeam'),f.get('awayTeam'),f.get('homeScore'),f.get('awayScore'),f.get('status'),f.get('kickoffUtcSource'),f.get('competition'),f.get('matchId')))
+                  candidates.sort(reverse=True,key=lambda x:x[0])
+                  print('TARGET',th,'vs',ta,'norm=',norm(th),'|',norm(ta))
+                  for c in candidates[:8]: print('  CAND',c)
+          b=json.loads(Path('/tmp/board.json').read_text())
+          print('\nPRIMARY board count',b.get('count'),'matched',b.get('matchedCount'),'slateDate',b.get('slateDate'))
+          for f in b.get('fixtures',[]):
+              if any((th in str(f.get('boardMatch')) or ta in str(f.get('boardMatch'))) for th,ta in targets):
+                  print('BOARD',json.dumps(f,ensure_ascii=False))
+          html=Path('/tmp/page.html').read_text(errors='replace')
+          app=Path('/tmp/app.js').read_text(errors='replace')
+          print('\nPAGES app-v49 ref', 'app-v2.js?v=49' in html)
+          print('PAGES build-v49', "window.__ARCXI_BUILD__ = 'fallback-v49'" in app)
+          print('PAGES placeholder guard', 'if (!eventId(event)) return false;' in app)
+          PY
