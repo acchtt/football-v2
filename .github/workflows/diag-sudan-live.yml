@@ -15,8 +15,8 @@ jobs:
           set -e
           stamp=$(date +%s)
           for spec in \
-            "BSD LIVE|https://football-v2.acchtt.workers.dev/api/bsd/live?t=$stamp" \
-            "BSD EVENTS|https://football-v2.acchtt.workers.dev/api/bsd/events?date_from=2026-09-25&date_to=2026-09-25&limit=200&t=$stamp" \
+            "BSD_LIVE|https://football-v2.acchtt.workers.dev/api/bsd/live?t=$stamp" \
+            "BSD_EVENTS|https://football-v2.acchtt.workers.dev/api/bsd/events?date_from=2026-09-25%26date_to=2026-09-25%26limit=200%26t=$stamp" \
             "DASHBOARD|https://football-v2.acchtt.workers.dev/api/dashboard-data?t=$stamp"
           do
             label=${spec%%|*}
@@ -24,31 +24,6 @@ jobs:
             echo "===== $label ====="
             tmp=$(mktemp)
             curl -fsSL --retry 2 "$url" -o "$tmp"
-            python3 - "$tmp" <<'PY'
-import json,sys
-p=json.load(open(sys.argv[1],encoding="utf-8"))
-def walk(v):
-    if isinstance(v,dict):
-        yield v
-        for x in v.values(): yield from walk(x)
-    elif isinstance(v,list):
-        for x in v: yield from walk(x)
-seen=set()
-for d in walk(p):
-    s=" ".join(str(d.get(k,"")) for k in ("name","home","away","home_name","away_name","home_team","away_team","match","competition"))
-    if "sudan" not in s.lower() and "ethiopia" not in s.lower(): continue
-    key=repr(sorted((str(k),repr(v)) for k,v in d.items() if k in {
-        "id","event_id","match","name","home","away","home_name","away_name","home_team","away_team",
-        "home_score","away_score","score","status","minute","current_minute","period","kickoff","start_time",
-        "timestamp","competition","league","slateDate","displayKickoff","bsd"
-    }))
-    if key in seen: continue
-    seen.add(key)
-    print({k:d.get(k) for k in (
-        "id","event_id","match","name","home","away","home_name","away_name","home_team","away_team",
-        "home_score","away_score","score","status","minute","current_minute","period","kickoff","start_time",
-        "timestamp","competition","league","slateDate","displayKickoff","bsd"
-    ) if k in d})
-PY
+            jq -c '.. | objects | select((tostring | ascii_downcase | contains("sudan")) or (tostring | ascii_downcase | contains("ethiopia"))) | {id,event_id,match,name,home,away,home_name,away_name,home_team,away_team,home_score,away_score,score,status,minute,current_minute,period,kickoff,start_time,timestamp,competition,league,slateDate,displayKickoff,bsd}' "$tmp" | head -n 120 || true
             rm -f "$tmp"
           done
