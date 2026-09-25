@@ -1,4 +1,4 @@
-name: Diagnose Sudan Ethiopia live lag
+name: Diagnose Sudan Ethiopia BSD binding
 
 on:
   push:
@@ -10,22 +10,45 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Compare raw live feeds
+      - name: Probe BSD production feeds
         run: |
           set -e
-          for host in soccerway.com flashscore.com
+          stamp=$(date +%s)
+          for spec in \
+            "BSD LIVE|https://football-v2.acchtt.workers.dev/api/bsd/live?t=$stamp" \
+            "BSD EVENTS|https://football-v2.acchtt.workers.dev/api/bsd/events?date_from=2026-09-25&date_to=2026-09-25&limit=200&t=$stamp" \
+            "DASHBOARD|https://football-v2.acchtt.workers.dev/api/dashboard-data?t=$stamp"
           do
-            echo "===== $host ====="
+            label=${spec%%|*}
+            url=${spec#*|}
+            echo "===== $label ====="
             tmp=$(mktemp)
-            code=$(curl -L -sS -o "$tmp" -w '%{http_code}' \
-              -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36' \
-              -H 'Accept: */*' \
-              -H 'Accept-Language: en-GB,en;q=0.9' \
-              -H "Referer: https://www.$host/" \
-              -H "Origin: https://www.$host" \
-              -H 'x-fsign: SW9D1eZo' \
-              "https://www.$host/x/feed/f_1_0_3_en_1")
-            echo "HTTP $code bytes $(wc -c < "$tmp")"
-            tr '¬' '\n' < "$tmp" | grep -Ei -B 18 -A 35 '~AA÷dYsi4GbD|AA÷dYsi4GbD|AE÷Sudan|AF÷Ethiopia' | head -n 220 || true
+            curl -fsSL --retry 2 "$url" -o "$tmp"
+            python3 - "$tmp" <<'PY'
+import json,sys
+p=json.load(open(sys.argv[1],encoding="utf-8"))
+def walk(v):
+    if isinstance(v,dict):
+        yield v
+        for x in v.values(): yield from walk(x)
+    elif isinstance(v,list):
+        for x in v: yield from walk(x)
+seen=set()
+for d in walk(p):
+    s=" ".join(str(d.get(k,"")) for k in ("name","home","away","home_name","away_name","home_team","away_team","match","competition"))
+    if "sudan" not in s.lower() and "ethiopia" not in s.lower(): continue
+    key=repr(sorted((str(k),repr(v)) for k,v in d.items() if k in {
+        "id","event_id","match","name","home","away","home_name","away_name","home_team","away_team",
+        "home_score","away_score","score","status","minute","current_minute","period","kickoff","start_time",
+        "timestamp","competition","league","slateDate","displayKickoff","bsd"
+    }))
+    if key in seen: continue
+    seen.add(key)
+    print({k:d.get(k) for k in (
+        "id","event_id","match","name","home","away","home_name","away_name","home_team","away_team",
+        "home_score","away_score","score","status","minute","current_minute","period","kickoff","start_time",
+        "timestamp","competition","league","slateDate","displayKickoff","bsd"
+    ) if k in d})
+PY
             rm -f "$tmp"
           done
