@@ -1,0 +1,39 @@
+name: Verify ICT fallback date
+
+on:
+  push:
+    paths:
+      - .github/workflows/verify-ict-fallback-date.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify production API
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -A 'Mozilla/5.0' 'https://football-v2.acchtt.workers.dev/api/soccerway/board?day=-1' -o /tmp/board.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('/tmp/board.json').read_text())
+          targets={
+            'IFK Varnamo Women vs Kristianstads DFF Women':(0,8),
+            'Hammarby Women vs Glasgow Rangers Women':(2,0),
+            'Feyenoord Women vs Valerenga Women':(4,1),
+            'VfL Wolfsburg Women vs Sturm Graz Women':(6,1),
+            'Ajax Amsterdam Women vs Aktobe Women':(8,0),
+          }
+          found={f.get('boardMatch'):f for f in p.get('fixtures',[]) if f.get('boardMatch') in targets}
+          print('slateDate=',p.get('slateDate'),'count=',p.get('count'),'matched=',p.get('matchedCount'))
+          assert set(found)==set(targets),(set(targets)-set(found),p)
+          for match,score in targets.items():
+              f=found[match]
+              print(match, f.get('homeScore'), '-', f.get('awayScore'), 'logos=',bool(f.get('homeLogoUrl')),bool(f.get('awayLogoUrl')),bool(f.get('competitionLogo')),'sourceSlateDate=',f.get('sourceSlateDate'))
+              assert (f.get('homeScore'),f.get('awayScore'))==score,f
+              assert f.get('homeLogoUrl') and f.get('awayLogoUrl') and f.get('competitionLogo'),f
+          PY
