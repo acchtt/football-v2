@@ -2,6 +2,7 @@
   'use strict';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
+  const SOCCERWAY_API = window.ARCXI_SOCCERWAY_API || 'https://soccerway-livescore.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
   const root = document.getElementById('app');
   if (!root) return;
@@ -20,6 +21,8 @@
     pickFilter: readStore('sliptrace.pickFilter.v3', 'open', sessionStorage),
     matchClockAnchor: new Map(),
     matchdayCache: new Map(),
+    soccerwayCache: new Map(),
+    soccerwayPromises: new Map(),
     matchdayRequest: 0,
     boardPromise: null,
     clockTimer: null,
@@ -164,6 +167,73 @@
       throw new Error(pick(payload && payload.error, payload && payload.detail, 'HTTP ' + response.status));
     }
     return payload;
+  }
+
+  function soccerwayDayOffset(date) {
+    for (let day = -7; day <= 7; day += 1) if (todayKey(day) === date) return day;
+    return null;
+  }
+  function soccerwayForBoardRow(row) {
+    const date = String(row && row.slateDate || state.date || '');
+    const cache = state.soccerwayCache.get(date);
+    return cache && cache.byId ? cache.byId.get(String(row && row.id || '')) || null : null;
+  }
+  function soccerwayStatusKey(fixture) {
+    const value = String(fixture && fixture.status || '').toLowerCase();
+    if (value === 'live') return 'live';
+    if (['finished','ft','ended','complete','completed'].includes(value)) return 'finished';
+    return 'upcoming';
+  }
+  function soccerwayScoreText(fixture) {
+    const home = num(fixture && fixture.homeScore);
+    const away = num(fixture && fixture.awayScore);
+    return home !== null && away !== null ? home + '–' + away : 'VS';
+  }
+  function soccerwayMinuteText(fixture) {
+    const minute = fixture && fixture.minute;
+    if (minute !== undefined && minute !== null && String(minute).trim()) return String(minute).replace(/['’]+$/,'') + '′';
+    return String(fixture && fixture.statusText || 'LIVE');
+  }
+  async function loadSoccerwayFallback(date, force) {
+    const day = soccerwayDayOffset(date);
+    if (day === null) return [];
+    const current = state.soccerwayCache.get(date);
+    const ttl = date === todayKey() ? 15000 : 300000;
+    if (!force && current && Date.now() - current.loadedAt < ttl) return current.fixtures;
+    if (state.soccerwayPromises.has(date)) return state.soccerwayPromises.get(date);
+
+    const task = fetch(SOCCERWAY_API + '/api/board?day=' + day + '&t=' + Date.now(), {cache:'no-store'})
+      .then(function (response) {
+        return response.json().catch(function () { return null; }).then(function (payload) {
+          if (!response.ok || !payload || payload.ok === false || !Array.isArray(payload.fixtures)) {
+            throw new Error(pick(payload && payload.error, 'Soccerway HTTP ' + response.status));
+          }
+          const matched = payload.fixtures.filter(function (fixture) { return fixture && fixture.matchedToSoccerway === true; });
+          const byId = new Map();
+          matched.forEach(function (fixture) {
+            if (fixture.boardId !== undefined && fixture.boardId !== null) byId.set(String(fixture.boardId), fixture);
+          });
+          state.soccerwayCache.set(date, {
+            fixtures: matched,
+            byId: byId,
+            loadedAt: Date.now(),
+            matchedCount: matched.length,
+            totalCount: Number(payload.count) || payload.fixtures.length,
+            error: ''
+          });
+          return matched;
+        });
+      })
+      .catch(function (error) {
+        const previous = state.soccerwayCache.get(date);
+        state.soccerwayCache.set(date, previous ? Object.assign({}, previous, {error:error.message || String(error)}) : {
+          fixtures: [], byId: new Map(), loadedAt: Date.now(), matchedCount: 0, totalCount: 0, error:error.message || String(error)
+        });
+        return [];
+      })
+      .finally(function () { state.soccerwayPromises.delete(date); });
+    state.soccerwayPromises.set(date, task);
+    return task;
   }
 
   function normalizeName(value) {
@@ -392,6 +462,8 @@
   function boardStatus(row) {
     const event = eventForBoardRow(row);
     if (event) return statusKey(event);
+    const fallback = soccerwayForBoardRow(row);
+    if (fallback) return soccerwayStatusKey(fallback);
     const declared = String(row && (row.status || row.matchStatus) || '').toLowerCase();
     if (['finished','ft','ended','complete','completed','final'].includes(declared)) return 'finished';
     const kickoff = Date.parse(row && (row.kickoff || row.displayKickoff));
@@ -400,13 +472,16 @@
   }
   function boardKickoff(row) {
     const event = eventForBoardRow(row);
-    return event ? eventKickoff(event) : row && (row.kickoff || row.displayKickoff);
+    if (event) return eventKickoff(event);
+    const fallback = soccerwayForBoardRow(row);
+    return pick(fallback && fallback.kickoffUtcSource, fallback && fallback.boardKickoff, row && row.kickoff, row && row.displayKickoff);
   }
   function boardMatchBlock(row, index) {
     const event = eventForBoardRow(row);
+    const fallback = event ? null : soccerwayForBoardRow(row);
     const id = event && eventId(event);
-    const unsupported = !id;
-    const status = event ? statusKey(event) : boardStatus(row);
+    const unsupported = !id && !fallback;
+    const status = event ? statusKey(event) : fallback ? soccerwayStatusKey(fallback) : boardStatus(row);
     const tier = String(row.tier || 'WATCHLIST').toUpperCase();
     const tierClass = tier === 'FOCUS' ? 'tier-focus' : 'tier-watchlist';
     const grade = row.grade || '—';
@@ -415,21 +490,33 @@
       away: teamName(event, 'away')
     } : splitMatch(row.match);
     const kickoff = boardKickoff(row);
-    const competition = row.competition || (event && leagueName(event)) || 'Competition';
+    const competition = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
     const lid = event && leagueId(event);
     const hasManualScore = unsupported && row.manualScore &&
       Number.isInteger(Number(row.manualScore.home)) && Number.isInteger(Number(row.manualScore.away));
     const finished = status === 'finished';
-    const primary = hasManualScore ? Number(row.manualScore.home) + '–' + Number(row.manualScore.away) :
-      finished && !unsupported ? scoreText(event) : finished ? '—' : status === 'live' ? scoreText(event) : formatTime(kickoff);
-    const secondary = hasManualScore ? (finished ? 'Manual FT' : 'Manual score') :
-      finished ? (unsupported ? 'Score needed' : 'Full time') : status === 'live' ? liveClock(event) : unsupported ? 'No BSD feed' : 'ICT kickoff';
+    let primary;
+    let secondary;
+    if (hasManualScore) {
+      primary = Number(row.manualScore.home) + '–' + Number(row.manualScore.away);
+      secondary = finished ? 'Manual FT' : 'Manual score';
+    } else if (event) {
+      primary = finished || status === 'live' ? scoreText(event) : formatTime(kickoff);
+      secondary = finished ? 'Full time' : status === 'live' ? liveClock(event) : 'ICT kickoff';
+    } else if (fallback) {
+      primary = finished || status === 'live' ? soccerwayScoreText(fallback) : formatTime(kickoff);
+      secondary = finished ? 'Soccerway · Full time' : status === 'live' ? 'Soccerway · ' + soccerwayMinuteText(fallback) : 'Soccerway · ICT kickoff';
+    } else {
+      primary = finished ? '—' : formatTime(kickoff);
+      secondary = finished ? 'Score needed' : 'No live feed';
+    }
     const statusName = hasManualScore ? 'Custom' : finished ? 'FT' : status === 'live' ? 'LIVE' : 'PRE';
     const statusClass = hasManualScore ? 'manual' : status;
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
-      'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"';
+      'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"' +
+      (fallback ? ' data-score-source="soccerway"' : '');
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
     const stateIcon = hasManualScore ?
@@ -452,7 +539,8 @@
       crest('team', event && teamId(event, 'away'), teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : '') +
       '<b>' + esc(competition) + '</b></span></div>' +
-      '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>MODEL</span></div>' +
+      '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>' +
+      (fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
       (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
       close + '</article>';
   }
@@ -519,11 +607,13 @@
   function contextClock(counts) {
     const now = new Date();
     const safeCounts = counts || {live:0,upcoming:0,finished:0};
+    const soccerway = state.soccerwayCache.get(state.date);
+    const providerLabel = soccerway && soccerway.matchedCount ? 'BSD + SW' : 'BSD';
     return '<section class="contextClock"><div><span data-context-date>' + esc(new Intl.DateTimeFormat('en-US', {
       timeZone:TZ, weekday:'short', month:'short', day:'numeric', year:'numeric'
     }).format(now)) + '</span><strong data-context-clock>' + esc(new Intl.DateTimeFormat('en-GB', {
       timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false
-    }).format(now)) + '</strong><small>ICT · GMT+7 · BSD ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div>' +
+    }).format(now)) + '</strong><small>ICT · GMT+7 · ' + providerLabel + ' ' + (state.error ? 'DELAYED' : 'LIVE') + '</small></div>' +
       '<i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path></svg></i>' +
       '<div class="railPulse" aria-label="Slate status"><span><b>' + safeCounts.live + '</b> live</span><span><b>' +
       safeCounts.upcoming + '</b> upcoming</span><span><b>' + safeCounts.finished + '</b> FT</span></div></section>';
@@ -545,16 +635,20 @@
         '<p>No live or upcoming ranked match on this date.</p></section>';
     }
     const event = eventForBoardRow(row);
+    const fallback = event ? null : soccerwayForBoardRow(row);
     const id = event && eventId(event);
-    const status = event ? statusKey(event) : boardStatus(row);
+    const status = event ? statusKey(event) : fallback ? soccerwayStatusKey(fallback) : boardStatus(row);
     const tier = String(row.tier || 'WATCHLIST').toUpperCase();
     const grade = row.grade || '—';
     const teams = event ? {home:teamName(event,'home'),away:teamName(event,'away')} : splitMatch(row.match);
     const kickoff = boardKickoff(row);
-    const competition = row.competition || (event && leagueName(event)) || 'Competition';
+    const competition = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
     const live = status === 'live';
-    const primary = live && event ? scoreText(event) : formatTime(kickoff);
-    const secondary = live && event ? liveClock(event) : countdownText(kickoff);
+    const finished = status === 'finished';
+    const primary = event ? (live || finished ? scoreText(event) : formatTime(kickoff)) :
+      fallback ? (live || finished ? soccerwayScoreText(fallback) : formatTime(kickoff)) : formatTime(kickoff);
+    const secondary = event ? (live ? liveClock(event) : finished ? 'Full time' : countdownText(kickoff)) :
+      fallback ? (live ? 'SW · ' + soccerwayMinuteText(fallback) : finished ? 'SW · Full time' : countdownText(kickoff)) : countdownText(kickoff);
     const label = live ? 'Live priority' : tier === 'FOCUS' ? 'Next focus' : 'Next watchlist';
     const body = '<header><span>' + esc(label) + '</span><b class="' + (tier === 'FOCUS' ? 'focus' : 'watch') + '">' +
       esc(tier) + ' · ' + esc(grade) + '</b></header><div class="railDecisionCompetition">' + esc(competition) + '</div>' +
@@ -562,7 +656,7 @@
       '<span>' + esc(teams.home || 'Home') + '</span></div><div>' + crest('team', event && teamId(event,'away'), teams.away || 'Away') +
       '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<div class="railDecisionState"><strong>' + esc(primary) + '</strong><span data-countdown="' + esc(kickoff || '') + '">' +
-      esc(secondary) + '</span></div><footer>' + (id ? 'Open match' : 'Ranked slate') +
+      esc(secondary) + '</span></div><footer>' + (id ? 'Open match' : fallback ? 'Soccerway feed' : 'Ranked slate') +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></footer>';
     return '<section class="railDecision">' + (id ? '<a href="#match/' + id + '">' + body + '</a>' : body) + '</section>';
   }
@@ -661,6 +755,7 @@
   async function loadMatchday(date, silent, force) {
     const requestedDate = date || state.date;
     const requestId = ++state.matchdayRequest;
+    const fallbackTask = loadSoccerwayFallback(requestedDate, Boolean(force));
     const cached = state.matchdayCache.get(requestedDate);
     const cacheAge = cached ? Date.now() - cached.loadedAt : Infinity;
     const cacheTtl = requestedDate === todayKey() ? 60000 : 600000;
@@ -680,6 +775,9 @@
     if (fresh && !force) {
       if (!state.board) await loadBoard(false);
       if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+      fallbackTask.then(function () {
+        if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+      });
       return state.today;
     }
 
@@ -700,6 +798,9 @@
       state.error = error.message || String(error);
     }
     if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+    fallbackTask.then(function () {
+      if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+    });
     return state.today;
   }
 
@@ -1134,7 +1235,7 @@
   }
   function openManualScoreEditor(key) {
     const row = manualScoreRow(key);
-    if (!row || eventId(eventForBoardRow(row))) return;
+    if (!row || eventId(eventForBoardRow(row)) || soccerwayForBoardRow(row)) return;
     closeManualScoreEditor();
     const teams = splitMatch(row.match);
     const existing = row.manualScore &&
@@ -1144,7 +1245,7 @@
     sheet.innerHTML = '<section class="manualScoreDialog" role="dialog" aria-modal="true" aria-labelledby="manualScoreTitle">' +
       '<header><div><span>Unsupported match</span><h2 id="manualScoreTitle">Custom score</h2></div>' +
       '<button type="button" class="manualScoreClose" aria-label="Close score editor">×</button></header>' +
-      '<p class="manualScoreIntro">This match has no live data feed. Add its score manually to keep your board current.</p>' +
+      '<p class="manualScoreIntro">BSD and Soccerway do not have a matched live feed for this fixture. Add its score manually to keep your board current.</p>' +
       '<form><div class="manualScoreTeams">' +
       '<label><span>' + esc(teams.home || 'Home') + '</span><input name="home" type="number" min="0" max="99" step="1" inputmode="numeric" required value="' +
       (existing ? esc(Number(row.manualScore.home)) : '') + '" aria-label="' + esc((teams.home || 'Home') + ' score') + '"></label>' +
@@ -1341,6 +1442,11 @@
     if (document.visibilityState === 'hidden') return;
     if (routeName() === 'board' && state.date !== todayKey()) return;
     state.refreshTick += 1;
+    if (routeName() === 'board' && state.date === todayKey() && state.refreshTick % 2 === 0) {
+      loadSoccerwayFallback(state.date, true).then(function () {
+        if (routeName() === 'board' && state.date === todayKey()) renderMatchday();
+      });
+    }
     try {
       if (state.refreshTick % 6 === 0 && routeName() === 'board' && state.date === todayKey()) {
         await loadMatchday(state.date, true, true);
