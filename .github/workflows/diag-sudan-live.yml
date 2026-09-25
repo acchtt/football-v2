@@ -3,93 +3,43 @@ name: Diagnose Sudan Ethiopia live lag
 on:
   push:
     paths:
-      - ".github/workflows/diag-sudan-live.yml"
+      - .github/workflows/diag-sudan-live.yml
   workflow_dispatch:
 
 jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe production live feeds
-        shell: bash
+      - name: Probe production feeds
         run: |
-          set -euo pipefail
-          probe_json () {
-            label="$1"
-            url="$2"
+          set -e
+          stamp=$(date +%s)
+          for spec in \
+            "PRIMARY|https://football-v2.acchtt.workers.dev/api/soccerway/board?day=0&t=$stamp" \
+            "BOARD|https://soccerway-livescore.acchtt.workers.dev/api/board?day=0&t=$stamp" \
+            "FIXTURES0|https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=0&t=$stamp" \
+            "LIVE0|https://soccerway-livescore.acchtt.workers.dev/api/live?day=0&t=$stamp" \
+            "FIXTURESM1|https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=-1&t=$stamp" \
+            "LIVEM1|https://soccerway-livescore.acchtt.workers.dev/api/live?day=-1&t=$stamp"
+          do
+            label=${spec%%|*}
+            url=${spec#*|}
             echo "===== $label ====="
-            tmp="$(mktemp)"
-            curl -fsSL --retry 2 --connect-timeout 10 "$url" -o "$tmp" || { echo "FETCH FAILED"; rm -f "$tmp"; return; }
-            python3 - "$tmp" <<'PY'
-import json,sys
-p=sys.argv[1]
-try:
-    data=json.load(open(p,encoding="utf-8"))
-except Exception as e:
-    print("json error",e)
-    print(open(p,encoding="utf-8",errors="replace").read()[:1000])
-    raise SystemExit
-print("generatedAt",data.get("generatedAt"),"count",data.get("count"),"liveCount",data.get("liveCount"),"cached",data.get("cached"))
-fixtures=data.get("fixtures") or data.get("data",{}).get("fixtures") or []
-for f in fixtures:
-    text=" ".join(str(f.get(k,"")) for k in ("homeTeam","awayTeam","boardMatch","competition"))
-    if "sudan" in text.lower() or "ethiopia" in text.lower():
-        keys=("matchId","boardId","boardMatch","homeTeam","awayTeam","homeScore","awayScore","status","statusText","minute","rawStatusCode","kickoffUtcSource","boardKickoff","matchedToSoccerway","source")
-        print({k:f.get(k) for k in keys})
-PY
-            rm -f "$tmp"
-          }
-          stamp="$(date +%s)"
-          probe_json "PRIMARY BOARD day0" "https://football-v2.acchtt.workers.dev/api/soccerway/board?day=0&t=$stamp"
-          probe_json "FALLBACK BOARD day0" "https://soccerway-livescore.acchtt.workers.dev/api/board?day=0&t=$stamp"
-          probe_json "FALLBACK FIXTURES day0" "https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=0&t=$stamp"
-          probe_json "FALLBACK LIVE day0" "https://soccerway-livescore.acchtt.workers.dev/api/live?day=0&t=$stamp"
-          probe_json "FALLBACK FIXTURES day-1" "https://soccerway-livescore.acchtt.workers.dev/api/fixtures?day=-1&t=$stamp"
-          probe_json "FALLBACK LIVE day-1" "https://soccerway-livescore.acchtt.workers.dev/api/live?day=-1&t=$stamp"
-
-      - name: Probe raw provider feeds
-        shell: bash
+            curl -fsSL --retry 2 "$url" | jq -c '
+              {generatedAt,cached,count,liveCount},
+              ((.fixtures // .data.fixtures // [])[] |
+                select((((.homeTeam // "") + " " + (.awayTeam // "") + " " + (.boardMatch // "")) | ascii_downcase) |
+                contains("sudan") or contains("ethiopia")) |
+                {matchId,boardId,boardMatch,homeTeam,awayTeam,homeScore,awayScore,status,statusText,minute,rawStatusCode,kickoffUtcSource,boardKickoff,matchedToSoccerway,source})'
+          done
+      - name: Probe raw Soccerway record
         run: |
-          set -euo pipefail
-          probe_raw () {
-            label="$1"
-            url="$2"
-            referer="$3"
-            origin="$4"
-            echo "===== $label ====="
-            tmp="$(mktemp)"
-            code="$(curl -L -sS -o "$tmp" -w '%{http_code}' --connect-timeout 10 \
-              -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36' \
-              -H 'Accept: */*' -H 'Accept-Language: en-GB,en;q=0.9' \
-              -H "Referer: $referer" -H "Origin: $origin" -H 'x-fsign: SW9D1eZo' "$url" || true)"
-            echo "HTTP $code bytes $(wc -c < "$tmp")"
-            python3 - "$tmp" <<'PY'
-import sys,re
-raw=open(sys.argv[1],encoding="utf-8",errors="replace").read()
-parts=raw.split("¬")
-hits=[]
-cur=[]
-for tok in parts:
-    if tok.startswith("~"): tok=tok[1:]
-    if tok.startswith("AA÷") and cur:
-        text=" ¬ ".join(cur)
-        if "sudan" in text.lower() or "ethiopia" in text.lower(): hits.append(text)
-        cur=[tok]
-    else:
-        cur.append(tok)
-if cur:
-    text=" ¬ ".join(cur)
-    if "sudan" in text.lower() or "ethiopia" in text.lower(): hits.append(text)
-for h in hits[:10]:
-    fields={}
-    for tok in h.split(" ¬ "):
-        if "÷" in tok:
-            k,v=tok.split("÷",1)
-            if k in {"AA","AB","AC","AW","BX","AE","AF","AG","AH","AD","JA","JB"}: fields[k]=v
-    print(fields)
-print("hits",len(hits))
-PY
-            rm -f "$tmp"
-          }
-          probe_raw "SOCCERWAY RAW day0" "https://www.soccerway.com/x/feed/f_1_0_3_en_1" "https://www.soccerway.com/" "https://www.soccerway.com"
-          probe_raw "FLASHSCORE RAW day0" "https://www.flashscore.com/x/feed/f_1_0_3_en_1" "https://www.flashscore.com/" "https://www.flashscore.com"
+          set -e
+          tmp=$(mktemp)
+          code=$(curl -L -sS -o "$tmp" -w '%{http_code}' \
+            -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36' \
+            -H 'Accept: */*' -H 'Accept-Language: en-GB,en;q=0.9' \
+            -H 'Referer: https://www.soccerway.com/' -H 'Origin: https://www.soccerway.com' \
+            -H 'x-fsign: SW9D1eZo' 'https://www.soccerway.com/x/feed/f_1_0_3_en_1')
+          echo "HTTP $code bytes $(wc -c < "$tmp")"
+          tr '¬' '\n' < "$tmp" | grep -Ei -B 15 -A 25 'Sudan|Ethiopia' | head -n 160 || true
