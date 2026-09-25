@@ -32,3 +32,7 @@ npm run dev
 The repository workflow `.github/workflows/deploy-soccerway-livescore.yml` deploys this folder as the independent Cloudflare Worker `soccerway-livescore`.
 
 This relies on an undocumented website feed and may require maintenance if Soccerway changes its frontend protocol.
+
+## ARC XI fallback
+
+This worker is also used as the zero-cost fallback score source for ARC XI when a ranked Board match is not available from BSD.
