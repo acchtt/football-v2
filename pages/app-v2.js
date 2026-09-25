@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  window.__ARCXI_BUILD__ = 'fallback-v48';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';

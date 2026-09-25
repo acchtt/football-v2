@@ -73,6 +73,20 @@
     }
     return swPromise;
   }
+  let swReloadArmed=false;
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(swReloadArmed)return;
+      swReloadArmed=true;
+      const key='arcxi.swReload.v92';
+      try{
+        if(sessionStorage.getItem(key)==='1')return;
+        sessionStorage.setItem(key,'1');
+      }catch{}
+      location.reload();
+    });
+  }
+
   function getPushConfig(force=false){
     if(force||!pushConfigPromise){
       pushConfigPromise=api('/api/push/config').catch(error=>({ok:false,enabled:false,error:error.message}));
