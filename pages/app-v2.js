@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'live-correction-v53';
+  window.__ARCXI_BUILD__ = 'live-correction-v54';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -808,6 +808,7 @@
       if (state.signalFilter === 'focus') return tier === 'FOCUS';
       if (state.signalFilter === 'watchlist') return tier === 'WATCHLIST';
       if (state.signalFilter === 'follow') return boardLane(row) === 'FOLLOW';
+      if (state.signalFilter === 'reserve') return boardLane(row) === 'RESERVE';
       return true;
     });
     const statusButton = function (key, label) {
@@ -821,34 +822,27 @@
     };
     const signalLabel = state.signalFilter === 'focus' ? 'Focus' :
       state.signalFilter === 'watchlist' ? 'Watchlist' :
-      state.signalFilter === 'follow' ? 'Follow' : 'All signals';
+      state.signalFilter === 'follow' ? 'Follow' :
+      state.signalFilter === 'reserve' ? 'Reserve' : 'All signals';
     const controls = '<div class="filterBar"><div class="statusFilters" role="group" aria-label="Match status">' +
       statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
       '</div><div class="filterActions"><details class="modelFilter"><summary><span>Model</span><b>' + signalLabel +
       '</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg></summary>' +
       '<div class="modelFilterMenu" role="group" aria-label="Model signal">' +
-      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + signalButton('follow','Follow') +
-      '<p><b>Focus</b> is the strongest ranked slate. <b>Watchlist</b> keeps secondary candidates visible. <b>Follow</b> shows the operational Step-2 queue.</p></div></details>' +
+      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') +
+      signalButton('follow','Follow') + signalButton('reserve','Reserve') +
+      '<p><b>Follow</b> and <b>Reserve</b> are operational lanes from the current board. Use them to narrow the same match list without changing the board layout.</p></div></details>' +
       '<button class="syncBoardButton" id="refreshToday" type="button" aria-label="Sync board">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg><span>Sync</span></button></div></div>';
-    const followRows = boardRows.filter(function (row) {
-      if (boardLane(row) !== 'FOLLOW') return false;
-      return state.statusFilter === 'all' || boardStatus(row) === state.statusFilter;
-    });
-    const boardFiltered = filtered.filter(function (row) { return boardLane(row) !== 'FOLLOW'; });
-    const followSection = followRows.length ?
-      '<section class="matchSection followQueueSection">' +
-        sectionHead('Follow queue', followRows.length + ' match' + (followRows.length === 1 ? '' : 'es') + ' · Step 2') +
-        boardMatchList(followRows) + '</section>' : '';
     const boardBody = state.error && !boardRows.length ?
       '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
-      boardFiltered.length ? boardMatchList(boardFiltered) : boardRows.length ?
-        '<div class="emptyState"><strong>No other matches for this filter</strong><span>FOLLOW fixtures are shown in the queue above. Reset filters to return to the full ranked slate.</span>' +
+      filtered.length ? boardMatchList(filtered) : boardRows.length ?
+        '<div class="emptyState"><strong>No matches for this filter</strong><span>Reset the filters to return to the full operational slate.</span>' +
         '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
-        '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>';
+        '<div class="emptyState"><strong>No ranked Board matches</strong><span>No operational entries were added for this date.</span></div>';
     const content = matchdayHero() +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      dateStrip() + controls + followSection + '<section class="matchSection">' + sectionHead('Board matches', boardFiltered.length + ' shown') +
+      dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
       boardBody + '</section>';
     root.innerHTML = shell(content, matchdayContext(boardRows, counts), 'boardHomeRoute');
     bindGlobal();
