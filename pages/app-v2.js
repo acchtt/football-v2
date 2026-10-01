@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'board-density-v55';
+  window.__ARCXI_BUILD__ = 'schedule-image-code-v56';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -18,6 +18,7 @@
     refreshTick: 0,
     statusFilter: readStore('sliptrace.statusFilter.v3', 'all', sessionStorage),
     signalFilter: readStore('sliptrace.signalFilter.v3', 'all', localStorage),
+    boardQuery: '',
     pickFilter: readStore('sliptrace.pickFilter.v3', 'open', sessionStorage),
     matchClockAnchor: new Map(),
     matchdayCache: new Map(),
@@ -363,8 +364,20 @@
       '<a class="brand" href="#board"><span class="brandMark"><img src="./icons/arc-xi-transparent-512.png?v=2" alt=""></span><span class="brandWords"><b>ARC XI</b><small>Live football · Match intelligence</small></span></a>' +
       menu + '</div></header>';
   }
+  function scheduleHeader() {
+    return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
+      '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule"><span class="scheduleBrandArc">ARC</span>' +
+      '<span class="scheduleBrandStar" aria-hidden="true">★</span><span class="scheduleBrandXi">XI</span>' +
+      '<small>Live football schedule</small></a>' +
+      '<div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div></div></header>';
+  }
   function shell(content, context, className) {
-    return header() + '<div class="appFrame ' + esc(className || '') + '">' +
+    const classes = String(className || '');
+    if (classes.includes('scheduleBoardRoute')) {
+      return scheduleHeader() + '<div class="appFrame ' + esc(classes) + '">' +
+        '<div class="contentFrame"><main class="mainView">' + content + '</main></div></div>';
+    }
+    return header() + '<div class="appFrame ' + esc(classes) + '">' +
       '<div class="contentFrame"><main class="mainView">' + content + '</main>' +
       (context ? '<aside class="contextRail">' + context + '</aside>' : '') +
       '</div></div>' + navigation('mobileNav');
@@ -391,7 +404,7 @@
   }
   function dateStrip() {
     let html = '<div class="dateStrip" aria-label="Match date">';
-    [-3,-2,-1,0,1,2,3].forEach(function (offset) {
+    [-2,-1,0,1,2].forEach(function (offset) {
       const date = todayKey(offset);
       const d = new Date(date + 'T12:00:00Z');
       const weekday = offset === 0 ? 'Today' : new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
@@ -535,71 +548,59 @@
     const unsupported = !id && !fallback;
     const status = event ? statusKey(event) : fallback ? soccerwayStatusKey(fallback) : boardStatus(row);
     const tier = String(row.tier || 'WATCHLIST').toUpperCase();
-    const tierClass = tier === 'FOCUS' ? 'tier-focus' : 'tier-watchlist';
     const lane = boardLane(row);
-    const grade = row.grade || '—';
     const teams = event ? {
       home: teamName(event, 'home'),
       away: teamName(event, 'away')
     } : splitMatch(row.match);
     const kickoff = boardKickoff(row);
-    const competition = row.competition || (event && leagueName(event)) || (fallback && fallback.competition) || 'Competition';
-    const lid = event && leagueId(event);
     const manualScore = manualBoardScore(row, event);
     const hasManualScore = Boolean(manualScore);
     const finished = status === 'finished';
+    const live = status === 'live';
     const canManualScore = !event && (!fallback || status !== 'upcoming');
-    let primary;
-    let secondary;
+    const kickoffText = formatTime(kickoff);
+    let scoreLabel = 'VS';
+    let detail = '';
     if (hasManualScore) {
-      primary = manualScore.home + '–' + manualScore.away;
-      secondary = fallback ?
-        (finished ? 'Manual · FT' : status === 'live' ? 'Manual · ' + soccerwayMinuteText(fallback) : 'Manual') :
-        (finished ? 'Manual FT' : 'Manual');
-    } else if (event) {
-      primary = finished || status === 'live' ? scoreText(event) : formatTime(kickoff);
-      secondary = finished ? 'Full time' : status === 'live' ? liveClock(event) : 'ICT kickoff';
-    } else if (fallback) {
-      primary = finished || status === 'live' ? soccerwayScoreText(fallback) : formatTime(kickoff);
-      secondary = finished ? 'Full time' : status === 'live' ? soccerwayMinuteText(fallback) : 'ICT kickoff';
-    } else {
-      primary = finished ? '—' : formatTime(kickoff);
-      secondary = finished ? 'Score needed' : 'No live feed';
+      scoreLabel = manualScore.home + '–' + manualScore.away;
+      detail = live && fallback ? soccerwayMinuteText(fallback) : finished ? 'FT' : 'MANUAL';
+    } else if (event && (live || finished)) {
+      scoreLabel = scoreText(event);
+      detail = live ? liveClock(event) : 'FT';
+    } else if (fallback && (live || finished)) {
+      scoreLabel = soccerwayScoreText(fallback);
+      detail = live ? soccerwayMinuteText(fallback) : 'FT';
+    } else if (finished) {
+      scoreLabel = '—';
+      detail = 'FT';
     }
-    const statusName = finished ? 'FT' : status === 'live' ? 'LIVE' : hasManualScore ? 'Custom' : 'PRE';
-    const statusClass = finished ? 'finished' : status === 'live' ? 'live' : hasManualScore ? 'manual' : status;
+    const statusName = finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : 'PRE';
+    const statusClass = finished ? 'finished' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
-    const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
+    const attrs = 'class="matchRow boardFixture scheduleFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
       'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"' +
       (lane ? ' data-operational-lane="' + esc(lane) + '"' : '') +
       (fallback ? ' data-score-source="soccerway"' : '');
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
-    const stateIcon = finished ?
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"></path><path d="M6 5h11l-2 4 2 4H6"></path></svg>' :
-      status === 'live' ?
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"></path></svg>' :
-      hasManualScore ?
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 4 4 12-12-4-4L4 16Z"></path><path d="m13 7 4 4M4 20l5-1"></path></svg>' :
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
     const manualControl = canManualScore ?
-      '<button type="button" class="manualScoreButton" data-manual-score="' + esc(manualKey) + '" aria-label="' +
+      '<button type="button" class="manualScoreButton scheduleManualScore" data-manual-score="' + esc(manualKey) + '" aria-label="' +
       esc(hasManualScore ? 'Edit score' : fallback ? 'Correct score' : 'Add score') + '">' +
       (hasManualScore ? 'Edit' : fallback ? 'Correct' : 'Add score') + '</button>' : '';
-    return '<article class="boardMatchCard ' + tierClass + '">' + open +
-      '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
-      boardCrest(event, fallback, 'home', teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
-      '<div class="fixtureState"><span class="fixtureStatus ' + statusClass + '">' + stateIcon + esc(statusName) + '</span>' +
-      '<strong>' + esc(primary) + '</strong><div class="fixtureStateMeta"><small data-clock data-clock-id="' + (id || '') + '">' +
-      esc(secondary) + '</small>' + manualControl + '</div></div>' +
-      '<div class="teamLine away">' +
-      boardCrest(event, fallback, 'away', teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
-      '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : (fallback ? externalLogo(fallback.competitionLogo, competition, 'competition') : '')) +
-      '<b>' + esc(competition) + '</b></span></div>' +
-      '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>' +
-      (lane ? esc(lane) + ' · ' : '') + (hasManualScore ? 'MANUAL' : fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
-      (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
+    const source = hasManualScore ? 'MANUAL' : fallback ? 'SOCCERWAY' : event ? 'BSD' : 'NO FEED';
+    return '<article class="boardMatchCard scheduleMatchCard">' + open +
+      '<div class="scheduleTime"><strong>' + esc(kickoffText) + '</strong><span class="fixtureStatus ' + statusClass + '">' +
+      esc(statusName) + '</span></div>' +
+      '<div class="scheduleTeams"><div class="scheduleTeam home"><span>' + esc(teams.home || 'Home') + '</span>' +
+      boardCrest(event, fallback, 'home', teams.home || 'Home') + '</div>' +
+      '<div class="scheduleScore"><strong>' + esc(scoreLabel) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' +
+      esc(detail) + '</small></div>' +
+      '<div class="scheduleTeam away">' + boardCrest(event, fallback, 'away', teams.away || 'Away') +
+      '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
+      '<div class="scheduleRowTools"><small>' + esc(source) + '</small>' + manualControl + '</div>' +
+      '<span class="scheduleArrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"></path></svg></span>' +
       close + '</article>';
   }
   function boardMatchList(boardRows) {
@@ -615,11 +616,11 @@
       else if (!groups.get(key).logo && logo) groups.get(key).logo = logo;
       groups.get(key).rows.push(row);
     });
-    return '<div class="boardCompetitionList">' + Array.from(groups.values()).map(function (group) {
-      return '<section class="boardCompetitionGroup"><header class="boardCompetitionHead">' +
+    return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
+      return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
         (group.id ? '<img src="' + image('league', group.id) + '" alt="" loading="lazy">' : externalLogo(group.logo, group.name, 'competition')) +
         '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' + (group.rows.length === 1 ? '' : 'es') + '</span>' +
-        (group.id ? '<a href="#league/' + group.id + '">View league <span aria-hidden="true">›</span></a>' : '') + '</header>' +
+        '<i class="scheduleGroupChevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg></i></header>' +
         '<div class="matchList boardMatchList chronologicalBoardList">' +
         group.rows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
     }).join('') + '</div>';
@@ -803,49 +804,39 @@
       upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length,
       finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length
     };
+    const query = String(state.boardQuery || '').trim().toLowerCase();
     const filtered = boardRows.filter(function (row) {
       if (state.statusFilter !== 'all' && boardStatus(row) !== state.statusFilter) return false;
-      const tier = String(row.tier || '').toUpperCase();
-      if (state.signalFilter === 'focus') return tier === 'FOCUS';
-      if (state.signalFilter === 'watchlist') return tier === 'WATCHLIST';
-      if (state.signalFilter === 'follow') return boardLane(row) === 'FOLLOW';
-      if (state.signalFilter === 'reserve') return boardLane(row) === 'RESERVE';
+      if (query) {
+        const haystack = [row.match, row.competition].filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
       return true;
     });
     const statusButton = function (key, label) {
       return '<button type="button" class="' + (state.statusFilter === key ? 'active' : '') + '" data-status-filter="' + key +
         '" aria-pressed="' + (state.statusFilter === key) + '"><span>' + label + '</span><b>' + counts[key] + '</b></button>';
     };
-    const signalButton = function (key, label) {
-      return '<button type="button" class="' + (state.signalFilter === key ? 'active' : '') + '" data-signal-filter="' + key +
-        '" aria-pressed="' + (state.signalFilter === key) + '"><span>' + label + '</span>' +
-        (state.signalFilter === key ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>' : '') + '</button>';
-    };
-    const signalLabel = state.signalFilter === 'focus' ? 'Focus' :
-      state.signalFilter === 'watchlist' ? 'Watchlist' :
-      state.signalFilter === 'follow' ? 'Follow' :
-      state.signalFilter === 'reserve' ? 'Reserve' : 'All signals';
-    const controls = '<div class="filterBar"><div class="statusFilters" role="group" aria-label="Match status">' +
+    const controls = '<div class="scheduleToolbar"><div class="statusFilters" role="group" aria-label="Match status">' +
       statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
-      '</div><div class="filterActions"><details class="modelFilter"><summary><span>Model</span><b>' + signalLabel +
-      '</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg></summary>' +
-      '<div class="modelFilterMenu" role="group" aria-label="Model signal">' +
-      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') +
-      signalButton('follow','Follow') + signalButton('reserve','Reserve') +
-      '<p><b>Follow</b> and <b>Reserve</b> are operational lanes from the current board. Use them to narrow the same match list without changing the board layout.</p></div></details>' +
-      '<button class="syncBoardButton" id="refreshToday" type="button" aria-label="Sync board">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg><span>Sync</span></button></div></div>';
+      '</div><form class="scheduleSearch" id="boardSearchForm" role="search">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>' +
+      '<input id="boardSearch" type="search" autocomplete="off" value="' + esc(state.boardQuery || '') +
+      '" placeholder="Search teams or leagues…" aria-label="Search current schedule"></form></div>';
     const boardBody = state.error && !boardRows.length ?
-      '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
+      '<div class="emptyState connectionEmpty"><strong>Schedule unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
-        '<div class="emptyState"><strong>No matches for this filter</strong><span>Reset the filters to return to the full operational slate.</span>' +
+        '<div class="emptyState"><strong>No matches found</strong><span>Change the status filter or clear the schedule search.</span>' +
         '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
-        '<div class="emptyState"><strong>No ranked Board matches</strong><span>No operational entries were added for this date.</span></div>';
-    const content = matchdayHero() +
-      (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
-      boardBody + '</section>';
-    root.innerHTML = shell(content, matchdayContext(boardRows, counts), 'boardHomeRoute');
+        '<div class="emptyState"><strong>No scheduled Board matches</strong><span>No operational entries were added for this date.</span></div>';
+    const content =
+      '<section class="scheduleStage" aria-label="ARC XI football schedule">' +
+      (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
+      '<div class="scheduleTop">' + dateStrip() + controls + '</div>' +
+      '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
+      '<footer class="scheduleFooter"><span class="scheduleSpark">✦</span><span class="scheduleSpark warm">✦</span>' +
+      '<span class="scheduleSpark pink">✦</span><small>Always more than a game</small></footer></section>';
+    root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute');
     bindGlobal();
   }
 
@@ -1466,10 +1457,17 @@
       button.addEventListener('click', function () {
         state.statusFilter = 'all';
         state.signalFilter = 'all';
+        state.boardQuery = '';
         writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
         writeStore('sliptrace.signalFilter.v3', state.signalFilter, localStorage);
         renderMatchday();
       });
+    });
+    document.getElementById('boardSearchForm')?.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const input = document.getElementById('boardSearch');
+      state.boardQuery = String(input?.value || '').trim();
+      renderMatchday();
     });
     root.querySelectorAll('[data-pick-filter]').forEach(function (button) {
       button.addEventListener('click', function () {

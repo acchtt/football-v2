@@ -1,68 +1,48 @@
 (() => {
   'use strict';
 
-  /* Approved finished rail artwork assets. Preserve the artwork pixels exactly;
-   * the browser only places/scales these files and adds no poster reconstruction. */
-
-  const rails = {
-    left: {
+  const corners = {
+    top: {
       image: './media/ive/ive-left-final.svg?v=3',
       width: 724,
       height: 2172
     },
-    right: {
+    bottom: {
       image: './media/ive/ive-right-final.png?v=5',
       width: 724,
       height: 2172
     }
   };
 
-  function buildRail(side) {
-    const rail = document.createElement('aside');
-    rail.className = `iveArtRail iveArtRail--${side}`;
-    rail.setAttribute('aria-hidden', 'true');
-
+  function buildCorner(position) {
+    const corner = document.createElement('aside');
+    corner.className = 'iveCorner iveCorner--' + position;
+    corner.setAttribute('aria-hidden', 'true');
     const photo = document.createElement('img');
-    photo.className = 'iveArtwork';
-    photo.src = rails[side].image;
+    photo.className = 'iveCornerArtwork';
+    photo.src = corners[position].image;
     photo.alt = '';
-    photo.width = rails[side].width;
-    photo.height = rails[side].height;
+    photo.width = corners[position].width;
+    photo.height = corners[position].height;
     photo.decoding = 'async';
-    photo.fetchPriority = 'high';
-    rail.appendChild(photo);
+    corner.appendChild(photo);
+    document.body.appendChild(corner);
+  }
 
-    document.body.appendChild(rail);
+  function updateMode() {
+    const hash = location.hash || '#board';
+    document.documentElement.classList.toggle('scheduleCornerMode',
+      hash === '#board' || hash === '#today' || hash === '#schedule' || hash === '#');
   }
 
   function init() {
-    document.querySelectorAll('.iveRailDecor,.iveEditorialRail,.iveReferenceRail,.iveArtRail').forEach(node => node.remove());
-    buildRail('left');
-    buildRail('right');
-
-    const root = document.getElementById('app');
-    const updateVisibility = () => {
-      const text = root?.textContent || '';
-      const busy = !root?.children.length ||
-        Boolean(root.querySelector('.skeletonRow')) ||
-        /Loading (?:decision board|matchday|picks|competitions|teams)/i.test(text);
-      document.documentElement.classList.toggle('iveRailsReady', !busy);
-    };
-
-    updateVisibility();
-    if (root) {
-      new MutationObserver(updateVisibility).observe(root, {
-        childList: true,
-        subtree: true,
-        characterData: true
-      });
-    }
-    window.addEventListener('hashchange', updateVisibility);
+    document.querySelectorAll('.iveRailDecor,.iveEditorialRail,.iveReferenceRail,.iveArtRail,.iveCorner').forEach(node => node.remove());
+    buildCorner('top');
+    buildCorner('bottom');
+    updateMode();
+    window.addEventListener('hashchange', updateMode);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+  else init();
 })();
