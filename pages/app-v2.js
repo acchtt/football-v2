@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-fidelity-v57';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v58';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -369,8 +369,10 @@
       '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule"><span class="scheduleBrandArc">ARC</span>' +
       '<span class="scheduleBrandStar" aria-hidden="true">★</span><span class="scheduleBrandXi">XI</span>' +
       '<small>Live football schedule</small></a>' +
+      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day">‹</button>' +
+      dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day">›</button></div>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
-      '<button type="button" class="scheduleMenuButton" data-open-alerts aria-label="Open alerts"><i></i><i></i><i></i></button>' +
+      '<button type="button" class="scheduleMenuButton" data-open-alerts aria-label="Open alerts"><i></i><i></i></button>' +
       '</div></div></header>';
   }
   function shell(content, context, className) {
@@ -620,8 +622,8 @@
     });
     return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
-        (group.id ? '<img src="' + image('league', group.id) + '" alt="" loading="lazy">' : externalLogo(group.logo, group.name, 'competition')) +
-        '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' + (group.rows.length === 1 ? '' : 'es') + '</span>' +
+        competitionMark() + '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
+        (group.rows.length === 1 ? '' : 'es') + '</span>' +
         '<i class="scheduleGroupChevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg></i></header>' +
         '<div class="matchList boardMatchList chronologicalBoardList">' +
         group.rows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
@@ -834,7 +836,7 @@
     const content =
       '<section class="scheduleStage" aria-label="ARC XI football schedule">' +
       (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      '<div class="scheduleTop">' + dateStrip() + controls + '</div>' +
+      '<div class="scheduleTop">' + controls + '</div>' +
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
       '<footer class="scheduleFooter"><span class="scheduleSpark">✦</span><span class="scheduleSpark warm">✦</span>' +
       '<span class="scheduleSpark pink">✦</span><small>Always more than a game</small></footer></section>';
@@ -1446,6 +1448,15 @@
         state.statusFilter = button.dataset.statusFilter;
         writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
         renderMatchday();
+      });
+    });
+    root.querySelectorAll('[data-date-shift]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const shift = Number(button.dataset.dateShift || 0);
+        if (!shift) return;
+        const current = new Date(state.date + 'T12:00:00Z');
+        current.setUTCDate(current.getUTCDate() + shift);
+        loadMatchday(current.toISOString().slice(0,10), false);
       });
     });
     root.querySelectorAll('[data-signal-filter]').forEach(function (button) {
