@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'live-correction-v51';
+  window.__ARCXI_BUILD__ = 'live-correction-v52';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -515,6 +515,13 @@
     const fallback = soccerwayForBoardRow(row);
     return pick(row && row.displayKickoff, row && row.kickoff, fallback && fallback.boardKickoff, fallback && fallback.kickoffUtcSource);
   }
+  function boardLane(row) {
+    const source = [row && row.coverageNotes, row && row.frozenPreSummary].filter(Boolean).join(' ');
+    const match = source.match(/\[FOLLOW:\s*(YES|FOLLOW|RESERVE|STOP)\]/i);
+    if (!match) return '';
+    const lane = match[1].toUpperCase();
+    return lane === 'YES' ? 'FOLLOW' : lane;
+  }
   function manualBoardScore(row, event) {
     if (event || !row || !row.manualScore) return null;
     const home = Number(row.manualScore.home);
@@ -529,6 +536,7 @@
     const status = event ? statusKey(event) : fallback ? soccerwayStatusKey(fallback) : boardStatus(row);
     const tier = String(row.tier || 'WATCHLIST').toUpperCase();
     const tierClass = tier === 'FOCUS' ? 'tier-focus' : 'tier-watchlist';
+    const lane = boardLane(row);
     const grade = row.grade || '—';
     const teams = event ? {
       home: teamName(event, 'home'),
@@ -564,6 +572,7 @@
     const attrs = 'class="matchRow boardFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
       'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"' +
+      (lane ? ' data-operational-lane="' + esc(lane) + '"' : '') +
       (fallback ? ' data-score-source="soccerway"' : '');
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
@@ -588,7 +597,7 @@
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : (fallback ? externalLogo(fallback.competitionLogo, competition, 'competition') : '')) +
       '<b>' + esc(competition) + '</b></span></div>' +
       '<div class="fixtureSignal"><small>' + esc(tier) + '</small><strong>' + esc(grade) + '</strong><span>' +
-      (hasManualScore ? 'MANUAL' : fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
+      (lane ? esc(lane) + ' · ' : '') + (hasManualScore ? 'MANUAL' : fallback ? 'SOCCERWAY' : 'MODEL') + '</span></div>' +
       (id ? '<span class="fixtureArrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>' : '') +
       close + '</article>';
   }
@@ -798,6 +807,7 @@
       const tier = String(row.tier || '').toUpperCase();
       if (state.signalFilter === 'focus') return tier === 'FOCUS';
       if (state.signalFilter === 'watchlist') return tier === 'WATCHLIST';
+      if (state.signalFilter === 'follow') return boardLane(row) === 'FOLLOW';
       return true;
     });
     const statusButton = function (key, label) {
@@ -809,14 +819,16 @@
         '" aria-pressed="' + (state.signalFilter === key) + '"><span>' + label + '</span>' +
         (state.signalFilter === key ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>' : '') + '</button>';
     };
-    const signalLabel = state.signalFilter === 'focus' ? 'Focus' : state.signalFilter === 'watchlist' ? 'Watchlist' : 'All signals';
+    const signalLabel = state.signalFilter === 'focus' ? 'Focus' :
+      state.signalFilter === 'watchlist' ? 'Watchlist' :
+      state.signalFilter === 'follow' ? 'Follow' : 'All signals';
     const controls = '<div class="filterBar"><div class="statusFilters" role="group" aria-label="Match status">' +
       statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
       '</div><div class="filterActions"><details class="modelFilter"><summary><span>Model</span><b>' + signalLabel +
       '</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg></summary>' +
       '<div class="modelFilterMenu" role="group" aria-label="Model signal">' +
-      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') +
-      '<p><b>Focus</b> is the strongest ranked slate. <b>Watchlist</b> keeps secondary candidates visible.</p></div></details>' +
+      signalButton('all','All signals') + signalButton('focus','Focus') + signalButton('watchlist','Watchlist') + signalButton('follow','Follow') +
+      '<p><b>Focus</b> is the strongest ranked slate. <b>Watchlist</b> keeps secondary candidates visible. <b>Follow</b> shows the operational Step-2 queue.</p></div></details>' +
       '<button class="syncBoardButton" id="refreshToday" type="button" aria-label="Sync board">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg><span>Sync</span></button></div></div>';
     const boardBody = state.error && !boardRows.length ?
