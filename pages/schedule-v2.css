@@ -399,3 +399,82 @@ html.scheduleCornerMode .iveCorner--bottom{
   -webkit-mask-image:none!important;
   mask-image:none!important;
 }
+
+
+/* Asset pass v3: real provider branding + approved photographic IVE accents. */
+.scheduleCompetitionHead .scheduleCompetitionLogo,
+.scheduleCompetitionHead img[data-external-logo="competition"]{
+  width:22px!important;
+  height:22px!important;
+  object-fit:contain!important;
+  filter:none!important;
+  opacity:.88;
+}
+.scheduleCompetitionHead .competitionMark{
+  width:18px!important;
+  height:18px!important;
+  border:1px solid rgba(241,60,145,.58)!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  color:var(--schedule-pink)!important;
+}
+.scheduleCompetitionHead .competitionMark svg{
+  width:11px!important;
+  height:11px!important;
+  stroke:currentColor!important;
+}
+
+.scheduleTeam .crestFallback{
+  width:25px!important;
+  height:25px!important;
+  flex:0 0 25px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #303136!important;
+  border-radius:7px!important;
+  background:linear-gradient(145deg,#161719,#0d0e10)!important;
+  color:#9b9a95!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+  font-size:9px!important;
+  font-weight:650!important;
+  text-transform:uppercase;
+}
+
+html.scheduleCornerMode .iveCorner{
+  opacity:1!important;
+  filter:none!important;
+  overflow:hidden!important;
+}
+html.scheduleCornerMode .iveCornerArtwork{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  transform:none!important;
+  mix-blend-mode:normal!important;
+}
+html.scheduleCornerMode .iveCorner--top{
+  width:min(300px,19vw)!important;
+  height:min(230px,27vh)!important;
+  opacity:.2!important;
+  -webkit-mask-image:radial-gradient(ellipse at 0 0,#000 0 38%,rgba(0,0,0,.72) 55%,transparent 82%)!important;
+  mask-image:radial-gradient(ellipse at 0 0,#000 0 38%,rgba(0,0,0,.72) 55%,transparent 82%)!important;
+}
+html.scheduleCornerMode .iveCorner--top .iveCornerArtwork{
+  object-position:50% 14%!important;
+  filter:grayscale(.18) saturate(.72) contrast(1.08) brightness(.72) sepia(.12) hue-rotate(300deg)!important;
+}
+html.scheduleCornerMode .iveCorner--bottom{
+  width:min(340px,21vw)!important;
+  height:min(285px,31vh)!important;
+  opacity:.22!important;
+  -webkit-mask-image:radial-gradient(ellipse at 100% 100%,#000 0 42%,rgba(0,0,0,.76) 58%,transparent 84%)!important;
+  mask-image:radial-gradient(ellipse at 100% 100%,#000 0 42%,rgba(0,0,0,.76) 58%,transparent 84%)!important;
+}
+html.scheduleCornerMode .iveCorner--bottom .iveCornerArtwork{
+  object-position:50% 72%!important;
+  filter:grayscale(.16) saturate(.78) contrast(1.08) brightness(.72) sepia(.1) hue-rotate(300deg)!important;
+}
+html.scheduleCornerMode .iveCorner:before,
+html.scheduleCornerMode .iveCorner:after{
+  content:none!important;
+}
