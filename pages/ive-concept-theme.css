@@ -1,0 +1,283 @@
+/*
+ * ARC XI — LOOKS KILL concept palette
+ * Visual-only theme layer. No layout, data, routing, or interaction changes.
+ * Reference palette: electric yellow + hot pink on near-black.
+ */
+:root{
+  --bg:#050505;
+  --surface:#0b0c0d;
+  --surface-2:#111214;
+  --surface-3:#17181b;
+  --line:#26272a;
+  --line-soft:#1b1c1f;
+  --line-strong:#3a3b3f;
+  --text:#f4f1e8;
+  --muted:#aaa79e;
+  --dim:#74736d;
+  --ive-yellow:#f6e928;
+  --ive-yellow-soft:#d8ca23;
+  --ive-pink:#f04090;
+  --ive-pink-soft:#d4337d;
+  --ive-plum:#201019;
+  --accent:var(--ive-yellow);
+  --accent-ink:#080806;
+  --focus:var(--ive-pink);
+  --amber:var(--ive-yellow);
+  --cyan:var(--ive-pink);
+  --lime:#c9dd62;
+  --ft:#83827d;
+}
+
+html,body{background:#050505;color:var(--text)}
+body{
+  background-image:
+    radial-gradient(circle at 50% -18%,rgba(246,233,40,.065),transparent 31%),
+    radial-gradient(circle at 82% 2%,rgba(240,64,144,.045),transparent 23%);
+}
+::selection{background:rgba(246,233,40,.28);color:#050505}
+:focus-visible{outline-color:var(--ive-yellow)}
+
+.appHeader{border-bottom-color:#27282a;background:rgba(5,5,5,.97)}
+.headerInner{border-bottom-color:#27282a!important;background:rgba(5,5,5,.97)!important}
+.brandWords b{color:#f4f1e8}
+.brandWords small{border-left-color:rgba(246,233,40,.24);color:#aaa79e}
+.siteMenu>summary,.siteMenuSearch input,.siteMenuSearch button,.siteMenuAction{
+  border-color:#323337;background:#0b0c0e;color:#c8c5bd
+}
+.siteMenu>summary:hover,.siteMenuSearch button:hover,.siteMenuAction:hover{
+  border-color:#67612b;background:#111214;color:#fff
+}
+.siteMenuPanel{border-color:#343538;background:#08090a}
+.siteMenuSearch input:focus{border-color:var(--ive-yellow)}
+.headerMenuNav .navItem:hover{background:#131416}
+.headerMenuNav .navItem.active{
+  background:rgba(246,233,40,.09);
+  box-shadow:inset 0 0 0 1px rgba(246,233,40,.18)
+}
+
+.appFrame,.contentFrame{background:#070708}
+.contextRail{border-left-color:#27282a;background:#08090a}
+.mobileNav{background:rgba(5,5,5,.98)!important;border-top-color:#292a2d!important}
+.mobileNav .navItem.active{background:rgba(246,233,40,.10)!important;color:var(--ive-yellow)!important}
+
+.matchdayHero{border-color:#353639;background:#050505}
+.matchdayHero>img{filter:saturate(.74) contrast(1.07) brightness(.88)}
+.matchdayHero:before{
+  background:
+    linear-gradient(90deg,rgba(246,233,40,.035),transparent 30%,transparent 70%,rgba(240,64,144,.05)),
+    linear-gradient(180deg,rgba(255,255,255,.01),transparent 28%,transparent 76%,rgba(5,5,5,.2))
+}
+
+.dateBtn{
+  border-color:#2d2e31!important;
+  background:linear-gradient(180deg,#101113,#0b0c0e);
+  color:#aaa79e
+}
+.dateBtn:hover{border-color:#5b5a42!important;background:#151619;color:#f4f1e8}
+.dateBtn.active{
+  border-color:var(--ive-yellow)!important;
+  background:linear-gradient(180deg,rgba(246,233,40,.12),rgba(16,16,14,.98));
+  box-shadow:inset 0 -4px 13px rgba(246,233,40,.08)
+}
+.dateBtn.active:after{background:var(--ive-pink)}
+.dateCount{
+  border-color:rgba(240,64,144,.42);
+  background:rgba(240,64,144,.12);
+  color:#ff83bc
+}
+
+.statusFilters button,.pickFilters button,.subNav a,.modelFilter>summary,.syncBoardButton{
+  border-color:#303136;background:#0d0e10;color:#b7b4ab
+}
+.statusFilters button:hover,.pickFilters button:hover,.subNav a:hover,
+.modelFilter>summary:hover,.syncBoardButton:hover{
+  border-color:#555443;background:#141516;color:#fff
+}
+.statusFilters button.active,.pickFilters button.active,.subNav a.active{
+  border-color:rgba(246,233,40,.48);
+  background:rgba(246,233,40,.09);
+  color:#f4f1e8
+}
+.statusFilters button.active b,.pickFilters button.active b{
+  background:rgba(240,64,144,.16);color:#ff85bc
+}
+.statusFilters button[data-status-filter="live"].active{border-color:#b4485d;color:#ffdce3}
+.modelFilter>summary span{color:#8e8b83}
+.modelFilter>summary b{color:#ece9df}
+.modelFilterMenu{border-color:#343538;background:#08090a}
+.modelFilterMenu button:hover{background:#141516}
+.modelFilterMenu button.active{background:rgba(246,233,40,.09);color:#fff}
+.modelFilterMenu button svg{stroke:var(--ive-yellow)}
+.modelFilterMenu p{border-top-color:#28292c;color:#8f8c84}
+.syncBoardButton svg{stroke:var(--ive-pink)}
+
+.boardCompetitionGroup{
+  border-color:#2a2b2e;background:#0b0c0e
+}
+.boardCompetitionHead{
+  border-bottom-color:#27282b;
+  background:linear-gradient(180deg,#111214,#0c0d0f)
+}
+.boardCompetitionHead>a{color:var(--ive-yellow)}
+.competitionMark{color:var(--ive-yellow)}
+.boardMatchCard,.boardMatchCard:first-child{
+  border-top-color:#222326;background:#0c0d0f
+}
+.boardMatchCard:has(.is-live-row){border-color:#2a2b2e;background:#101113}
+.boardMatchCard:has(.is-finished-row){background:#090a0b}
+.boardFixture:hover{background:#131416}
+.fixtureStatus{background:#242529;color:#c1beb6}
+.fixtureStatus.upcoming{color:#bab7ae}
+.fixtureStatus.finished{background:#2d2e31;color:#bebbb3}
+.fixtureStatus.manual{background:rgba(246,233,40,.08);color:var(--ive-yellow)}
+.fixtureStateMeta>small{color:#97948d}
+.fixtureStateMeta .manualScoreButton{
+  border-color:rgba(240,64,144,.28);
+  background:rgba(240,64,144,.06);
+  color:#ee80b4
+}
+.is-finished-row .fixtureStateMeta .manualScoreButton{color:#857e82}
+.is-finished-row:hover .fixtureStateMeta .manualScoreButton,
+.is-finished-row .fixtureStateMeta .manualScoreButton:focus-visible{
+  border-color:rgba(240,64,144,.4);
+  background:rgba(240,64,144,.08);
+  color:#ff8cc1
+}
+.fixtureSignal small{color:#b7b3aa}
+.tier-focus .fixtureSignal{color:var(--ive-yellow)}
+.tier-watchlist .fixtureSignal{color:var(--ive-pink)}
+.notifyToggle.selected{background:rgba(246,233,40,.10);color:var(--ive-yellow)}
+.emptyAction{
+  border-color:#514d25;background:#14140d;color:#eee68d
+}
+.emptyAction:hover{border-color:var(--ive-yellow);background:#1b1a0d;color:#fff}
+
+.boardHomeRoute .contextRail{
+  background:linear-gradient(180deg,#08090a 0%,#060607 100%)
+}
+.boardHomeRoute .railCard{
+  border-color:#343226;
+  background:
+    linear-gradient(145deg,rgba(246,233,40,.045),rgba(10,10,11,.98) 48%),
+    #0a0b0c;
+  box-shadow:inset 0 1px 0 rgba(246,233,40,.035),0 8px 24px rgba(0,0,0,.1)
+}
+.boardHomeRoute .contextClock>div:first-child>span,
+.boardHomeRoute .railDecision header>span,
+.boardHomeRoute .railCardHead strong{color:var(--ive-yellow)}
+.boardHomeRoute .contextClock strong{color:#f4f1e8}
+.boardHomeRoute .contextClock>i{color:var(--ive-yellow)}
+.boardHomeRoute .railPulse span:first-child:before{
+  background:var(--ive-pink);box-shadow:0 0 9px rgba(240,64,144,.52)
+}
+.boardHomeRoute .railDecision header>b{
+  border-color:rgba(240,64,144,.24);
+  background:rgba(240,64,144,.10)
+}
+.boardHomeRoute .railCompetitionItem:hover,
+.boardHomeRoute .railWatchItem:hover{background:rgba(246,233,40,.025)}
+.boardHomeRoute .railWatchItem em{color:var(--ive-pink)}
+.boardHomeRoute .railMediaThumb{
+  border-color:#514a20;background:#11100a
+}
+.boardHomeRoute .railMediaThumb i:before{
+  border-color:rgba(246,233,40,.72);
+  background:rgba(12,12,8,.82);
+  box-shadow:0 0 14px rgba(246,233,40,.12)
+}
+.boardHomeRoute .railMediaThumb svg{stroke:var(--ive-yellow)}
+.boardHomeRoute .railMediaCopy small{color:var(--ive-pink)}
+.boardHomeRoute .railMediaArrow{stroke:var(--ive-yellow)}
+
+.railDecision header>b.focus,.nextSignal.focus{color:var(--ive-yellow)}
+.railDecision header>b.watch,.nextSignal.watch{color:var(--ive-pink)}
+.railDecision footer svg,.railAction:after{stroke:var(--ive-yellow);color:var(--ive-yellow)}
+.nextCountdown strong{color:var(--ive-pink)}
+
+.pageTop h1,.profileHead h1{color:#f4f1e8}
+.eyebrow,.backLink,.competitionHead a,.profileHead>div>span,
+.rankItem>b,.transferItem b,.lineupSide>header span,.incident time{color:var(--ive-yellow)}
+.primaryButton span{color:var(--ive-yellow)}
+.matchSection,.contentSection,.detailPanel,.profileHead,.matchHero,.modelSpotlight,
+.entityCard,.playerCard,.performanceGrid,.boardMetrics{
+  border-color:#2b2c2f;background:#0c0d0f
+}
+.competitionHead{background:#101113}
+.matchHero{background:linear-gradient(145deg,#111214,#0b0c0e)}
+.matchContext{background:#101113}.matchContext a{color:var(--ive-yellow)}
+.modelIdentity strong,.modelIdentity small{color:var(--ive-yellow)}
+.tabBtn.active{border-bottom-color:var(--ive-pink)}
+.statBar i{background:var(--ive-yellow)}
+.oddCard{background:#090a0b}
+.manualScoreDialog,.pwaSheetCard,.alertsCenterCard{background:#0d0e10}
+.manualScoreDialog>header span,.manualScoreNote strong{color:var(--ive-yellow)}
+.manualScoreTeams input:focus{border-color:var(--ive-yellow)}
+.manualScoreSave{border-color:var(--ive-yellow);background:var(--ive-yellow);color:#070705}
+
+/* Alerts */
+.alertsCenterCard{border-color:#38393c}
+.alertsEyebrow{color:var(--ive-yellow)!important}
+.alertsConnection,.alertsMatch,.alertsPref,.alertsEmpty{background:#0a0b0c!important}
+.alertsConnection.is-ok,.alertsSetup,.alertsSetup.is-active{
+  border-color:rgba(246,233,40,.28)!important;
+  background:rgba(246,233,40,.045)!important
+}
+.alertsConnection.is-ok .alertsStatusDot,.alertsSetup.is-active>span{background:var(--ive-yellow)!important;color:#050505!important}
+.alertsSetup button,.alertsActions .primary{
+  border-color:rgba(246,233,40,.45)!important;
+  background:rgba(246,233,40,.08)!important;
+  color:#eee772!important
+}
+.alertsPref input:checked+i{
+  background:rgba(240,64,144,.16)!important;
+  border-color:rgba(240,64,144,.5)!important
+}
+.alertsPref input:checked+i:after{background:var(--ive-pink)!important}
+
+/* YouTube player */
+.youtubeHubMount{background:#070708}
+.youtubePlaylistPlayer,.youtubeHubToggle{border-color:#2a2b2e;background:#0b0c0e}
+.youtubeHubToggle:hover{background:#111214}
+.youtubeHubLabel{border-color:#4b4827;color:#e8e18b}
+.youtubeHubBody,.youtubeNowPlaying,.youtubeQueueHeader,.youtubePlayerColumn{border-color:#252629}
+.youtubeStart{
+  border-color:rgba(246,233,40,.62);
+  background:#16150b;color:#f5ec72
+}
+.youtubeControl{border-color:#303136;background:#101113;color:#c6c3ba}
+.youtubeControl:hover:not(:disabled){border-color:#5d5a36;background:#151619}
+.youtubeControl[aria-pressed="true"]{
+  border-color:rgba(240,64,144,.66);
+  background:rgba(240,64,144,.08);
+  color:#ff91c4
+}
+.youtubeQueue{background:#08090a}
+.youtubeQueueItem{border-bottom-color:#202124}
+.youtubeQueueItem:hover{background:#111214}
+.youtubeQueueItem[aria-current="true"]{
+  box-shadow:inset 2px 0 var(--ive-yellow);
+  background:rgba(246,233,40,.045)
+}
+.youtubeQueueLink{border-color:#303136;color:#c6c3ba}
+.youtubeQueueLink:hover{border-color:#5d5a36;background:#151619}
+.youtubePlayerStatus{background:rgba(5,5,5,.9)}
+
+/* Approved IVE artwork stays intact; only the presentation is color-graded. */
+@media(min-width:1320px){
+  .iveArtwork{filter:saturate(.68) contrast(1.06) brightness(.82)}
+  .iveArtRail:before{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      linear-gradient(180deg,rgba(246,233,40,.055),transparent 27%,transparent 70%,rgba(240,64,144,.11)),
+      linear-gradient(90deg,rgba(5,5,5,.04),transparent 35%,rgba(5,5,5,.12));
+  }
+  .iveArtRail--left{border-right-color:#343226}
+  .iveArtRail--right{border-left-color:#332333}
+}
+
+html{
+  scrollbar-color:#5b5622 #08090a;
+}
+::-webkit-scrollbar-track{background:#08090a}
+::-webkit-scrollbar-thumb{background:#504b22;border-color:#08090a}
+::-webkit-scrollbar-thumb:hover{background:#70682a}

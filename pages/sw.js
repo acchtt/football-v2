@@ -1,4 +1,4 @@
-const CACHE='arc-xi-shell-v98';
+const CACHE='arc-xi-shell-v99';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -9,7 +9,8 @@ const SHELL=[
   asset('alerts-center.css?v=4'),
   asset('ive-matchday-final.css?v=25'),
   asset('youtube-player.css?v=2'),
-  asset('manifest.webmanifest?v=19'),
+  asset('ive-concept-theme.css?v=1'),
+  asset('manifest.webmanifest?v=20'),
   asset('icons/arc-xi-transparent-512.png?v=2'),
   asset('icons/arc-xi-transparent-192.png?v=2'),
   asset('icons/arc-xi-transparent-512.png?v=2'),
