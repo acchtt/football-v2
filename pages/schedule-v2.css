@@ -367,3 +367,35 @@ html.scheduleCornerMode .iveCorner--bottom:after{
 @media(max-width:680px){
   .scheduleBrand{width:190px}
 }
+
+
+/* Asset pass v2: schedule-specific IVE vector corners. */
+html.scheduleCornerMode .iveCorner{
+  opacity:.82!important;
+  filter:none!important;
+}
+html.scheduleCornerMode .iveCornerArtwork{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  transform:none!important;
+  opacity:1!important;
+  mix-blend-mode:normal!important;
+}
+html.scheduleCornerMode .iveCorner:before,
+html.scheduleCornerMode .iveCorner:after{
+  content:none!important;
+}
+html.scheduleCornerMode .iveCorner--top{
+  width:min(360px,22vw);
+  height:min(240px,26vh);
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
+}
+html.scheduleCornerMode .iveCorner--bottom{
+  width:min(430px,27vw);
+  height:min(270px,30vh);
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
+}
