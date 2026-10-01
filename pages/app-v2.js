@@ -372,7 +372,7 @@
       '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day">‹</button>' +
       dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day">›</button></div>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
-      '<button type="button" class="scheduleMenuButton" data-open-alerts aria-label="Open alerts"><i></i><i></i></button>' +
+      '<span class="scheduleMenuButton" aria-hidden="true"><i></i><i></i></span>' +
       '</div></div></header>';
   }
   function shell(content, context, className) {
