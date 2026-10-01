@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'live-correction-v52';
+  window.__ARCXI_BUILD__ = 'live-correction-v53';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -831,15 +831,24 @@
       '<p><b>Focus</b> is the strongest ranked slate. <b>Watchlist</b> keeps secondary candidates visible. <b>Follow</b> shows the operational Step-2 queue.</p></div></details>' +
       '<button class="syncBoardButton" id="refreshToday" type="button" aria-label="Sync board">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 0-2 5"></path></svg><span>Sync</span></button></div></div>';
+    const followRows = boardRows.filter(function (row) {
+      if (boardLane(row) !== 'FOLLOW') return false;
+      return state.statusFilter === 'all' || boardStatus(row) === state.statusFilter;
+    });
+    const boardFiltered = filtered.filter(function (row) { return boardLane(row) !== 'FOLLOW'; });
+    const followSection = followRows.length ?
+      '<section class="matchSection followQueueSection">' +
+        sectionHead('Follow queue', followRows.length + ' match' + (followRows.length === 1 ? '' : 'es') + ' · Step 2') +
+        boardMatchList(followRows) + '</section>' : '';
     const boardBody = state.error && !boardRows.length ?
       '<div class="emptyState connectionEmpty"><strong>Board data unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
-      filtered.length ? boardMatchList(filtered) : boardRows.length ?
-        '<div class="emptyState"><strong>No matches for this filter</strong><span>Reset the filters to return to the full ranked slate.</span>' +
+      boardFiltered.length ? boardMatchList(boardFiltered) : boardRows.length ?
+        '<div class="emptyState"><strong>No other matches for this filter</strong><span>FOLLOW fixtures are shown in the queue above. Reset filters to return to the full ranked slate.</span>' +
         '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
         '<div class="emptyState"><strong>No ranked Board matches</strong><span>No Focus or Watchlist entries were added for this date.</span></div>';
     const content = matchdayHero() +
       (state.error ? '<div class="statusBanner"><b>Board data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      dateStrip() + controls + '<section class="matchSection">' + sectionHead('Board matches', filtered.length + ' shown') +
+      dateStrip() + controls + followSection + '<section class="matchSection">' + sectionHead('Board matches', boardFiltered.length + ' shown') +
       boardBody + '</section>';
     root.innerHTML = shell(content, matchdayContext(boardRows, counts), 'boardHomeRoute');
     bindGlobal();
