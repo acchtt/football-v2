@@ -193,8 +193,11 @@
         const calendarDate = kickoff ? ictDateKey(kickoff) : '';
         return {
           ...row,
-          sourceSlateDate: row?.sourceSlateDate || row?.slateDate || '',
-          slateDate: calendarDate || row?.slateDate || ''
+          sourceSlateDate: row?.sourceSlateDate || row?.slateDate || calendarDate || '',
+          // Slate Date is the operational board day and may intentionally contain
+          // post-midnight fixtures from the same sweep window. Only derive a
+          // calendar day when the backend did not provide a slate day.
+          slateDate: row?.slateDate || calendarDate || ''
         };
       })
     };
