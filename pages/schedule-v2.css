@@ -1,108 +1,115 @@
 /*
- * ARC XI schedule image-to-code pass.
- * Source of truth: approved schedule-only mockup.
+ * ARC XI schedule — approved reference fidelity pass.
+ * Schedule page only. Legacy app views remain untouched.
  */
 :root{
   --schedule-max:1600px;
   --schedule-yellow:#f3e72b;
   --schedule-pink:#f13c91;
   --schedule-bg:#070708;
-  --schedule-panel:#0b0c0d;
-  --schedule-line:#242529;
-  --schedule-text:#f4f1ea;
-  --schedule-muted:#9b9a95;
+  --schedule-line:#25262a;
+  --schedule-text:#f3f0e9;
+  --schedule-muted:#92918b;
 }
-
 html.scheduleCornerMode,html.scheduleCornerMode body{background:#070708}
 html.scheduleCornerMode body{
   min-height:100vh;
-  background-image:
-    radial-gradient(circle at 7% 7%,rgba(241,60,145,.075),transparent 20%),
-    radial-gradient(circle at 93% 92%,rgba(241,60,145,.08),transparent 23%);
+  background:
+    radial-gradient(ellipse at 8% 7%,rgba(241,60,145,.08),transparent 25%),
+    radial-gradient(ellipse at 92% 88%,rgba(241,60,145,.09),transparent 30%),
+    #070708;
 }
 
 .iveArtRail{display:none!important}
 .iveCorner{display:none}
 html.scheduleCornerMode .iveCorner{
   position:fixed;z-index:0;display:block;overflow:hidden;pointer-events:none;
-  opacity:.18;filter:saturate(1.12) contrast(1.08);
+  opacity:.34;filter:saturate(1.16) contrast(1.08) brightness(.92)
 }
-html.scheduleCornerMode .iveCorner:after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(7,7,8,.12),rgba(7,7,8,.78) 66%,#070708 100%);
+html.scheduleCornerMode .iveCorner--top{
+  left:0;top:0;width:min(360px,22vw);height:min(300px,34vh);
+  -webkit-mask-image:radial-gradient(ellipse at 0 0,#000 0 36%,rgba(0,0,0,.7) 54%,transparent 78%);
+  mask-image:radial-gradient(ellipse at 0 0,#000 0 36%,rgba(0,0,0,.7) 54%,transparent 78%)
 }
-html.scheduleCornerMode .iveCorner--top{left:0;top:0;width:min(240px,16vw);height:min(220px,24vh)}
 html.scheduleCornerMode .iveCorner--top .iveCornerArtwork{
-  width:100%;height:100%;object-fit:cover;object-position:8% 0%;transform:scale(2.05)
+  width:100%;height:100%;object-fit:cover;object-position:10% 0;transform:scale(1.45)
 }
-html.scheduleCornerMode .iveCorner--bottom{right:0;bottom:0;width:min(310px,19vw);height:min(285px,31vh)}
-html.scheduleCornerMode .iveCorner--bottom:after{
-  background:linear-gradient(315deg,rgba(7,7,8,.04),rgba(7,7,8,.72) 64%,#070708 100%)
+html.scheduleCornerMode .iveCorner--bottom{
+  right:0;bottom:0;width:min(430px,27vw);height:min(340px,38vh);
+  -webkit-mask-image:radial-gradient(ellipse at 100% 100%,#000 0 38%,rgba(0,0,0,.72) 56%,transparent 80%);
+  mask-image:radial-gradient(ellipse at 100% 100%,#000 0 38%,rgba(0,0,0,.72) 56%,transparent 80%)
 }
 html.scheduleCornerMode .iveCorner--bottom .iveCornerArtwork{
-  width:100%;height:100%;object-fit:cover;object-position:87% 91%;transform:scale(1.22)
+  width:100%;height:100%;object-fit:cover;object-position:90% 94%;transform:scale(1.12)
 }
 
 .scheduleHeader{position:relative;z-index:3;background:transparent}
 .scheduleHeaderInner{
-  width:min(var(--schedule-max),calc(100% - 72px));min-height:132px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;gap:28px
+  width:min(var(--schedule-max),calc(100vw - 120px));height:132px;margin:0 auto;
+  display:grid;grid-template-columns:310px minmax(520px,1fr) 310px;align-items:center;gap:28px
 }
 .scheduleBrand{
-  position:relative;min-width:260px;color:inherit;text-decoration:none;display:grid;
-  grid-template-columns:auto 28px auto;grid-template-rows:auto auto;align-items:center;
-  column-gap:0;line-height:.8
+  min-width:0;color:inherit;text-decoration:none;display:grid;
+  grid-template-columns:auto 30px auto;grid-template-rows:auto auto;align-items:center;justify-content:start;line-height:.8
 }
 .scheduleBrandArc,.scheduleBrandXi{
-  color:var(--schedule-yellow);font-family:Arial Black,Impact,sans-serif;font-size:54px;
-  font-weight:950;letter-spacing:-.07em;text-transform:uppercase
+  color:var(--schedule-yellow);font-family:Arial Black,Impact,sans-serif;font-size:58px;
+  font-weight:950;letter-spacing:-.075em;text-transform:uppercase
 }
 .scheduleBrandStar{
-  z-index:1;color:var(--schedule-pink);font-size:44px;line-height:1;transform:translate(-3px,-2px) rotate(-8deg)
+  z-index:1;color:var(--schedule-pink);font-size:46px;line-height:1;transform:translate(-4px,-3px) rotate(-8deg)
 }
 .scheduleBrand small{
   grid-column:1/-1;margin-top:10px;color:var(--schedule-yellow);font-size:10px;font-weight:800;
   letter-spacing:.34em;text-transform:uppercase
 }
+.scheduleDateNav{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;align-items:center;gap:8px}
+.scheduleDateNav>button{
+  width:34px;height:46px;border:0;background:transparent;color:#e8e4de;font:inherit;font-size:34px;font-weight:200;cursor:pointer
+}
+.scheduleDateNav>button:hover{color:var(--schedule-yellow)}
+.scheduleDateNav .dateStrip{
+  width:100%;margin:0;display:grid;grid-template-columns:repeat(5,minmax(70px,1fr));gap:8px;
+  padding:0;border:0;background:transparent;overflow:visible
+}
+.scheduleDateNav .dateBtn{
+  min-height:62px;padding:8px 6px;border:1px solid transparent!important;border-radius:12px;
+  background:transparent;color:#b8b5ae;display:grid;justify-items:center;align-content:center;gap:1px;box-shadow:none
+}
+.scheduleDateNav .dateBtn:hover{border-color:#333438!important;background:rgba(255,255,255,.018)}
+.scheduleDateNav .dateBtn.active{
+  border-color:var(--schedule-yellow)!important;background:rgba(243,231,43,.025);
+  box-shadow:0 0 22px rgba(243,231,43,.045)
+}
+.scheduleDateNav .dateBtn.active:after{display:none}
+.scheduleDateNav .dateBtn small{font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+.scheduleDateNav .dateBtn strong{font-size:14px;font-weight:800}
+.scheduleDateNav .dateBtn span{font-size:9px;font-weight:700;text-transform:uppercase}
+.scheduleDateNav .dateBtn.active small,.scheduleDateNav .dateBtn.active strong,.scheduleDateNav .dateBtn.active span{color:var(--schedule-yellow)}
+.scheduleDateNav .dateCount{display:none}
+.scheduleDateNav .dateBtn.unavailable{opacity:.35}
+.scheduleHeaderActions{justify-self:end;display:flex;align-items:center;gap:18px}
 .scheduleIdentity{display:flex;align-items:flex-end;gap:18px;color:#ee5aa1;font-size:11px;font-weight:800;letter-spacing:.32em;text-transform:uppercase}
 .scheduleIdentity i{width:72px;height:1px;background:#e6e1dc}
+.scheduleMenuButton{
+  width:42px;height:34px;padding:7px 4px;border:0;background:transparent;color:#eeeae3;
+  display:grid;align-content:center;gap:7px;cursor:pointer
+}
+.scheduleMenuButton i{display:block;width:100%;height:1.5px;background:currentColor}
+.scheduleMenuButton:hover{color:var(--schedule-pink)}
 
 .scheduleBoardRoute.appFrame{
-  position:relative;z-index:2;width:100%!important;max-width:none!important;margin:0!important;background:transparent
+  position:relative;z-index:2;width:100%!important;max-width:none!important;margin:0!important;
+  min-height:0!important;display:block!important;background:transparent
 }
-.scheduleBoardRoute .contentFrame{
-  width:100%!important;max-width:none!important;display:block;background:transparent
-}
+.scheduleBoardRoute .contentFrame{width:100%!important;max-width:none!important;display:block!important;background:transparent}
 .scheduleBoardRoute .mainView{
-  width:min(var(--schedule-max),calc(100vw - 120px));max-width:none;margin:0 auto;padding:0 0 38px
+  width:min(var(--schedule-max),calc(100vw - 120px));max-width:none!important;margin:0 auto;padding:0 0 34px!important
 }
 .scheduleStage{position:relative}
-.scheduleTop{display:grid;gap:24px;margin-bottom:22px}
-.scheduleBoardRoute .dateStrip{
-  width:min(620px,65vw);margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);
-  gap:8px;padding:0;overflow:visible
-}
-.scheduleBoardRoute .dateBtn{
-  position:relative;min-height:64px;padding:9px 8px;border:1px solid transparent!important;border-radius:12px;
-  background:transparent;color:#b9b7b0;display:grid;grid-template-columns:1fr;justify-items:center;align-content:center;
-  gap:1px;box-shadow:none
-}
-.scheduleBoardRoute .dateBtn:hover{background:rgba(255,255,255,.025);border-color:#2c2d30!important}
-.scheduleBoardRoute .dateBtn.active{
-  border-color:var(--schedule-yellow)!important;background:rgba(243,231,43,.03);
-  box-shadow:0 0 22px rgba(243,231,43,.06)
-}
-.scheduleBoardRoute .dateBtn.active:after{display:none}
-.scheduleBoardRoute .dateBtn small{font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
-.scheduleBoardRoute .dateBtn strong{font-size:14px;font-weight:800}
-.scheduleBoardRoute .dateBtn span{font-size:9px;font-weight:700;text-transform:uppercase}
-.scheduleBoardRoute .dateBtn.active small,.scheduleBoardRoute .dateBtn.active strong,.scheduleBoardRoute .dateBtn.active span{color:var(--schedule-yellow)}
-.scheduleBoardRoute .dateCount{display:none}
-.scheduleBoardRoute .dateBtn.unavailable{opacity:.38}
-
+.scheduleTop{margin:0 0 22px}
 .scheduleToolbar{
-  display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-  align-items:center;gap:28px
+  display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:28px
 }
 .scheduleToolbar .statusFilters{grid-column:2}
 .scheduleToolbar .scheduleSearch{grid-column:3;justify-self:end}
@@ -110,8 +117,8 @@ html.scheduleCornerMode .iveCorner--bottom .iveCornerArtwork{
   width:auto;display:flex;align-items:center;gap:8px;padding:0;border:0;background:transparent
 }
 .scheduleBoardRoute .statusFilters button{
-  min-width:104px;min-height:42px;padding:0 16px;border:1px solid #28292c;border-radius:999px;
-  background:#0c0d0f;color:#d2cfc7;justify-content:center;gap:9px;font-size:11px
+  min-width:104px;min-height:40px;padding:0 16px;border:1px solid #2b2c30;border-radius:999px;
+  background:#0c0d0f;color:#d1cec7;justify-content:center;gap:9px;font-size:11px
 }
 .scheduleBoardRoute .statusFilters button b{
   min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:#292a2d;color:#ddd9d0;
@@ -120,60 +127,54 @@ html.scheduleCornerMode .iveCorner--bottom .iveCornerArtwork{
 .scheduleBoardRoute .statusFilters button.active{
   border-color:var(--schedule-yellow);background:var(--schedule-yellow);color:#080806
 }
-.scheduleBoardRoute .statusFilters button.active b{background:rgba(0,0,0,.2);color:#080806}
+.scheduleBoardRoute .statusFilters button.active b{background:rgba(0,0,0,.18);color:#080806}
 .scheduleBoardRoute .statusFilters button[data-status-filter="live"].active{
   border-color:var(--schedule-pink);background:var(--schedule-pink);color:#fff
 }
 .scheduleSearch{
-  width:min(360px,32vw);min-height:42px;padding:0 15px;border:1px solid #28292c;border-radius:999px;
+  width:350px;min-height:40px;padding:0 15px;border:1px solid #2b2c30;border-radius:999px;
   background:#111214;display:flex;align-items:center;gap:10px
 }
 .scheduleSearch svg{width:18px;height:18px;fill:none;stroke:#f2efe8;stroke-width:1.7;stroke-linecap:round}
-.scheduleSearch input{
-  width:100%;border:0;outline:0;background:transparent;color:#f4f1ea;font:inherit;font-size:12px
-}
+.scheduleSearch input{width:100%;border:0;outline:0;background:transparent;color:#f4f1ea;font:inherit;font-size:12px}
 .scheduleSearch input::placeholder{color:#85857f}
 
 .scheduleMatchSection{margin:0!important;border:0!important;background:transparent!important}
-.scheduleCompetitionList{display:grid!important;gap:22px!important}
-.scheduleCompetitionGroup{
-  overflow:visible!important;border:0!important;border-radius:0!important;background:transparent!important
-}
+.scheduleCompetitionList{width:100%;display:grid!important;gap:18px!important}
+.scheduleCompetitionGroup{overflow:visible!important;border:0!important;border-radius:0!important;background:transparent!important}
 .scheduleCompetitionHead{
-  min-height:44px!important;padding:0 10px!important;border:0!important;border-bottom:1px solid #2a2b2e!important;
+  min-height:42px!important;padding:0 10px!important;border:0!important;border-bottom:1px solid #2a2b2e!important;
   background:transparent!important;display:grid!important;grid-template-columns:26px minmax(0,1fr) auto 22px!important;
   align-items:center!important;gap:10px!important
 }
-.scheduleCompetitionHead img,.scheduleCompetitionHead .competitionMark{width:24px!important;height:24px!important}
-.scheduleCompetitionHead img{
-  filter:grayscale(1) sepia(1) saturate(6) hue-rotate(285deg) brightness(1.12);
-  opacity:.92
+.scheduleCompetitionHead .competitionMark{
+  width:23px!important;height:23px!important;color:var(--schedule-pink)!important;display:grid!important;place-items:center!important
 }
-.scheduleCompetitionHead .competitionMark{color:var(--schedule-pink)!important}
+.scheduleCompetitionHead .competitionMark svg{width:18px!important;height:18px!important}
 .scheduleCompetitionHead>strong{
-  color:#f4f1ea!important;font-size:14px!important;font-weight:850!important;letter-spacing:.22em!important;text-transform:uppercase
+  color:#f3f0e9!important;font-size:13px!important;font-weight:720!important;letter-spacing:.22em!important;text-transform:uppercase
 }
-.scheduleCompetitionHead>span{color:#d5d1ca!important;font-size:10px!important;letter-spacing:.18em!important;text-transform:uppercase}
+.scheduleCompetitionHead>span{color:#d0cdc6!important;font-size:9px!important;letter-spacing:.17em!important;text-transform:uppercase}
 .scheduleGroupChevron{display:grid;place-items:center;color:#e7e3dc}
-.scheduleGroupChevron svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.scheduleGroupChevron svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}
 
 .scheduleMatchCard,.scheduleMatchCard:first-child{
-  border:0!important;border-top:1px solid #202124!important;border-radius:0!important;background:transparent!important
+  border:0!important;border-top:1px solid #212225!important;border-radius:0!important;background:transparent!important
 }
 .scheduleMatchCard:first-child{border-top:0!important}
 .scheduleFixture{
-  min-height:48px!important;padding:5px 10px!important;display:grid!important;
-  grid-template-columns:140px minmax(0,1fr) 112px 22px!important;align-items:center!important;gap:10px!important;
+  min-height:44px!important;padding:4px 10px!important;display:grid!important;
+  grid-template-columns:140px minmax(0,1fr) 44px!important;align-items:center!important;gap:10px!important;
   color:inherit;text-decoration:none
 }
-.scheduleFixture:hover{background:rgba(255,255,255,.018)!important}
-.scheduleTime{display:grid;grid-template-columns:56px auto;align-items:center;gap:12px}
-.scheduleTime>strong{font-size:15px;font-weight:650;font-variant-numeric:tabular-nums}
+.scheduleFixture:hover{background:rgba(255,255,255,.016)!important}
+.scheduleTime{display:grid;grid-template-columns:58px auto;align-items:center;gap:12px}
+.scheduleTime>strong{font-size:14px;font-weight:560;font-variant-numeric:tabular-nums}
 .scheduleTime .fixtureStatus{
-  width:max-content;min-width:52px;padding:4px 10px;border:0;border-radius:999px;background:#202124;color:#dedbd4;
-  font-size:9px;font-weight:800;letter-spacing:.08em;text-align:center
+  width:max-content;min-width:54px;padding:4px 10px;border:0;border-radius:999px;background:#202124;color:#dedbd4;
+  font-size:9px;font-weight:760;letter-spacing:.08em;text-align:center
 }
-.scheduleTime .fixtureStatus.live{background:var(--schedule-pink);color:#fff;box-shadow:0 0 16px rgba(241,60,145,.18)}
+.scheduleTime .fixtureStatus.live{background:var(--schedule-pink);color:#fff;box-shadow:0 0 16px rgba(241,60,145,.16)}
 .scheduleTime .fixtureStatus.finished{background:#26272a;color:#aaa7a0}
 .scheduleTime .fixtureStatus.manual{background:rgba(243,231,43,.12);color:var(--schedule-yellow)}
 .scheduleTeams{
@@ -183,94 +184,52 @@ html.scheduleCornerMode .iveCorner--bottom .iveCornerArtwork{
 .scheduleTeam.home{justify-content:flex-end;text-align:right}
 .scheduleTeam.away{justify-content:flex-start;text-align:left}
 .scheduleTeam span{
-  min-width:0;overflow:hidden;color:#f1eee7;font-size:15px;font-weight:620;text-overflow:ellipsis;white-space:nowrap
+  min-width:0;overflow:hidden;color:#efede7;font-size:14px;font-weight:500;text-overflow:ellipsis;white-space:nowrap
 }
-.scheduleTeam img,.scheduleTeam .crestFallback{width:28px;height:28px;flex:0 0 28px}
+.scheduleTeam img,.scheduleTeam .crestFallback{width:27px;height:27px;flex:0 0 27px}
 .scheduleScore{display:grid;justify-items:center;align-content:center;gap:0}
-.scheduleScore strong{color:#c4c1ba;font-size:11px;font-weight:700;letter-spacing:.06em}
-.scheduleScore small{min-height:11px;color:var(--schedule-pink);font-size:9px;font-weight:800}
+.scheduleScore strong{color:#a8a69f;font-size:11px;font-weight:650;letter-spacing:.06em}
+.scheduleScore small{min-height:10px;color:var(--schedule-pink);font-size:8px;font-weight:800}
 .is-live-row .scheduleScore strong{color:var(--schedule-pink);font-size:17px}
-.is-live-row .scheduleScore small{color:var(--schedule-pink)}
-.scheduleRowTools{display:flex;align-items:center;justify-content:flex-end;gap:6px}
-.scheduleRowTools>small{display:none}
-.scheduleManualScore{
-  min-height:20px!important;height:20px!important;margin:0!important;padding:0 5px!important;border:0!important;
-  background:transparent!important;color:#7d7779!important;font-size:8px!important;opacity:0;pointer-events:none
-}
-.scheduleFixture:hover .scheduleManualScore,.scheduleManualScore:focus-visible{
-  color:#ef6cad!important;opacity:1;pointer-events:auto
-}
-.boardPendingRow .scheduleManualScore{opacity:.42;pointer-events:auto}
-.boardPendingRow:hover .scheduleManualScore,.boardPendingRow .scheduleManualScore:focus-visible{opacity:1}
+.scheduleRowTools{display:none}
 .scheduleArrow{display:grid;place-items:center;color:#e6e2da}
-.scheduleArrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.scheduleArrow svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .scheduleMatchCard>.notifyToggle{display:none!important}
-
-.scheduleFooter{min-height:72px;display:flex;align-items:center;gap:6px;color:#8d8c86}
+.scheduleFooter{min-height:60px;display:flex;align-items:center;gap:6px;color:#8d8c86}
 .scheduleFooter small{margin-left:12px;font-size:8px;font-weight:700;letter-spacing:.38em;text-transform:uppercase}
 .scheduleSpark{color:var(--schedule-yellow);font-size:20px}.scheduleSpark.warm{color:#f2b98b}.scheduleSpark.pink{color:var(--schedule-pink)}
-.scheduleBoardRoute .statusBanner{margin:0 0 18px;border-color:#4b4524;background:rgba(243,231,43,.04)}
+
+html.scheduleCornerMode .youtubeHubMount{display:none!important}
+.scheduleBoardRoute .statusBanner{margin:0 0 16px;border-color:#4b4524;background:rgba(243,231,43,.04)}
 .scheduleBoardRoute .emptyState{border-color:#252629;background:#0b0c0d}
 .scheduleBoardRoute .emptyAction{border-color:var(--schedule-yellow);background:transparent;color:var(--schedule-yellow)}
 
-@media(max-width:900px){
-  html.scheduleCornerMode .iveCorner{opacity:.16}
-  .scheduleHeaderInner,.scheduleBoardRoute .mainView{width:min(100% - 28px,var(--schedule-max))}
-  .scheduleHeaderInner{min-height:98px}
-  .scheduleBrand{min-width:190px;grid-template-columns:auto 20px auto}
-  .scheduleBrandArc,.scheduleBrandXi{font-size:38px}.scheduleBrandStar{font-size:31px}
-  .scheduleBrand small{font-size:8px;letter-spacing:.24em}.scheduleIdentity{font-size:9px}
-  .scheduleBoardRoute .dateStrip{width:100%}
-  .scheduleToolbar{align-items:stretch;flex-direction:column;gap:10px}
+@media(max-width:1100px){
+  .scheduleHeaderInner{width:min(100% - 32px,var(--schedule-max));grid-template-columns:220px minmax(0,1fr) auto;gap:14px}
+  .scheduleBrandArc,.scheduleBrandXi{font-size:42px}.scheduleBrandStar{font-size:34px}.scheduleBrand small{font-size:8px}
+  .scheduleBoardRoute .mainView{width:min(100% - 32px,var(--schedule-max))}
+  .scheduleIdentity{display:none}
+  .scheduleToolbar{display:flex;flex-direction:column;align-items:stretch;gap:10px}
   .scheduleBoardRoute .statusFilters{display:grid;grid-template-columns:repeat(4,1fr)}
   .scheduleBoardRoute .statusFilters button{min-width:0;padding-inline:8px}
-  .scheduleSearch{width:100%;max-width:none}
-  .scheduleFixture{grid-template-columns:84px minmax(0,1fr) 22px!important}
-  .scheduleRowTools{display:none}
-  .scheduleTeams{grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:6px}
-  .scheduleTeam{gap:6px}.scheduleTeam img,.scheduleTeam .crestFallback{width:26px;height:26px;flex-basis:26px}
-  .scheduleTeam span{font-size:11px}.scheduleTime{grid-template-columns:1fr;gap:2px}.scheduleTime .fixtureStatus{padding:2px 5px;min-width:0;font-size:7px}
+  .scheduleSearch{width:100%}
+  .scheduleFixture{grid-template-columns:86px minmax(0,1fr) 24px!important}
+  .scheduleTeams{grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:7px}
+  .scheduleTeam span{font-size:11px}.scheduleTeam img,.scheduleTeam .crestFallback{width:25px;height:25px;flex-basis:25px}
 }
-@media(max-width:560px){
-  html.scheduleCornerMode .iveCorner--top{width:150px;height:140px}
-  html.scheduleCornerMode .iveCorner--bottom{width:180px;height:170px}
-  .scheduleHeaderInner{align-items:flex-start;padding-top:18px}
-  .scheduleIdentity{display:none}
-  .scheduleBoardRoute .dateStrip{gap:2px}.scheduleBoardRoute .dateBtn{min-height:56px;padding-inline:3px}
+@media(max-width:680px){
+  .scheduleHeaderInner{height:auto;min-height:154px;padding:18px 0 10px;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto}
+  .scheduleBrand{grid-column:1}.scheduleHeaderActions{grid-column:2}
+  .scheduleDateNav{grid-column:1/-1;grid-row:2}
+  .scheduleBrandArc,.scheduleBrandXi{font-size:36px}.scheduleBrandStar{font-size:28px}
+  .scheduleDateNav>button{display:none}.scheduleDateNav{grid-template-columns:1fr}
+  .scheduleDateNav .dateStrip{gap:2px}.scheduleDateNav .dateBtn{min-height:52px;padding-inline:3px}
   .scheduleBoardRoute .statusFilters button{font-size:9px}.scheduleBoardRoute .statusFilters button b{display:none}
-  .scheduleFixture{min-height:66px!important;padding:7px 4px!important;grid-template-columns:52px minmax(0,1fr) 16px!important}
-  .scheduleTeams{grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)}
-  .scheduleTeam{display:grid;justify-items:center;gap:3px;text-align:center!important}
-  .scheduleTeam.home,.scheduleTeam.away{justify-content:center}.scheduleTeam.home span{order:2}
-  .scheduleTeam span{font-size:9px;white-space:normal;line-height:1.15}
-  .scheduleTeam img,.scheduleTeam .crestFallback{width:24px;height:24px;flex-basis:24px}
-  .scheduleScore strong{font-size:10px}.is-live-row .scheduleScore strong{font-size:14px}
-  .scheduleCompetitionHead>strong{font-size:10px!important;letter-spacing:.16em!important}
-  .scheduleCompetitionHead>span{display:none}
-}
-@media(prefers-reduced-motion:reduce){
-  .scheduleFixture,.scheduleBoardRoute .dateBtn{transition:none}
-}
-
-/* Reference-fidelity corrections after production screenshot comparison. */
-html.scheduleCornerMode .youtubeHubMount{display:none!important}
-.scheduleBoardRoute .mainView,
-.scheduleHeaderInner{box-sizing:border-box}
-.scheduleBoardRoute .matchSection{width:100%!important}
-.scheduleCompetitionList{width:100%!important}
-.scheduleIdentity{margin-right:4px}
-.scheduleHeaderInner{width:min(var(--schedule-max),calc(100vw - 120px))}
-.scheduleMenuButton{
-  width:42px;height:34px;margin-left:16px;padding:7px 6px;border:0;background:transparent;color:#eeeae3;
-  display:grid;align-content:center;gap:5px;cursor:pointer
-}
-.scheduleMenuButton i{display:block;width:100%;height:1.5px;background:currentColor}
-.scheduleMenuButton:hover{color:var(--schedule-pink)}
-.scheduleHeaderActions{display:flex;align-items:center}
-@media(max-width:900px){
-  .scheduleToolbar{display:flex;align-items:stretch;flex-direction:column;gap:10px}
-  .scheduleToolbar .statusFilters,.scheduleToolbar .scheduleSearch{grid-column:auto}
-  .scheduleHeaderInner,.scheduleBoardRoute .mainView{width:min(100% - 28px,var(--schedule-max))}
-  .scheduleTeam span{font-size:11px}
-  .scheduleCompetitionHead>strong{font-size:11px!important}
+  .scheduleFixture{min-height:62px!important;padding:6px 3px!important;grid-template-columns:50px minmax(0,1fr) 16px!important}
+  .scheduleTime{grid-template-columns:1fr;gap:2px}.scheduleTime .fixtureStatus{padding:2px 4px;min-width:0;font-size:7px}
+  .scheduleTeams{grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)}
+  .scheduleTeam{display:grid;justify-items:center;gap:3px;text-align:center!important}.scheduleTeam.home,.scheduleTeam.away{justify-content:center}
+  .scheduleTeam.home span{order:2}.scheduleTeam span{font-size:9px;white-space:normal;line-height:1.12}
+  .scheduleTeam img,.scheduleTeam .crestFallback{width:23px;height:23px;flex-basis:23px}
+  .scheduleCompetitionHead>strong{font-size:10px!important;letter-spacing:.15em!important}.scheduleCompetitionHead>span{display:none}
 }
