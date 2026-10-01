@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 360" role="img" aria-labelledby="title">
+<title id="title">IVE matchday corner accent</title>
+<defs>
+  <linearGradient id="pink" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ff8bc1" stop-opacity=".05"/>
+    <stop offset=".42" stop-color="#f13c91" stop-opacity=".92"/>
+    <stop offset="1" stop-color="#7b234f" stop-opacity=".04"/>
+  </linearGradient>
+  <radialGradient id="glow" cx="18%" cy="16%" r="72%">
+    <stop offset="0" stop-color="#f13c91" stop-opacity=".26"/>
+    <stop offset=".48" stop-color="#f13c91" stop-opacity=".08"/>
+    <stop offset="1" stop-color="#f13c91" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="blur"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<rect width="560" height="360" fill="url(#glow)"/>
+<path d="M-40 246C87 137 181 81 331-18" fill="none" stroke="url(#pink)" stroke-width="4"/>
+<path d="M-70 302C67 198 193 130 395-10" fill="none" stroke="#f13c91" stroke-opacity=".16" stroke-width="1.2"/>
+<path d="M-25 195C86 126 161 88 291 8" fill="none" stroke="#f8b1d0" stroke-opacity=".15" stroke-width="1"/>
+<g fill="#ffd8ea">
+  <path d="M64 58 69 72 83 77 69 82 64 96 59 82 45 77 59 72Z" opacity=".76"/>
+  <path d="M126 119 129 128 138 131 129 134 126 143 123 134 114 131 123 128Z" opacity=".44"/>
+  <path d="M31 164 33 171 40 173 33 175 31 182 29 175 22 173 29 171Z" opacity=".36"/>
+</g>
+<g transform="translate(22 14)" opacity=".22" fill="#fff4f9">
+  <text x="0" y="36" font-family="Georgia,serif" font-size="38" font-weight="700" letter-spacing="6">IVE</text>
+  <line x1="1" y1="49" x2="118" y2="49" stroke="#f13c91" stroke-width="1"/>
+</g>
+<g opacity=".23" fill="none" stroke="#f5c2d9" stroke-width="1.3">
+  <path d="M85 224 103 192 121 224 141 184 161 224"/>
+  <path d="M91 224h64"/>
+  <circle cx="103" cy="190" r="3"/><circle cx="141" cy="182" r="3"/>
+</g>
+<circle cx="78" cy="73" r="42" fill="#f13c91" opacity=".05" filter="url(#blur)"/>
+</svg>
