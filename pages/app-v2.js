@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'live-correction-v54';
+  window.__ARCXI_BUILD__ = 'board-density-v55';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -554,14 +554,14 @@
     if (hasManualScore) {
       primary = manualScore.home + '–' + manualScore.away;
       secondary = fallback ?
-        (finished ? 'Manual · Full time' : status === 'live' ? 'Manual · ' + soccerwayMinuteText(fallback) : 'Manual score') :
-        (finished ? 'Manual FT' : 'Manual score');
+        (finished ? 'Manual · FT' : status === 'live' ? 'Manual · ' + soccerwayMinuteText(fallback) : 'Manual') :
+        (finished ? 'Manual FT' : 'Manual');
     } else if (event) {
       primary = finished || status === 'live' ? scoreText(event) : formatTime(kickoff);
       secondary = finished ? 'Full time' : status === 'live' ? liveClock(event) : 'ICT kickoff';
     } else if (fallback) {
       primary = finished || status === 'live' ? soccerwayScoreText(fallback) : formatTime(kickoff);
-      secondary = finished ? 'Soccerway · Full time' : status === 'live' ? 'Soccerway · ' + soccerwayMinuteText(fallback) : 'Soccerway · ICT kickoff';
+      secondary = finished ? 'Full time' : status === 'live' ? soccerwayMinuteText(fallback) : 'ICT kickoff';
     } else {
       primary = finished ? '—' : formatTime(kickoff);
       secondary = finished ? 'Score needed' : 'No live feed';
@@ -584,14 +584,15 @@
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 4 4 12-12-4-4L4 16Z"></path><path d="m13 7 4 4M4 20l5-1"></path></svg>' :
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>';
     const manualControl = canManualScore ?
-      '<button type="button" class="manualScoreButton" data-manual-score="' + esc(manualKey) + '">' +
-      (hasManualScore ? 'Edit score' : fallback ? 'Correct score' : 'Add score') + '</button>' : '';
+      '<button type="button" class="manualScoreButton" data-manual-score="' + esc(manualKey) + '" aria-label="' +
+      esc(hasManualScore ? 'Edit score' : fallback ? 'Correct score' : 'Add score') + '">' +
+      (hasManualScore ? 'Edit' : fallback ? 'Correct' : 'Add score') + '</button>' : '';
     return '<article class="boardMatchCard ' + tierClass + '">' + open +
       '<div class="fixtureMatch"><div class="fixtureTeams"><div class="teamLine home">' +
       boardCrest(event, fallback, 'home', teams.home || 'Home') + '<span>' + esc(teams.home || 'Home') + '</span></div>' +
       '<div class="fixtureState"><span class="fixtureStatus ' + statusClass + '">' + stateIcon + esc(statusName) + '</span>' +
-      '<strong>' + esc(primary) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' + esc(secondary) + '</small>' +
-      manualControl + '</div>' +
+      '<strong>' + esc(primary) + '</strong><div class="fixtureStateMeta"><small data-clock data-clock-id="' + (id || '') + '">' +
+      esc(secondary) + '</small>' + manualControl + '</div></div>' +
       '<div class="teamLine away">' +
       boardCrest(event, fallback, 'away', teams.away || 'Away') + '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<span class="fixtureCompetition">' + (lid ? '<img src="' + image('league', lid) + '" alt="" loading="lazy">' : (fallback ? externalLogo(fallback.competitionLogo, competition, 'competition') : '')) +
