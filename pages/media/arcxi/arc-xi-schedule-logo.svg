@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 170" role="img" aria-labelledby="title desc">
+<title id="title">ARC XI</title>
+<desc id="desc">ARC XI live football schedule wordmark in electric yellow and hot pink.</desc>
+<defs>
+  <filter id="softGlow" x="-20%" y="-40%" width="140%" height="180%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+<g fill="#F3E72B">
+  <!-- A -->
+  <path fill-rule="evenodd" d="M18 116 62 24h52l45 92h-35l-8-19H62l-8 19H18Zm56-45h31L89 34 74 71Z"/>
+  <!-- R -->
+  <path fill-rule="evenodd" d="M166 24h81c23 0 39 13 39 34 0 16-9 27-25 31l34 27h-45l-30-25h-19v25h-35V24Zm35 27v18h38c8 0 13-4 13-9s-5-9-13-9h-38Z"/>
+  <!-- C -->
+  <path d="M307 24h90v28h-68c-10 0-16 7-16 18s6 18 16 18h68v28h-90c-22 0-37-18-37-46s15-46 37-46Z"/>
+  <!-- X -->
+  <path d="M434 24h40l21 27 20-27h41l-41 47 44 45h-42l-22-26-22 26h-42l44-45-41-47Z"/>
+  <!-- I -->
+  <path d="M573 24h33v92h-33Z"/>
+</g>
+<!-- star + slash -->
+<g fill="#F13C91" filter="url(#softGlow)">
+  <path d="M421 39 429 58 450 60 434 74 439 95 421 83 403 95 408 74 392 60 413 58Z"/>
+  <path d="M426 46 468 0h12l-45 58Z"/>
+</g>
+<text x="18" y="151" fill="#F3E72B" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" letter-spacing="7">LIVE FOOTBALL SCHEDULE</text>
+</svg>
