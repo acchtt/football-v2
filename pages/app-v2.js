@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v58';
+  window.__ARCXI_BUILD__ = 'schedule-polish-v59';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -16,7 +16,7 @@
     error: '',
     lastSync: 0,
     refreshTick: 0,
-    statusFilter: readStore('sliptrace.statusFilter.v3', 'all', sessionStorage),
+    statusFilter: readStore('sliptrace.statusFilter.v4', 'all', sessionStorage),
     signalFilter: readStore('sliptrace.signalFilter.v3', 'all', localStorage),
     boardQuery: '',
     pickFilter: readStore('sliptrace.pickFilter.v3', 'open', sessionStorage),
@@ -471,8 +471,17 @@
     if (value.startsWith('C')) return 'gradeC';
     return 'gradeNeutral';
   }
+  function crestHue(name) {
+    let hash = 0;
+    String(name || '').split('').forEach(function (char) { hash = (hash * 31 + char.charCodeAt(0)) >>> 0; });
+    return hash % 360;
+  }
+  function crestFallback(name) {
+    return '<span class="crestFallback" aria-hidden="true" style="--crest-hue:' + crestHue(name) + '">' +
+      esc(String(name || '?').slice(0, 1)) + '</span>';
+  }
   function crest(type, id, name, transparent) {
-    if (!id) return '<span class="crestFallback" aria-hidden="true">' + esc(String(name || '?').slice(0, 1)) + '</span>';
+    if (!id) return crestFallback(name);
     return '<img src="' + image(type, id, transparent) + '" alt="" loading="lazy">';
   }
   function competitionMark() {
@@ -481,8 +490,7 @@
   function externalLogo(url, name, kind) {
     const source = String(url || '');
     if (!/^https:\/\/static\.flashscore\.com\/res\/image\/data\/[A-Za-z0-9_-]+\.(?:png|svg|webp)$/i.test(source)) {
-      return kind === 'competition' ? competitionMark() :
-        '<span class="crestFallback" aria-hidden="true">' + esc(String(name || '?').slice(0, 1)) + '</span>';
+      return kind === 'competition' ? competitionMark() : crestFallback(name);
     }
     return '<img src="' + esc(source) + '" alt="" loading="lazy" referrerpolicy="no-referrer" data-external-logo="' +
       esc(kind || 'team') + '" data-logo-fallback="' + esc(String(name || '?').slice(0, 1)) + '">';
@@ -1439,14 +1447,14 @@
         const nextDate = button.dataset.date;
         if (nextDate === state.date) return;
         state.statusFilter = nextDate < todayKey() ? 'finished' : 'all';
-        writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
+        writeStore('sliptrace.statusFilter.v4', state.statusFilter, sessionStorage);
         loadMatchday(nextDate, true);
       });
     });
     root.querySelectorAll('[data-status-filter]').forEach(function (button) {
       button.addEventListener('click', function () {
         state.statusFilter = button.dataset.statusFilter;
-        writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
+        writeStore('sliptrace.statusFilter.v4', state.statusFilter, sessionStorage);
         renderMatchday();
       });
     });
@@ -1471,7 +1479,7 @@
         state.statusFilter = 'all';
         state.signalFilter = 'all';
         state.boardQuery = '';
-        writeStore('sliptrace.statusFilter.v3', state.statusFilter, sessionStorage);
+        writeStore('sliptrace.statusFilter.v4', state.statusFilter, sessionStorage);
         writeStore('sliptrace.signalFilter.v3', state.signalFilter, localStorage);
         renderMatchday();
       });
