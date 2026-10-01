@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-polish-v59';
+  window.__ARCXI_BUILD__ = 'schedule-assets-v60';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -366,9 +366,8 @@
   }
   function scheduleHeader() {
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
-      '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule"><span class="scheduleBrandArc">ARC</span>' +
-      '<span class="scheduleBrandStar" aria-hidden="true">★</span><span class="scheduleBrandXi">XI</span>' +
-      '<small>Live football schedule</small></a>' +
+      '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule">' +
+      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=1" alt="ARC XI — Live Football Schedule"></a>' +
       '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day">‹</button>' +
       dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day">›</button></div>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
@@ -630,7 +629,8 @@
     });
     return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
-        competitionMark() + '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
+        '<img class="scheduleCompetitionAsset" src="./icons/schedule-competition-mark.svg?v=1" alt="">' +
+        '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
         (group.rows.length === 1 ? '' : 'es') + '</span>' +
         '<i class="scheduleGroupChevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg></i></header>' +
         '<div class="matchList boardMatchList chronologicalBoardList">' +
