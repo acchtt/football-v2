@@ -3,14 +3,14 @@
 
   const corners = {
     top: {
-      image: './media/ive/ive-left-final.svg?v=3',
-      width: 724,
-      height: 2172
+      image: './media/ive/schedule-corner-top.svg?v=1',
+      width: 560,
+      height: 360
     },
     bottom: {
-      image: './media/ive/ive-right-final.png?v=5',
-      width: 724,
-      height: 2172
+      image: './media/ive/schedule-corner-bottom.svg?v=1',
+      width: 720,
+      height: 440
     }
   };
 
