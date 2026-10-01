@@ -1,4 +1,4 @@
-const CACHE='arc-xi-shell-v100';
+const CACHE='arc-xi-shell-v101';
 const BASE=self.registration?.scope?new URL(self.registration.scope).pathname:new URL('./',self.location.href).pathname;
 const asset=name=>BASE+name;
 const SHELL=[
@@ -10,7 +10,7 @@ const SHELL=[
   asset('ive-matchday-final.css?v=25'),
   asset('youtube-player.css?v=2'),
   asset('ive-concept-theme.css?v=1'),
-  asset('schedule-v2.css?v=1'),
+  asset('schedule-v2.css?v=2'),
   asset('manifest.webmanifest?v=20'),
   asset('icons/arc-xi-transparent-512.png?v=2'),
   asset('icons/arc-xi-transparent-192.png?v=2'),
@@ -24,7 +24,7 @@ const SHELL=[
   asset('canonical-live-source.js?v=2'),
   asset('matchday-behavior.js?v=3'),
   asset('ive-sidebars.js?v=21'),
-  asset('app-v2.js?v=56'),
+  asset('app-v2.js?v=57'),
   asset('youtube-player.js?v=8'),
   asset('status-sync.js?v=4'),
   asset('pwa-v2.js?v=7'),

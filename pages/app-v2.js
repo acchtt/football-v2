@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-image-code-v56';
+  window.__ARCXI_BUILD__ = 'schedule-fidelity-v57';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -369,7 +369,9 @@
       '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule"><span class="scheduleBrandArc">ARC</span>' +
       '<span class="scheduleBrandStar" aria-hidden="true">★</span><span class="scheduleBrandXi">XI</span>' +
       '<small>Live football schedule</small></a>' +
-      '<div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div></div></header>';
+      '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
+      '<button type="button" class="scheduleMenuButton" data-open-alerts aria-label="Open alerts"><i></i><i></i><i></i></button>' +
+      '</div></div></header>';
   }
   function shell(content, context, className) {
     const classes = String(className || '');
