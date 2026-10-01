@@ -48,8 +48,8 @@ jobs:
               'matchday-behavior.js',
               'media/arcxi/arc-xi-schedule-logo.svg',
               'icons/schedule-competition-mark.svg',
-              'media/ive/schedule-corner-top.svg',
-              'media/ive/schedule-corner-bottom.svg',
+              'media/ive/ive-left-approved.webp',
+              'media/ive/ive-right-approved.webp',
           ]
           for path in required:
               target = root / path
@@ -60,24 +60,24 @@ jobs:
           assert 'pwa-v2.js' not in index, 'PWA runtime should be disabled'
           assert 'alerts-center.js' not in index, 'PWA-linked alerts runtime should be disabled'
           assert 'pwa-off.js?v=1' in index, 'service-worker cleanup script is missing'
-          assert 'app-v2.js?v=60' in index, 'unexpected app asset version'
-          assert 'schedule-v2.css?v=6' in index, 'unexpected schedule CSS version'
-          assert 'ive-sidebars.js?v=22' in index, 'unexpected corner asset loader version'
+          assert 'app-v2.js?v=61' in index, 'unexpected app asset version'
+          assert 'schedule-v2.css?v=7' in index, 'unexpected schedule CSS version'
+          assert 'ive-sidebars.js?v=23' in index, 'unexpected corner asset loader version'
 
           app = (root / 'app-v2.js').read_text(encoding='utf-8')
-          assert "schedule-assets-v60" in app, 'unexpected ARC XI schedule build'
+          assert "schedule-assets-v61" in app, 'unexpected ARC XI schedule build'
           assert 'arc-xi-schedule-logo.svg?v=1' in app, 'schedule logo asset not wired'
-          assert 'schedule-competition-mark.svg?v=1' in app, 'competition mark asset not wired'
+          assert 'scheduleCompetitionLogo' in app, 'real competition logo path not wired'
 
           sidebars = (root / 'ive-sidebars.js').read_text(encoding='utf-8')
-          assert 'schedule-corner-top.svg?v=1' in sidebars, 'top IVE corner asset not wired'
-          assert 'schedule-corner-bottom.svg?v=1' in sidebars, 'bottom IVE corner asset not wired'
+          assert 'ive-left-approved.webp?v=1' in sidebars, 'top IVE corner asset not wired'
+          assert 'ive-right-approved.webp?v=1' in sidebars, 'bottom IVE corner asset not wired'
 
           for path in [
               root / 'media/arcxi/arc-xi-schedule-logo.svg',
               root / 'icons/schedule-competition-mark.svg',
-              root / 'media/ive/schedule-corner-top.svg',
-              root / 'media/ive/schedule-corner-bottom.svg',
+              root / 'media/arcxi/arc-xi-schedule-logo.svg',
+              root / 'icons/schedule-competition-mark.svg',
           ]:
               ET.parse(path)
 
