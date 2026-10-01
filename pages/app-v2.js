@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-assets-v60';
+  window.__ARCXI_BUILD__ = 'schedule-assets-v61';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -476,7 +476,7 @@
     return hash % 360;
   }
   function crestFallback(name) {
-    return '<span class="crestFallback" aria-hidden="true" style="--crest-hue:' + crestHue(name) + '">' +
+    return '<span class="crestFallback" aria-hidden="true">' +
       esc(String(name || '?').slice(0, 1)) + '</span>';
   }
   function crest(type, id, name, transparent) {
@@ -629,7 +629,8 @@
     });
     return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
-        '<img class="scheduleCompetitionAsset" src="./icons/schedule-competition-mark.svg?v=1" alt="">' +
+        (group.id ? '<img class="scheduleCompetitionLogo" src="' + image('league', group.id) + '" alt="" loading="lazy">' :
+          group.logo ? externalLogo(group.logo, group.name, 'competition') : competitionMark()) +
         '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
         (group.rows.length === 1 ? '' : 'es') + '</span>' +
         '<i class="scheduleGroupChevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg></i></header>' +
