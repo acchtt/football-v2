@@ -4,7 +4,7 @@
   --schedule-yellow:#fff000;--schedule-pink:#f52c91;--schedule-bg:#0a0a0a;
   --schedule-text:#f5f5f5;--schedule-muted:#b5b5b8;--schedule-line:#242426;
   --schedule-font:"ARC Grotesk",Helvetica,Arial,sans-serif;
-  --schedule-width:min(85vw,1600px);--schedule-row:42px;--schedule-crest:34px;
+  --schedule-width:min(85vw,1600px);--schedule-row:41px;--schedule-crest:34px;
 }
 html.scheduleCornerMode,html.scheduleCornerMode body{background:var(--schedule-bg)}
 html.scheduleCornerMode body{min-height:100dvh;background:radial-gradient(ellipse at 0 12%,#31101d55,transparent 22%),radial-gradient(ellipse at 100% 100%,#30121f66,transparent 25%),var(--schedule-bg);font-family:var(--schedule-font);-webkit-font-smoothing:antialiased}
@@ -13,10 +13,10 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointe
 /* Only the crown/light areas of the unchanged reference are visible. No reference faces or UI are used. */
 .iveCorner--top{left:0;top:0;width:235px;height:435px;clip-path:polygon(0 0,100% 0,74% 10%,58% 24%,47% 49%,35% 100%,0 100%);background:url('./media/arcxi/reference-artwork.png') no-repeat 0 0 / 1672px 941px;mask-image:linear-gradient(100deg,#000 35%,transparent 95%)}
 .iveCorner--bottom{right:0;bottom:0;width:450px;height:300px;mask-image:linear-gradient(115deg,transparent 28%,#000 73%)}
-.iveCorner--bottom .iveCornerArtwork{position:absolute;right:-55px;bottom:55px;width:150px;height:175px;object-fit:cover;object-position:50% 10%;transform:rotate(-17deg);border:2px solid #e276a399;opacity:.38;mask-image:linear-gradient(0deg,transparent,#000 30%)}
+.iveCorner--bottom .iveCornerArtwork{position:absolute;right:-125px;bottom:55px;width:220px;height:175px;object-fit:cover;object-position:50% 0%;transform:rotate(-17deg);border:2px solid #e276a399;opacity:.38;mask-image:linear-gradient(0deg,transparent,#000 30%)}
 .iveCorner--bottom:before{content:"";position:absolute;inset:0;background:linear-gradient(156deg,transparent 43%,#f15ea833 44%,#f585bd66 44.4%,transparent 45.5%),radial-gradient(ellipse at 95% 92%,#e8449466,transparent 64%)}
 /* The handwritten signature and lower light streak are below every reference row. */
-.iveCorner--bottom:after{content:"";position:absolute;right:95px;bottom:0;width:350px;height:78px;background:url('./media/arcxi/reference-artwork.png') no-repeat -1220px -863px / 1672px 941px;mask-image:linear-gradient(90deg,transparent,#000 25%,#000)}
+.iveCorner--bottom:after{content:"";position:absolute;right:95px;bottom:0;width:350px;height:78px;background:url('./media/arcxi/reference-artwork.png') no-repeat -1220px -863px / 1672px 941px;mix-blend-mode:screen;mask-image:linear-gradient(90deg,transparent,#000 25%,#000 85%,transparent),linear-gradient(0deg,#000 65%,transparent);mask-composite:intersect}
 .scheduleHeader{position:relative;z-index:3;background:transparent;font-family:var(--schedule-font)}
 .scheduleHeaderInner{width:var(--schedule-width);height:140px;margin:auto;display:grid;grid-template-columns:30% 40% 30%;align-items:start;padding-top:20px}
 .scheduleBrand{display:block;width:256px;margin-left:4.5vw;color:inherit;text-decoration:none}
@@ -94,7 +94,7 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointe
 .scheduleTeam img,.scheduleTeam .crestFallback{width:var(--schedule-crest);height:var(--schedule-crest);flex:0 0 var(--schedule-crest);object-fit:contain}
 .scheduleBoardRoute .scheduleTeam .crestFallback{display:grid;place-items:center;border:1px solid #454548;border-radius:5px;background:transparent;color:var(--schedule-muted);font-size:10px;font-weight:500;box-shadow:none}
 .scheduleScore{display:grid;place-items:center;align-content:center;gap:0;min-height:32px;font-variant-numeric:tabular-nums}
-.scheduleScore strong{color:var(--schedule-muted);font-size:12px;font-weight:450;letter-spacing:.09em}
+.scheduleScore strong{color:var(--schedule-muted);font-size:12px;font-weight:450;letter-spacing:.09em;line-height:1.05}
 .scheduleScore small{color:var(--schedule-pink);font-size:11px;line-height:13px;font-weight:500}
 .scheduleScore small:empty{display:none}
 .is-live-row .scheduleScore strong{color:var(--schedule-pink);font-size:22px;font-weight:600}
