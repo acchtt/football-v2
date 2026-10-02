@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
 <title>ARC XI</title>
-<rect width="96" height="96" rx="18" fill="#0a0a0a"/>
-<!-- The A and star are the exact contours and colors from the schedule wordmark. -->
-<path fill="#fff000" fill-rule="evenodd" transform="translate(3 -3) scale(1.15)" d="M2 72 19 32h30l17 40H42l-1-3H26l-1 3H2Zm29-15h6l-2-10h-2l-2 10Z"/>
-<path fill="#f52c91" transform="translate(-112 6) scale(.8)" d="m185 29 15 13L249 2l-39 49 11 11-18-1-7 15-4-17h-14l12-9Z"/>
+<rect width="128" height="128" rx="24" fill="#0a0a0a"/>
+<!-- XI signet: original wordmark contours, centered as a single brand unit. -->
+<g transform="translate(-206.5 15) scale(1.25)">
+<path fill="#f52c91" d="m185 29 15 13L249 2l-39 49 11 11-18-1-7 15-4-17h-14l12-9Z"/>
+<path fill="#fff000" d="M231 32h23v40h-23Z"/>
+</g>
 </svg>

@@ -59,6 +59,6 @@ assert(root.innerHTML.includes('aria-busy="false"') && !root.innerHTML.includes(
 assert.equal((root.innerHTML.match(/class="iveCorner iveCorner--bottom"/g)||[]).length,1);
 assert(root.innerHTML.indexOf('iveCorner--bottom') > root.innerHTML.indexOf('scheduleMatchSection'), 'artwork follows the match table');
 const index=fs.readFileSync('pages/index.html','utf8');
-assert(index.includes('icons/arc-xi-schedule.svg?v=1'));
+assert(index.includes('icons/arc-xi-schedule.svg?v=2'));
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
 console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');
