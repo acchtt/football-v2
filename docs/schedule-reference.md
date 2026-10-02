@@ -13,7 +13,7 @@ At the reference's 1672px width, the schedule canvas is 1421px wide (85vw), with
 | Date labels | Two lines: weekday, then month/day |
 | Yellow / pink / background | #fff000 / #f52c91 / #0a0a0a |
 
-The unchanged reference artwork is displayed through two softly masked CSS windows: the upper-left crown/light field and the lower handwritten signature/light streak below all reference match rows. These windows exclude all reference faces and schedule UI. The crown uses screen blending and a radial fade instead of a hard polygon cutoff. The lower-right photograph comes from the existing approved ive-right-approved.webp, with a radial fade on every exposed edge and no rectangular border; cropping and opacity are CSS-only. No faces are synthesized or retouched.
+The corner imagery now uses all six members from the existing real group photograph `media/ive/sources/ive-group-black.jpeg`, split three at upper-left and three at lower-right. Individual portraits use CSS offsets and soft radial masks; source pixels remain unchanged. The reference supplies only the lower handwritten signature/light streak, excluding its faces and schedule UI. No faces are synthesized or retouched.
 
 The single schedule stylesheet replaces all previous schedule-only patch layers. Legacy detail views keep their styles. BSD and Soccerway matching, normalization, Board capacity/tier rules, scores and dates are unchanged. All provider images share the existing restrained fallback. Manual score controls are outside links and become visible on hover or keyboard focus; on mobile they remain visible.
 

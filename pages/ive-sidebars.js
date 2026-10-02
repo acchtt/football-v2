@@ -2,25 +2,24 @@
   'use strict';
 
   const corners = {
-    bottom: {
-      image: './media/ive/ive-right-approved.webp?v=1',
-      width: 912,
-      height: 1621
-    }
+    top: ['leeseo', 'wonyoung', 'yujin'],
+    bottom: ['gaeul', 'rei', 'liz']
   };
 
   function buildCorner(position) {
     const corner = document.createElement('aside');
     corner.className = 'iveCorner iveCorner--' + position;
     corner.setAttribute('aria-hidden', 'true');
-    if (position === 'bottom') {
+    corners[position].forEach(member => {
+      const portrait = document.createElement('span');
+      portrait.className = 'iveCornerPortrait iveCornerPortrait--' + member;
       const photo = document.createElement('img');
-      photo.className = 'iveCornerArtwork';
-      photo.src = corners[position].image;
+      photo.src = './media/ive/sources/ive-group-black.jpeg';
       photo.alt = '';
       photo.decoding = 'async';
-      corner.appendChild(photo);
-    }
+      portrait.appendChild(photo);
+      corner.appendChild(portrait);
+    });
     document.body.appendChild(corner);
   }
 

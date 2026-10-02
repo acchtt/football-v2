@@ -50,6 +50,7 @@ jobs:
               'icons/schedule-competition-mark.svg',
               'media/ive/ive-left-approved.webp',
               'media/ive/ive-right-approved.webp',
+              'media/ive/sources/ive-group-black.jpeg',
               'media/arcxi/reference-artwork.png',
               'media/fonts/DM-Sans.ttf',
           ]
@@ -63,8 +64,8 @@ jobs:
           assert 'alerts-center.js' not in index, 'PWA-linked alerts runtime should be disabled'
           assert 'pwa-off.js?v=1' in index, 'service-worker cleanup script is missing'
           assert 'app-v2.js?v=64' in index, 'unexpected app asset version'
-          assert 'schedule-v2.css?v=12' in index, 'unexpected schedule CSS version'
-          assert 'ive-sidebars.js?v=24' in index, 'unexpected corner asset loader version'
+          assert 'schedule-v2.css?v=13' in index, 'unexpected schedule CSS version'
+          assert 'ive-sidebars.js?v=25' in index, 'unexpected corner asset loader version'
 
           app = (root / 'app-v2.js').read_text(encoding='utf-8')
           assert "schedule-reference-v64" in app, 'unexpected ARC XI schedule build'
@@ -73,7 +74,7 @@ jobs:
 
           sidebars = (root / 'ive-sidebars.js').read_text(encoding='utf-8')
           assert 'reference-artwork.png' in (root / 'schedule-v2.css').read_text(), 'reference atmosphere not wired'
-          assert 'ive-right-approved.webp?v=1' in sidebars, 'bottom IVE corner asset not wired'
+          assert 'ive-group-black.jpeg' in sidebars, 'real member portraits not wired'
 
           for path in [
               root / 'media/arcxi/arc-xi-schedule-logo.svg',

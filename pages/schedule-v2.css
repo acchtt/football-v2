@@ -10,10 +10,23 @@ html.scheduleCornerMode,html.scheduleCornerMode body{background:var(--schedule-b
 html.scheduleCornerMode body{min-height:100dvh;background:radial-gradient(ellipse at 0 12%,#31101d55,transparent 22%),radial-gradient(ellipse at 100% 100%,#30121f66,transparent 25%),var(--schedule-bg);font-family:var(--schedule-font);-webkit-font-smoothing:antialiased}
 .iveArtRail,.iveCorner{display:none}
 html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointer-events:none;overflow:hidden}
-/* Only the crown/light areas of the unchanged reference are visible. No reference faces or UI are used. */
-.iveCorner--top{left:0;top:0;width:235px;height:435px;background:url('./media/arcxi/reference-artwork.png') no-repeat 0 0 / 1672px 941px;mix-blend-mode:screen;mask-image:radial-gradient(ellipse 230px 440px at 0 0,#000 24%,#000000b3 43%,transparent 72%)}
-.iveCorner--bottom{right:0;bottom:0;width:450px;height:300px;mask-image:linear-gradient(115deg,transparent 28%,#000 73%)}
-.iveCorner--bottom .iveCornerArtwork{position:absolute;right:-130px;bottom:35px;width:280px;height:270px;object-fit:cover;object-position:50% 0%;transform:rotate(-17deg);opacity:.38;mask-image:radial-gradient(ellipse 60% 60% at 55% 48%,#000 20%,#000000b3 42%,transparent 69%)}
+/* Six real portraits, cropped only through CSS; all exposed edges fade into the canvas. */
+.iveCorner--top{left:0;top:0;width:170px;height:370px}
+.iveCorner--bottom{right:0;bottom:0;width:450px;height:370px}
+.iveCornerPortrait{position:absolute;width:118px;height:140px;overflow:hidden;opacity:.7;mask-image:radial-gradient(ellipse 62% 65% at 50% 42%,#000 32%,#000000b3 53%,transparent 76%)}
+.iveCornerPortrait img{position:absolute;width:480px;height:320px;max-width:none;object-fit:fill;left:var(--portrait-x);top:var(--portrait-y)}
+.iveCorner--top .iveCornerPortrait:nth-child(1){left:0;top:0}
+.iveCorner--top .iveCornerPortrait:nth-child(2){left:23px;top:105px}
+.iveCorner--top .iveCornerPortrait:nth-child(3){left:0;top:210px}
+.iveCorner--bottom .iveCornerPortrait:nth-child(1){right:0;bottom:210px}
+.iveCorner--bottom .iveCornerPortrait:nth-child(2){right:23px;bottom:105px}
+.iveCorner--bottom .iveCornerPortrait:nth-child(3){right:0;bottom:0}
+.iveCornerPortrait--leeseo{--portrait-x:-29px;--portrait-y:-12px}
+.iveCornerPortrait--wonyoung{--portrait-x:-134px;--portrait-y:-8px}
+.iveCornerPortrait--yujin{--portrait-x:-70px;--portrait-y:-111px}
+.iveCornerPortrait--gaeul{--portrait-x:-231px;--portrait-y:-9px}
+.iveCornerPortrait--rei{--portrait-x:-252px;--portrait-y:-116px}
+.iveCornerPortrait--liz{--portrait-x:-343px;--portrait-y:-3px}
 .iveCorner--bottom:before{content:"";position:absolute;inset:0;background:linear-gradient(156deg,transparent 43%,#f15ea833 44%,#f585bd66 44.4%,transparent 45.5%),radial-gradient(ellipse at 95% 92%,#e8449466,transparent 64%)}
 /* The handwritten signature and lower light streak are below every reference row. */
 .iveCorner--bottom:after{content:"";position:absolute;right:95px;bottom:0;width:350px;height:78px;background:url('./media/arcxi/reference-artwork.png') no-repeat -1220px -863px / 1672px 941px;mix-blend-mode:screen;mask-image:linear-gradient(90deg,transparent,#000 25%,#000 85%,transparent),linear-gradient(0deg,#000 65%,transparent);mask-composite:intersect}
