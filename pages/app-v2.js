@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v65';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v66';
   // Operational lane badges distinguish ranked FOLLOW / RESERVE / STOP from lifecycle state.
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
@@ -864,7 +864,9 @@
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
       '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
         return '<svg class="scheduleSpark' + color + '" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0c1 12 2 14 12 15-10 1-11 3-12 15C11 18 10 16 0 15c10-1 11-3 12-15Z"></path></svg>';
-      }).join('') + '<small>Always more than a game</small></footer></section>';
+      }).join('') + '<small>Always more than a game</small></footer>' +
+      '<aside class="iveCorner iveCorner--bottom" aria-hidden="true"><span class="iveCornerPhoto">' +
+      '<img class="iveCornerArtwork" src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside></section>';
     root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute' + (loading ? ' scheduleLoadingRoute' : ''));
     bindGlobal();
   }

@@ -4,14 +4,15 @@
   --schedule-yellow:#fff000;--schedule-pink:#f52c91;--schedule-bg:#0a0a0a;
   --schedule-text:#f5f5f5;--schedule-muted:#b5b5b8;--schedule-line:#242426;
   --schedule-font:"ARC Grotesk",Helvetica,Arial,sans-serif;
+  --schedule-art-width:clamp(380px,32vw,580px);
   --schedule-width:min(85vw,1600px);--schedule-row:41px;--schedule-crest:34px;
 }
 html.scheduleCornerMode,html.scheduleCornerMode body{background:var(--schedule-bg)}
 html.scheduleCornerMode body{min-height:100dvh;background:var(--schedule-bg);font-family:var(--schedule-font);-webkit-font-smoothing:antialiased}
 .iveArtRail,.iveCorner{display:none}
-html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointer-events:none;overflow:hidden}
+html.scheduleCornerMode .iveCorner{display:block;position:absolute;z-index:0;pointer-events:none;overflow:hidden}
 /* One transparent Wonyoung + Liz artwork; all atmosphere is baked into the asset. */
-.iveCorner--bottom{right:0;bottom:0;width:clamp(260px,18vw,340px);aspect-ratio:4/3}
+.iveCorner--bottom{right:calc((var(--schedule-width) - 100vw)/2);bottom:0;width:var(--schedule-art-width);aspect-ratio:4/3}
 .iveCornerPhoto,.iveCornerArtwork{display:block;width:100%;height:100%}
 .iveCornerArtwork{object-fit:contain}
 .scheduleHeader{position:relative;z-index:3;background:transparent;font-family:var(--schedule-font)}
@@ -47,7 +48,7 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointe
 .scheduleBoardRoute.appFrame{position:relative;z-index:1;width:100%!important;max-width:none!important;min-height:0!important;margin:0!important;display:block!important;background:transparent}
 .scheduleBoardRoute .contentFrame{width:100%!important;max-width:none!important;display:block!important;background:transparent}
 .scheduleBoardRoute .mainView{width:var(--schedule-width);max-width:none!important;margin:auto;padding:0 0 64px!important;font-family:var(--schedule-font)}
-.scheduleStage{position:relative;min-height:calc(100dvh - 204px);padding-bottom:64px}
+.scheduleStage{position:relative;min-height:calc(100dvh - 204px);padding-bottom:calc(var(--schedule-art-width)*.75 + 32px)}
 .scheduleTop{margin:0 0 19px}
 .scheduleToolbar{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:20px;min-height:40px}
 .scheduleBoardRoute .statusFilters{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;width:max-content;margin:0;padding:0;border:0;background:none}
@@ -132,6 +133,7 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
 }
 @media(max-width:1000px){
   html.scheduleCornerMode .iveCorner{display:none}
+  .scheduleStage{padding-bottom:64px}
   :root{--schedule-width:calc(100% - 40px)}
   .scheduleHeaderInner{grid-template-columns:220px minmax(0,1fr) 44px;gap:18px}
   .scheduleIdentity{display:none}.scheduleHeaderActions{margin-right:0}

@@ -49,6 +49,7 @@ jobs:
               'matchday-behavior.js',
               'media/arcxi/arc-xi-schedule-logo.svg',
               'icons/schedule-competition-mark.svg',
+              'icons/arc-xi-schedule.svg',
               'media/ive/ive-left-approved.webp',
               'media/ive/ive-right-approved.webp',
               'media/ive/wonyoung-liz-bottom-right.webp',
@@ -64,21 +65,23 @@ jobs:
           assert 'pwa-v2.js' not in index, 'PWA runtime should be disabled'
           assert 'alerts-center.js' not in index, 'PWA-linked alerts runtime should be disabled'
           assert 'pwa-off.js?v=1' in index, 'service-worker cleanup script is missing'
-          assert 'app-v2.js?v=65' in index, 'unexpected app asset version'
-          assert 'schedule-v2.css?v=19' in index, 'unexpected schedule CSS version'
-          assert 'ive-sidebars.js?v=28' in index, 'unexpected corner asset loader version'
+          assert 'app-v2.js?v=66' in index, 'unexpected app asset version'
+          assert 'schedule-v2.css?v=20' in index, 'unexpected schedule CSS version'
+          assert 'ive-sidebars.js?v=29' in index, 'unexpected corner asset loader version'
+          assert 'icons/arc-xi-schedule.svg?v=1' in index, 'current favicon not wired'
           assert 'schedule-logos.js?v=1' in index, 'independent schedule logo lookup is missing'
 
           app = (root / 'app-v2.js').read_text(encoding='utf-8')
-          assert "schedule-reference-v65" in app, 'unexpected ARC XI schedule build'
+          assert "schedule-reference-v66" in app, 'unexpected ARC XI schedule build'
           assert 'arc-xi-schedule-logo.svg?v=3' in app, 'schedule logo asset not wired'
           assert 'scheduleCompetitionLogo' in app, 'real competition logo path not wired'
 
           sidebars = (root / 'ive-sidebars.js').read_text(encoding='utf-8')
-          assert 'wonyoung-liz-bottom-right.webp' in sidebars, 'Wonyoung + Liz artwork not wired'
+          assert 'wonyoung-liz-bottom-right.webp' in app, 'Wonyoung + Liz artwork not wired'
           assert "buildCorner('top')" not in sidebars, 'upper-left artwork should be removed'
 
           for path in [
+              root / 'icons/arc-xi-schedule.svg',
               root / 'media/arcxi/arc-xi-schedule-logo.svg',
               root / 'icons/schedule-competition-mark.svg',
               root / 'media/arcxi/arc-xi-schedule-logo.svg',
