@@ -82,10 +82,14 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointe
 .scheduleBoardRoute .scheduleFixture{min-height:var(--schedule-row);padding:3px 10px 3px 3.7%;display:grid;grid-template-columns:150px minmax(0,1fr) 122px;align-items:center;gap:14px;background:transparent;color:var(--schedule-text);text-decoration:none}
 .scheduleBoardRoute .scheduleFixture:hover{background:#ffffff04}
 .scheduleTime{display:grid;grid-template-columns:80px 60px;align-items:center;gap:36px}
-.scheduleTime>strong{font-size:16px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scheduleTime>strong{display:flex;align-items:center;gap:7px;font-size:16px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scheduleRank{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--schedule-muted)}
 .scheduleBoardRoute .scheduleTime .fixtureStatus{width:60px;padding:4px 5px;border:0;border-radius:99px;background:#242425;color:var(--schedule-text);font-size:12px;font-weight:600;letter-spacing:.09em;line-height:16px;text-align:center}
 .scheduleBoardRoute .scheduleTime .fixtureStatus.live{background:var(--schedule-pink);color:#10070c;box-shadow:0 0 12px #f52c9144}
 .scheduleBoardRoute .scheduleTime .fixtureStatus.manual{color:var(--schedule-yellow)}
+.scheduleBoardRoute .scheduleFixture[data-operational-lane="FOLLOW"] .fixtureStatus.upcoming{background:var(--schedule-pink);color:#10070c}
+.scheduleBoardRoute .scheduleFixture[data-operational-lane="RESERVE"] .fixtureStatus.upcoming{background:var(--schedule-yellow);color:#111}
+.scheduleBoardRoute .scheduleFixture[data-operational-lane="STOP"] .fixtureStatus.upcoming{background:#242425;color:var(--schedule-text)}
 .scheduleTeams{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,13%) minmax(0,1fr);align-items:center;gap:20px}
 .scheduleTeam{min-width:0;display:flex;align-items:center;gap:44px}
 .scheduleTeam.home{justify-content:flex-end;text-align:right}
