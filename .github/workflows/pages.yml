@@ -50,6 +50,8 @@ jobs:
               'icons/schedule-competition-mark.svg',
               'media/ive/ive-left-approved.webp',
               'media/ive/ive-right-approved.webp',
+              'media/arcxi/reference-artwork.png',
+              'media/fonts/DM-Sans.ttf',
           ]
           for path in required:
               target = root / path
@@ -60,17 +62,17 @@ jobs:
           assert 'pwa-v2.js' not in index, 'PWA runtime should be disabled'
           assert 'alerts-center.js' not in index, 'PWA-linked alerts runtime should be disabled'
           assert 'pwa-off.js?v=1' in index, 'service-worker cleanup script is missing'
-          assert 'app-v2.js?v=61' in index, 'unexpected app asset version'
-          assert 'schedule-v2.css?v=7' in index, 'unexpected schedule CSS version'
-          assert 'ive-sidebars.js?v=23' in index, 'unexpected corner asset loader version'
+          assert 'app-v2.js?v=62' in index, 'unexpected app asset version'
+          assert 'schedule-v2.css?v=8' in index, 'unexpected schedule CSS version'
+          assert 'ive-sidebars.js?v=24' in index, 'unexpected corner asset loader version'
 
           app = (root / 'app-v2.js').read_text(encoding='utf-8')
-          assert "schedule-assets-v61" in app, 'unexpected ARC XI schedule build'
-          assert 'arc-xi-schedule-logo.svg?v=1' in app, 'schedule logo asset not wired'
+          assert "schedule-reference-v62" in app, 'unexpected ARC XI schedule build'
+          assert 'arc-xi-schedule-logo.svg?v=2' in app, 'schedule logo asset not wired'
           assert 'scheduleCompetitionLogo' in app, 'real competition logo path not wired'
 
           sidebars = (root / 'ive-sidebars.js').read_text(encoding='utf-8')
-          assert 'ive-left-approved.webp?v=1' in sidebars, 'top IVE corner asset not wired'
+          assert 'reference-artwork.png' in (root / 'schedule-v2.css').read_text(), 'reference atmosphere not wired'
           assert 'ive-right-approved.webp?v=1' in sidebars, 'bottom IVE corner asset not wired'
 
           for path in [
@@ -87,7 +89,8 @@ jobs:
           for js in             pages/app-v2.js             pages/youtube-player.js             pages/config.js             pages/strict-board-filter.js             pages/canonical-live-source.js             pages/matchday-behavior.js             pages/ive-sidebars.js             pages/pwa-off.js; do
             node --check "$js"
           done
-          echo "Active JavaScript syntax validated"
+          node scripts/check-schedule.cjs
+          echo "Active JavaScript syntax and schedule rendering validated"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

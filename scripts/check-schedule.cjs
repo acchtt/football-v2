@@ -1,0 +1,50 @@
+// Run with: node scripts/check-schedule.cjs
+// Exercises the real renderer with BSD, Soccerway and unsupported/manual rows.
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const source = fs.readFileSync('pages/app-v2.js', 'utf8');
+const root = {innerHTML:'',querySelectorAll:()=>[],querySelector:()=>null};
+const storage = {getItem:()=>null,setItem:()=>{}};
+const context = {window:{},document:{getElementById:id=>id==='app'?root:null},
+  localStorage:storage,sessionStorage:storage,location:{hash:'#board'},Date,Intl,console};
+vm.createContext(context);
+vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashchange'")) +
+  'window.test = {state, todayKey, boardMatchBlock, renderMatchday, formatTime, dateStrip, externalLogo, crest};})();', context);
+const t = context.window.test;
+const date = t.todayKey();
+const kickoff = date+'T11:00:00Z';
+const make = (id,match,extra={}) => ({id,match,kickoff,slateDate:date,competition:'Test League',tier:'FOCUS',...extra});
+const bsd=make('bsd','Arsenal vs Chelsea');
+const sw=make('sw','Singapore U23 vs Vietnam U23');
+const manual=make('manual','Unsupported Home vs Unsupported Away',{manualScore:{home:2,away:1},status:'finished'});
+const upcoming=make('pre','Upcoming Home vs Upcoming Away');
+t.state.board={schedule:[bsd,sw,manual,upcoming],picks:[]};
+t.state.today=[{id:101,home_team:{id:1,name:'Arsenal'},away_team:{id:2,name:'Chelsea'},league:{id:10,name:'Test League'},event_date:kickoff,status:'live',home_score:1,away_score:0,minute:30}];
+const fixture={boardId:'sw',status:'finished',homeScore:2,awayScore:2,homeLogoUrl:'https://static.flashscore.com/res/image/data/test.png'};
+t.state.soccerwayCache.set(date,{byId:new Map([['sw',fixture]])});
+let row=t.boardMatchBlock(bsd,0);
+assert(row.includes('1–0') && row.includes('LIVE') && row.includes('#match/101'));
+assert(row.includes('sports.bzzoiro.com/img/team/1/'));
+row=t.boardMatchBlock(sw,1);
+assert(row.includes('2–2') && row.includes('FT') && row.includes('static.flashscore.com'));
+row=t.boardMatchBlock(manual,2);
+assert(row.includes('2–1') && row.includes('data-manual-score'));
+assert(row.indexOf('scheduleRowTools') > row.indexOf('</div></div>'), 'manual action must be a separate row control');
+assert(!row.includes('NO FEED') && !row.includes('SOCCERWAY'));
+assert(t.boardMatchBlock(upcoming,3).includes('PRE'));
+assert.equal(t.formatTime(kickoff),'18:00');
+assert(t.crest('team',1,'Arsenal').includes('data-external-logo="team"'));
+assert(t.externalLogo('https://untrusted.invalid/logo.svg','Unknown','team').includes('crestFallback'));
+t.state.statusFilter='live'; t.renderMatchday();
+assert.equal((root.innerHTML.match(/class="boardMatchCard/g)||[]).length,1);
+t.state.statusFilter='all'; t.state.boardQuery='vietnam'; t.renderMatchday();
+assert.equal((root.innerHTML.match(/class="boardMatchCard/g)||[]).length,1);
+t.state.boardQuery='no such club'; t.renderMatchday();
+assert(root.innerHTML.includes('No matches found') && root.innerHTML.includes('data-reset-board-filters'));
+t.state.boardQuery=''; t.state.board={schedule:[],picks:[]}; t.renderMatchday();
+assert(root.innerHTML.includes('No scheduled Board matches'));
+assert(t.dateStrip().includes('scheduleDateLabel') && !t.dateStrip().includes('dateCount'));
+const index=fs.readFileSync('pages/index.html','utf8');
+assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
+console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');

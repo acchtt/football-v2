@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-assets-v61';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v62';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -367,11 +367,13 @@
   function scheduleHeader() {
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
       '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule">' +
-      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=1" alt="ARC XI — Live Football Schedule"></a>' +
-      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day">‹</button>' +
-      dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day">›</button></div>' +
+      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=2" alt="ARC XI — Live Football Schedule"></a>' +
+      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
+      dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
-      '<span class="scheduleMenuButton" aria-hidden="true"><i></i><i></i></span>' +
+      '<details class="scheduleMenu"><summary class="scheduleMenuButton" aria-label="Open menu"><i></i><i></i></summary>' +
+      '<nav class="scheduleMenuPanel" aria-label="Schedule menu"><a href="#board">Schedule</a><a href="#picks">Picks</a>' +
+      '<a href="#leagues">Competitions</a><a href="#teams">Teams</a><button type="button" data-refresh-schedule>Refresh scores</button></nav></details>' +
       '</div></div></header>';
   }
   function shell(content, context, className) {
@@ -410,7 +412,7 @@
     [-2,-1,0,1,2].forEach(function (offset) {
       const date = todayKey(offset);
       const d = new Date(date + 'T12:00:00Z');
-      const weekday = offset === 0 ? 'Today' : new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
+      const weekday = new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
       const count = boardDateCount(date);
       const active = state.date === date;
       const unavailable = count === 0 && !active;
@@ -418,9 +420,8 @@
         new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d);
       html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
         '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no ranked board matches')) +
-        '" aria-pressed="' + active + '"' + (unavailable ? ' disabled' : '') + '><small>' + weekday + '</small><strong>' +
-        d.getUTCDate() + '</strong><span>' + new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) +
-        '</span>' + (count ? '<b class="dateCount">' + count + '</b>' : '') + '</button>';
+        '" aria-pressed="' + active + '"' + (unavailable ? ' disabled' : '') + '><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
+        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + ' ' + d.getUTCDate() + '</strong></button>';
     });
     return html + '</div>';
   }
@@ -481,7 +482,8 @@
   }
   function crest(type, id, name, transparent) {
     if (!id) return crestFallback(name);
-    return '<img src="' + image(type, id, transparent) + '" alt="" loading="lazy">';
+    return '<img src="' + image(type, id, transparent) + '" alt="" loading="lazy" data-external-logo="' +
+      (type === 'league' ? 'competition' : 'team') + '" data-logo-fallback="' + esc(String(name || '?').slice(0, 1)) + '">';
   }
   function competitionMark() {
     return '<span class="competitionMark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z"></path><path d="M8 6H4v1.5A4.5 4.5 0 0 0 8.5 12"></path><path d="M16 6h4v1.5a4.5 4.5 0 0 1-4.5 4.5"></path><path d="M12 12v4M8 20h8M9 16h6v4H9z"></path></svg></span>';
@@ -600,19 +602,17 @@
       '<button type="button" class="manualScoreButton scheduleManualScore" data-manual-score="' + esc(manualKey) + '" aria-label="' +
       esc(hasManualScore ? 'Edit score' : fallback ? 'Correct score' : 'Add score') + '">' +
       (hasManualScore ? 'Edit' : fallback ? 'Correct' : 'Add score') + '</button>' : '';
-    const source = hasManualScore ? 'MANUAL' : fallback ? 'SOCCERWAY' : event ? 'BSD' : 'NO FEED';
     return '<article class="boardMatchCard scheduleMatchCard">' + open +
       '<div class="scheduleTime"><strong>' + esc(kickoffText) + '</strong><span class="fixtureStatus ' + statusClass + '">' +
       esc(statusName) + '</span></div>' +
-      '<div class="scheduleTeams"><div class="scheduleTeam home"><span>' + esc(teams.home || 'Home') + '</span>' +
+      '<div class="scheduleTeams"><div class="scheduleTeam home"><span title="' + esc(teams.home || 'Home') + '">' + esc(teams.home || 'Home') + '</span>' +
       boardCrest(event, fallback, 'home', teams.home || 'Home') + '</div>' +
       '<div class="scheduleScore"><strong>' + esc(scoreLabel) + '</strong><small data-clock data-clock-id="' + (id || '') + '">' +
       esc(detail) + '</small></div>' +
       '<div class="scheduleTeam away">' + boardCrest(event, fallback, 'away', teams.away || 'Away') +
-      '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
-      '<div class="scheduleRowTools"><small>' + esc(source) + '</small>' + manualControl + '</div>' +
+      '<span title="' + esc(teams.away || 'Away') + '">' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<span class="scheduleArrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"></path></svg></span>' +
-      close + '</article>';
+      close + (manualControl ? '<div class="scheduleRowTools">' + manualControl + '</div>' : '') + '</article>';
   }
   function boardMatchList(boardRows) {
     const groups = new Map();
@@ -629,7 +629,7 @@
     });
     return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
-        (group.id ? '<img class="scheduleCompetitionLogo" src="' + image('league', group.id) + '" alt="" loading="lazy">' :
+        (group.id ? '<span class="scheduleCompetitionLogo">' + crest('league', group.id, group.name) + '</span>' :
           group.logo ? externalLogo(group.logo, group.name, 'competition') : competitionMark()) +
         '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
         (group.rows.length === 1 ? '' : 'es') + '</span>' +
@@ -733,7 +733,7 @@
       esc(tier) + ' · ' + esc(grade) + '</b></header><div class="railDecisionCompetition">' + esc(competition) + '</div>' +
       '<div class="railDecisionTeams"><div>' + boardCrest(event, fallback, 'home', teams.home || 'Home') +
       '<span>' + esc(teams.home || 'Home') + '</span></div><div>' + boardCrest(event, fallback, 'away', teams.away || 'Away') +
-      '<span>' + esc(teams.away || 'Away') + '</span></div></div>' +
+      '<span title="' + esc(teams.away || 'Away') + '">' + esc(teams.away || 'Away') + '</span></div></div>' +
       '<div class="railDecisionState"><strong>' + esc(primary) + '</strong><span data-countdown="' + esc(kickoff || '') + '">' +
       esc(secondary) + '</span></div><footer>' + (manualScore ? 'Manual correction' : id ? 'Open match' : fallback ? 'Soccerway feed' : 'Ranked slate') +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></footer>';
@@ -847,8 +847,9 @@
       (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       '<div class="scheduleTop">' + controls + '</div>' +
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
-      '<footer class="scheduleFooter"><span class="scheduleSpark">✦</span><span class="scheduleSpark warm">✦</span>' +
-      '<span class="scheduleSpark pink">✦</span><small>Always more than a game</small></footer></section>';
+      '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
+        return '<svg class="scheduleSpark' + color + '" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0c1 12 2 14 12 15-10 1-11 3-12 15C11 18 10 16 0 15c10-1 11-3 12-15Z"></path></svg>';
+      }).join('') + '<small>Always more than a game</small></footer></section>';
     root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute');
     bindGlobal();
   }
@@ -1498,6 +1499,7 @@
         picksPage();
       });
     });
+    root.querySelector('[data-refresh-schedule]')?.addEventListener('click', function () { loadMatchday(state.date, true, true); });
     document.getElementById('refreshToday')?.addEventListener('click', function () {
       loadMatchday(state.date, true, true);
     });
@@ -1534,20 +1536,13 @@
       });
     });
     root.querySelectorAll('img[data-external-logo]').forEach(function (img) {
-      img.addEventListener('error', function () {
-        const kind = img.dataset.externalLogo || 'team';
-        const node = document.createElement('span');
-        if (kind === 'competition') {
-          node.className = 'competitionMark';
-          node.setAttribute('aria-hidden','true');
-          node.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z"></path><path d="M8 6H4v1.5A4.5 4.5 0 0 0 8.5 12"></path><path d="M16 6h4v1.5a4.5 4.5 0 0 1-4.5 4.5"></path><path d="M12 12v4M8 20h8M9 16h6v4H9z"></path></svg>';
-        } else {
-          node.className = 'crestFallback';
-          node.setAttribute('aria-hidden','true');
-          node.textContent = img.dataset.logoFallback || '?';
-        }
-        img.replaceWith(node);
-      }, {once:true});
+      const replace = function () {
+        const wrapper = document.createElement('span');
+        wrapper.innerHTML = img.dataset.externalLogo === 'competition' ? competitionMark() : crestFallback(img.dataset.logoFallback);
+        img.replaceWith(wrapper.firstElementChild);
+      };
+      img.addEventListener('error', replace, {once:true});
+      if (img.complete && !img.naturalWidth) replace();
     });
     root.querySelectorAll('[data-manual-score]').forEach(function (button) {
       button.addEventListener('click', function (event) {
