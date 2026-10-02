@@ -13,7 +13,8 @@ vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashch
   'window.test = {state, todayKey, boardMatchBlock, renderMatchday, formatTime, dateStrip, externalLogo, crest};})();', context);
 const t = context.window.test;
 const date = t.todayKey();
-const kickoff = date+'T11:00:00Z';
+const kickoff = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
+const fixedKickoff = '2026-01-01T11:00:00Z';
 const make = (id,match,extra={}) => ({id,match,kickoff,slateDate:date,competition:'Test League',tier:'FOCUS',...extra});
 const bsd=make('bsd','Arsenal vs Chelsea');
 const sw=make('sw','Singapore U23 vs Vietnam U23');
@@ -35,7 +36,7 @@ assert(!row.includes('NO FEED') && !row.includes('SOCCERWAY'));
 row=t.boardMatchBlock(upcoming,3);
 assert(row.includes('FOLLOW') && row.includes('#1'));
 assert(t.boardMatchBlock(make('legacy','Legacy Upcoming vs Legacy Away'),4).includes('PRE'));
-assert.equal(t.formatTime(kickoff),'18:00');
+assert.equal(t.formatTime(fixedKickoff),'18:00');
 assert(t.crest('team',1,'Arsenal').includes('data-external-logo="team"'));
 assert(t.externalLogo('https://untrusted.invalid/logo.svg','Unknown','team').includes('crestFallback'));
 t.state.statusFilter='live'; t.renderMatchday();
