@@ -9,7 +9,7 @@
     composition.className = 'iveCornerPhoto';
     const photo = document.createElement('img');
     photo.className = 'iveCornerArtwork';
-    photo.src = './media/ive/wonyoung-liz-bottom-right.webp?v=1';
+    photo.src = './media/ive/wonyoung-liz-bottom-right.webp?v=2';
     photo.alt = '';
     photo.decoding = 'async';
     composition.appendChild(photo);
