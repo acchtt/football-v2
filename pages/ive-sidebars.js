@@ -1,25 +1,19 @@
 (() => {
   'use strict';
 
-  const corners = {
-    top: ['leeseo', 'wonyoung', 'yujin'],
-    bottom: ['gaeul', 'rei', 'liz']
-  };
-
   function buildCorner(position) {
     const corner = document.createElement('aside');
     corner.className = 'iveCorner iveCorner--' + position;
     corner.setAttribute('aria-hidden', 'true');
-    corners[position].forEach(member => {
-      const portrait = document.createElement('span');
-      portrait.className = 'iveCornerPortrait iveCornerPortrait--' + member;
-      const photo = document.createElement('img');
-      photo.src = './media/ive/sources/ive-group-black.jpeg';
-      photo.alt = '';
-      photo.decoding = 'async';
-      portrait.appendChild(photo);
-      corner.appendChild(portrait);
-    });
+    const composition = document.createElement('span');
+    composition.className = 'iveCornerPhoto';
+    const photo = document.createElement('img');
+    photo.className = 'iveCornerArtwork';
+    photo.src = './media/ive/sources/ive-group-black.jpeg';
+    photo.alt = '';
+    photo.decoding = 'async';
+    composition.appendChild(photo);
+    corner.appendChild(composition);
     document.body.appendChild(corner);
   }
 
