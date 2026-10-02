@@ -13,7 +13,7 @@ At the reference's 1672px width, the schedule canvas is 1421px wide (85vw), with
 | Date labels | Two lines: weekday, then month/day |
 | Yellow / pink / background | #fff000 / #f52c91 / #0a0a0a |
 
-The unchanged reference artwork is displayed through two tightly bounded CSS windows: the upper-left crown/light field and the lower handwritten signature/light streak below all reference match rows. These windows exclude all reference faces and schedule UI. The lower-right photograph comes from the existing approved ive-right-approved.webp; cropping, framing and opacity are CSS-only. No faces are synthesized or retouched.
+The unchanged reference artwork is displayed through two softly masked CSS windows: the upper-left crown/light field and the lower handwritten signature/light streak below all reference match rows. These windows exclude all reference faces and schedule UI. The crown uses screen blending and a radial fade instead of a hard polygon cutoff. The lower-right photograph comes from the existing approved ive-right-approved.webp, with a radial fade on every exposed edge and no rectangular border; cropping and opacity are CSS-only. No faces are synthesized or retouched.
 
 The single schedule stylesheet replaces all previous schedule-only patch layers. Legacy detail views keep their styles. BSD and Soccerway matching, normalization, Board capacity/tier rules, scores and dates are unchanged. All provider images share the existing restrained fallback. Manual score controls are outside links and become visible on hover or keyboard focus; on mobile they remain visible.
 
