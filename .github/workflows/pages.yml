@@ -41,6 +41,7 @@ jobs:
               'app-v2.js',
               'schedule-v2.css',
               'ive-sidebars.js',
+              'schedule-logos.js',
               'pwa-off.js',
               'config.js',
               'strict-board-filter.js',
@@ -66,6 +67,7 @@ jobs:
           assert 'app-v2.js?v=64' in index, 'unexpected app asset version'
           assert 'schedule-v2.css?v=18' in index, 'unexpected schedule CSS version'
           assert 'ive-sidebars.js?v=28' in index, 'unexpected corner asset loader version'
+          assert 'schedule-logos.js?v=1' in index, 'independent schedule logo lookup is missing'
 
           app = (root / 'app-v2.js').read_text(encoding='utf-8')
           assert "schedule-reference-v64" in app, 'unexpected ARC XI schedule build'
@@ -91,6 +93,8 @@ jobs:
             node --check "$js"
           done
           node scripts/check-schedule.cjs
+          node --check pages/schedule-logos.js
+          node scripts/check-schedule-logos.cjs
           echo "Active JavaScript syntax and schedule rendering validated"
 
       - name: Setup Pages
