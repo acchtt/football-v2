@@ -7,23 +7,13 @@
   --schedule-width:min(85vw,1600px);--schedule-row:41px;--schedule-crest:34px;
 }
 html.scheduleCornerMode,html.scheduleCornerMode body{background:var(--schedule-bg)}
-html.scheduleCornerMode body{min-height:100dvh;background:radial-gradient(ellipse at 0 12%,#31101d55,transparent 22%),radial-gradient(ellipse at 100% 100%,#30121f66,transparent 25%),var(--schedule-bg);font-family:var(--schedule-font);-webkit-font-smoothing:antialiased}
+html.scheduleCornerMode body{min-height:100dvh;background:var(--schedule-bg);font-family:var(--schedule-font);-webkit-font-smoothing:antialiased}
 .iveArtRail,.iveCorner{display:none}
 html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointer-events:none;overflow:hidden}
-/* Each corner is one photographic trio: preserve the source grouping, never isolate heads. */
-.iveCorner--top{left:0;top:0;width:300px;height:340px}
-.iveCorner--bottom{right:0;bottom:0;width:450px;height:360px}
-.iveCornerPhoto{position:absolute;display:block;overflow:hidden;opacity:.68;mask-image:linear-gradient(90deg,transparent,#000 16%,#000 82%,transparent),linear-gradient(0deg,transparent,#000 43%,#000 84%,transparent);mask-composite:intersect}
-.iveCornerPhoto img{position:absolute;max-width:none;object-fit:fill}
-.iveCorner--top .iveCornerPhoto{left:-40px;top:0;width:230px;height:307px;mask-image:linear-gradient(90deg,transparent,#000 16%,#000 82%,transparent),linear-gradient(180deg,transparent,#000 12%,#000 57%,transparent 72%)}
-.iveCorner--top .iveCornerArtwork{left:0;top:0;width:460px;height:307px}
-.iveCorner--bottom .iveCornerPhoto{right:-25px;bottom:-65px;width:220px;height:294px}
-.iveCorner--bottom .iveCornerArtwork{left:-220px;top:0;width:440px;height:294px}
-.iveCorner--top:before,.iveCorner--bottom:before{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
-.iveCorner--top:before{background:radial-gradient(ellipse at 0 30%,#f52c9130,transparent 65%),linear-gradient(145deg,transparent 23%,#f585bd55 23.3%,#f52c9122 24%,transparent 25%);mask-image:linear-gradient(90deg,#000,transparent 85%)}
-.iveCorner--bottom:before{background:linear-gradient(156deg,transparent 43%,#f15ea833 44%,#f585bd66 44.4%,transparent 45.5%),radial-gradient(ellipse at 95% 92%,#e8449466,transparent 64%);mask-image:linear-gradient(90deg,transparent,#000 60%)}
-/* Keep the handwritten signature outside the members' faces. */
-.iveCorner--bottom:after{content:"";position:absolute;right:175px;bottom:0;width:350px;height:78px;background:url('./media/arcxi/reference-artwork.png') no-repeat -1220px -863px / 1672px 941px;mix-blend-mode:screen;mask-image:linear-gradient(90deg,transparent,#000 25%,#000 85%,transparent),linear-gradient(0deg,#000 65%,transparent);mask-composite:intersect}
+/* One transparent Wonyoung + Liz artwork; all atmosphere is baked into the asset. */
+.iveCorner--bottom{right:0;bottom:0;width:clamp(260px,18vw,340px);aspect-ratio:1}
+.iveCornerPhoto,.iveCornerArtwork{display:block;width:100%;height:100%}
+.iveCornerArtwork{object-fit:contain}
 .scheduleHeader{position:relative;z-index:3;background:transparent;font-family:var(--schedule-font)}
 .scheduleHeaderInner{width:var(--schedule-width);height:140px;margin:auto;display:grid;grid-template-columns:30% 40% 30%;align-items:start;padding-top:20px}
 .scheduleBrand{display:block;width:256px;margin-left:4.5vw;color:inherit;text-decoration:none}
@@ -127,8 +117,6 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
 .scheduleBoardRoute .emptyAction{padding:9px 16px;border:1px solid var(--schedule-yellow);border-radius:99px;background:none;color:var(--schedule-yellow)}
 .scheduleBoardRoute .statusBanner{border-color:#6a6034;background:#fff00008}
 @media(max-width:1250px){
-  .iveCorner--top .iveCornerPhoto{transform:scale(.56);transform-origin:top left}
-  .iveCorner--bottom .iveCornerPhoto{bottom:-35px;transform:scale(.85);transform-origin:bottom right}
   .scheduleHeaderInner{grid-template-columns:24% 50% 26%}
   .scheduleBrand{width:220px;margin-left:0}
   .scheduleHeaderActions{gap:22px;margin-right:0}
@@ -143,6 +131,7 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleTeam span,.scheduleTime>strong{font-size:15px}
 }
 @media(max-width:1000px){
+  html.scheduleCornerMode .iveCorner{display:none}
   :root{--schedule-width:calc(100% - 40px)}
   .scheduleHeaderInner{grid-template-columns:220px minmax(0,1fr) 44px;gap:18px}
   .scheduleIdentity{display:none}.scheduleHeaderActions{margin-right:0}
@@ -185,6 +174,5 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleMatchCard:has(.scheduleManualScore) .scheduleFixture{padding-bottom:25px}
   .scheduleFooter{gap:4px}.scheduleFooter small{font-size:8px;letter-spacing:.21em;margin-left:10px}
   .scheduleSpark{width:18px;height:22px}
-  .iveCorner--top{opacity:.65}.iveCorner--bottom{opacity:.6}
 }
 @media(prefers-reduced-motion:reduce){.scheduleHeader *,.scheduleBoardRoute *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

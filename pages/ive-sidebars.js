@@ -1,15 +1,15 @@
 (() => {
   'use strict';
 
-  function buildCorner(position) {
+  function buildCorner() {
     const corner = document.createElement('aside');
-    corner.className = 'iveCorner iveCorner--' + position;
+    corner.className = 'iveCorner iveCorner--bottom';
     corner.setAttribute('aria-hidden', 'true');
     const composition = document.createElement('span');
     composition.className = 'iveCornerPhoto';
     const photo = document.createElement('img');
     photo.className = 'iveCornerArtwork';
-    photo.src = './media/ive/sources/ive-group-black.jpeg';
+    photo.src = './media/ive/wonyoung-liz-bottom-right.webp?v=1';
     photo.alt = '';
     photo.decoding = 'async';
     composition.appendChild(photo);
@@ -25,8 +25,7 @@
 
   function init() {
     document.querySelectorAll('.iveRailDecor,.iveEditorialRail,.iveReferenceRail,.iveArtRail,.iveCorner').forEach(node => node.remove());
-    buildCorner('top');
-    buildCorner('bottom');
+    buildCorner();
     updateMode();
     window.addEventListener('hashchange', updateMode);
   }
