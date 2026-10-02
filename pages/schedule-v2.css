@@ -76,12 +76,12 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:0;pointe
 .scheduleGroupChevron{display:grid;place-items:center;color:var(--schedule-text)}
 .scheduleGroupChevron svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5}
 .scheduleBoardRoute .scheduleMatchCard,.scheduleBoardRoute .scheduleMatchCard:first-child{position:relative;border:0;border-bottom:1px solid var(--schedule-line);border-radius:0;background:transparent}
-.scheduleBoardRoute .scheduleFixture{min-height:var(--schedule-row);padding:3px 10px 3px 3.7%;display:grid;grid-template-columns:150px minmax(0,1fr) 122px;align-items:center;gap:14px;background:transparent;color:var(--schedule-text);text-decoration:none}
+.scheduleBoardRoute .scheduleFixture{min-height:var(--schedule-row);padding:3px 10px 3px 3.7%;display:grid;grid-template-columns:176px minmax(0,1fr) 122px;align-items:center;gap:14px;background:transparent;color:var(--schedule-text);text-decoration:none}
 .scheduleBoardRoute .scheduleFixture:hover{background:#ffffff04}
-.scheduleTime{display:grid;grid-template-columns:80px 60px;align-items:center;gap:36px}
+.scheduleTime{display:grid;grid-template-columns:80px 76px;align-items:center;gap:20px}
 .scheduleTime>strong{display:flex;align-items:center;gap:7px;font-size:16px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
 .scheduleRank{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--schedule-muted)}
-.scheduleBoardRoute .scheduleTime .fixtureStatus{width:60px;padding:4px 5px;border:0;border-radius:99px;background:#242425;color:var(--schedule-text);font-size:12px;font-weight:600;letter-spacing:.09em;line-height:16px;text-align:center}
+.scheduleBoardRoute .scheduleTime .fixtureStatus{width:max-content;min-width:76px;justify-content:center;white-space:nowrap;box-sizing:border-box;padding:4px 5px;border:0;border-radius:99px;background:#242425;color:var(--schedule-text);font-size:12px;font-weight:600;letter-spacing:.09em;line-height:16px;text-align:center}
 .scheduleBoardRoute .scheduleTime .fixtureStatus.live{background:var(--schedule-pink);color:#10070c;box-shadow:0 0 12px #f52c9144}
 .scheduleBoardRoute .scheduleTime .fixtureStatus.manual{color:var(--schedule-yellow)}
 .scheduleBoardRoute .scheduleFixture[data-operational-lane="FOLLOW"] .fixtureStatus.upcoming{background:var(--schedule-pink);color:#10070c}
@@ -125,8 +125,8 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleBoardRoute .statusFilters{left:43%;gap:8px}
   .scheduleBoardRoute .statusFilters button{padding-inline:12px}
   .scheduleSearch{width:27%;min-width:210px}
-  .scheduleTime{grid-template-columns:64px 54px;gap:12px}
-  .scheduleBoardRoute .scheduleFixture{grid-template-columns:130px minmax(0,1fr) 20px;padding-left:2%}
+  .scheduleTime{grid-template-columns:64px 76px;gap:12px}
+  .scheduleBoardRoute .scheduleFixture{grid-template-columns:152px minmax(0,1fr) 20px;padding-left:2%}
   .scheduleTeam{gap:20px}.scheduleTeams{gap:12px}
   .scheduleTeam span,.scheduleTime>strong{font-size:15px}
 }
@@ -160,10 +160,10 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleBoardRoute .scheduleCompetitionHead>strong{font-size:11px;letter-spacing:.12em}
   .scheduleBoardRoute .scheduleCompetitionHead>span:not(.competitionMark){display:none}
   .scheduleBoardRoute .scheduleCompetitionHead img,.scheduleBoardRoute .scheduleCompetitionHead .competitionMark{width:21px;height:21px}
-  .scheduleBoardRoute .scheduleFixture{grid-template-columns:46px minmax(0,1fr) 14px;padding:8px 0;gap:7px}
+  .scheduleBoardRoute .scheduleFixture{grid-template-columns:66px minmax(0,1fr) 14px;padding:8px 0;gap:7px}
   .scheduleTime{grid-template-columns:1fr;gap:5px;justify-items:start}
   .scheduleTime>strong{font-size:12px}
-  .scheduleBoardRoute .scheduleTime .fixtureStatus{width:39px;font-size:9px;line-height:13px;padding:2px 0}
+  .scheduleBoardRoute .scheduleTime .fixtureStatus{width:max-content;min-width:66px;font-size:9px;line-height:13px;padding:2px 0}
   .scheduleTeams{grid-template-columns:minmax(0,1fr) 45px minmax(0,1fr);gap:6px}
   .scheduleTeam,.scheduleTeam.home,.scheduleTeam.away{display:flex;flex-direction:column;justify-content:center;text-align:center;gap:4px}
   .scheduleTeam.home span{order:2}.scheduleTeam span{max-width:100%;font-size:11px;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
@@ -176,3 +176,16 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleSpark{width:18px;height:22px}
 }
 @media(prefers-reduced-motion:reduce){.scheduleHeader *,.scheduleBoardRoute *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Loading uses the same schedule chrome and row grid as the populated board. */
+.scheduleLoadingMessage{margin:0 0 12px;color:var(--schedule-muted);font:inherit;font-size:13px}
+.scheduleLoadingRoute .statusFilters button:disabled,.scheduleLoadingRoute .scheduleSearch{opacity:.55;cursor:default}
+.scheduleLoadingRows .scheduleCompetitionHead{margin-bottom:0}
+.schedulePlaceholder{display:block;flex-shrink:0;height:12px;border-radius:4px;background:#242426}
+.schedulePlaceholder.time{width:48px}.schedulePlaceholder.lane{width:66px;height:22px;border-radius:99px}
+.schedulePlaceholder.team{width:clamp(36px,8vw,130px);max-width:100%}.schedulePlaceholder.crest{width:var(--schedule-crest);height:var(--schedule-crest);border-radius:50%}
+.schedulePlaceholder.league{width:180px;max-width:100%;height:10px}.schedulePlaceholder.score{width:22px;height:8px}
+.scheduleLoadingRows{animation:schedule-loading 1.5s ease-in-out infinite}
+@keyframes schedule-loading{50%{opacity:.45}}
+@media(max-width:700px){.scheduleLoadingRows .scheduleTime{gap:5px}.scheduleLoadingRows .schedulePlaceholder.time{width:36px}.scheduleLoadingRows .scheduleTeam.home .schedulePlaceholder.team{order:2}}
+@media(prefers-reduced-motion:reduce){.scheduleLoadingRows{animation:none}}

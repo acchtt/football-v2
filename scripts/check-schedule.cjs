@@ -10,7 +10,7 @@ const context = {window:{},document:{getElementById:id=>id==='app'?root:null},
   localStorage:storage,sessionStorage:storage,location:{hash:'#board'},Date,Intl,console};
 vm.createContext(context);
 vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashchange'")) +
-  'window.test = {state, todayKey, boardMatchBlock, renderMatchday, formatTime, dateStrip, externalLogo, crest};})();', context);
+  'window.test = {state, todayKey, boardMatchBlock, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest};})();', context);
 const t = context.window.test;
 const date = t.todayKey();
 const kickoff = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
@@ -48,6 +48,14 @@ assert(root.innerHTML.includes('No matches found') && root.innerHTML.includes('d
 t.state.boardQuery=''; t.state.board={schedule:[],picks:[]}; t.renderMatchday();
 assert(root.innerHTML.includes('No scheduled Board matches'));
 assert(t.dateStrip().includes('scheduleDateLabel') && !t.dateStrip().includes('dateCount'));
+t.skeleton('board','Loading decision board');
+assert(root.innerHTML.includes('scheduleHeader') && root.innerHTML.includes('scheduleLoadingRoute'));
+assert(root.innerHTML.includes('aria-busy="true"') && root.innerHTML.includes('Loading schedule…'));
+assert(!root.innerHTML.includes('contextRail') && !root.innerHTML.includes('Loading decision board'));
+assert.equal((root.innerHTML.match(/class="scheduleFixture"/g)||[]).length,6);
+assert(root.innerHTML.includes('disabled><span>All</span><b>—</b>'), 'loading must not claim zero matches');
+t.renderMatchday();
+assert(root.innerHTML.includes('aria-busy="false"') && !root.innerHTML.includes('scheduleLoadingRows'));
 const index=fs.readFileSync('pages/index.html','utf8');
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
 console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');

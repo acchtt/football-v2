@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v64';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v65';
   // Operational lane badges distinguish ranked FOLLOW / RESERVE / STOP from lifecycle state.
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
@@ -806,7 +806,7 @@
     return '<div class="matchIntelligenceRail">' + contextClock(counts) + matchdayDecision(boardRows) +
       railCompetitionSummary(boardRows) + railWatchlist(boardRows) + matchdayMedia() + '</div>';
   }
-  function renderMatchday() {
+  function renderMatchday(loading) {
     state.route = 'board';
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
@@ -836,34 +836,42 @@
     });
     const statusButton = function (key, label) {
       return '<button type="button" class="' + (state.statusFilter === key ? 'active' : '') + '" data-status-filter="' + key +
-        '" aria-pressed="' + (state.statusFilter === key) + '"><span>' + label + '</span><b>' + counts[key] + '</b></button>';
+        '" aria-pressed="' + (state.statusFilter === key) + '"' + (loading ? ' disabled' : '') + '><span>' + label + '</span><b>' + (loading ? '—' : counts[key]) + '</b></button>';
     };
     const controls = '<div class="scheduleToolbar"><div class="statusFilters" role="group" aria-label="Match status">' +
       statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
       '</div><form class="scheduleSearch" id="boardSearchForm" role="search">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>' +
       '<input id="boardSearch" type="search" autocomplete="off" value="' + esc(state.boardQuery || '') +
-      '" placeholder="Search teams or leagues…" aria-label="Search current schedule"></form></div>';
-    const boardBody = state.error && !boardRows.length ?
+      '" placeholder="Search teams or leagues…" aria-label="Search current schedule"' + (loading ? ' disabled' : '') + '></form></div>';
+    const boardBody = loading ?
+      '<p class="scheduleLoadingMessage" role="status">Loading schedule…</p><div class="scheduleLoadingRows" aria-hidden="true">' +
+      '<div class="scheduleCompetitionHead"><i class="schedulePlaceholder crest"></i><i class="schedulePlaceholder league"></i></div>' +
+      Array.from({length:6}, function () {
+        return '<div class="scheduleMatchCard"><div class="scheduleFixture"><div class="scheduleTime"><i class="schedulePlaceholder time"></i><i class="schedulePlaceholder lane"></i></div>' +
+          '<div class="scheduleTeams"><div class="scheduleTeam home"><i class="schedulePlaceholder team"></i><i class="schedulePlaceholder crest"></i></div>' +
+          '<div class="scheduleScore"><i class="schedulePlaceholder score"></i></div><div class="scheduleTeam away"><i class="schedulePlaceholder crest"></i><i class="schedulePlaceholder team"></i></div></div></div></div>';
+      }).join('') + '</div>' : state.error && !boardRows.length ?
       '<div class="emptyState connectionEmpty"><strong>Schedule unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches found</strong><span>Change the status filter or clear the schedule search.</span>' +
         '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
         '<div class="emptyState"><strong>No scheduled Board matches</strong><span>No operational entries were added for this date.</span></div>';
     const content =
-      '<section class="scheduleStage" aria-label="ARC XI football schedule">' +
+      '<section class="scheduleStage" aria-label="ARC XI football schedule" aria-busy="' + Boolean(loading) + '">' +
       (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       '<div class="scheduleTop">' + controls + '</div>' +
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
       '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
         return '<svg class="scheduleSpark' + color + '" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0c1 12 2 14 12 15-10 1-11 3-12 15C11 18 10 16 0 15c10-1 11-3 12-15Z"></path></svg>';
       }).join('') + '<small>Always more than a game</small></footer></section>';
-    root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute');
+    root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute' + (loading ? ' scheduleLoadingRoute' : ''));
     bindGlobal();
   }
 
   function skeleton(route, title) {
     state.route = route;
+    if (route === 'board') { renderMatchday(true); return; }
     const rows = Array.from({length:6}, function () { return '<div class="skeletonRow"></div>'; }).join('');
     root.innerHTML = shell(pageTitle('Loading', title || 'ARC XI', 'Retrieving the latest football data.'), '<section class="railSection"><div class="skeletonBlock"></div></section>', 'loadingRoute') +
       '';
