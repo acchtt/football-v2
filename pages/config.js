@@ -5,7 +5,7 @@
 
   const API = 'https://football-v2.acchtt.workers.dev';
   const TZ = 'Asia/Ho_Chi_Minh';
-  const DASHBOARD_CACHE_KEY = 'sliptrace.dashboard.compat.v3';
+  const DASHBOARD_CACHE_KEY = 'sliptrace.dashboard.compat.v4';
   const nativeFetch = window.fetch.bind(window);
   const nativeSetInterval = window.setInterval.bind(window);
 
@@ -193,11 +193,11 @@
         const calendarDate = kickoff ? ictDateKey(kickoff) : '';
         return {
           ...row,
+          // Keep the operational/Airtable board day only for audit and provider context.
+          // The visible schedule date must always follow the fixture's actual ICT kickoff
+          // calendar day, so post-midnight matches do not remain on the previous board.
           sourceSlateDate: row?.sourceSlateDate || row?.slateDate || calendarDate || '',
-          // Slate Date is the operational board day and may intentionally contain
-          // post-midnight fixtures from the same sweep window. Only derive a
-          // calendar day when the backend did not provide a slate day.
-          slateDate: row?.slateDate || calendarDate || ''
+          slateDate: calendarDate || row?.slateDate || ''
         };
       })
     };
