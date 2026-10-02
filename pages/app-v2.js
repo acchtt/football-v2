@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v62';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v63';
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
@@ -367,7 +367,7 @@
   function scheduleHeader() {
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
       '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule">' +
-      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=2" alt="ARC XI — Live Football Schedule"></a>' +
+      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=3" alt="ARC XI — Live Football Schedule"></a>' +
       '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
       dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
