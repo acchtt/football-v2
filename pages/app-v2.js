@@ -548,6 +548,11 @@
     const lane = match[1].toUpperCase();
     return lane === 'YES' ? 'FOLLOW' : lane;
   }
+  function boardRank(row) {
+    const source = [row && row.frozenPreSummary, row && row.coverageNotes].filter(Boolean).join(' ');
+    const match = source.match(/\bRank\s*#?(\d+)\b/i);
+    return match ? Number(match[1]) : null;
+  }
   function manualBoardScore(row, event) {
     if (event || !row || !row.manualScore) return null;
     const home = Number(row.manualScore.home);
@@ -562,6 +567,7 @@
     const status = event ? statusKey(event) : fallback ? soccerwayStatusKey(fallback) : boardStatus(row);
     const tier = String(row.tier || 'WATCHLIST').toUpperCase();
     const lane = boardLane(row);
+    const rank = boardRank(row);
     const teams = event ? {
       home: teamName(event, 'home'),
       away: teamName(event, 'away')
@@ -588,13 +594,14 @@
       scoreLabel = '—';
       detail = 'FT';
     }
-    const statusName = finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : 'PRE';
+    const statusName = finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
     const statusClass = finished ? 'finished' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture scheduleFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
       'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"' +
       (lane ? ' data-operational-lane="' + esc(lane) + '"' : '') +
+      (rank ? ' data-board-rank="' + esc(rank) + '"' : '') +
       (fallback ? ' data-score-source="soccerway"' : '');
     const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
     const close = id ? '</a>' : '</div>';
@@ -603,7 +610,7 @@
       esc(hasManualScore ? 'Edit score' : fallback ? 'Correct score' : 'Add score') + '">' +
       (hasManualScore ? 'Edit' : fallback ? 'Correct' : 'Add score') + '</button>' : '';
     return '<article class="boardMatchCard scheduleMatchCard">' + open +
-      '<div class="scheduleTime"><strong>' + esc(kickoffText) + '</strong><span class="fixtureStatus ' + statusClass + '">' +
+      '<div class="scheduleTime"><strong>' + esc(kickoffText) + (rank ? '<em class="scheduleRank">#' + esc(rank) + '</em>' : '') + '</strong><span class="fixtureStatus ' + statusClass + '">' +
       esc(statusName) + '</span></div>' +
       '<div class="scheduleTeams"><div class="scheduleTeam home"><span title="' + esc(teams.home || 'Home') + '">' + esc(teams.home || 'Home') + '</span>' +
       boardCrest(event, fallback, 'home', teams.home || 'Home') + '</div>' +
