@@ -163,7 +163,7 @@
       const dashboard=await getBoard();
       const rows=(dashboard.schedule||[]).filter(r=>{
         const tier=String(r?.tier||'').toUpperCase();
-        return r?.slateDate===from&&(tier==='FOCUS'||tier==='WATCHLIST');
+        return r?.slateDate===from&&(tier==='FOCUS'||tier==='WATCHLIST'||tier==='PASS');
       });
       const merged=mergeBoardRows(source,rows);
       const out={...payload,data:{...data,results:merged,events:merged,count:merged.length,next:null,previous:null},strictBoardOnly:true,boardRows:rows.length,boardFallbackRows:merged.filter(x=>x.__boardFallback).length};
