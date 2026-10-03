@@ -222,7 +222,7 @@ function pickMatchesCandidate(pick, candidate) {
 }
 
 async function dashboardData(env) {
-  const coverageWindow = "AND(OR({Board Tier}='FOCUS',{Board Tier}='WATCHLIST'),IS_AFTER({Kickoff ICT},DATEADD(NOW(),-7,'days')),IS_BEFORE({Kickoff ICT},DATEADD(NOW(),14,'days')))";
+  const coverageWindow = "AND(OR({Board Tier}='FOCUS',{Board Tier}='WATCHLIST',{Board Tier}='PASS'),IS_AFTER({Kickoff ICT},DATEADD(NOW(),-7,'days')),IS_BEFORE({Kickoff ICT},DATEADD(NOW(),14,'days')))";
   const pickWindow = "AND(IS_AFTER({Kickoff},DATEADD(NOW(),-14,'days')),IS_BEFORE({Kickoff},DATEADD(NOW(),14,'days')))";
   const manualWindow = "IS_AFTER({Updated At},DATEADD(NOW(),-14,'days'))";
   const [coverageRows, pickRows, decisionRows, manualRows] = await Promise.all([
@@ -252,7 +252,7 @@ async function dashboardData(env) {
   const currentCoverage = [...latest.values()];
 
   const boardBase = currentCoverage
-    .filter((record) => ["FOCUS", "WATCHLIST"].includes(selectName(record.fields?.["Board Tier"])))
+    .filter((record) => ["FOCUS", "WATCHLIST", "PASS"].includes(selectName(record.fields?.["Board Tier"])))
     .filter((record) => Boolean(slateDay(record.fields || {})) && timestamp(record.fields?.["Kickoff ICT"]) > 0)
     .sort((a, b) => slateDay(a.fields || {}).localeCompare(slateDay(b.fields || {})) || timestamp(a.fields?.["Kickoff ICT"]) - timestamp(b.fields?.["Kickoff ICT"]));
 
