@@ -111,7 +111,7 @@ export async function GET() {
     }
 
     const boardBase = [...latest.values()]
-      .filter((record) => ["FOCUS", "WATCHLIST"].includes(selectName(record.fields["Board Tier"])))
+      .filter((record) => ["FOCUS", "WATCHLIST", "PASS"].includes(selectName(record.fields["Board Tier"])))
       .filter((record) => Boolean(slateDay(record.fields)) && timestamp(record.fields["Kickoff ICT"]) > 0)
       .sort((a, b) => {
         const dayCompare = slateDay(b.fields).localeCompare(slateDay(a.fields));
