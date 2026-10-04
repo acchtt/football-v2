@@ -96,10 +96,10 @@ const material=new THREE.ShaderMaterial({
       vec2 a2=vec2(.035,.93), b2=vec2(.078,.63), c2=vec2(.100,.82);
       vec2 a3=vec2(.066,.79), b3=vec2(.116,.55), c3=vec2(.126,.74);
       float l1=inTri(uv,a1,b1,c1),l2=inTri(uv,a2,b2,c2),l3=inTri(uv,a3,b3,c3);
-      col+=pink*l1*.12+hot*l2*.15+pink*l3*.11;
-      col+=pale*triEdge(uv,a1,b1,c1,.004)*.40;
-      col+=hot*triEdge(uv,a2,b2,c2,.005)*.34;
-      col+=champagne*triEdge(uv,a3,b3,c3,.005)*.18;
+      col+=(pink*.18+pale*.055)*l1+(hot*.20+pale*.045)*l2+(pink*.15+pale*.035)*l3;
+      col+=pale*triEdge(uv,a1,b1,c1,.004)*.52;
+      col+=hot*triEdge(uv,a2,b2,c2,.005)*.44;
+      col+=champagne*triEdge(uv,a3,b3,c3,.005)*.25;
       col+=pale*lineGlow(sdLine(uv,vec2(.040,.87),vec2(.078,.67)),.003,.014)*.24;
 
       // Slim top-right mixed pink/champagne cluster.
@@ -107,25 +107,25 @@ const material=new THREE.ShaderMaterial({
       vec2 d2=vec2(.965,.93), e2=vec2(.922,.63), f2=vec2(.900,.82);
       vec2 d3=vec2(.934,.79), e3=vec2(.884,.55), f3=vec2(.874,.74);
       float r1=inTri(uv,d1,e1,f1),r2=inTri(uv,d2,e2,f2),r3=inTri(uv,d3,e3,f3);
-      col+=hot*r1*.12+gold*r2*.13+pink*r3*.10;
-      col+=pale*triEdge(uv,d1,e1,f1,.004)*.34;
-      col+=champagne*triEdge(uv,d2,e2,f2,.005)*.31;
-      col+=hot*triEdge(uv,d3,e3,f3,.005)*.28;
+      col+=(hot*.17+pale*.04)*r1+(gold*.16+champagne*.045)*r2+(pink*.14+pale*.03)*r3;
+      col+=pale*triEdge(uv,d1,e1,f1,.004)*.46;
+      col+=champagne*triEdge(uv,d2,e2,f2,.005)*.41;
+      col+=hot*triEdge(uv,d3,e3,f3,.005)*.36;
       col+=champagne*lineGlow(sdLine(uv,vec2(.958,.87),vec2(.922,.67)),.003,.014)*.24;
 
       // Curved bottom ribbon field. No straight bands.
       float x=uv.x;
-      float yPink=.070+.040*sin(x*5.8+t*.20)+.018*sin(x*12.0-t*.13);
-      float yPink2=.030+.028*sin(x*7.5-t*.15+1.7);
-      float yGold=.115+.034*sin(x*4.8+t*.16+1.2)+.010*sin(x*10.0);
-      float fade=1.0-smoothstep(.05,.25,uv.y);
-      col+=pink*lineGlow(uv.y-yPink,.008,.055)*fade*.54;
+      float yPink=.105+.045*sin(x*5.8+t*.20)+.018*sin(x*12.0-t*.13);
+      float yPink2=.050+.032*sin(x*7.5-t*.15+1.7);
+      float yGold=.150+.038*sin(x*4.8+t*.16+1.2)+.010*sin(x*10.0);
+      float fade=1.0-smoothstep(.08,.33,uv.y);
+      col+=pink*lineGlow(uv.y-yPink,.010,.070)*fade*.62;
       col+=hot*lineGlow(uv.y-yPink2,.010,.070)*fade*.30;
-      col+=gold*lineGlow(uv.y-yGold,.007,.050)*fade*.32;
+      col+=gold*lineGlow(uv.y-yGold,.009,.060)*fade*.38;
 
       // Broader soft glow beneath the ribbons.
-      float under=exp(-pow((uv.y-.075)/.095,2.0));
-      col+=(pink*.060+gold*.026)*under;
+      float under=exp(-pow((uv.y-.115)/.125,2.0));
+      col+=(pink*.075+gold*.032)*under;
 
       // Reference-like bokeh concentrated lower-left / middle.
       float b=0.0;
@@ -138,7 +138,7 @@ const material=new THREE.ShaderMaterial({
       b+=dotGlow(uv,vec2(.44,.115),.032);
       b+=dotGlow(uv,vec2(.51,.080),.018);
       b+=dotGlow(uv,vec2(.58,.108),.025);
-      col+=mix(pink,champagne,.30)*b*.21;
+      col+=mix(pink,champagne,.30)*b*.30;
 
       // Ambient pools around the two shard groups.
       col+=pink*dotGlow(uv,vec2(.055,.79),.18)*.045;
