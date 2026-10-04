@@ -36,17 +36,22 @@ jobs:
             sleep 1
           done
           mkdir -p .design-review
-          timeout 30s "${{ steps.chrome.outputs.chrome-path }}" \
+          set +e
+          timeout 15s "${{ steps.chrome.outputs.chrome-path }}" \
             --headless \
             --no-sandbox \
             --disable-dev-shm-usage \
+            --enable-unsafe-swiftshader \
             --hide-scrollbars \
             --window-size=1920,1080 \
             --run-all-compositor-stages-before-draw \
-            --virtual-time-budget=6000 \
+            --virtual-time-budget=4500 \
             --screenshot=".design-review/threejs-demo.png" \
             "http://127.0.0.1:8000/threejs-demo.html"
+          chrome_status=$?
+          set -e
           test -s .design-review/threejs-demo.png
+          echo "Chrome exit: $chrome_status; screenshot captured."
 
       - name: Commit screenshot
         shell: bash
