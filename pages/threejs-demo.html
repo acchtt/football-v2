@@ -26,7 +26,7 @@
   @media(prefers-reduced-motion:reduce){.demoTag i{box-shadow:none}}
 </style>
 <script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
 </script>
 </head>
 <body>
@@ -36,6 +36,7 @@
 
 <script type="module">
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const root=document.querySelector('#fx');
 const toggle=document.querySelector('#toggle');
@@ -47,10 +48,13 @@ renderer.setSize(innerWidth,innerHeight);
 renderer.setClearColor(0x000000,0);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.18;
+renderer.toneMappingExposure=1.12;
 root.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(),.05).texture;
+pmrem.dispose();
 const camera=new THREE.PerspectiveCamera(34,innerWidth/innerHeight,.1,100);
 camera.position.set(0,0,9);
 
@@ -71,24 +75,26 @@ function starShape(){
 }
 
 const glass=new THREE.MeshPhysicalMaterial({
-  color:0xff3f98,
-  metalness:.18,
-  roughness:.08,
+  color:0xff378f,
+  metalness:.02,
+  roughness:.06,
+  transmission:.78,
+  thickness:1.4,
+  ior:1.48,
   clearcoat:1,
-  clearcoatRoughness:.04,
-  emissive:0x3d071f,
-  emissiveIntensity:.34,
+  clearcoatRoughness:.025,
+  emissive:0x250714,
+  emissiveIntensity:.16,
   transparent:true,
-  opacity:.32,
-  depthWrite:false,
+  opacity:1,
   side:THREE.DoubleSide
 });
 const starGeometry=new THREE.ExtrudeGeometry(starShape(),{
-  depth:.22,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:.055,bevelThickness:.05
+  depth:.42,bevelEnabled:true,bevelSegments:6,steps:1,bevelSize:.075,bevelThickness:.07
 });
 starGeometry.center();
 const star=new THREE.Mesh(starGeometry,glass);
-star.rotation.z=-.08;
+star.rotation.set(.18,.28,-.11);
 group.add(star);
 
 const starEdges=new THREE.LineSegments(
@@ -99,13 +105,13 @@ starEdges.rotation.copy(star.rotation);
 group.add(starEdges);
 
 const gold=new THREE.MeshPhysicalMaterial({
-  color:0xffdf6a,
-  metalness:1,
-  roughness:.1,
+  color:0xffdf72,
+  metalness:.72,
+  roughness:.13,
   clearcoat:1,
-  clearcoatRoughness:.05,
-  emissive:0x5a3300,
-  emissiveIntensity:.28
+  clearcoatRoughness:.04,
+  emissive:0x6b4a00,
+  emissiveIntensity:.34
 });
 const slash=new THREE.Mesh(new THREE.BoxGeometry(.13,2.38,.13),gold);
 slash.rotation.z=-.76;
@@ -120,30 +126,22 @@ slashEdge.rotation.copy(slash.rotation);
 slashEdge.position.copy(slash.position);
 group.add(slashEdge);
 
-const glow=new THREE.Mesh(
-  new THREE.CircleGeometry(1.12,48),
-  new THREE.MeshBasicMaterial({color:0xf13c91,transparent:true,opacity:.035,blending:THREE.AdditiveBlending,depthWrite:false})
-);
-glow.scale.set(1.25,1.25,1);
-glow.position.z=-.55;
-group.add(glow);
+scene.add(new THREE.AmbientLight(0xffffff,.72));
 
-scene.add(new THREE.AmbientLight(0xffffff,1.15));
-
-const pinkKey=new THREE.PointLight(0xf13c91,30,10,2);
-pinkKey.position.set(-1.8,1.7,4);scene.add(pinkKey);
-const yellowKey=new THREE.PointLight(0xffdf6a,36,11,2);
-yellowKey.position.set(2.1,.4,3.8);scene.add(yellowKey);
-const whiteRim=new THREE.PointLight(0xffffff,18,9,2);
-whiteRim.position.set(-.3,2.5,3);scene.add(whiteRim);
+const pinkKey=new THREE.PointLight(0xf13c91,24,10,2);
+pinkKey.position.set(-2.2,1.8,4.5);scene.add(pinkKey);
+const yellowKey=new THREE.PointLight(0xffdf72,34,11,2);
+yellowKey.position.set(2.3,.8,4.2);scene.add(yellowKey);
+const whiteRim=new THREE.PointLight(0xffffff,28,10,2);
+whiteRim.position.set(-.2,2.8,4.8);scene.add(whiteRim);
 
 let baseY=2.14;
 function place(){
   const narrow=innerWidth<850;
-  group.scale.setScalar(narrow?.34:.46);
+  group.scale.setScalar(narrow?.31:.42);
   group.position.set(
-    narrow?-2.62:-4.36,
-    narrow?1.86:2.14,
+    narrow?-2.72:-4.48,
+    narrow?1.93:2.22,
     0
   );
   baseY=group.position.y;
