@@ -10,8 +10,8 @@
   html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505}
   .site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#050505}
   #fx{position:fixed;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen}
-  #fx canvas{display:block;width:100%;height:100%;opacity:.86}
-  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.74}}
+  #fx canvas{display:block;width:100%;height:100%;opacity:.92}
+  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.82}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
@@ -60,75 +60,85 @@ const material=new THREE.ShaderMaterial({
     uniform float uAspect;
     uniform float uMotion;
 
-    float lineGlow(float d,float core,float glow){
-      return exp(-abs(d)/core)*.65 + exp(-abs(d)/glow)*.22;
+    float cross2(vec2 a,vec2 b){return a.x*b.y-a.y*b.x;}
+    float sideDist(vec2 p,vec2 a,vec2 b){
+      vec2 e=b-a;
+      return cross2(e,p-a)/max(length(e),.0001);
     }
-
-    float band(float v,float a,float b,float soft){
-      return smoothstep(a-soft,a,v)*(1.0-smoothstep(b,b+soft,v));
+    float triField(vec2 p,vec2 a,vec2 b,vec2 c){
+      float s=sign(cross2(b-a,c-a));
+      return min(min(s*sideDist(p,a,b),s*sideDist(p,b,c)),s*sideDist(p,c,a));
+    }
+    float lineGlow(float d,float core,float glow){
+      return exp(-abs(d)/core)*.72 + exp(-abs(d)/glow)*.28;
+    }
+    float softDot(vec2 p,vec2 c,float r){
+      float d=length(p-c);
+      return exp(-d*d/(r*r));
     }
 
     void main(){
-      vec2 p=vUv*2.0-1.0;
-      p.x*=uAspect;
-
+      vec2 uv=vUv;
       float t=uTime*uMotion;
 
-      vec3 pink=vec3(1.0,.12,.48);
-      vec3 hot=vec3(1.0,.32,.66);
-      vec3 gold=vec3(1.0,.73,.30);
-      vec3 champagne=vec3(1.0,.86,.58);
-
+      vec3 pink=vec3(1.0,.11,.47);
+      vec3 hot=vec3(1.0,.34,.67);
+      vec3 gold=vec3(1.0,.69,.24);
+      vec3 champagne=vec3(1.0,.86,.62);
       vec3 col=vec3(0.0);
 
-      // Edge masks: keep the schedule center almost untouched.
-      float leftMask=smoothstep(-.62*uAspect,-1.02*uAspect,p.x);
-      float rightMask=smoothstep(.62*uAspect,1.02*uAspect,p.x);
-      float bottomMask=smoothstep(-.42,-1.02,p.y);
-      float topMask=smoothstep(.52,1.02,p.y);
+      // Reference C: large translucent crystalline forms at both outer edges.
+      float lf1=triField(uv,vec2(-.03,.22),vec2(.075,.78),vec2(.165,.48));
+      float lf2=triField(uv,vec2(-.02,.10),vec2(.11,.57),vec2(.19,.28));
+      float lf3=triField(uv,vec2(.045,.66),vec2(.12,.98),vec2(.17,.56));
+      float lm1=smoothstep(-.015,.020,lf1);
+      float lm2=smoothstep(-.015,.020,lf2);
+      float lm3=smoothstep(-.015,.018,lf3);
+      col+=pink*(lm1*.095+lm2*.075+lm3*.085);
+      col+=hot*(lineGlow(lf1,.006,.027)*.28+lineGlow(lf2,.006,.024)*.22+lineGlow(lf3,.005,.020)*.30);
+      col+=champagne*lineGlow(lf2-.035,.005,.020)*.11;
 
-      // Large crystalline/refraction bands at the left edge.
-      float l1=p.y-(1.34*p.x/uAspect+1.05+sin(t*.18)*.025);
-      float l2=p.y-(.82*p.x/uAspect+.42+cos(t*.14)*.018);
-      float l3=p.y-(-1.15*p.x/uAspect-.92);
-      float leftFacet=(lineGlow(l1,.020,.13)*.95 + lineGlow(l2,.026,.17)*.64 + lineGlow(l3,.018,.11)*.45)
-                    * leftMask * band(p.y,-.82,.88,.16);
-      col += pink*leftFacet*.82;
-      col += champagne*lineGlow(l2,.012,.075)*leftMask*.34;
+      float rf1=triField(uv,vec2(1.03,.20),vec2(.925,.82),vec2(.835,.58));
+      float rf2=triField(uv,vec2(1.02,.08),vec2(.91,.62),vec2(.84,.43));
+      float rf3=triField(uv,vec2(.97,.68),vec2(.89,.98),vec2(.84,.60));
+      float rm1=smoothstep(-.015,.020,rf1);
+      float rm2=smoothstep(-.015,.020,rf2);
+      float rm3=smoothstep(-.015,.018,rf3);
+      col+=hot*(rm1*.085+rm3*.075);
+      col+=gold*rm2*.075;
+      col+=pink*(lineGlow(rf1,.006,.027)*.24+lineGlow(rf3,.005,.021)*.28);
+      col+=champagne*lineGlow(rf2,.006,.025)*.23;
 
-      // Right edge glass: pink primary with champagne highlights.
-      float r1=p.y-(-1.10*p.x/uAspect+1.02+cos(t*.16)*.022);
-      float r2=p.y-(-.62*p.x/uAspect+.30);
-      float r3=p.y-(1.22*p.x/uAspect-1.18);
-      float rightFacet=(lineGlow(r1,.022,.14)*.82 + lineGlow(r2,.030,.18)*.58 + lineGlow(r3,.018,.12)*.42)
-                     * rightMask * band(p.y,-.78,.90,.18);
-      col += hot*rightFacet*.72;
-      col += gold*lineGlow(r2,.014,.085)*rightMask*.30;
+      // Stronger lower refraction sweep from the chosen reference.
+      float x=uv.x;
+      float y1=.055+.055*sin(x*6.1+t*.18)+.020*sin(x*14.0-t*.10);
+      float y2=.105+.046*sin(x*5.0+t*.14+1.2);
+      float y3=.018+.034*sin(x*7.6-t*.12+2.0);
+      float bottomMask=1.0-smoothstep(.05,.34,uv.y);
+      col+=pink*lineGlow(uv.y-y1,.009,.060)*bottomMask*.52;
+      col+=gold*lineGlow(uv.y-y2,.007,.052)*bottomMask*.28;
+      col+=hot*lineGlow(uv.y-y3,.012,.075)*bottomMask*.20;
 
-      // Flowing bottom light, matching the reference's pink/gold sweep.
-      float x=p.x/max(uAspect,.001);
-      float yPink=-.92 + .12*sin(x*2.7+t*.20) + .04*sin(x*6.2-t*.15);
-      float yGold=-.82 + .10*sin(x*2.15+t*.15+1.4);
-      float pinkRibbon=lineGlow(p.y-yPink,.018,.12)*bottomMask;
-      float goldRibbon=lineGlow(p.y-yGold,.015,.10)*bottomMask;
-      col += pink*pinkRibbon*.56;
-      col += gold*goldRibbon*.34;
+      // Soft magenta atmosphere rising from the lower corners.
+      float lb=softDot(uv,vec2(.08,.07),.23);
+      float rb=softDot(uv,vec2(.92,.08),.26);
+      col+=pink*(lb*.075+rb*.065);
 
-      // Soft ambient wash behind the edge forms.
-      float leftBloom=exp(-pow((p.x/uAspect+1.02)/.28,2.0)-pow((p.y-.18)/.82,2.0));
-      float rightBloom=exp(-pow((p.x/uAspect-1.02)/.30,2.0)-pow((p.y-.05)/.86,2.0));
-      float bottomBloom=exp(-pow((p.y+1.02)/.26,2.0));
-      col += pink*leftBloom*.09 + hot*rightBloom*.085 + pink*bottomBloom*.045;
+      // Dim bokeh accents along the bottom edge, like the reference.
+      float dots=0.0;
+      dots+=softDot(uv,vec2(.20,.10),.020);
+      dots+=softDot(uv,vec2(.27,.075),.014);
+      dots+=softDot(uv,vec2(.36,.11),.023);
+      dots+=softDot(uv,vec2(.46,.075),.017);
+      dots+=softDot(uv,vec2(.62,.095),.021);
+      dots+=softDot(uv,vec2(.73,.07),.015);
+      col+=mix(pink,champagne,.34)*dots*.20;
 
-      // Tiny top-edge shimmer, never crossing controls.
-      float topArc=lineGlow(p.y-(.92+.025*sin(x*4.0+t*.12)),.009,.055)*topMask;
-      col += mix(pink,champagne,.38+.22*sin(x*2.0))*topArc*.16;
+      // Faint top corner wash only; keep navigation readable.
+      col+=pink*softDot(uv,vec2(.02,.88),.18)*.045;
+      col+=gold*softDot(uv,vec2(.98,.88),.18)*.040;
 
-      // Darken everything away from the frame.
-      float frame=max(max(leftMask,rightMask),max(bottomMask,topMask));
-      col*=frame;
-
-      float alpha=clamp(max(max(col.r,col.g),col.b),0.0,.72);
+      float alpha=clamp(max(max(col.r,col.g),col.b),0.0,.80);
       gl_FragColor=vec4(col,alpha);
     }
   `
