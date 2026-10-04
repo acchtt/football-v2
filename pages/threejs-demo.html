@@ -30,7 +30,7 @@
 </script>
 </head>
 <body>
-<iframe class="site" src="./#board" title="ARC XI schedule"></iframe>
+<iframe class="site" src="https://acchtt.github.io/football-v2/#board" title="ARC XI schedule"></iframe>
 <div id="fx" aria-hidden="true"></div>
 <div class="demoTag"><i></i><span>Glass emblem demo</span><button id="toggle" type="button">hide</button></div>
 
@@ -71,81 +71,82 @@ function starShape(){
 }
 
 const glass=new THREE.MeshPhysicalMaterial({
-  color:0xf13c91,
-  metalness:.08,
-  roughness:.12,
-  transmission:.55,
-  thickness:1.25,
-  ior:1.45,
+  color:0xff3f98,
+  metalness:.18,
+  roughness:.08,
   clearcoat:1,
-  clearcoatRoughness:.08,
-  emissive:0x38081e,
-  emissiveIntensity:.5,
+  clearcoatRoughness:.04,
+  emissive:0x3d071f,
+  emissiveIntensity:.34,
   transparent:true,
-  opacity:.96
+  opacity:.32,
+  depthWrite:false,
+  side:THREE.DoubleSide
 });
-const star=new THREE.Mesh(
-  new THREE.ExtrudeGeometry(starShape(),{depth:.34,bevelEnabled:true,bevelSegments:5,steps:1,bevelSize:.08,bevelThickness:.07}),
-  glass
-);
-star.geometry.center();
-star.rotation.z=-.10;
+const starGeometry=new THREE.ExtrudeGeometry(starShape(),{
+  depth:.22,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:.055,bevelThickness:.05
+});
+starGeometry.center();
+const star=new THREE.Mesh(starGeometry,glass);
+star.rotation.z=-.08;
 group.add(star);
 
+const starEdges=new THREE.LineSegments(
+  new THREE.EdgesGeometry(starGeometry,22),
+  new THREE.LineBasicMaterial({color:0xff8dc3,transparent:true,opacity:.72,blending:THREE.AdditiveBlending})
+);
+starEdges.rotation.copy(star.rotation);
+group.add(starEdges);
+
 const gold=new THREE.MeshPhysicalMaterial({
-  color:0xf3d76a,
-  metalness:.92,
-  roughness:.16,
+  color:0xffdf6a,
+  metalness:1,
+  roughness:.1,
   clearcoat:1,
-  clearcoatRoughness:.1,
-  emissive:0x2d2102,
-  emissiveIntensity:.16
+  clearcoatRoughness:.05,
+  emissive:0x5a3300,
+  emissiveIntensity:.28
 });
-const slash=new THREE.Mesh(new THREE.BoxGeometry(.16,2.65,.17),gold);
+const slash=new THREE.Mesh(new THREE.BoxGeometry(.13,2.38,.13),gold);
 slash.rotation.z=-.76;
-slash.position.set(.42,.2,.28);
+slash.position.set(.38,.18,.21);
 group.add(slash);
 
-const edgeMat=new THREE.MeshBasicMaterial({color:0xff9aca,transparent:true,opacity:.34,blending:THREE.AdditiveBlending,depthWrite:false});
-const halo=new THREE.Mesh(new THREE.TorusGeometry(1.23,.012,10,180),edgeMat);
-halo.rotation.x=1.13;
-halo.rotation.z=-.38;
-halo.position.z=-.14;
-group.add(halo);
-
-const halo2=new THREE.Mesh(
-  new THREE.TorusGeometry(1.48,.008,8,180),
-  new THREE.MeshBasicMaterial({color:0xf3e72b,transparent:true,opacity:.14,blending:THREE.AdditiveBlending,depthWrite:false})
+const slashEdge=new THREE.LineSegments(
+  new THREE.EdgesGeometry(slash.geometry),
+  new THREE.LineBasicMaterial({color:0xfff0ae,transparent:true,opacity:.5})
 );
-halo2.rotation.set(.78,.42,.18);
-halo2.position.z=-.38;
-group.add(halo2);
+slashEdge.rotation.copy(slash.rotation);
+slashEdge.position.copy(slash.position);
+group.add(slashEdge);
+
+const glow=new THREE.Mesh(
+  new THREE.CircleGeometry(1.12,48),
+  new THREE.MeshBasicMaterial({color:0xf13c91,transparent:true,opacity:.035,blending:THREE.AdditiveBlending,depthWrite:false})
+);
+glow.scale.set(1.25,1.25,1);
+glow.position.z=-.55;
+group.add(glow);
 
 scene.add(new THREE.AmbientLight(0xffffff,1.15));
 
-const pinkKey=new THREE.PointLight(0xf13c91,38,14,2);
-pinkKey.position.set(-2.3,1.8,4.2);scene.add(pinkKey);
-const yellowKey=new THREE.PointLight(0xf3e72b,28,14,2);
-yellowKey.position.set(2.5,-.7,3.5);scene.add(yellowKey);
-const whiteRim=new THREE.PointLight(0xffffff,14,10,2);
-whiteRim.position.set(0,3.1,2.2);scene.add(whiteRim);
+const pinkKey=new THREE.PointLight(0xf13c91,30,10,2);
+pinkKey.position.set(-1.8,1.7,4);scene.add(pinkKey);
+const yellowKey=new THREE.PointLight(0xffdf6a,36,11,2);
+yellowKey.position.set(2.1,.4,3.8);scene.add(yellowKey);
+const whiteRim=new THREE.PointLight(0xffffff,18,9,2);
+whiteRim.position.set(-.3,2.5,3);scene.add(whiteRim);
 
-const shadow=new THREE.Mesh(
-  new THREE.CircleGeometry(1.45,64),
-  new THREE.MeshBasicMaterial({color:0xf13c91,transparent:true,opacity:.055,depthWrite:false})
-);
-shadow.scale.set(1.65,.3,1);
-shadow.position.set(0,-1.35,-.6);
-group.add(shadow);
-
+let baseY=2.14;
 function place(){
   const narrow=innerWidth<850;
-  group.scale.setScalar(narrow?.62:.82);
+  group.scale.setScalar(narrow?.34:.46);
   group.position.set(
-    narrow?-2.15:-3.42,
-    narrow?1.52:1.78,
+    narrow?-2.62:-4.36,
+    narrow?1.86:2.14,
     0
   );
+  baseY=group.position.y;
 }
 place();
 
@@ -179,9 +180,7 @@ function frame(){
   group.rotation.y+=(targetY-group.rotation.y)*.045;
   group.rotation.x+=(targetX-group.rotation.x)*.045;
   if(!reduceMotion){
-    group.position.y+=(1.78+Math.sin(t*.62)*.035-group.position.y)*.05;
-    halo.rotation.z+=.0009;
-    halo2.rotation.y-=.0012;
+    group.position.y+=(baseY+Math.sin(t*.58)*.018-group.position.y)*.05;
   }
   renderer.render(scene,camera);
 }
