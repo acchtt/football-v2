@@ -24,8 +24,13 @@ jobs:
         id: chrome
         uses: browser-actions/setup-chrome@v2
 
+      - name: Install screenshot driver
+        run: npm install --no-save playwright-core@1.55.0
+
       - name: Capture browser render
         shell: bash
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: |
           set -euo pipefail
           python3 -m http.server 8000 -d pages >/tmp/arcxi-http.log 2>&1 &
@@ -36,22 +41,22 @@ jobs:
             sleep 1
           done
           mkdir -p .design-review
-          set +e
-          timeout 15s "${{ steps.chrome.outputs.chrome-path }}" \
-            --headless \
-            --no-sandbox \
-            --disable-dev-shm-usage \
-            --enable-unsafe-swiftshader \
-            --hide-scrollbars \
-            --window-size=1920,1080 \
-            --run-all-compositor-stages-before-draw \
-            --virtual-time-budget=4500 \
-            --screenshot=".design-review/threejs-demo.png" \
-            "http://127.0.0.1:8000/threejs-demo.html"
-          chrome_status=$?
-          set -e
+          node <<'NODE'
+          const { chromium } = require('playwright-core');
+          (async () => {
+            const browser = await chromium.launch({
+              executablePath: process.env.CHROME_PATH,
+              headless: true,
+              args: ['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader']
+            });
+            const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+            await page.goto('http://127.0.0.1:8000/threejs-demo.html', { waitUntil: 'networkidle', timeout: 30000 });
+            await page.waitForTimeout(5000);
+            await page.screenshot({ path: '.design-review/threejs-demo.png', fullPage: false });
+            await browser.close();
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
           test -s .design-review/threejs-demo.png
-          echo "Chrome exit: $chrome_status; screenshot captured."
 
       - name: Commit screenshot
         shell: bash
