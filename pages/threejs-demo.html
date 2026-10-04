@@ -10,8 +10,8 @@
   html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505}
   .site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#050505}
   #fx{position:fixed;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen}
-  #fx canvas{display:block;width:100%;height:100%;opacity:.96}
-  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.88}}
+  #fx canvas{display:block;width:100%;height:100%;opacity:.90}
+  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.82}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
@@ -63,109 +63,94 @@ const material=new THREE.ShaderMaterial({
       float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);
       return length(pa-ba*h);
     }
-    float triMask(vec2 p,vec2 a,vec2 b,vec2 c,float feather){
-      float c1=cross2(b-a,p-a);
-      float c2=cross2(c-b,p-b);
-      float c3=cross2(a-c,p-c);
-      float pos=min(min(c1,c2),c3);
-      float neg=max(max(c1,c2),c3);
-      float d=max(-pos,neg);
-      float inside=step(0.0,min(min(c1,c2),c3))+step(max(max(c1,c2),c3),0.0);
-      float edge=min(min(sdLine(p,a,b),sdLine(p,b,c)),sdLine(p,c,a));
-      return max(smoothstep(feather,0.0,edge)*.0,clamp(inside,0.0,1.0));
-    }
     float inTri(vec2 p,vec2 a,vec2 b,vec2 c){
-      float s1=cross2(b-a,p-a);
-      float s2=cross2(c-b,p-b);
-      float s3=cross2(a-c,p-c);
+      float s1=cross2(b-a,p-a),s2=cross2(c-b,p-b),s3=cross2(a-c,p-c);
       bool neg=(s1<0.0)||(s2<0.0)||(s3<0.0);
       bool pos=(s1>0.0)||(s2>0.0)||(s3>0.0);
       return (neg&&pos)?0.0:1.0;
     }
-    float edgeGlowTri(vec2 p,vec2 a,vec2 b,vec2 c,float w){
+    float triEdge(vec2 p,vec2 a,vec2 b,vec2 c,float w){
       float d=min(min(sdLine(p,a,b),sdLine(p,b,c)),sdLine(p,c,a));
       return exp(-d/w);
     }
-    float softDot(vec2 p,vec2 c,float r){
-      vec2 q=(p-c)/r;
-      return exp(-dot(q,q)*2.6);
-    }
     float lineGlow(float d,float core,float glow){
-      return exp(-abs(d)/core)*.74+exp(-abs(d)/glow)*.26;
+      return exp(-abs(d)/core)*.70+exp(-abs(d)/glow)*.30;
+    }
+    float dotGlow(vec2 p,vec2 c,float r){
+      vec2 q=(p-c)/r;
+      return exp(-dot(q,q)*2.2);
     }
 
     void main(){
       vec2 uv=vUv;
       float t=uTime*uMotion;
-      vec3 pink=vec3(1.0,.10,.47);
-      vec3 hot=vec3(1.0,.32,.66);
-      vec3 gold=vec3(1.0,.69,.24);
-      vec3 champagne=vec3(1.0,.88,.66);
-      vec3 whitePink=vec3(1.0,.74,.88);
+      vec3 pink=vec3(1.0,.08,.45);
+      vec3 hot=vec3(1.0,.30,.65);
+      vec3 gold=vec3(1.0,.66,.20);
+      vec3 champagne=vec3(1.0,.88,.68);
+      vec3 pale=vec3(1.0,.72,.88);
       vec3 col=vec3(0.0);
 
-      // LEFT CLUSTER — large filled shards, matching Concept C's top-left placement.
-      vec2 la=vec2(-.02,.99), lb=vec2(.075,.72), lc=vec2(.105,.93);
-      vec2 ld=vec2(.045,.75), le=vec2(.125,.46), lf=vec2(.155,.82);
-      vec2 lg=vec2(-.02,.64), lh=vec2(.105,.54), li=vec2(.045,.34);
-      float L1=inTri(uv,la,lb,lc);
-      float L2=inTri(uv,ld,le,lf);
-      float L3=inTri(uv,lg,lh,li);
-      col+=pink*L1*.20 + hot*L2*.18 + pink*L3*.12;
-      col+=whitePink*edgeGlowTri(uv,la,lb,lc,.006)*.46;
-      col+=hot*edgeGlowTri(uv,ld,le,lf,.007)*.38;
-      col+=champagne*edgeGlowTri(uv,lg,lh,li,.008)*.18;
-      // Internal refraction cuts.
-      col+=whitePink*lineGlow(sdLine(uv,vec2(.018,.91),vec2(.104,.73)),.004,.020)*.22;
-      col+=hot*lineGlow(sdLine(uv,vec2(.071,.71),vec2(.143,.51)),.004,.018)*.24;
+      // Slim top-left crystalline cluster from the selected C reference.
+      vec2 a1=vec2(-.018,.99), b1=vec2(.042,.76), c1=vec2(.060,.92);
+      vec2 a2=vec2(.035,.93), b2=vec2(.078,.63), c2=vec2(.100,.82);
+      vec2 a3=vec2(.066,.79), b3=vec2(.116,.55), c3=vec2(.126,.74);
+      float l1=inTri(uv,a1,b1,c1),l2=inTri(uv,a2,b2,c2),l3=inTri(uv,a3,b3,c3);
+      col+=pink*l1*.12+hot*l2*.15+pink*l3*.11;
+      col+=pale*triEdge(uv,a1,b1,c1,.004)*.40;
+      col+=hot*triEdge(uv,a2,b2,c2,.005)*.34;
+      col+=champagne*triEdge(uv,a3,b3,c3,.005)*.18;
+      col+=pale*lineGlow(sdLine(uv,vec2(.040,.87),vec2(.078,.67)),.003,.014)*.24;
 
-      // RIGHT CLUSTER — larger and more gold/pink mixed, like the reference.
-      vec2 ra=vec2(1.02,.98), rb=vec2(.925,.74), rc=vec2(.885,.95);
-      vec2 rd=vec2(.985,.82), re=vec2(.895,.49), rf=vec2(.845,.86);
-      vec2 rg=vec2(1.02,.66), rh=vec2(.905,.57), ri=vec2(.955,.35);
-      float R1=inTri(uv,ra,rb,rc);
-      float R2=inTri(uv,rd,re,rf);
-      float R3=inTri(uv,rg,rh,ri);
-      col+=hot*R1*.17 + gold*R2*.15 + pink*R3*.13;
-      col+=whitePink*edgeGlowTri(uv,ra,rb,rc,.006)*.40;
-      col+=champagne*edgeGlowTri(uv,rd,re,rf,.007)*.36;
-      col+=hot*edgeGlowTri(uv,rg,rh,ri,.008)*.28;
-      col+=champagne*lineGlow(sdLine(uv,vec2(.978,.88),vec2(.894,.56)),.004,.018)*.26;
-      col+=hot*lineGlow(sdLine(uv,vec2(.915,.74),vec2(.965,.40)),.004,.020)*.25;
+      // Slim top-right mixed pink/champagne cluster.
+      vec2 d1=vec2(1.018,.99), e1=vec2(.958,.76), f1=vec2(.940,.92);
+      vec2 d2=vec2(.965,.93), e2=vec2(.922,.63), f2=vec2(.900,.82);
+      vec2 d3=vec2(.934,.79), e3=vec2(.884,.55), f3=vec2(.874,.74);
+      float r1=inTri(uv,d1,e1,f1),r2=inTri(uv,d2,e2,f2),r3=inTri(uv,d3,e3,f3);
+      col+=hot*r1*.12+gold*r2*.13+pink*r3*.10;
+      col+=pale*triEdge(uv,d1,e1,f1,.004)*.34;
+      col+=champagne*triEdge(uv,d2,e2,f2,.005)*.31;
+      col+=hot*triEdge(uv,d3,e3,f3,.005)*.28;
+      col+=champagne*lineGlow(sdLine(uv,vec2(.958,.87),vec2(.922,.67)),.003,.014)*.24;
 
-      // Broad bottom light ribbons — brighter and wider, but still behind the schedule.
+      // Curved bottom ribbon field. No straight bands.
       float x=uv.x;
-      float yp=.075+.034*sin(x*5.0+t*.16)+.012*sin(x*12.0-t*.10);
-      float yg=.115+.028*sin(x*4.0+t*.13+1.1);
-      float yp2=.025+.024*sin(x*6.6-t*.12+2.0);
-      float bottom=1.0-smoothstep(.02,.28,uv.y);
-      col+=pink*lineGlow(uv.y-yp,.010,.075)*bottom*.66;
-      col+=gold*lineGlow(uv.y-yg,.008,.058)*bottom*.40;
-      col+=hot*lineGlow(uv.y-yp2,.012,.085)*bottom*.30;
+      float yPink=.070+.040*sin(x*5.8+t*.20)+.018*sin(x*12.0-t*.13);
+      float yPink2=.030+.028*sin(x*7.5-t*.15+1.7);
+      float yGold=.115+.034*sin(x*4.8+t*.16+1.2)+.010*sin(x*10.0);
+      float fade=1.0-smoothstep(.05,.25,uv.y);
+      col+=pink*lineGlow(uv.y-yPink,.008,.055)*fade*.54;
+      col+=hot*lineGlow(uv.y-yPink2,.010,.070)*fade*.30;
+      col+=gold*lineGlow(uv.y-yGold,.007,.050)*fade*.32;
 
-      // Bokeh / soft glass glow in the lower left and middle.
+      // Broader soft glow beneath the ribbons.
+      float under=exp(-pow((uv.y-.075)/.095,2.0));
+      col+=(pink*.060+gold*.026)*under;
+
+      // Reference-like bokeh concentrated lower-left / middle.
       float b=0.0;
-      b+=softDot(uv,vec2(.16,.105),.040);
-      b+=softDot(uv,vec2(.205,.078),.022);
-      b+=softDot(uv,vec2(.262,.120),.032);
-      b+=softDot(uv,vec2(.318,.083),.018);
-      b+=softDot(uv,vec2(.380,.112),.026);
-      b+=softDot(uv,vec2(.445,.075),.020);
-      b+=softDot(uv,vec2(.520,.102),.027);
-      col+=mix(pink,champagne,.28)*b*.26;
+      b+=dotGlow(uv,vec2(.12,.105),.026);
+      b+=dotGlow(uv,vec2(.17,.070),.016);
+      b+=dotGlow(uv,vec2(.22,.125),.035);
+      b+=dotGlow(uv,vec2(.27,.083),.020);
+      b+=dotGlow(uv,vec2(.32,.112),.028);
+      b+=dotGlow(uv,vec2(.38,.072),.018);
+      b+=dotGlow(uv,vec2(.44,.115),.032);
+      b+=dotGlow(uv,vec2(.51,.080),.018);
+      b+=dotGlow(uv,vec2(.58,.108),.025);
+      col+=mix(pink,champagne,.30)*b*.21;
 
-      // Soft atmospheric glow around both shard clusters.
-      col+=pink*softDot(uv,vec2(.055,.72),.18)*.065;
-      col+=hot*softDot(uv,vec2(.945,.70),.20)*.060;
-      col+=gold*softDot(uv,vec2(.900,.55),.18)*.035;
+      // Ambient pools around the two shard groups.
+      col+=pink*dotGlow(uv,vec2(.055,.79),.18)*.045;
+      col+=hot*dotGlow(uv,vec2(.945,.78),.18)*.040;
+      col+=gold*dotGlow(uv,vec2(.905,.63),.16)*.026;
 
-      // Keep the central interface nearly untouched.
-      float centerX=smoothstep(.18,.31,uv.x)*(1.0-smoothstep(.69,.82,uv.x));
-      float centerY=smoothstep(.18,.34,uv.y);
-      float protect=centerX*centerY;
-      col*=mix(1.0,.18,protect);
+      // Protect the schedule's central reading area.
+      float cx=smoothstep(.14,.25,uv.x)*(1.0-smoothstep(.75,.86,uv.x));
+      float cy=smoothstep(.20,.36,uv.y);
+      col*=mix(1.0,.18,cx*cy);
 
-      float alpha=clamp(max(max(col.r,col.g),col.b)*1.7,0.0,.92);
+      float alpha=clamp(max(max(col.r,col.g),col.b)*1.55,0.0,.82);
       gl_FragColor=vec4(col,alpha);
     }
   `
