@@ -1,0 +1,48 @@
+name: Capture Three.js demo
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "pages/threejs-demo.html"
+      - ".github/workflows/threejs-demo-screenshot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2
+
+      - name: Capture deployed demo
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://acchtt.github.io/football-v2/threejs-demo.html?capture=${GITHUB_SHA}"
+          for i in {1..24}; do
+            if curl -fsS "$URL" >/dev/null; then break; fi
+            sleep 5
+          done
+          mkdir -p .design-review
+          "${{ steps.chrome.outputs.chrome-path }}"             --headless             --no-sandbox             --disable-dev-shm-usage             --hide-scrollbars             --window-size=1920,1080             --virtual-time-budget=5000             --screenshot=".design-review/threejs-demo.png"             "$URL"
+
+      - name: Commit screenshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .design-review/threejs-demo.png
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Capture Three.js demo screenshot"
+          git push
