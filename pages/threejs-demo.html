@@ -10,8 +10,8 @@
   html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505}
   .site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#050505}
   #fx{position:fixed;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen}
-  #fx canvas{display:block;width:100%;height:100%;opacity:.52}
-  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.46}}
+  #fx canvas{display:block;width:100%;height:100%;opacity:.86}
+  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.74}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
@@ -26,6 +26,7 @@ import * as THREE from 'three';
 
 const host=document.querySelector('#fx');
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));
 renderer.setSize(innerWidth,innerHeight);
@@ -34,123 +35,124 @@ renderer.outputColorSpace=THREE.SRGBColorSpace;
 host.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
-const camera=new THREE.OrthographicCamera(-5,5,3,-3,.1,20);
-camera.position.z=10;
+const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 
-const vertex=`
-  varying vec2 vUv;
-  void main(){
-    vUv=uv;
-    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
-  }
-`;
+const material=new THREE.ShaderMaterial({
+  transparent:true,
+  depthWrite:false,
+  blending:THREE.AdditiveBlending,
+  uniforms:{
+    uTime:{value:0},
+    uAspect:{value:innerWidth/innerHeight},
+    uMotion:{value:reduceMotion?0:1}
+  },
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){
+      vUv=uv;
+      gl_Position=vec4(position.xy,0.0,1.0);
+    }
+  `,
+  fragmentShader:`
+    precision highp float;
+    varying vec2 vUv;
+    uniform float uTime;
+    uniform float uAspect;
+    uniform float uMotion;
 
-const fragment=`
-  uniform vec3 uColor;
-  uniform float uAlpha;
-  uniform float uPhase;
-  uniform float uTime;
-  varying vec2 vUv;
-  void main(){
-    float edge=min(min(vUv.x,1.0-vUv.x),min(vUv.y,1.0-vUv.y));
-    float rim=1.0-smoothstep(0.0,.09,edge);
-    float sweep=pow(max(0.0,1.0-abs((vUv.x+vUv.y*.4)-(.58+sin(uTime*.12+uPhase)*.05))),11.0);
-    float alpha=uAlpha*(.06+rim*.56+sweep*.46);
-    gl_FragColor=vec4(uColor,alpha);
-  }
-`;
+    float lineGlow(float d,float core,float glow){
+      return exp(-abs(d)/core)*.65 + exp(-abs(d)/glow)*.22;
+    }
 
-function makeShard(points,color,alpha,phase){
-  const shape=new THREE.Shape();
-  points.forEach((p,i)=>i?shape.lineTo(p[0],p[1]):shape.moveTo(p[0],p[1]));
-  shape.closePath();
-  const geometry=new THREE.ShapeGeometry(shape);
-  const material=new THREE.ShaderMaterial({
-    uniforms:{
-      uColor:{value:new THREE.Color(color)},
-      uAlpha:{value:alpha},
-      uPhase:{value:phase},
-      uTime:{value:0}
-    },
-    vertexShader:vertex,fragmentShader:fragment,
-    transparent:true,depthWrite:false,side:THREE.DoubleSide,
-    blending:THREE.AdditiveBlending
-  });
-  const mesh=new THREE.Mesh(geometry,material);
-  mesh.userData={phase,baseX:0,baseY:0};
-  return mesh;
-}
+    float band(float v,float a,float b,float soft){
+      return smoothstep(a-soft,a,v)*(1.0-smoothstep(b,b+soft,v));
+    }
 
-const group=new THREE.Group();scene.add(group);
+    void main(){
+      vec2 p=vUv*2.0-1.0;
+      p.x*=uAspect;
 
-// Small crystalline edge fragments. Most of each shard stays outside the viewport.
-const shards=[
-  {pts:[[-.22,-.6],[.38,-.24],[.14,.62],[-.34,.18]],c:0xf13c91,a:.12,p:.1,x:-5.38,y:2.72,r:-.42,s:.72},
-  {pts:[[-.28,-.48],[.34,-.16],[.10,.50],[-.40,.14]],c:0xe7c36a,a:.08,p:.8,x:-5.08,y:2.56,r:-.18,s:.55},
-  {pts:[[-.24,-.58],[.40,-.20],[.16,.58],[-.36,.20]],c:0xf13c91,a:.11,p:1.5,x:5.36,y:2.66,r:.44,s:.68},
-  {pts:[[-.30,-.44],[.34,-.14],[.10,.46],[-.38,.12]],c:0xe7c36a,a:.07,p:2.2,x:5.08,y:2.50,r:.18,s:.52}
-];
+      float t=uTime*uMotion;
 
-shards.forEach(s=>{
-  const m=makeShard(s.pts,s.c,s.a,s.p);
-  m.position.set(s.x,s.y,0);
-  m.rotation.z=s.r;
-  m.scale.setScalar(s.s);
-  m.userData.baseX=s.x;m.userData.baseY=s.y;
-  group.add(m);
+      vec3 pink=vec3(1.0,.12,.48);
+      vec3 hot=vec3(1.0,.32,.66);
+      vec3 gold=vec3(1.0,.73,.30);
+      vec3 champagne=vec3(1.0,.86,.58);
 
-  const edgeGeom=new THREE.EdgesGeometry(m.geometry,18);
-  const edge=new THREE.LineSegments(edgeGeom,new THREE.LineBasicMaterial({
-    color:s.c,transparent:true,opacity:s.c===0xf13c91?.16:.12,
-    blending:THREE.AdditiveBlending,depthWrite:false
-  }));
-  edge.position.copy(m.position);edge.rotation.copy(m.rotation);edge.scale.copy(m.scale);
-  edge.userData={baseX:s.x,baseY:s.y,phase:s.p+.35};
-  group.add(edge);
+      vec3 col=vec3(0.0);
+
+      // Edge masks: keep the schedule center almost untouched.
+      float leftMask=smoothstep(-.62*uAspect,-1.02*uAspect,p.x);
+      float rightMask=smoothstep(.62*uAspect,1.02*uAspect,p.x);
+      float bottomMask=smoothstep(-.42,-1.02,p.y);
+      float topMask=smoothstep(.52,1.02,p.y);
+
+      // Large crystalline/refraction bands at the left edge.
+      float l1=p.y-(1.34*p.x/uAspect+1.05+sin(t*.18)*.025);
+      float l2=p.y-(.82*p.x/uAspect+.42+cos(t*.14)*.018);
+      float l3=p.y-(-1.15*p.x/uAspect-.92);
+      float leftFacet=(lineGlow(l1,.020,.13)*.95 + lineGlow(l2,.026,.17)*.64 + lineGlow(l3,.018,.11)*.45)
+                    * leftMask * band(p.y,-.82,.88,.16);
+      col += pink*leftFacet*.82;
+      col += champagne*lineGlow(l2,.012,.075)*leftMask*.34;
+
+      // Right edge glass: pink primary with champagne highlights.
+      float r1=p.y-(-1.10*p.x/uAspect+1.02+cos(t*.16)*.022);
+      float r2=p.y-(-.62*p.x/uAspect+.30);
+      float r3=p.y-(1.22*p.x/uAspect-1.18);
+      float rightFacet=(lineGlow(r1,.022,.14)*.82 + lineGlow(r2,.030,.18)*.58 + lineGlow(r3,.018,.12)*.42)
+                     * rightMask * band(p.y,-.78,.90,.18);
+      col += hot*rightFacet*.72;
+      col += gold*lineGlow(r2,.014,.085)*rightMask*.30;
+
+      // Flowing bottom light, matching the reference's pink/gold sweep.
+      float x=p.x/max(uAspect,.001);
+      float yPink=-.92 + .12*sin(x*2.7+t*.20) + .04*sin(x*6.2-t*.15);
+      float yGold=-.82 + .10*sin(x*2.15+t*.15+1.4);
+      float pinkRibbon=lineGlow(p.y-yPink,.018,.12)*bottomMask;
+      float goldRibbon=lineGlow(p.y-yGold,.015,.10)*bottomMask;
+      col += pink*pinkRibbon*.56;
+      col += gold*goldRibbon*.34;
+
+      // Soft ambient wash behind the edge forms.
+      float leftBloom=exp(-pow((p.x/uAspect+1.02)/.28,2.0)-pow((p.y-.18)/.82,2.0));
+      float rightBloom=exp(-pow((p.x/uAspect-1.02)/.30,2.0)-pow((p.y-.05)/.86,2.0));
+      float bottomBloom=exp(-pow((p.y+1.02)/.26,2.0));
+      col += pink*leftBloom*.09 + hot*rightBloom*.085 + pink*bottomBloom*.045;
+
+      // Tiny top-edge shimmer, never crossing controls.
+      float topArc=lineGlow(p.y-(.92+.025*sin(x*4.0+t*.12)),.009,.055)*topMask;
+      col += mix(pink,champagne,.38+.22*sin(x*2.0))*topArc*.16;
+
+      // Darken everything away from the frame.
+      float frame=max(max(leftMask,rightMask),max(bottomMask,topMask));
+      col*=frame;
+
+      float alpha=clamp(max(max(col.r,col.g),col.b),0.0,.72);
+      gl_FragColor=vec4(col,alpha);
+    }
+  `
 });
 
-function glowTexture(){
-  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
-  const ctx=canvas.getContext('2d');
-  const g=ctx.createRadialGradient(128,128,0,128,128,128);
-  g.addColorStop(0,'rgba(255,255,255,.34)');
-  g.addColorStop(.22,'rgba(255,255,255,.10)');
-  g.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=g;ctx.fillRect(0,0,256,256);
-  return new THREE.CanvasTexture(canvas);
-}
-const glow=glowTexture();
-[
-  {x:-5.32,y:2.66,c:0xf13c91,s:1.25,a:.045},
-  {x:5.32,y:2.64,c:0xe7c36a,s:1.16,a:.035}
-].forEach(g=>{
-  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({
-    map:glow,color:g.c,transparent:true,opacity:g.a,depthWrite:false,blending:THREE.AdditiveBlending
-  }));
-  sprite.position.set(g.x,g.y,-.2);sprite.scale.set(g.s,g.s,1);group.add(sprite);
-});
+const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);
+scene.add(quad);
 
 function layout(){
-  const aspect=innerWidth/innerHeight;
-  camera.left=-3*aspect;camera.right=3*aspect;camera.top=3;camera.bottom=-3;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));
+  material.uniforms.uAspect.value=innerWidth/innerHeight;
 }
-layout();addEventListener('resize',layout);
+layout();
+addEventListener('resize',layout);
 
-let visible=true;document.addEventListener('visibilitychange',()=>visible=!document.hidden);
+let visible=true;
+document.addEventListener('visibilitychange',()=>visible=!document.hidden);
 const clock=new THREE.Clock();
+
 function frame(){
   requestAnimationFrame(frame);
   if(!visible)return;
-  const t=clock.getElapsedTime();
-  group.children.forEach((o,i)=>{
-    if(o.material?.uniforms?.uTime)o.material.uniforms.uTime.value=t;
-    if(!reduceMotion&&o.userData?.baseX!==undefined){
-      o.position.x=o.userData.baseX+Math.sin(t*.12+o.userData.phase)*.018;
-      o.position.y=o.userData.baseY+Math.cos(t*.1+o.userData.phase)*.012;
-    }
-  });
+  material.uniforms.uTime.value=clock.getElapsedTime();
   renderer.render(scene,camera);
 }
 frame();
