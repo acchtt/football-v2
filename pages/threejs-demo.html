@@ -94,9 +94,9 @@ const material=new THREE.ShaderMaterial({
       float lm1=smoothstep(-.015,.020,lf1);
       float lm2=smoothstep(-.015,.020,lf2);
       float lm3=smoothstep(-.015,.018,lf3);
-      col+=pink*(lm1*.095+lm2*.075+lm3*.085);
-      col+=hot*(lineGlow(lf1,.006,.027)*.28+lineGlow(lf2,.006,.024)*.22+lineGlow(lf3,.005,.020)*.30);
-      col+=champagne*lineGlow(lf2-.035,.005,.020)*.11;
+      col+=pink*(lm1*.17+lm2*.13+lm3*.15);
+      col+=hot*(lineGlow(lf1,.006,.027)*.42+lineGlow(lf2,.006,.024)*.34+lineGlow(lf3,.005,.020)*.44);
+      col+=champagne*lineGlow(lf2-.035,.005,.020)*.18;
 
       float rf1=triField(uv,vec2(1.03,.20),vec2(.925,.82),vec2(.835,.58));
       float rf2=triField(uv,vec2(1.02,.08),vec2(.91,.62),vec2(.84,.43));
@@ -104,10 +104,10 @@ const material=new THREE.ShaderMaterial({
       float rm1=smoothstep(-.015,.020,rf1);
       float rm2=smoothstep(-.015,.020,rf2);
       float rm3=smoothstep(-.015,.018,rf3);
-      col+=hot*(rm1*.085+rm3*.075);
-      col+=gold*rm2*.075;
-      col+=pink*(lineGlow(rf1,.006,.027)*.24+lineGlow(rf3,.005,.021)*.28);
-      col+=champagne*lineGlow(rf2,.006,.025)*.23;
+      col+=hot*(rm1*.15+rm3*.13);
+      col+=gold*rm2*.12;
+      col+=pink*(lineGlow(rf1,.006,.027)*.38+lineGlow(rf3,.005,.021)*.42);
+      col+=champagne*lineGlow(rf2,.006,.025)*.31;
 
       // Stronger lower refraction sweep from the chosen reference.
       float x=uv.x;
@@ -115,9 +115,9 @@ const material=new THREE.ShaderMaterial({
       float y2=.105+.046*sin(x*5.0+t*.14+1.2);
       float y3=.018+.034*sin(x*7.6-t*.12+2.0);
       float bottomMask=1.0-smoothstep(.05,.34,uv.y);
-      col+=pink*lineGlow(uv.y-y1,.009,.060)*bottomMask*.52;
-      col+=gold*lineGlow(uv.y-y2,.007,.052)*bottomMask*.28;
-      col+=hot*lineGlow(uv.y-y3,.012,.075)*bottomMask*.20;
+      col+=pink*lineGlow(uv.y-y1,.009,.060)*bottomMask*.66;
+      col+=gold*lineGlow(uv.y-y2,.007,.052)*bottomMask*.38;
+      col+=hot*lineGlow(uv.y-y3,.012,.075)*bottomMask*.28;
 
       // Soft magenta atmosphere rising from the lower corners.
       float lb=softDot(uv,vec2(.08,.07),.23);
@@ -132,13 +132,13 @@ const material=new THREE.ShaderMaterial({
       dots+=softDot(uv,vec2(.46,.075),.017);
       dots+=softDot(uv,vec2(.62,.095),.021);
       dots+=softDot(uv,vec2(.73,.07),.015);
-      col+=mix(pink,champagne,.34)*dots*.20;
+      col+=mix(pink,champagne,.34)*dots*.28;
 
       // Faint top corner wash only; keep navigation readable.
       col+=pink*softDot(uv,vec2(.02,.88),.18)*.045;
       col+=gold*softDot(uv,vec2(.98,.88),.18)*.040;
 
-      float alpha=clamp(max(max(col.r,col.g),col.b),0.0,.80);
+      float alpha=clamp(max(max(col.r,col.g),col.b)*1.65,0.0,.88);
       gl_FragColor=vec4(col,alpha);
     }
   `
