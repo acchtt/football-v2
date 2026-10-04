@@ -9,9 +9,9 @@
   *{box-sizing:border-box}
   html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505}
   .site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#050505}
-  #fx{position:fixed;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen}
-  #fx canvas{display:block;width:100%;height:100%;opacity:.90}
-  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.82}}
+  #fx{position:fixed;inset:0;z-index:3;pointer-events:none}
+  #fx canvas{display:block;width:100%;height:100%;opacity:1}
+  @media(prefers-reduced-motion:reduce){#fx canvas{opacity:.96}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
@@ -26,8 +26,9 @@ import * as THREE from 'three';
 
 const host=document.querySelector('#fx');
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.4));
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));
 renderer.setSize(innerWidth,innerHeight);
 renderer.setClearColor(0x000000,0);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -36,150 +37,43 @@ host.appendChild(renderer.domElement);
 const scene=new THREE.Scene();
 const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 
-const material=new THREE.ShaderMaterial({
+const texture=await new THREE.TextureLoader().loadAsync('./media/arcxi/concept-c-reference-effect.webp?v=1');
+texture.colorSpace=THREE.SRGBColorSpace;
+texture.minFilter=THREE.LinearFilter;
+texture.magFilter=THREE.LinearFilter;
+
+const material=new THREE.MeshBasicMaterial({
+  map:texture,
   transparent:true,
   depthWrite:false,
-  blending:THREE.AdditiveBlending,
-  uniforms:{
-    uTime:{value:0},
-    uMotion:{value:reduceMotion?0:1}
-  },
-  vertexShader:`
-    varying vec2 vUv;
-    void main(){
-      vUv=uv;
-      gl_Position=vec4(position.xy,0.0,1.0);
-    }
-  `,
-  fragmentShader:`
-    precision highp float;
-    varying vec2 vUv;
-    uniform float uTime;
-    uniform float uMotion;
-
-    float cross2(vec2 a,vec2 b){return a.x*b.y-a.y*b.x;}
-    float sdLine(vec2 p,vec2 a,vec2 b){
-      vec2 pa=p-a, ba=b-a;
-      float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);
-      return length(pa-ba*h);
-    }
-    float inTri(vec2 p,vec2 a,vec2 b,vec2 c){
-      float s1=cross2(b-a,p-a),s2=cross2(c-b,p-b),s3=cross2(a-c,p-c);
-      bool neg=(s1<0.0)||(s2<0.0)||(s3<0.0);
-      bool pos=(s1>0.0)||(s2>0.0)||(s3>0.0);
-      return (neg&&pos)?0.0:1.0;
-    }
-    float triEdge(vec2 p,vec2 a,vec2 b,vec2 c,float w){
-      float d=min(min(sdLine(p,a,b),sdLine(p,b,c)),sdLine(p,c,a));
-      return exp(-d/w);
-    }
-    float lineGlow(float d,float core,float glow){
-      return exp(-abs(d)/core)*.70+exp(-abs(d)/glow)*.30;
-    }
-    float dotGlow(vec2 p,vec2 c,float r){
-      vec2 q=(p-c)/r;
-      return exp(-dot(q,q)*2.2);
-    }
-
-    void main(){
-      vec2 uv=vUv;
-      float t=uTime*uMotion;
-      vec3 pink=vec3(1.0,.08,.45);
-      vec3 hot=vec3(1.0,.30,.65);
-      vec3 gold=vec3(1.0,.66,.20);
-      vec3 champagne=vec3(1.0,.88,.68);
-      vec3 pale=vec3(1.0,.72,.88);
-      vec3 col=vec3(0.0);
-
-      // Slim top-left crystalline cluster from the selected C reference.
-      vec2 a1=vec2(-.018,.99), b1=vec2(.042,.76), c1=vec2(.060,.92);
-      vec2 a2=vec2(.035,.93), b2=vec2(.078,.63), c2=vec2(.100,.82);
-      vec2 a3=vec2(.066,.79), b3=vec2(.120,.43), c3=vec2(.132,.73);
-      vec2 a4=vec2(.105,.84), b4=vec2(.150,.56), c4=vec2(.158,.76);
-      float l1=inTri(uv,a1,b1,c1),l2=inTri(uv,a2,b2,c2),l3=inTri(uv,a3,b3,c3),l4=inTri(uv,a4,b4,c4);
-      col+=(pink*.18+pale*.055)*l1+(hot*.20+pale*.045)*l2+(pink*.16+pale*.035)*l3+(gold*.075+champagne*.025)*l4;
-      col+=pale*triEdge(uv,a1,b1,c1,.004)*.52;
-      col+=hot*triEdge(uv,a2,b2,c2,.005)*.44;
-      col+=champagne*triEdge(uv,a3,b3,c3,.005)*.25;
-      col+=champagne*triEdge(uv,a4,b4,c4,.004)*.19;
-      col+=pale*lineGlow(sdLine(uv,vec2(.040,.87),vec2(.078,.67)),.003,.014)*.24;
-
-      // Slim top-right mixed pink/champagne cluster.
-      vec2 d1=vec2(1.018,.99), e1=vec2(.958,.76), f1=vec2(.940,.92);
-      vec2 d2=vec2(.965,.93), e2=vec2(.922,.63), f2=vec2(.900,.82);
-      vec2 d3=vec2(.934,.79), e3=vec2(.880,.43), f3=vec2(.868,.73);
-      vec2 d4=vec2(.895,.84), e4=vec2(.850,.56), f4=vec2(.842,.76);
-      float r1=inTri(uv,d1,e1,f1),r2=inTri(uv,d2,e2,f2),r3=inTri(uv,d3,e3,f3),r4=inTri(uv,d4,e4,f4);
-      col+=(hot*.17+pale*.04)*r1+(gold*.16+champagne*.045)*r2+(pink*.15+pale*.03)*r3+(hot*.07+champagne*.025)*r4;
-      col+=pale*triEdge(uv,d1,e1,f1,.004)*.46;
-      col+=champagne*triEdge(uv,d2,e2,f2,.005)*.41;
-      col+=hot*triEdge(uv,d3,e3,f3,.005)*.36;
-      col+=champagne*triEdge(uv,d4,e4,f4,.004)*.18;
-      col+=champagne*lineGlow(sdLine(uv,vec2(.958,.87),vec2(.922,.67)),.003,.014)*.24;
-
-      // Curved bottom ribbon field. No straight bands.
-      float x=uv.x;
-      float yPink=.125+.048*sin(x*5.8+t*.20)+.019*sin(x*12.0-t*.13);
-      float yPink2=.070+.034*sin(x*7.5-t*.15+1.7);
-      float yGold=.170+.040*sin(x*4.8+t*.16+1.2)+.011*sin(x*10.0);
-      float fade=1.0-smoothstep(.10,.38,uv.y);
-      col+=pink*lineGlow(uv.y-yPink,.010,.070)*fade*.62;
-      col+=hot*lineGlow(uv.y-yPink2,.010,.070)*fade*.30;
-      col+=gold*lineGlow(uv.y-yGold,.009,.060)*fade*.38;
-
-      // Broader soft glow beneath the ribbons.
-      float under=exp(-pow((uv.y-.145)/.145,2.0));
-      col+=(pink*.075+gold*.032)*under;
-
-      // Reference-like bokeh concentrated lower-left / middle.
-      float b=0.0;
-      b+=dotGlow(uv,vec2(.12,.105),.026);
-      b+=dotGlow(uv,vec2(.17,.070),.016);
-      b+=dotGlow(uv,vec2(.22,.125),.035);
-      b+=dotGlow(uv,vec2(.27,.083),.020);
-      b+=dotGlow(uv,vec2(.32,.112),.028);
-      b+=dotGlow(uv,vec2(.38,.072),.018);
-      b+=dotGlow(uv,vec2(.44,.115),.032);
-      b+=dotGlow(uv,vec2(.51,.080),.018);
-      b+=dotGlow(uv,vec2(.58,.108),.025);
-      b+=dotGlow(uv,vec2(.68,.135),.020);
-      b+=dotGlow(uv,vec2(.76,.095),.016);
-      float b2=dotGlow(uv,vec2(.20,.205),.016)+dotGlow(uv,vec2(.34,.185),.012)+dotGlow(uv,vec2(.47,.220),.015);
-      col+=mix(pink,champagne,.30)*b*.30;
-      col+=pink*b2*.075;
-
-      // Ambient pools around the two shard groups.
-      col+=pink*dotGlow(uv,vec2(.055,.79),.18)*.045;
-      col+=hot*dotGlow(uv,vec2(.945,.78),.18)*.040;
-      col+=gold*dotGlow(uv,vec2(.905,.63),.16)*.026;
-
-      // Protect the schedule's central reading area.
-      float cx=smoothstep(.14,.25,uv.x)*(1.0-smoothstep(.75,.86,uv.x));
-      float cy=smoothstep(.20,.36,uv.y);
-      col*=mix(1.0,.18,cx*cy);
-
-      float alpha=clamp(max(max(col.r,col.g),col.b)*1.55,0.0,.82);
-      gl_FragColor=vec4(col,alpha);
-    }
-  `
+  opacity:.96,
+  blending:THREE.NormalBlending
 });
 
-scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),material));
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(2.06,2.06),material);
+scene.add(plane);
 
 function layout(){
   renderer.setSize(innerWidth,innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.4));
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));
 }
 layout();
 addEventListener('resize',layout);
 
 let visible=true;
 document.addEventListener('visibilitychange',()=>visible=!document.hidden);
+
 const clock=new THREE.Clock();
 function frame(){
   requestAnimationFrame(frame);
   if(!visible)return;
-  material.uniforms.uTime.value=clock.getElapsedTime();
+  const t=clock.getElapsedTime();
+  if(!reduceMotion){
+    plane.position.x=Math.sin(t*.10)*.006;
+    plane.position.y=Math.cos(t*.085)*.004;
+    const s=1.03+Math.sin(t*.07)*.004;
+    plane.scale.setScalar(s);
+  }
   renderer.render(scene,camera);
 }
 frame();
