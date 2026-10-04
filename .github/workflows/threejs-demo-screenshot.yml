@@ -24,17 +24,29 @@ jobs:
         id: chrome
         uses: browser-actions/setup-chrome@v2
 
-      - name: Capture deployed demo
+      - name: Capture browser render
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://acchtt.github.io/football-v2/threejs-demo.html?capture=${GITHUB_SHA}"
-          for i in {1..24}; do
-            if curl -fsS "$URL" >/dev/null; then break; fi
-            sleep 5
+          python3 -m http.server 8000 -d pages >/tmp/arcxi-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in {1..20}; do
+            if curl -fsS "http://127.0.0.1:8000/threejs-demo.html" >/dev/null; then break; fi
+            sleep 1
           done
           mkdir -p .design-review
-          "${{ steps.chrome.outputs.chrome-path }}"             --headless             --no-sandbox             --disable-dev-shm-usage             --hide-scrollbars             --window-size=1920,1080             --virtual-time-budget=5000             --screenshot=".design-review/threejs-demo.png"             "$URL"
+          timeout 30s "${{ steps.chrome.outputs.chrome-path }}" \
+            --headless \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --hide-scrollbars \
+            --window-size=1920,1080 \
+            --run-all-compositor-stages-before-draw \
+            --virtual-time-budget=6000 \
+            --screenshot=".design-review/threejs-demo.png" \
+            "http://127.0.0.1:8000/threejs-demo.html"
+          test -s .design-review/threejs-demo.png
 
       - name: Commit screenshot
         shell: bash
