@@ -1,0 +1,100 @@
+name: Build ARC XI reference effect
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/build-reference-effect.yml"
+      - "pages/media/arcxi/reference-artwork.png"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install image tools
+        run: python -m pip install pillow numpy
+
+      - name: Extract reference atmosphere
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from PIL import Image, ImageFilter
+          from pathlib import Path
+          import numpy as np
+
+          src=Path('pages/media/arcxi/reference-artwork.png')
+          out=Path('pages/media/arcxi/reference-effect-hd.webp')
+          im=Image.open(src).convert('RGB')
+          a=np.asarray(im).astype(np.float32)/255.0
+          r,g,b=a[...,0],a[...,1],a[...,2]
+          mx=a.max(axis=2); mn=a.min(axis=2)
+          sat=np.divide(mx-mn,mx,out=np.zeros_like(mx),where=mx>1e-5)
+          h,w=r.shape
+          yy,xx=np.mgrid[0:h,0:w]
+          xn=xx/(w-1); yn=yy/(h-1)
+
+          pink=(r>g*1.12)&(r>0.12)&(b>g*0.62)&(sat>0.18)
+          gold=(r>0.20)&(g>0.12)&(r>b*1.18)&(g>b*.95)&(sat>0.16)
+
+          # Literal artwork zones from the approved reference.
+          top_left=(xn<0.115)&(yn<0.47)
+          bottom_right=(xn>0.70)&(yn>0.55)
+          lower_sweep=(yn>0.76)&(xn>0.48)
+          zone=top_left|bottom_right|lower_sweep
+
+          strength=np.clip((sat-.12)/.68,0,1)*np.clip((mx-.04)/.78,0,1)
+          alpha=np.where((pink|gold)&zone,strength,0.0)
+
+          # Keep dim magenta glow in artwork zones while rejecting neutral UI.
+          glow=(zone)&(sat>.12)&(r>g*1.04)&(r>b*.82)&(mx>.055)
+          alpha=np.maximum(alpha,np.where(glow,np.clip((mx-.045)/.52,0,.42),0))
+
+          # Interior fades keep the schedule canvas untouched.
+          left_fade=np.clip((.125-xn)/.045,0,1)
+          right_fade=np.clip((xn-.675)/.09,0,1)
+          bottom_fade=np.clip((yn-.72)/.16,0,1)
+          spatial=np.maximum.reduce([
+              np.where(top_left,left_fade,0),
+              np.where(bottom_right,np.maximum(right_fade,bottom_fade),0),
+              np.where(lower_sweep,bottom_fade,0),
+          ])
+          alpha*=spatial
+
+          # Explicitly protect logo/navigation/text regions from accidental extraction.
+          alpha=np.where((xn>.105)&(xn<.70)&(yn<.55),0,alpha)
+          alpha=np.where((xn<.48)&(yn>.72),0,alpha)
+
+          rgba=np.dstack([np.clip(a*1.06,0,1),alpha])
+          effect=Image.fromarray((rgba*255).astype(np.uint8),'RGBA')
+          effect.putalpha(effect.getchannel('A').filter(ImageFilter.GaussianBlur(.55)))
+
+          # Add soft halo derived only from the extracted artwork.
+          halo=effect.filter(ImageFilter.GaussianBlur(10))
+          halo.putalpha(halo.getchannel('A').point(lambda p:int(p*.20)))
+          final=Image.new('RGBA',effect.size,(0,0,0,0))
+          final.alpha_composite(halo)
+          final.alpha_composite(effect)
+          final.save(out,'WEBP',quality=91,method=6)
+          print('REFERENCE_EFFECT',final.size,out.stat().st_size)
+          PY
+
+      - name: Commit effect asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pages/media/arcxi/reference-effect-hd.webp
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Build HD atmosphere from approved ARC XI reference"
+          git push
