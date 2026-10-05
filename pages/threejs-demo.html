@@ -37,7 +37,7 @@ host.appendChild(renderer.domElement);
 const scene=new THREE.Scene();
 const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 
-const texture=await new THREE.TextureLoader().loadAsync('./media/arcxi/concept-c-reference-effect.webp?v=2');
+const texture=await new THREE.TextureLoader().loadAsync('./media/arcxi/reference-effect-hd.webp?v=1');
 texture.colorSpace=THREE.SRGBColorSpace;
 texture.minFilter=THREE.LinearFilter;
 texture.magFilter=THREE.LinearFilter;
@@ -46,11 +46,11 @@ const material=new THREE.MeshBasicMaterial({
   map:texture,
   transparent:true,
   depthWrite:false,
-  opacity:.96,
+  opacity:.94,
   blending:THREE.NormalBlending
 });
 
-const plane=new THREE.Mesh(new THREE.PlaneGeometry(2.06,2.06),material);
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(2.02,2.02),material);
 scene.add(plane);
 
 function layout(){
@@ -71,7 +71,7 @@ function frame(){
   if(!reduceMotion){
     plane.position.x=Math.sin(t*.10)*.006;
     plane.position.y=Math.cos(t*.085)*.004;
-    const s=1.03+Math.sin(t*.07)*.004;
+    const s=1.015+Math.sin(t*.07)*.003;
     plane.scale.setScalar(s);
   }
   renderer.render(scene,camera);
