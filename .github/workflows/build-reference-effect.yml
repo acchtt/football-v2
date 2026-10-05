@@ -79,6 +79,8 @@ jobs:
 
           # Hard safety cutouts around all live schedule content.
           alpha=np.where((xn>.10)&(xn<.845)&(yn<.82),0,alpha)
+          # Remove the first competition mark that sits inside the left artwork column.
+          alpha=np.where((xn>.070)&(xn<.105)&(yn>.175)&(yn<.265),0,alpha)
 
           rgba=np.dstack([np.clip(a*1.06,0,1),alpha])
           effect=Image.fromarray((rgba*255).astype(np.uint8),'RGBA')
