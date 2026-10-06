@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v66';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v67';
   // Operational lane badges distinguish ranked FOLLOW / RESERVE / STOP from lifecycle state.
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
@@ -405,7 +405,7 @@
   function boardDateCount(date) {
     return (state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
-      return row.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST');
+      return row.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'PASS');
     }).length;
   }
   function dateStrip() {
@@ -544,7 +544,9 @@
   }
   function boardLane(row) {
     const source = [row && row.coverageNotes, row && row.frozenPreSummary].filter(Boolean).join(' ');
-    const match = source.match(/\[FOLLOW:\s*(YES|FOLLOW|RESERVE|STOP)\]/i);
+    const match = source.match(/\[FOLLOW:\s*(YES|FOLLOW|RESERVE|STOP)\]/i) ||
+      source.match(/\bofficial lane\s*=\s*(FOLLOW|RESERVE|STOP)\b/i) ||
+      source.match(/"follow_lane"\s*:\s*"(FOLLOW|RESERVE|STOP)"/i);
     if (!match) return '';
     const lane = match[1].toUpperCase();
     return lane === 'YES' ? 'FOLLOW' : lane;
@@ -810,7 +812,7 @@
     state.route = 'board';
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
-      return tier === 'FOCUS' || tier === 'WATCHLIST';
+      return tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'PASS';
     }).sort(function (a, b) {
       const left = Date.parse(boardKickoff(a));
       const right = Date.parse(boardKickoff(b));
