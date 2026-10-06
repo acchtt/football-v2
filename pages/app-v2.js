@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v67';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v66';
   // Operational lane badges distinguish ranked FOLLOW / RESERVE / STOP from lifecycle state.
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
