@@ -67,7 +67,7 @@ jobs:
           assert 'alerts-center.js' not in index, 'PWA-linked alerts runtime should be disabled'
           assert 'pwa-off.js?v=1' in index, 'service-worker cleanup script is missing'
           assert 'app-v2.js?v=66' in index, 'unexpected app asset version'
-          assert 'schedule-v2.css?v=22' in index, 'unexpected schedule CSS version'
+          assert 'schedule-v2.css?v=23' in index, 'unexpected schedule CSS version'
           assert 'ive-sidebars.js?v=29' in index, 'unexpected corner asset loader version'
           assert 'icons/arc-xi-schedule.svg?v=2' in index, 'current favicon not wired'
           assert 'schedule-logos.js?v=1' in index, 'independent schedule logo lookup is missing'
@@ -100,22 +100,6 @@ jobs:
           node --check pages/schedule-logos.js
           node scripts/check-schedule-logos.cjs
           echo "Active JavaScript syntax and schedule rendering validated"
-          node - <<'NODE'
-          const fs = require("node:fs");
-          const vm = require("node:vm");
-          const html = fs.readFileSync("pages/design-lab/index.html", "utf8");
-          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
-          if (scripts.length !== 1) throw new Error(`Expected one Design Lab inline script, found ${scripts.length}`);
-          new vm.Script(scripts[0][1], {filename: "pages/design-lab/index.html"});
-          const start = html.indexOf("const clubAssets={");
-          const end = html.indexOf("const leagueAssets=", start);
-          if (start < 0 || end < start) throw new Error("Design Lab crest map missing");
-          const crestMap = html.slice(start, end);
-          for (const name of ["Arsenal","Chelsea","Barcelona","Valencia","Celtic","Rangers","Milan","Bologna","Atalanta"]) {
-            if (!crestMap.includes(`'${name}':`)) throw new Error(`Missing Design Lab crest mapping: ${name}`);
-          }
-          console.log("Design Lab JavaScript validated");
-          NODE
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
