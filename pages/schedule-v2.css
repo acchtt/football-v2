@@ -2,7 +2,7 @@
 @font-face{font-family:"ARC Grotesk";src:url("./media/fonts/DM-Sans.ttf") format("truetype");font-style:normal;font-weight:100 1000;font-display:swap}
 :root{
   --schedule-yellow:#fff000;--schedule-pink:#f52c91;--schedule-bg:#0a0a0a;
-  --schedule-text:#f5f5f5;--schedule-muted:#b5b5b8;--schedule-line:#242426;
+  --schedule-text:#f5f5f5;--schedule-muted:#b9b9bd;--schedule-line:#303034;
   --schedule-font:"ARC Grotesk",Helvetica,Arial,sans-serif;
   --schedule-art-width:clamp(380px,32vw,580px);
   --schedule-width:min(85vw,1600px);--schedule-row:41px;--schedule-crest:34px;
@@ -89,7 +89,7 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:2;pointe
 .scheduleBoardRoute .scheduleFixture[data-operational-lane="RESERVE"] .fixtureStatus.upcoming{background:var(--schedule-yellow);color:#111}
 .scheduleBoardRoute .scheduleFixture[data-operational-lane="STOP"] .fixtureStatus.upcoming{background:#242425;color:var(--schedule-text)}
 .scheduleTeams{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,13%) minmax(0,1fr);align-items:center;gap:20px}
-.scheduleTeam{min-width:0;display:flex;align-items:center;gap:44px}
+.scheduleTeam{min-width:0;display:flex;align-items:center;gap:clamp(14px,2.4vw,34px)}
 .scheduleTeam.home{justify-content:flex-end;text-align:right}
 .scheduleTeam.away{justify-content:flex-start;text-align:left}
 .scheduleTeam span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--schedule-text);font-size:16px;font-weight:400;line-height:1.3}
@@ -177,6 +177,39 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleSpark{width:18px;height:22px}
 }
 @media(prefers-reduced-motion:reduce){.scheduleHeader *,.scheduleBoardRoute *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Focused improvement pass: maintain the approved schedule while improving clarity. */
+.scheduleBoardRoute .scheduleFixture,
+.scheduleBoardRoute .scheduleMatchCard{transition:background-color .14s ease}
+.scheduleBoardRoute .scheduleMatchCard:focus-within{background:#ffffff08}
+.scheduleBoardRoute .scheduleFixture:focus-visible,
+.scheduleDateNav>button:focus-visible,
+.scheduleDateNav .dateBtn:focus-visible,
+.scheduleBoardRoute .statusFilters button:focus-visible,
+.scheduleMenuButton:focus-visible,
+.scheduleMenuPanel a:focus-visible,
+.scheduleMenuPanel button:focus-visible,
+.scheduleManualScore:focus-visible{
+  outline:2px solid var(--schedule-yellow);outline-offset:3px
+}
+.scheduleBoardRoute .scheduleFixture:focus-visible{outline-offset:-2px;background:#ffffff09}
+.scheduleBoardRoute .statusFilters button[data-status-filter="live"]:focus-visible{outline-color:var(--schedule-pink)}
+.scheduleBoardRoute .scheduleSearch input{font-size:14px}
+@media(max-width:700px){
+  .scheduleBoardRoute .scheduleTeam span{font-size:12px;line-height:1.3}
+  .scheduleBoardRoute .is-live-row .scheduleScore strong,
+  .scheduleBoardRoute .is-finished-row .scheduleScore strong{font-size:18px}
+  .scheduleBoardRoute .scheduleCompetitionHead>strong{letter-spacing:.09em}
+  .scheduleMenuPanel{z-index:10}
+}
+@media(max-width:360px){
+  .scheduleBoardRoute .scheduleTeam span{font-size:11px}
+  .scheduleBoardRoute .statusFilters button{letter-spacing:0;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .scheduleBoardRoute .scheduleFixture,
+  .scheduleBoardRoute .scheduleMatchCard{transition:none}
+}
 
 /* Loading uses the same schedule chrome and row grid as the populated board. */
 .scheduleLoadingMessage{margin:0 0 12px;color:var(--schedule-muted);font:inherit;font-size:13px}
