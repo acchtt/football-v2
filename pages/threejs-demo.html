@@ -27,6 +27,39 @@
     .fx-corner--top{width:min(39vw,190px);opacity:.75}
     .fx-corner--bottom{width:min(55vw,240px);opacity:.48}
   }
+
+  /* Concept C: edge-only editorial light, with the center deliberately clear. */
+  #fx::before,#fx::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;mix-blend-mode:screen}
+  #fx::before{
+    background:
+      radial-gradient(ellipse 36vw 47vh at -3% -2%,rgba(249,94,167,.30),transparent 77%),
+      radial-gradient(ellipse 31vw 40vh at 104% -5%,rgba(241,182,149,.27),transparent 76%),
+      radial-gradient(ellipse 48vw 28vh at 15% 108%,rgba(238,102,161,.20),transparent 79%),
+      radial-gradient(ellipse 39vw 34vh at 97% 103%,rgba(235,157,115,.23),transparent 79%);
+    filter:blur(12px);opacity:1;animation:atmosphere-breathe 18s ease-in-out infinite alternate
+  }
+  #fx::after{
+    background:radial-gradient(ellipse 50vw 16vh at 58% 112%,rgba(245,162,130,.17),transparent 82%);
+    filter:blur(18px);opacity:.85;animation:atmosphere-drift 23s ease-in-out infinite alternate
+  }
+  .fx-static,#fx canvas,.fx-corner{filter:brightness(1.13) saturate(1.14) drop-shadow(0 0 14px rgba(239,85,153,.12))}
+  .fx-static,#fx canvas{z-index:1}
+  .fx-corner{z-index:1}
+  #fx.show-before::before,#fx.show-before::after{opacity:0;animation:none}
+  #fx.show-before .fx-static,#fx.show-before canvas,#fx.show-before .fx-corner{filter:none}
+  #fx.no-motion::before,#fx.no-motion::after{animation:none}
+  @keyframes atmosphere-breathe{from{opacity:.72;transform:translate3d(-9px,5px,0)}to{opacity:1;transform:translate3d(9px,-7px,0)}}
+  @keyframes atmosphere-drift{from{opacity:.45;transform:translate3d(-12px,0,0)}to{opacity:.9;transform:translate3d(14px,-6px,0)}}
+  /* This control exists only on the standalone comparison demo. */
+  #compare{position:fixed;left:18px;bottom:18px;z-index:10;min-height:35px;padding:8px 13px;border:1px solid rgba(245,170,195,.42);border-radius:999px;background:rgba(15,12,17,.88);color:#f3dfeb;font:600 11px/1.2 system-ui,sans-serif;letter-spacing:.06em;cursor:pointer;backdrop-filter:blur(8px)}
+  #compare:hover{border-color:#f9a4c9;background:#20141c}
+  #compare:focus-visible{outline:2px solid #fff000;outline-offset:3px}
+  @media(prefers-reduced-motion:reduce){#fx::before,#fx::after{animation:none}}
+  @media(max-width:900px),(max-aspect-ratio:5/4),(min-aspect-ratio:21/9){
+    #fx::before{background:radial-gradient(ellipse 46vw 35vh at 0% 0%,rgba(249,94,167,.22),transparent 77%),radial-gradient(ellipse 55vw 26vh at 100% 100%,rgba(235,157,115,.16),transparent 76%)}
+    #fx::after{opacity:.3}
+    #compare{left:10px;bottom:10px;padding:8px 10px;font-size:10px}
+  }
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
@@ -39,9 +72,16 @@
   <div class="fx-corner fx-corner--top"></div>
   <div class="fx-corner fx-corner--bottom"></div>
 </div>
+<button id="compare" type="button" aria-pressed="true" aria-label="Compare original and polished atmosphere">Show previous</button>
 
 <script type="module">
 const host=document.querySelector('#fx');
+const compare=document.querySelector('#compare');
+compare.addEventListener('click',()=>{
+  const before=host.classList.toggle('show-before');
+  compare.textContent=before?'Show polished':'Show previous';
+  compare.setAttribute('aria-pressed',String(!before));
+});
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const edgeLayout=matchMedia('(max-width: 900px), (max-aspect-ratio: 5/4), (min-aspect-ratio: 21/9)');
 const saveData=navigator.connection?.saveData===true;
@@ -137,6 +177,7 @@ async function makeEngine(){
 }
 
 async function sync(){
+  host.classList.toggle('no-motion',reducedMotion.matches||saveData||document.hidden);
   if(!shouldAnimate()){
     pause();
     return;
