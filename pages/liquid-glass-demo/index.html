@@ -417,6 +417,87 @@ body.embed[data-skin=clear]{
   .embed .rightmark .menu{margin-top:0}
 }
 
+
+/* ARC XI / readable glass v5: no optical illusion over the cosmic composition.
+   Preserve image, active states, schedule structure, and IVE foreground artwork. */
+.embed[data-skin=clear] .competition{
+  border-radius:14px;
+  border:1px solid rgba(232,231,249,.18);
+  background:linear-gradient(110deg,rgba(10,11,20,.72),rgba(15,13,25,.59));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.095),0 9px 26px rgba(0,0,0,.23);
+  backdrop-filter:blur(5px) saturate(105%);
+  -webkit-backdrop-filter:blur(5px) saturate(105%);
+  transform:none;transition:border-color .15s ease,background .15s ease;
+}
+/* Disable large halos, multiple bright rims and pseudo-lenses completely. */
+.embed[data-skin=clear] .competition::before,
+.embed[data-skin=clear] .competition::after{
+  content:none!important;display:none!important;
+}
+.embed[data-skin=clear] .competition:hover{
+  border-color:rgba(239,238,250,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 10px 26px rgba(0,0,0,.24);
+}
+.embed[data-skin=clear] .competition-head{
+  background:rgba(12,13,24,.26);
+  border-bottom:1px solid rgba(233,235,247,.13);
+  box-shadow:none;
+}
+.embed[data-skin=clear] .match-row{
+  background:rgba(8,9,17,.10);
+  border-bottom:1px solid rgba(233,235,247,.10);
+  box-shadow:none;
+}
+.embed[data-skin=clear] .match-row:hover,
+.embed[data-skin=clear] .match-row:focus-visible{
+  background:rgba(235,235,255,.075);
+  box-shadow:none;
+}
+.embed[data-skin=clear] .filters button,
+.embed[data-skin=clear] .search{
+  background:linear-gradient(115deg,rgba(16,17,29,.64),rgba(22,21,32,.46));
+  border:1px solid rgba(238,239,250,.23);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 5px 12px rgba(0,0,0,.16);
+  backdrop-filter:blur(5px) saturate(105%);
+  -webkit-backdrop-filter:blur(5px) saturate(105%);
+  transform:none;
+  transition:background .15s ease,border-color .15s ease;
+}
+.embed[data-skin=clear] .filters button:not([aria-pressed=true]):hover,
+.embed[data-skin=clear] .search:focus-within{
+  border-color:rgba(245,245,255,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 6px 14px rgba(0,0,0,.21);
+  transform:none;
+}
+.embed[data-skin=clear] .filters button:active{transform:none}
+.embed[data-skin=clear] .filters button[aria-pressed=true]{
+  background:var(--yellow);border-color:var(--yellow);color:#131313;
+  box-shadow:0 2px 8px rgba(0,0,0,.17);
+}
+.embed[data-skin=clear] .filters button.live[aria-pressed=true]{
+  background:var(--pink);border-color:var(--pink);color:#13080d;
+}
+.embed[data-skin=clear] .mainarea::before{content:none;display:none}
+/* Keep the unboxed header and tab-underlined date strip. */
+.embed[data-skin=clear] .brandbar{
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.embed[data-skin=clear] .date{background:transparent!important;box-shadow:none!important}
+@media(max-width:900px){
+  .embed[data-skin=clear] .competition{
+    border-radius:12px;
+    backdrop-filter:blur(3px) saturate(105%);
+    -webkit-backdrop-filter:blur(3px) saturate(105%);
+  }
+}
+@media(prefers-reduced-transparency:reduce){
+  .embed[data-skin=clear] .competition{background:#171821;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .embed[data-skin=clear] .filters button,
+  .embed[data-skin=clear] .search{background:#20202a;backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+
 </style>
 <link rel="stylesheet" href="./cosmic-wallpaper.css?v=1">
 </head>
@@ -455,30 +536,6 @@ document.addEventListener('click',event=>{const target=event.target.closest('but
 else{if(target.hasAttribute('data-skin')){state.style=target.dataset.skin;renderShell();return}if(target.hasAttribute('data-compare')){state.comparison=!state.comparison;renderShell();return}if(target.hasAttribute('data-device')){state.device=target.dataset.device;renderShell();return}}});
 document.addEventListener('input',e=>{if(isEmbed&&e.target.matches('.search input')){state.search=e.target.value;renderFixtures()}});
 document.addEventListener('keydown',e=>{if(isEmbed&&(e.key==='Enter'||e.key===' ')&&e.target.hasAttribute('data-match')){e.preventDefault();openDetail(Number(e.target.dataset.match))}});
-/* Single listener, one RAF at most: optically tracked highlights on clear glass. */
-if(isEmbed && defaultStyle==='clear' && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-  let nextLight=null,activeLens=null,lightPending=false;
-  document.addEventListener('pointermove',event=>{
-    if(event.pointerType==='touch')return;
-    const t=event.target instanceof Element?event.target.closest('.competition,.filters button,.search'):null;
-    if(t!==activeLens){if(activeLens){activeLens.style.removeProperty('--light-power');activeLens.style.removeProperty('--lx');activeLens.style.removeProperty('--ly')};activeLens=t}
-    if(!t)return;
-    const rect=t.getBoundingClientRect();nextLight={x:((event.clientX-rect.left)/rect.width)*100,y:((event.clientY-rect.top)/rect.height)*100,el:t};
-    if(lightPending)return;lightPending=true;
-    requestAnimationFrame(()=>{lightPending=false;if(!nextLight||nextLight.el!==activeLens)return;const {x,y,el}=nextLight;el.style.setProperty('--lx',x.toFixed(1)+'%');el.style.setProperty('--ly',y.toFixed(1)+'%');el.style.setProperty('--light-power','1')});
-  },{passive:true});
-  document.addEventListener('pointerout',event=>{if(!event.relatedTarget && activeLens){activeLens.style.removeProperty('--light-power');activeLens.style.removeProperty('--lx');activeLens.style.removeProperty('--ly');activeLens=null}},{passive:true});
-}
-
-
-/* Chrome/Edge can refract the live backdrop via an SVG displacement map. */
-if(isEmbed && defaultStyle==='clear' && /Chrome|Chromium|Edg\//.test(navigator.userAgent) &&
-  CSS.supports('backdrop-filter','url(#arcxi-liquid-refraction)') &&
-  !matchMedia('(prefers-reduced-transparency: reduce)').matches){
-  document.body.classList.add('optical-refraction');
-}
-
-
 if(isEmbed)renderEmbedded();else renderShell();
 </script>
 </body>
