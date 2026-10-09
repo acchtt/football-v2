@@ -201,6 +201,22 @@ try{
     return {hover:row.matches(":hover"),glass:computed.backdropFilter||computed.webkitBackdropFilter};
   });
   assert(!idle.hover&&idle.glass==="none","Fixture failed to return to quiet reading surface");
+  // Keyboard focus should activate the identical optical treatment.
+  const keyboardFocus=await page.evaluate(()=>{
+    const fixture=document.querySelector(".scheduleMatchCard .scheduleFixture");
+    fixture.focus({preventScroll:true});
+    const row=fixture.closest(".scheduleMatchCard");
+    const style=getComputedStyle(row);
+    return {
+      focus:document.activeElement===fixture,
+      focusWithin:row.matches(":focus-within"),
+      glass:style.backdropFilter||style.webkitBackdropFilter
+    };
+  });
+  assert(keyboardFocus.focus&&keyboardFocus.focusWithin,"Keyboard focus did not reach a fixture");
+  assert(keyboardFocus.glass.includes("blur("),"Keyboard-focused fixture lacks Liquid Glass");
+  console.log("KEYBOARD "+target.name+" "+JSON.stringify(keyboardFocus));
+  await page.evaluate(()=>document.activeElement?.blur());
   await page.type("#boardSearch","Al Wakrah",{delay:10});
   await new Promise(ok=>setTimeout(ok,350));
   const after=await page.evaluate(()=>({
