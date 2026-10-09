@@ -1412,9 +1412,12 @@
   function closeManualScoreEditor() {
     const sheet = document.querySelector('.manualScoreSheet');
     if (sheet) sheet.remove();
+    root.inert = false;
     document.body.classList.remove('manualScoreOpen');
   }
   function openManualScoreEditor(key) {
+    if (IS_READ_ONLY_PREVIEW) return;
+    const returnFocus = document.activeElement;
     const row = manualScoreRow(key);
     if (!row) return;
     const event = eventForBoardRow(row);
@@ -1445,13 +1448,29 @@
       '</footer></form></section>';
     document.body.appendChild(sheet);
     document.body.classList.add('manualScoreOpen');
+    root.inert = true;
     const form = sheet.querySelector('form');
     const errorNode = sheet.querySelector('.manualScoreError');
     const close = function () {
       document.removeEventListener('keydown', onKey);
       closeManualScoreEditor();
+      root.inert = false;
+      const target = returnFocus?.isConnected ? returnFocus :
+        root.querySelector('[data-manual-score="' + key + '"]');
+      if (target?.focus) target.focus({preventScroll:true});
     };
-    const onKey = function (event) { if (event.key === 'Escape') close(); };
+    const onKey = function (event) {
+      if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(sheet.querySelectorAll('button:not(:disabled),input:not(:disabled)'));
+      if (!focusable.length) { event.preventDefault(); return; }
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !sheet.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !sheet.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
     const setBusy = function (busy) {
       sheet.classList.toggle('is-busy', busy);
       sheet.querySelectorAll('button,input').forEach(function (control) { control.disabled = busy; });
@@ -1542,8 +1561,17 @@
         renderMatchday();
       });
     });
+    const boardSearch = document.getElementById('boardSearch');
+    boardSearch?.addEventListener('input', function () {
+      state.boardQuery = String(boardSearch.value || '');
+      clearTimeout(state.searchTimer);
+      state.searchTimer = setTimeout(function () {
+        if (document.getElementById('boardSearch') === boardSearch) renderMatchday();
+      }, 220);
+    });
     document.getElementById('boardSearchForm')?.addEventListener('submit', function (event) {
       event.preventDefault();
+      clearTimeout(state.searchTimer);
       const input = document.getElementById('boardSearch');
       state.boardQuery = String(input?.value || '').trim();
       renderMatchday();
@@ -1650,8 +1678,14 @@
     }
     location.hash = '#board';
   }
+  function refreshSignature(events) {
+    return events.map(function (event) {
+      return [eventId(event), eventStatus(event), event.home_score, event.away_score,
+        event.current_minute, event.period, event.last_updated].join(':');
+    }).join('|');
+  }
   async function refreshLive() {
-    if (document.visibilityState === 'hidden') return;
+    if (IS_SNAPSHOT || document.visibilityState === 'hidden' || document.querySelector('.manualScoreSheet')) return;
     if (routeName() === 'board' && state.date !== todayKey()) return;
     state.refreshTick += 1;
     if (routeName() === 'board' && state.date === todayKey() && state.refreshTick % 2 === 0) {
@@ -1666,6 +1700,8 @@
       }
       const payload = await api('/api/bsd/live');
       const liveRows = rows(payload);
+      const previous = refreshSignature(state.live);
+      const next = refreshSignature(liveRows);
       state.live = liveRows;
       state.lastSync = Date.now();
       const byId = new Map(liveRows.map(function (event) { return [String(eventId(event)), event]; }));
@@ -1676,10 +1712,16 @@
       if (state.date === todayKey()) {
         state.matchdayCache.set(state.date, {events:state.today.slice(), loadedAt:Date.now()});
       }
-      if (routeName() === 'board') renderMatchday();
+      if (routeName() === 'board' && (previous !== next || state.error)) {
+        state.error = '';
+        if (!document.querySelector('.manualScoreSheet')) renderMatchday();
+      }
     } catch (error) {
-      state.error = error.message || String(error);
-      if (routeName() === 'board') renderMatchday();
+      const message = error.message || String(error);
+      if (state.error !== message) {
+        state.error = message;
+        if (routeName() === 'board' && !document.querySelector('.manualScoreSheet')) renderMatchday();
+      }
     }
   }
   function tickClocks() {
@@ -1712,6 +1754,7 @@
     if (document.visibilityState === 'visible') refreshLive();
   });
   state.clockTimer = setInterval(tickClocks, 1000);
-  state.liveTimer = setInterval(refreshLive, 10000);
+  state.liveTimer = IS_SNAPSHOT ? null : setInterval(refreshLive, 10000);
+  window.addEventListener('arcxi:snapshot-ready', updateSnapshotStatus);
   loadMatchday(state.date, false).catch(render);
 })();
