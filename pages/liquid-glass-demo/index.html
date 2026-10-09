@@ -331,6 +331,78 @@ body.embed[data-skin=clear]{
 }
 
 
+
+/* Clear Lens v4 — optical clarity. Only the highlights and edges carry density. */
+.embed[data-skin=clear] #site{
+  background:
+    radial-gradient(ellipse 42% 48% at 5% 20%,rgba(175,208,249,.085),transparent 78%),
+    radial-gradient(ellipse 41% 52% at 86% 68%,rgba(238,108,180,.08),transparent 82%),
+    linear-gradient(150deg,#0b0d12 0%,#08090c 64%,#08070b 100%);
+}
+.embed[data-skin=clear] .mainarea::before{
+  background:radial-gradient(ellipse 38% 15% at 9% 17%,rgba(123,169,231,.12),transparent 89%),
+             radial-gradient(ellipse 42% 21% at 94% 53%,rgba(235,120,197,.09),transparent 90%);
+  filter:blur(10px);
+}
+.embed[data-skin=clear] .competition{
+  background:linear-gradient(112deg,rgba(255,255,255,.062),rgba(255,255,255,.008) 26%,rgba(255,255,255,.004) 68%,rgba(245,224,242,.025));
+  border-color:rgba(242,247,255,.39);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.80),inset 1px 0 1px rgba(255,255,255,.19),
+             inset 0 -1px 1px rgba(250,234,255,.13),
+             0 3px 6px rgba(0,0,0,.20),0 16px 30px rgba(0,0,0,.26),0 30px 55px rgba(0,0,0,.14);
+  backdrop-filter:blur(1.5px) saturate(110%) brightness(1.02);
+  -webkit-backdrop-filter:blur(1.5px) saturate(110%) brightness(1.02);
+}
+.embed[data-skin=clear] .competition::before{
+  background:radial-gradient(ellipse 53% 51% at var(--lx) var(--ly),rgba(255,255,255,.25),rgba(255,255,255,.040) 41%,transparent 76%),
+             linear-gradient(145deg,rgba(255,255,255,.075),transparent 30%,transparent 76%,rgba(255,227,247,.038));
+  opacity:var(--light-power);
+}
+.embed[data-skin=clear] .competition::after{opacity:.9}
+.embed[data-skin=clear] .competition-head{
+  background:linear-gradient(174deg,rgba(255,255,255,.060),rgba(255,255,255,.004) 82%);
+  border-bottom-color:rgba(242,246,255,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11);
+}
+.embed[data-skin=clear] .match-row{
+  background:linear-gradient(93deg,rgba(255,255,255,.012),transparent 66%);
+  border-bottom-color:rgba(235,239,255,.11);
+}
+.embed[data-skin=clear] .match-row:hover,
+.embed[data-skin=clear] .match-row:focus-visible{
+  background:linear-gradient(95deg,rgba(255,255,255,.083),rgba(255,255,255,.013) 73%);
+}
+.embed[data-skin=clear] .filters button,
+.embed[data-skin=clear] .search{
+  background:radial-gradient(ellipse 110% 150% at var(--lx) var(--ly),rgba(255,255,255,.15),transparent 59%),
+             linear-gradient(116deg,rgba(255,255,255,.060),rgba(255,255,255,.008) 70%);
+  border-color:rgba(255,255,255,.43);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.63),inset 1px 0 1px rgba(255,255,255,.17),
+             0 5px 12px rgba(0,0,0,.24),0 12px 24px rgba(0,0,0,.14);
+  backdrop-filter:blur(1.5px) saturate(110%);
+  -webkit-backdrop-filter:blur(1.5px) saturate(110%);
+}
+/* Preserve the vivid selected controls, the optical meniscus, and real displacement. */
+.embed[data-skin=clear].optical-refraction .competition{
+  backdrop-filter:url(#arcxi-liquid-refraction) blur(.5px) saturate(110%) brightness(1.02);
+  -webkit-backdrop-filter:url(#arcxi-liquid-refraction) blur(.5px) saturate(110%) brightness(1.02);
+}
+.embed[data-skin=clear].optical-refraction .filters button:not([aria-pressed=true]),
+.embed[data-skin=clear].optical-refraction .search{
+  backdrop-filter:url(#arcxi-liquid-refraction) blur(0px) saturate(108%);
+  -webkit-backdrop-filter:url(#arcxi-liquid-refraction) blur(0px) saturate(108%);
+}
+@media(max-width:900px){
+ .embed[data-skin=clear] .competition{backdrop-filter:blur(1px) saturate(110%);-webkit-backdrop-filter:blur(1px) saturate(110%)}
+}
+@media(prefers-reduced-transparency:reduce){
+ .embed[data-skin=clear] .competition{background:#20222a;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .embed[data-skin=clear] .filters button,.embed[data-skin=clear] .search{background:#252731;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .embed[data-skin=clear].optical-refraction .competition,
+ .embed[data-skin=clear].optical-refraction .filters button,
+ .embed[data-skin=clear].optical-refraction .search{backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+
 </style>
 </head>
 <body>
