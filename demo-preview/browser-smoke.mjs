@@ -110,6 +110,34 @@ try{
   assert(before.snapshot&&before.readOnly);
   assert(before.documentWidth<=before.windowWidth+3,
     "Horizontal overflow on "+target.name+": "+before.documentWidth+" > "+before.windowWidth);
+  const material=await page.evaluate(()=>{
+    const computed=selector=>getComputedStyle(document.querySelector(selector));
+    const date=computed(".dateBtn.active");
+    const filter=computed(".statusFilters button.active");
+    const search=computed(".scheduleSearch");
+    const panel=computed(".scheduleCompetitionGroup");
+    const rim=getComputedStyle(document.querySelector(".dateBtn.active"),"::after");
+    return {
+      dateBlur:date.backdropFilter||date.webkitBackdropFilter,
+      filterBlur:filter.backdropFilter||filter.webkitBackdropFilter,
+      searchBlur:search.backdropFilter||search.webkitBackdropFilter,
+      contentBlur:panel.backdropFilter||panel.webkitBackdropFilter,
+      contentBackground:panel.backgroundColor,
+      rimContent:rim.content,
+      dateBorderRadius:date.borderRadius
+    };
+  });
+  assert(material.dateBlur.includes("blur(")&&material.filterBlur.includes("blur(")&&
+    material.searchBlur.includes("blur("),"Liquid Glass missing from control plane: "+JSON.stringify(material));
+  assert(material.contentBlur==="none","Competition rows must use standard material: "+JSON.stringify(material));
+  assert(material.rimContent!=="none","Control edge-optics layer missing");
+  console.log("MATERIAL "+target.name+" "+JSON.stringify(material));
+  const glowTarget=await page.$(".statusFilters button.active");
+  const bounds=await glowTarget.boundingBox();
+  await page.mouse.move(bounds.x+bounds.width*.35,bounds.y+bounds.height*.5);
+  await new Promise(ok=>setTimeout(ok,100));
+  const optical=await page.evaluate(()=>document.querySelector(".statusFilters button.active")?.style.getPropertyValue("--lg-x"));
+  assert(optical.endsWith("%"),"Pointer-following specular light did not respond");
   await page.type("#boardSearch","Al Wakrah",{delay:10});
   await new Promise(ok=>setTimeout(ok,350));
   const after=await page.evaluate(()=>({
