@@ -110,6 +110,26 @@ try{
   assert(before.snapshot&&before.readOnly);
   assert(before.documentWidth<=before.windowWidth+3,
     "Horizontal overflow on "+target.name+": "+before.documentWidth+" > "+before.windowWidth);
+  const dateGeometry=await page.evaluate(()=>{
+    const nav=document.querySelector(".scheduleDateNav");
+    const strip=nav?.querySelector(".dateStrip");
+    const nodes=[nav?.firstElementChild,...(strip?[...strip.children]:[]),nav?.lastElementChild];
+    return nodes.map(n=>{
+      const r=n?.getBoundingClientRect();
+      return {left:r?.left||0,right:r?.right||0,width:r?.width||0};
+    });
+  });
+  assert.equal(dateGeometry.length,7,"Expected previous arrow, five dates and next arrow");
+  const widths=dateGeometry.map(r=>r.width);
+  const gaps=dateGeometry.slice(1).map((r,i)=>r.left-dateGeometry[i].right);
+  assert(Math.max(...widths)-Math.min(...widths)<1.1,
+    "Uneven date control widths: "+JSON.stringify(dateGeometry));
+  assert(Math.max(...gaps)-Math.min(...gaps)<1.1,
+    "Uneven visible spacing between date controls: "+JSON.stringify(gaps));
+  assert(Math.min(...gaps)>=2,"Date controls are overlapping: "+JSON.stringify(gaps));
+  console.log("DATE GRID "+target.name+" "+JSON.stringify({
+    width:widths[0].toFixed(2),gaps:gaps.map(v=>v.toFixed(2))
+  }));
   const material=await page.evaluate(()=>{
     const computed=selector=>getComputedStyle(document.querySelector(selector));
     const date=computed(".dateBtn.active");
