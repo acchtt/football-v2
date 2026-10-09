@@ -29,6 +29,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Verify demo snapshot adapter and public data CORS
+        run: node demo-preview/check-preview.mjs
       - name: Capture actual public football schedule
         run: node demo-preview/capture-snapshot.mjs
       - name: Commit snapshot on demo branch only
