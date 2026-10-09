@@ -1,0 +1,65 @@
+name: Sharpen Liquid Glass Demo Wallpaper
+
+on:
+  push:
+    branches: ["demo/liquid-glass"]
+    paths:
+      - "demo-preview/build-sharp-wallpaper.py"
+      - ".github/workflows/liquid-glass-wallpaper.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: liquid-glass-wallpaper
+  cancel-in-progress: true
+
+jobs:
+  sharpen-demo-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: demo/liquid-glass
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install image processing library
+        run: python -m pip install --disable-pip-version-check "Pillow>=11,<13"
+      - name: Upscale original pixels and activate high-resolution background
+        run: python demo-preview/build-sharp-wallpaper.py
+      - name: Verify integrity, exact scope and image dimensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/demo/liquid-glass"
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          c=Path("pages/cosmic-schedule-background.css").read_text()
+          h=Path("pages/index.html").read_text()
+          p=Path("pages/media/arcxi/cosmic-wallpaper-3840.webp")
+          assert p.exists() and p.stat().st_size > 100000
+          with Image.open(p) as img:
+              assert img.width == 3840 and img.height >= 2155 and img.height <= 2165, img.size
+          assert 'media/arcxi/cosmic-wallpaper-3840.webp' in c
+          assert 'cosmic-schedule-background.css?v=8' in h
+          assert 'filter: none;' in c
+          print("PASS: sharpened asset, CSS reference and demo-only cache update")
+          PY
+          git diff --name-only | sort
+          test "$(git diff --name-only | wc -l)" -eq 2
+          ! git diff --name-only | grep -v -E '^(pages/index\.html|pages/cosmic-schedule-background\.css)$'
+      - name: Commit only demo wallpaper + stylesheet
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pages/index.html pages/cosmic-schedule-background.css pages/media/arcxi/cosmic-wallpaper-3840.webp
+          if ! git diff --cached --quiet; then
+            git commit -m "Improve demo cosmic wallpaper clarity at 3840px [skip ci]"
+            git push origin HEAD:demo/liquid-glass
+          fi
