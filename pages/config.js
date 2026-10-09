@@ -458,7 +458,8 @@
 
   // Prevent app-v2's legacy live timer from rebuilding Matchday.
   window.setInterval = function sliptraceSetInterval(callback, delay, ...args) {
-    if (!replacedAppLiveTimer && Number(delay) === 10000 && callback?.name === 'refreshLive') {
+    if (!replacedAppLiveTimer && Number(delay) === 10000 && callback?.name === 'refreshLive' &&
+        window.__ARCXI_BUILD__ !== 'schedule-reference-v67-demo-repair') {
       replacedAppLiveTimer = true;
       return nativeSetInterval(quietLiveRefresh, 10000);
     }
@@ -469,13 +470,14 @@
   // script loads first, capture-phase guards prevent those handlers from firing.
   // We refresh live values silently instead, leaving the current board mounted.
   document.addEventListener('visibilitychange', event => {
-    if (document.visibilityState !== 'visible') return;
+    if (window.__ARCXI_DEMO_SNAPSHOT__ || document.visibilityState !== 'visible') return;
     event.stopImmediatePropagation();
     quietLiveRefresh();
     checkBoardRefresh();
   }, true);
 
   window.addEventListener('focus', event => {
+    if (window.__ARCXI_DEMO_SNAPSHOT__) return;
     event.stopImmediatePropagation();
     quietLiveRefresh();
     checkBoardRefresh();
@@ -483,6 +485,8 @@
 
   // New Airtable publications should appear without a reload, but Matchday is
   // only rebuilt when the board fingerprint actually changes.
-  nativeSetInterval(checkBoardRefresh, 15000);
-  setTimeout(checkBoardRefresh, 2500);
+  if (!window.__ARCXI_DEMO_SNAPSHOT__) {
+    nativeSetInterval(checkBoardRefresh, 15000);
+    setTimeout(checkBoardRefresh, 2500);
+  }
 })();
