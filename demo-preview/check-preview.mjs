@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import vm from "node:vm";
 const bridge = await fs.readFile("pages/demo-api-bridge.js", "utf8");
 const index = await fs.readFile("pages/index.html", "utf8");
-assert(index.includes("./demo-api-bridge.js?v=1"));
+assert(index.includes("./demo-api-bridge.js?v=2"));
 assert(index.indexOf("demo-api-bridge.js") < index.indexOf("ict-slate-fetch.js"));
 const called = [];
 const make = (body,status=200) => new Response(JSON.stringify(body),{
