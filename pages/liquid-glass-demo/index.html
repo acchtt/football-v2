@@ -192,9 +192,149 @@ body.embed[data-skin=clear]{
   .embed[data-skin=clear] .filters button,.embed[data-skin=clear] .search{background:#24242b;backdrop-filter:none;-webkit-backdrop-filter:none}
 }
 
+/* ARC XI / clear lens v3: fluid optics, no enclosing masthead. */
+.embed[data-skin=clear] #site {
+  background:
+    radial-gradient(ellipse 39% 49% at 4% 21%,rgba(193,216,255,.16),transparent 79%),
+    radial-gradient(ellipse 42% 56% at 83% 69%,rgba(245,103,185,.14),transparent 81%),
+    radial-gradient(ellipse 76% 29% at 45% 109%,rgba(130,142,206,.12),transparent 81%),
+    linear-gradient(150deg,#11121a 0%,#090a0e 64%,#08070c 100%);
+}
+/* The brand and day strip deliberately remain unboxed, per approved direction. */
+.embed[data-skin=clear] .brandbar {
+  background:none!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.embed[data-skin=clear] .date {background:none!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.embed[data-skin=clear] .date[aria-pressed=true] {border-bottom-color:var(--yellow)!important;color:var(--yellow)}
+/* Each league is a thick optical pane: curved specular rim / clear middle / dark under-shadow. */
+.embed[data-skin=clear] .competition {
+  --lx:12%; --ly:-28%; --light-power:.75;
+  border-radius:25px;
+  isolation:isolate;
+  background:linear-gradient(117deg,rgba(255,255,255,.17) 0%,rgba(255,255,255,.033) 20%,rgba(255,255,255,.015) 68%,rgba(255,206,231,.075) 100%);
+  border:1px solid rgba(243,249,255,.46);
+  box-shadow:
+    inset 0 1.5px 1px rgba(255,255,255,.83),
+    inset 2px 0 2px rgba(255,255,255,.27),
+    inset -1px 0 2px rgba(250,224,255,.21),
+    inset 0 -2px 3px rgba(255,255,255,.17),
+    0 3px 5px rgba(0,0,0,.21),
+    0 16px 27px rgba(0,0,0,.32),
+    0 34px 66px rgba(0,0,0,.19);
+  backdrop-filter:blur(8px) saturate(165%) brightness(1.13);
+  -webkit-backdrop-filter:blur(8px) saturate(165%) brightness(1.13);
+  transform:translateZ(0);
+  transition:border-color .22s ease,box-shadow .22s ease;
+}
+/* Floating convex highlight follows pointer, without shifting the text. */
+.embed[data-skin=clear] .competition::before {
+  content:"";position:absolute;inset:0;height:auto;z-index:1;
+  border-radius:inherit;pointer-events:none;
+  background:
+    radial-gradient(ellipse 58% 59% at var(--lx) var(--ly),rgba(255,255,255,.38) 0%,rgba(255,255,255,.11) 43%,transparent 80%),
+    linear-gradient(140deg,rgba(255,255,255,.24),transparent 34%,transparent 69%,rgba(255,234,255,.095)),
+    linear-gradient(0deg,rgba(244,174,232,.07),transparent 24%);
+  opacity:var(--light-power);mix-blend-mode:screen;
+  transition:opacity .2s ease;
+}
+/* Optical edge. The rim, not a thick colored border, conveys curved glass. */
+.embed[data-skin=clear] .competition::after {
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  border-radius:inherit;padding:2px;
+  background:
+    conic-gradient(from 205deg at 52% 40%,rgba(255,255,255,.12),rgba(250,252,255,.93) 14%,rgba(255,255,255,.25) 27%,rgba(255,255,255,.03) 43%,rgba(248,179,232,.67) 62%,rgba(255,255,255,.04) 78%,rgba(252,255,255,.80) 90%,rgba(255,255,255,.12)) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  opacity:.84;
+}
+.embed[data-skin=clear] .competition:hover {
+  border-color:rgba(255,255,255,.68);
+  box-shadow:
+    inset 0 1.5px 1px rgba(255,255,255,.90),
+    inset 2px 0 2px rgba(255,255,255,.30),
+    inset -1px 0 2px rgba(250,224,255,.25),
+    0 4px 10px rgba(0,0,0,.23),0 19px 38px rgba(0,0,0,.35),0 43px 74px rgba(0,0,0,.23);
+}
+/* One sculpted lip contains the league identity; the content itself stays legible. */
+.embed[data-skin=clear] .competition-head {
+  position:relative;z-index:3;
+  background:linear-gradient(178deg,rgba(255,255,255,.16),rgba(255,255,255,.018) 74%);
+  border-bottom:1px solid rgba(242,246,255,.24);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.17),0 2px 4px rgba(0,0,0,.12);
+}
+.embed[data-skin=clear] .match-row {position:relative;z-index:3;
+  background:linear-gradient(90deg,rgba(255,255,255,.038),rgba(255,255,255,.003) 65%);
+  border-bottom:1px solid rgba(235,239,255,.11);
+}
+.embed[data-skin=clear] .match-row:hover,
+.embed[data-skin=clear] .match-row:focus-visible {
+  background:linear-gradient(105deg,rgba(255,255,255,.145),rgba(255,255,255,.028) 71%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -1px 0 rgba(255,255,255,.09);
+}
+/* Independent control lenses: bright meniscus, quiet clear center, press compression. */
+.embed[data-skin=clear] .filters button,
+.embed[data-skin=clear] .search {
+  --lx:12%;--ly:-50%;
+  position:relative;
+  background:radial-gradient(ellipse 120% 190% at var(--lx) var(--ly),rgba(255,255,255,.24),transparent 63%),linear-gradient(110deg,rgba(255,255,255,.13),rgba(255,255,255,.038) 68%);
+  border:1px solid rgba(255,255,255,.46);
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.68),inset 1.4px 0 1px rgba(255,255,255,.21),inset 0 -1px 1px rgba(255,255,255,.14),0 5px 12px rgba(0,0,0,.30),0 13px 24px rgba(0,0,0,.18);
+  backdrop-filter:blur(10px) saturate(155%) brightness(1.07);
+  -webkit-backdrop-filter:blur(10px) saturate(155%) brightness(1.07);
+  transition:box-shadow .23s cubic-bezier(.2,.8,.1,1),transform .23s cubic-bezier(.2,.8,.1,1),border-color .22s ease;
+}
+.embed[data-skin=clear] .filters button:not([aria-pressed=true]):hover {transform:translateY(-2px);border-color:rgba(255,255,255,.77);box-shadow:inset 0 1px 1px white,0 10px 23px rgba(0,0,0,.42),0 17px 32px rgba(0,0,0,.16)}
+.embed[data-skin=clear] .filters button:active {transform:scale(.955)}
+.embed[data-skin=clear] .filters button[aria-pressed=true] {background:var(--yellow);color:#111;border:1px solid var(--yellow);box-shadow:inset 0 1px 1px rgba(255,255,255,.83),0 5px 14px rgba(0,0,0,.3)}
+.embed[data-skin=clear] .filters button.live[aria-pressed=true] {background:var(--pink);color:#140612;border-color:var(--pink)}
+.embed[data-skin=clear] .search:focus-within {border-color:rgba(255,255,255,.91);box-shadow:inset 0 1px 1px rgba(255,255,255,.72),0 11px 30px rgba(0,0,0,.41)}
+/* Clear glass can only refract something visible beneath it; color fields reveal the lens without competing with IVE. */
+.embed[data-skin=clear] .mainarea::before {
+  content:"";pointer-events:none;position:absolute;inset:90px 3% 7% -5%;z-index:-1;
+  background:
+    radial-gradient(ellipse 33% 13% at 8% 12%,rgba(130,167,224,.28),transparent 90%),
+    radial-gradient(ellipse 48% 22% at 95% 54%,rgba(250,123,203,.19),transparent 92%),
+    radial-gradient(ellipse 45% 18% at 40% 94%,rgba(164,184,255,.12),transparent 89%);
+  filter:blur(12px);
+}
+@media(max-width:900px){
+ .embed[data-skin=clear] .competition{border-radius:20px;backdrop-filter:blur(7px) saturate(145%);-webkit-backdrop-filter:blur(7px) saturate(145%)}
+ .embed[data-skin=clear] .competition::after{padding:1.5px}
+}
+@media(prefers-reduced-motion:reduce){
+ .embed[data-skin=clear] .competition,.embed[data-skin=clear] .filters button,.embed[data-skin=clear] .search{transition:none}
+}
+@media(prefers-reduced-transparency:reduce){
+ .embed[data-skin=clear] .competition{background:#20222a;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .embed[data-skin=clear] .filters button,.embed[data-skin=clear] .search{background:#252731;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .embed[data-skin=clear] .brandbar{background:none}
+}
+
+
+/* True background displacement in Chromium; graceful CSS optical fallback elsewhere. */
+.embed[data-skin=clear].optical-refraction .competition{
+  backdrop-filter:url(#arcxi-liquid-refraction) blur(3px) saturate(165%) brightness(1.12);
+  -webkit-backdrop-filter:url(#arcxi-liquid-refraction) blur(3px) saturate(165%) brightness(1.12);
+}
+.embed[data-skin=clear].optical-refraction .filters button:not([aria-pressed=true]),
+.embed[data-skin=clear].optical-refraction .search{
+  backdrop-filter:url(#arcxi-liquid-refraction) blur(2px) saturate(150%);
+  -webkit-backdrop-filter:url(#arcxi-liquid-refraction) blur(2px) saturate(150%);
+}
+@media(prefers-reduced-transparency:reduce){
+  .embed[data-skin=clear].optical-refraction .competition,
+  .embed[data-skin=clear].optical-refraction .filters button,
+  .embed[data-skin=clear].optical-refraction .search {backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+
+
 </style>
 </head>
 <body>
+<svg aria-hidden="true" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" xmlns="http://www.w3.org/2000/svg"><defs><filter id="arcxi-liquid-refraction" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feImage href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAACACAIAAABr1yBdAAABeklEQVR42u3XzWlCURRG0W18+K+9hjSQbgUHb+REEEkd4axVwsfdcO7m5/v3UWs961WfWmpfp7rUtc51rF1tgv9hU7s61rmudalT7WupT73qWWs9auluLuZaWo3A5ACeRmByAG8jMDmArRGYHMDBCEwO4GIEJgdwMwICACcQ+ATDqAC+jMBcnj8CAAGAAEAAIAAQAAgABAACAAGAAEAAIAAQAAgABAACAAGAAEAAIAAQAAgABAACAAGAAEAAIAAQAAgABAACAAGAAEAAIAAQAAgABAACAAGAAEAAIAAQAAgABAACAAGAABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAC0SYHYAByMwOYCLEZgcwM0ICACcQOATDKMC2BqByQG8jcDkAJ5GYHIAqxGYHMDdCMz1B7sNFMhMW0kmAAAAAElFTkSuQmCC" width="100%" height="100%" preserveAspectRatio="none" result="lensNormals"/><feDisplacementMap in="SourceGraphic" in2="lensNormals" scale="25" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
 <div id="root"></div>
 <script>
 'use strict';
@@ -228,6 +368,30 @@ document.addEventListener('click',event=>{const target=event.target.closest('but
 else{if(target.hasAttribute('data-skin')){state.style=target.dataset.skin;renderShell();return}if(target.hasAttribute('data-compare')){state.comparison=!state.comparison;renderShell();return}if(target.hasAttribute('data-device')){state.device=target.dataset.device;renderShell();return}}});
 document.addEventListener('input',e=>{if(isEmbed&&e.target.matches('.search input')){state.search=e.target.value;renderFixtures()}});
 document.addEventListener('keydown',e=>{if(isEmbed&&(e.key==='Enter'||e.key===' ')&&e.target.hasAttribute('data-match')){e.preventDefault();openDetail(Number(e.target.dataset.match))}});
+/* Single listener, one RAF at most: optically tracked highlights on clear glass. */
+if(isEmbed && defaultStyle==='clear' && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  let nextLight=null,activeLens=null,lightPending=false;
+  document.addEventListener('pointermove',event=>{
+    if(event.pointerType==='touch')return;
+    const t=event.target instanceof Element?event.target.closest('.competition,.filters button,.search'):null;
+    if(t!==activeLens){if(activeLens){activeLens.style.removeProperty('--light-power');activeLens.style.removeProperty('--lx');activeLens.style.removeProperty('--ly')};activeLens=t}
+    if(!t)return;
+    const rect=t.getBoundingClientRect();nextLight={x:((event.clientX-rect.left)/rect.width)*100,y:((event.clientY-rect.top)/rect.height)*100,el:t};
+    if(lightPending)return;lightPending=true;
+    requestAnimationFrame(()=>{lightPending=false;if(!nextLight||nextLight.el!==activeLens)return;const {x,y,el}=nextLight;el.style.setProperty('--lx',x.toFixed(1)+'%');el.style.setProperty('--ly',y.toFixed(1)+'%');el.style.setProperty('--light-power','1')});
+  },{passive:true});
+  document.addEventListener('pointerout',event=>{if(!event.relatedTarget && activeLens){activeLens.style.removeProperty('--light-power');activeLens.style.removeProperty('--lx');activeLens.style.removeProperty('--ly');activeLens=null}},{passive:true});
+}
+
+
+/* Chrome/Edge can refract the live backdrop via an SVG displacement map. */
+if(isEmbed && defaultStyle==='clear' && /Chrome|Chromium|Edg\//.test(navigator.userAgent) &&
+  CSS.supports('backdrop-filter','url(#arcxi-liquid-refraction)') &&
+  !matchMedia('(prefers-reduced-transparency: reduce)').matches){
+  document.body.classList.add('optical-refraction');
+}
+
+
 if(isEmbed)renderEmbedded();else renderShell();
 </script>
 </body>
