@@ -79,9 +79,19 @@ try{
   await page.goto(address,{waitUntil:"domcontentloaded",timeout:25000});
   await page.waitForSelector(".scheduleDateNav", {timeout:20000});
   await page.waitForSelector('[data-date="2026-10-09"]',{timeout:12000});
-  await page.click('[data-date="2026-10-09"]');
-  await page.waitForSelector('[data-status-filter="all"]',{timeout:12000});
-  await page.click('[data-status-filter="all"]');
+  // The schedule may replace the entire board while its first data request settles.
+  // Dispatch synchronously inside the page so Chrome never holds a detached node.
+  await page.evaluate(()=>{
+    const date=document.querySelector('[data-date="2026-10-09"]');
+    if (!date) throw new Error("Date navigation missing");
+    date.click();
+  });
+  await page.waitForFunction(()=>document.querySelector('.dateBtn.active')?.dataset.date==="2026-10-09",{timeout:16000});
+  await page.evaluate(()=>{
+    const all=document.querySelector('[data-status-filter="all"]');
+    if (!all) throw new Error("Status controls missing");
+    all.click();
+  });
   await page.waitForFunction(()=>document.querySelectorAll(".scheduleMatchCard").length>0,{timeout:25000});
   const before=await page.evaluate(()=>({
     rows:document.querySelectorAll(".scheduleMatchCard").length,
