@@ -1,10 +1,12 @@
 (() => {
   'use strict';
-  window.__ARCXI_BUILD__ = 'schedule-reference-v66';
+  window.__ARCXI_BUILD__ = 'schedule-reference-v67-demo-repair';
   // Operational lane badges distinguish ranked FOLLOW / RESERVE / STOP from lifecycle state.
 
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const TZ = window.SLIPTRACE_TIME_ZONE || 'Asia/Ho_Chi_Minh';
+  const IS_SNAPSHOT = Boolean(window.__ARCXI_DEMO_SNAPSHOT__);
+  const IS_READ_ONLY_PREVIEW = Boolean(window.__ARCXI_DEMO_READ_ONLY__);
   const root = document.getElementById('app');
   if (!root) return;
 
@@ -28,7 +30,8 @@
     matchdayRequest: 0,
     boardPromise: null,
     clockTimer: null,
-    liveTimer: null
+    liveTimer: null,
+    searchTimer: null
   };
 
   function readStore(key, fallback, storage) {
@@ -374,7 +377,8 @@
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
       '<details class="scheduleMenu"><summary class="scheduleMenuButton" aria-label="Open menu"><i></i><i></i></summary>' +
       '<nav class="scheduleMenuPanel" aria-label="Schedule menu"><a href="#board">Schedule</a><a href="#picks">Picks</a>' +
-      '<a href="#leagues">Competitions</a><a href="#teams">Teams</a><button type="button" data-refresh-schedule>Refresh scores</button></nav></details>' +
+      '<a href="#leagues">Competitions</a><a href="#teams">Teams</a><button type="button" data-refresh-schedule>' +
+      (IS_SNAPSHOT ? 'Reload snapshot' : 'Refresh scores') + '</button></nav></details>' +
       '</div></div></header>';
   }
   function shell(content, context, className) {
@@ -411,7 +415,9 @@
   function dateStrip() {
     let html = '<div class="dateStrip" aria-label="Match date">';
     [-2,-1,0,1,2].forEach(function (offset) {
-      const date = todayKey(offset);
+      const selected = new Date((state.date || todayKey()) + 'T12:00:00Z');
+      selected.setUTCDate(selected.getUTCDate() + offset);
+      const date = selected.toISOString().slice(0, 10);
       const d = new Date(date + 'T12:00:00Z');
       const weekday = new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
       const count = boardDateCount(date);
@@ -421,7 +427,7 @@
         new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d);
       html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
         '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no ranked board matches')) +
-        '" aria-pressed="' + active + '"' + (unavailable ? ' disabled' : '') + '><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
+        '" aria-pressed="' + active + '"><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
         new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + ' ' + d.getUTCDate() + '</strong></button>';
     });
     return html + '</div>';
@@ -580,7 +586,7 @@
     const hasManualScore = Boolean(manualScore);
     const finished = status === 'finished';
     const live = status === 'live';
-    const canManualScore = !event && (!fallback || status !== 'upcoming');
+    const canManualScore = !IS_READ_ONLY_PREVIEW && !event && (!fallback || status !== 'upcoming');
     const kickoffText = formatTime(kickoff);
     let scoreLabel = 'VS';
     let detail = '';
@@ -625,7 +631,8 @@
       close + (manualControl ? '<div class="scheduleRowTools">' + manualControl + '</div>' : '') + '</article>';
   }
   function boardMatchList(boardRows) {
-    const groups = new Map();
+    // Group only consecutive matches so kickoff ordering survives competition headers.
+    const groups = [];
     boardRows.forEach(function (row) {
       const event = eventForBoardRow(row);
       const fallback = event ? null : soccerwayForBoardRow(row);
@@ -633,17 +640,17 @@
       const id = event && leagueId(event);
       const logo = fallback && fallback.competitionLogo || '';
       const key = String(id || '') + ':' + name;
-      if (!groups.has(key)) groups.set(key, {name:name, id:id, event:event, logo:logo, rows:[]});
-      else if (!groups.get(key).logo && logo) groups.get(key).logo = logo;
-      groups.get(key).rows.push(row);
+      const previous = groups[groups.length - 1];
+      if (!previous || previous.key !== key) groups.push({key:key,name:name,id:id,event:event,logo:logo,rows:[]});
+      else if (!previous.logo && logo) previous.logo = logo;
+      groups[groups.length - 1].rows.push(row);
     });
-    return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
+    return '<div class="boardCompetitionList scheduleCompetitionList">' + groups.map(function (group) {
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
         (group.id ? '<span class="scheduleCompetitionLogo">' + crest('league', group.id, group.name) + '</span>' :
           group.logo ? externalLogo(group.logo, group.name, 'competition') : competitionMark()) +
-        '<strong>' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
-        (group.rows.length === 1 ? '' : 'es') + '</span>' +
-        '<i class="scheduleGroupChevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg></i></header>' +
+        '<strong role="heading" aria-level="2">' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
+        (group.rows.length === 1 ? '' : 'es') + '</span></header>' +
         '<div class="matchList boardMatchList chronologicalBoardList">' +
         group.rows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
     }).join('') + '</div>';
@@ -809,6 +816,9 @@
       railCompetitionSummary(boardRows) + railWatchlist(boardRows) + matchdayMedia() + '</div>';
   }
   function renderMatchday(loading) {
+    const search = document.activeElement?.id === 'boardSearch' ? document.activeElement : null;
+    const editing = search ? {value:search.value,start:search.selectionStart,end:search.selectionEnd} : null;
+    if (editing) state.boardQuery = editing.value;
     state.route = 'board';
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
@@ -858,11 +868,15 @@
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches found</strong><span>Change the status filter or clear the schedule search.</span>' +
         '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
-        '<div class="emptyState"><strong>No scheduled Board matches</strong><span>No operational entries were added for this date.</span></div>';
+        '<div class="emptyState"><strong>No scheduled Board matches</strong><span>' +
+        (IS_SNAPSHOT ? 'No ranked fixtures were recorded for this date in the saved snapshot.' :
+        'No operational entries were added for this date.') + '</span></div>';
     const content =
       '<section class="scheduleStage" aria-label="ARC XI football schedule" aria-busy="' + Boolean(loading) + '">' +
-      (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
-      '<div class="scheduleTop">' + controls + '</div>' +
+      (state.error ? '<div class="statusBanner"><b>' + (IS_SNAPSHOT ? 'Snapshot data unavailable.' : 'Schedule data delayed.') +
+        '</b><span>' + esc(state.error) + '</span></div>' : '') +
+      '<div class="scheduleTop">' + (IS_SNAPSHOT ?
+        '<div class="scheduleSnapshotNotice" role="status"><strong>Saved schedule</strong><span data-snapshot-status>Public-data snapshot · Not live</span></div>' : '') + controls + '</div>' +
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
       '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
         return '<svg class="scheduleSpark' + color + '" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0c1 12 2 14 12 15-10 1-11 3-12 15C11 18 10 16 0 15c10-1 11-3 12-15Z"></path></svg>';
@@ -871,6 +885,27 @@
       '<img class="iveCornerArtwork" src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside></section>';
     root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute' + (loading ? ' scheduleLoadingRoute' : ''));
     bindGlobal();
+    if (IS_SNAPSHOT) updateSnapshotStatus();
+    if (editing) {
+      const next = document.getElementById('boardSearch');
+      if (next && !next.disabled) {
+        next.value = editing.value;
+        next.focus({preventScroll:true});
+        if (editing.start !== null && editing.end !== null) {
+          try { next.setSelectionRange(editing.start, editing.end); } catch {}
+        }
+      }
+    }
+  }
+
+  function updateSnapshotStatus() {
+    const timestamp = Date.parse(window.__ARCXI_SNAPSHOT_CAPTURED_AT || '');
+    const value = Number.isFinite(timestamp)
+      ? 'Captured ' + new Intl.DateTimeFormat('en-GB', {
+          timeZone:TZ, day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
+        }).format(timestamp) + ' ICT · Not live'
+      : 'Public-data snapshot · Not live';
+    root.querySelectorAll('[data-snapshot-status]').forEach(function (node) { node.textContent = value; });
   }
 
   function skeleton(route, title) {
@@ -940,7 +975,8 @@
       state.lastSync = Date.now();
     } catch (error) {
       if (requestId !== state.matchdayRequest || state.date !== requestedDate) return [];
-      state.error = error.message || String(error);
+      state.error = IS_SNAPSHOT && state.board && !boardRowsForDate().length ? '' :
+        (error.message || String(error));
     }
     if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
     fallbackTask.then(function () {
