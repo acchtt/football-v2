@@ -7,16 +7,45 @@ on:
       - "pages/**"
       - "demo-preview/**"
       - ".github/workflows/liquid-glass-preview.yml"
-  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: liquid-glass-demo-preview
   cancel-in-progress: true
 
 jobs:
+  snapshot-public-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout demo branch
+        uses: actions/checkout@v4
+        with:
+          ref: demo/liquid-glass
+          fetch-depth: 1
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Capture actual public football schedule
+        run: node demo-preview/capture-snapshot.mjs
+      - name: Commit snapshot on demo branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/demo/liquid-glass"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pages/demo-preview-data/
+          if git diff --cached --quiet; then
+            echo "Snapshot unchanged."
+          else
+            git commit -m "Refresh authentic read-only demo schedule snapshot [skip ci]"
+            git push origin HEAD:demo/liquid-glass
+          fi
+
   deploy-demo:
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -35,26 +64,31 @@ jobs:
             echo "::error::Ref is not demo/liquid-glass; refusing deployment."
             exit 1
           }
+      - name: Check separate demo-host credentials
+        id: preview-creds
+        shell: bash
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cloudflare credentials unavailable outside production environment. Live demo host not deployed; public snapshot remains usable."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Node
+        if: steps.preview-creds.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check Cloudflare preview credentials
-        shell: bash
-        run: |
-          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID" || {
-            echo "::error::Preview deploy needs Cloudflare repository secrets. Production environment secrets are NOT accessed."
-            exit 1
-          }
       - name: Install Wrangler
+        if: steps.preview-creds.outputs.ready == 'true'
         run: npm install --ignore-scripts --no-audit --no-fund --no-save wrangler@4
       - name: Deploy separate preview Worker (not football-v2)
+        if: steps.preview-creds.outputs.ready == 'true'
         shell: bash
         run: |
           npx wrangler deploy --config demo-preview/wrangler.jsonc --var SOURCE_COMMIT:$GITHUB_SHA
-      - name: Report preview URL
-        shell: bash
+      - name: Report preview mode
         run: |
-          echo "Expected preview: https://football-v2-liquid-glass-demo.acchtt.workers.dev/"
-          echo "Commit: $GITHUB_SHA"
-          echo "This job never deploys production Pages or the football-v2 production Worker."
+          echo "Live preview requires a dedicated non-production credential configuration."
+          echo "Static fallback: public real-data snapshot, distinctly marked NOT LIVE."
+          echo "This workflow never deploys production Pages or the football-v2 production Worker."
