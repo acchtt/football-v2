@@ -10,7 +10,8 @@
     ".scheduleDateNav > button",
     ".scheduleMenuButton",
     ".scheduleBoardRoute .statusFilters button",
-    ".scheduleBoardRoute .scheduleSearch"
+    ".scheduleBoardRoute .scheduleSearch",
+    ".scheduleBoardRoute .scheduleCompetitionList"
   ].join(",");
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   const noTransparency = window.matchMedia("(prefers-reduced-transparency: reduce)");
