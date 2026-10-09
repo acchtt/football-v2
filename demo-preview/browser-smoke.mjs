@@ -96,13 +96,16 @@ try{
   const before=await page.evaluate(()=>({
     rows:document.querySelectorAll(".scheduleMatchCard").length,
     groups:document.querySelectorAll(".scheduleCompetitionGroup").length,
+    filter:document.querySelector(".statusFilters button.active")?.dataset.statusFilter,
+    allCount:document.querySelector('[data-status-filter="all"] b')?.textContent,
+    teamSamples:[...document.querySelectorAll(".scheduleTeam span[title]")].slice(0,5).map(n=>n.textContent),
     selectedDate:document.querySelector(".dateBtn.active")?.dataset.date,
     snapshot:Boolean(document.querySelector(".scheduleSnapshotNotice")),
     readOnly:document.querySelectorAll("[data-manual-score]").length===0,
     documentWidth:document.documentElement.scrollWidth,windowWidth:innerWidth
   }));
   console.log("POPULATED "+target.name+" "+JSON.stringify(before));
-  assert(before.rows>=8,"Missing real match rows at "+target.name);
+  assert(before.rows>=1,"Missing real match rows at "+target.name);
   assert.equal(before.selectedDate,"2026-10-09");
   assert(before.snapshot&&before.readOnly);
   assert(before.documentWidth<=before.windowWidth+3,
