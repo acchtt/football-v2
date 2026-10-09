@@ -612,7 +612,12 @@
       (lane ? ' data-operational-lane="' + esc(lane) + '"' : '') +
       (rank ? ' data-board-rank="' + esc(rank) + '"' : '') +
       (fallback ? ' data-score-source="soccerway"' : '');
-    const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
+    // Unsupported fixtures have no match-detail destination. Make their details
+    // keyboard-inspectable without pretending they are links or buttons.
+    const open = id ? '<a ' + attrs + '>' :
+      '<div ' + attrs + ' tabindex="0" role="group" aria-label="' +
+      esc('Fixture: ' + (teams.home || 'Home') + ' versus ' + (teams.away || 'Away') +
+        ', ' + kickoffText + ' ICT, ' + statusName) + '">';
     const close = id ? '</a>' : '</div>';
     const manualControl = canManualScore ?
       '<button type="button" class="manualScoreButton scheduleManualScore" data-manual-score="' + esc(manualKey) + '" aria-label="' +
