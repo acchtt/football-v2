@@ -136,20 +136,27 @@ try{
     const filter=computed(".statusFilters button.active");
     const search=computed(".scheduleSearch");
     const panel=computed(".scheduleCompetitionGroup");
+    const sheet=computed(".scheduleCompetitionList");
     const rim=getComputedStyle(document.querySelector(".dateBtn.active"),"::after");
+    const sheetRim=getComputedStyle(document.querySelector(".scheduleCompetitionList"),"::before");
     return {
       dateBlur:date.backdropFilter||date.webkitBackdropFilter,
       filterBlur:filter.backdropFilter||filter.webkitBackdropFilter,
       searchBlur:search.backdropFilter||search.webkitBackdropFilter,
       contentBlur:panel.backdropFilter||panel.webkitBackdropFilter,
       contentBackground:panel.backgroundColor,
+      sheetBlur:sheet.backdropFilter||sheet.webkitBackdropFilter,
+      sheetBackground:sheet.backgroundColor,
+      sheetRim:sheetRim.content,
       rimContent:rim.content,
       dateBorderRadius:date.borderRadius
     };
   });
   assert(material.dateBlur.includes("blur(")&&material.filterBlur.includes("blur(")&&
     material.searchBlur.includes("blur("),"Liquid Glass missing from control plane: "+JSON.stringify(material));
-  assert(material.contentBlur==="none","Competition rows must use standard material: "+JSON.stringify(material));
+  assert(material.contentBlur==="none","Individual rows must not each blur the background");
+  assert(material.sheetBlur.includes("blur("),"Unified schedule sheet must have real translucent glass blur");
+  assert(material.sheetRim!=="none","Unified glass rim missing");
   assert(material.rimContent!=="none","Control edge-optics layer missing");
   assert.equal(material.dateBorderRadius,target.name==="desktop" ? "15px" : "12px",
     "Selected date should be a clear-glass tile, not an oversized capsule");
@@ -160,6 +167,12 @@ try{
   await new Promise(ok=>setTimeout(ok,100));
   const optical=await page.evaluate(()=>document.querySelector(".statusFilters button.active")?.style.getPropertyValue("--lg-x"));
   assert(optical.endsWith("%"),"Pointer-following specular light did not respond");
+  const glassSheet=await page.$(".scheduleCompetitionList");
+  const glassBox=await glassSheet.boundingBox();
+  await page.mouse.move(glassBox.x+glassBox.width*.67,glassBox.y+Math.min(90,glassBox.height*.5));
+  await new Promise(ok=>setTimeout(ok,110));
+  const sheetOptical=await page.evaluate(()=>document.querySelector(".scheduleCompetitionList")?.style.getPropertyValue("--lg-x"));
+  assert(sheetOptical.endsWith("%"),"Shared schedule sheet specular interaction missing");
   await page.type("#boardSearch","Al Wakrah",{delay:10});
   await new Promise(ok=>setTimeout(ok,350));
   const after=await page.evaluate(()=>({
