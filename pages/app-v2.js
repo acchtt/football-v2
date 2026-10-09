@@ -385,7 +385,7 @@
     const classes = String(className || '');
     if (classes.includes('scheduleBoardRoute')) {
       return scheduleHeader() + '<div class="appFrame ' + esc(classes) + '">' +
-        '<div class="contentFrame"><main class="mainView">' + content + '</main></div></div>';
+        '<div class="contentFrame"><main class="mainView"><h1 class="srOnly">ARC XI football schedule</h1>' + content + '</main></div></div>';
     }
     return header() + '<div class="appFrame ' + esc(classes) + '">' +
       '<div class="contentFrame"><main class="mainView">' + content + '</main>' +
@@ -1541,7 +1541,10 @@
         if (!shift) return;
         const current = new Date(state.date + 'T12:00:00Z');
         current.setUTCDate(current.getUTCDate() + shift);
-        loadMatchday(current.toISOString().slice(0,10), false);
+        const nextDate = current.toISOString().slice(0,10);
+        state.statusFilter = nextDate < todayKey() ? 'finished' : 'all';
+        writeStore('sliptrace.statusFilter.v4', state.statusFilter, sessionStorage);
+        loadMatchday(nextDate, false);
       });
     });
     root.querySelectorAll('[data-signal-filter]').forEach(function (button) {
@@ -1680,8 +1683,9 @@
   }
   function refreshSignature(events) {
     return events.map(function (event) {
+      // Clocks update in tickClocks; rebuild rows only for meaningful status/score changes.
       return [eventId(event), eventStatus(event), event.home_score, event.away_score,
-        event.current_minute, event.period, event.last_updated].join(':');
+        event.period].join(':');
     }).join('|');
   }
   async function refreshLive() {
