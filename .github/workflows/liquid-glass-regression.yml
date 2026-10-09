@@ -1,0 +1,41 @@
+name: ARC XI Demo Repair Regression
+
+on:
+  push:
+    branches: ["demo/liquid-glass"]
+    paths:
+      - "pages/**"
+      - "demo-preview/check-repair.mjs"
+      - ".github/workflows/liquid-glass-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: liquid-glass-repair-regression
+  cancel-in-progress: true
+
+jobs:
+  verify-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout demo branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check repaired scripts parse cleanly
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in pages/app-v2.js pages/config.js pages/demo-api-bridge.js pages/schedule-logos.js pages/matchday-behavior.js demo-preview/capture-snapshot.mjs; do
+            node --check "$script"
+          done
+      - name: Verify actual date grouping and safe preview behavior
+        run: node demo-preview/check-repair.mjs
+      - name: Verify snapshot API routing and CORS
+        run: node demo-preview/check-preview.mjs
