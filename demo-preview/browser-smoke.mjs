@@ -137,8 +137,9 @@ try{
     const search=computed(".scheduleSearch");
     const panel=computed(".scheduleCompetitionGroup");
     const sheet=computed(".scheduleCompetitionList");
+    const row=computed(".scheduleMatchCard");
     const rim=getComputedStyle(document.querySelector(".dateBtn.active"),"::after");
-    const sheetRim=getComputedStyle(document.querySelector(".scheduleCompetitionList"),"::before");
+    const rowRim=getComputedStyle(document.querySelector(".scheduleMatchCard"),"::before");
     return {
       dateBlur:date.backdropFilter||date.webkitBackdropFilter,
       filterBlur:filter.backdropFilter||filter.webkitBackdropFilter,
@@ -147,16 +148,18 @@ try{
       contentBackground:panel.backgroundColor,
       sheetBlur:sheet.backdropFilter||sheet.webkitBackdropFilter,
       sheetBackground:sheet.backgroundColor,
-      sheetRim:sheetRim.content,
+      rowBlur:row.backdropFilter||row.webkitBackdropFilter,
+      rowRim:rowRim.content,
       rimContent:rim.content,
       dateBorderRadius:date.borderRadius
     };
   });
   assert(material.dateBlur.includes("blur(")&&material.filterBlur.includes("blur(")&&
     material.searchBlur.includes("blur("),"Liquid Glass missing from control plane: "+JSON.stringify(material));
-  assert(material.contentBlur==="none","Individual rows must not each blur the background");
-  assert(material.sheetBlur.includes("blur("),"Unified schedule sheet must have real translucent glass blur");
-  assert(material.sheetRim!=="none","Unified glass rim missing");
+  assert(material.contentBlur==="none","Resting competition groups must not blur the background");
+  assert(material.sheetBlur==="none","Giant schedule glass sheet must be removed");
+  assert(material.rowBlur==="none","Resting fixture rows must stay quiet and blur-free");
+  assert(material.rowRim!=="none","Transient fixture glass optics are missing");
   assert(material.rimContent!=="none","Control edge-optics layer missing");
   assert.equal(material.dateBorderRadius,target.name==="desktop" ? "15px" : "12px",
     "Selected date should be a clear-glass tile, not an oversized capsule");
@@ -167,12 +170,37 @@ try{
   await new Promise(ok=>setTimeout(ok,100));
   const optical=await page.evaluate(()=>document.querySelector(".statusFilters button.active")?.style.getPropertyValue("--lg-x"));
   assert(optical.endsWith("%"),"Pointer-following specular light did not respond");
-  const glassSheet=await page.$(".scheduleCompetitionList");
-  const glassBox=await glassSheet.boundingBox();
-  await page.mouse.move(glassBox.x+glassBox.width*.67,glassBox.y+Math.min(90,glassBox.height*.5));
-  await new Promise(ok=>setTimeout(ok,110));
-  const sheetOptical=await page.evaluate(()=>document.querySelector(".scheduleCompetitionList")?.style.getPropertyValue("--lg-x"));
-  assert(sheetOptical.endsWith("%"),"Shared schedule sheet specular interaction missing");
+  // A fixture temporarily rises into optical glass only while hovered or focused.
+  const firstFixture=await page.$(".scheduleMatchCard .scheduleFixture");
+  assert(firstFixture,"A focusable match row must exist");
+  const rowBox=await firstFixture.boundingBox();
+  await page.mouse.move(rowBox.x+rowBox.width*.63,rowBox.y+rowBox.height*.5);
+  await new Promise(ok=>setTimeout(ok,260));
+  const interaction=await page.evaluate(()=>{
+    const row=document.querySelector(".scheduleMatchCard");
+    const computed=getComputedStyle(row);
+    return {
+      glass:computed.backdropFilter||computed.webkitBackdropFilter,
+      pointer:row.style.getPropertyValue("--lg-x"),
+      active:row.matches(":hover")||row.matches(":focus-within"),
+      rimOpacity:getComputedStyle(row,"::before").opacity
+    };
+  });
+  assert(interaction.active,"Hover did not select fixture");
+  assert(interaction.glass.includes("blur("),"Focused match must acquire real glass material");
+  assert(interaction.pointer.endsWith("%"),"Fixture-edge highlight did not track pointer");
+  assert(Number(interaction.rimOpacity)>.5,"Interactive fixture optical edge is invisible");
+  console.log("FOCUSED "+target.name+" "+JSON.stringify(interaction));
+  await fs.mkdir("demo-preview/screenshots",{recursive:true});
+  await page.screenshot({path:"demo-preview/screenshots/"+target.name+"-focused.png",fullPage:true});
+  await page.mouse.move(0,0);
+  await new Promise(ok=>setTimeout(ok,280));
+  const idle=await page.evaluate(()=>{
+    const row=document.querySelector(".scheduleMatchCard");
+    const computed=getComputedStyle(row);
+    return {hover:row.matches(":hover"),glass:computed.backdropFilter||computed.webkitBackdropFilter};
+  });
+  assert(!idle.hover&&idle.glass==="none","Fixture failed to return to quiet reading surface");
   await page.type("#boardSearch","Al Wakrah",{delay:10});
   await new Promise(ok=>setTimeout(ok,350));
   const after=await page.evaluate(()=>({
