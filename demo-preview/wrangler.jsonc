@@ -1,0 +1,9 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "football-v2-liquid-glass-demo",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-12",
+  "workers_dev": true,
+  "vars": {"SOURCE_COMMIT":"0000000000000000000000000000000000000000"},
+  "services": [{"binding":"FOOTBALL_API","service":"football-v2"}]
+}
