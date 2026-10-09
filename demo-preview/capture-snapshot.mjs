@@ -31,12 +31,13 @@ if (!dashboard || !Array.isArray(dashboard.schedule) || !Array.isArray(dashboard
   console.error("Dashboard API unavailable: refusing to publish an empty/fake snapshot.");
   process.exit(1);
 }
-const dates = [...new Set(Array.from({length: 11}, (_, i) => date(i - 5)))];
+// Include one extra UTC day on either side so ICT midnight windows stay covered.
+const dates = [...new Set(Array.from({length: 13}, (_, i) => date(i - 6)))];
 const today = date(0);
 const results = await Promise.all(dates.map(async day => {
-  // Only request known board dates (plus today) to keep the snapshot bounded.
+  // Capture genuine empty fixture days as well as ranked days.
+  // Missing files must mean unavailable, never silently "zero matches".
   const hasBoard = dashboard.schedule.some(row => row.slateDate === day);
-  if (!hasBoard && day !== today) return {date:day,hasBoard:false};
   const events = await getJSON("/api/bsd/events?date_from=" + day + "&date_to=" + day + "&limit=200");
   if (events) {
     await fs.mkdir(path.join(ROOT,"events"),{recursive:true});
