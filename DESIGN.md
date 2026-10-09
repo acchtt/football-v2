@@ -14,7 +14,7 @@ This contract records the approved Impeccable Shape direction for the football s
 
 1. **Environment:** existing cosmic image with localized, not global, readability protection. Never blur the wallpaper to fake depth.
 2. **Control plane:** Apple-inspired *clear Liquid Glass* applied consistently to selected date, date arrows, status filters, search and menu. Use a transmitted center, refraction-like rim lighting, restrained directional highlights, subtle depth and a lightweight response to real pointer movement.
-3. **Schedule content canvas:** no gigantic glass sheet and no opaque league cards. The board is a quiet, translucent, legible fixture list with understated league dividers. Only the hovered or keyboard-focused match becomes a temporarily raised Liquid Glass surface with directional optical rim and pointer-responsive light. The glass returns to quiet after focus leaves.
+3. **Schedule glass components:** the board consists of individually floating clear Liquid Glass competition panels, always visible even at rest. Each has a rounded refractive edge, specular directional highlight and clear transmitted background, with a controlled-contrast interior for league headings and fixtures. Hover and keyboard focus strengthen—never originate—the glass material. No giant full-board glass sheet.
 4. **Foreground art:** approved IVE artwork positioned independently above the schedule.
 
 ## Behavior, quality and anti-goals
@@ -22,6 +22,6 @@ This contract records the approved Impeccable Shape direction for the football s
 - Desktop and mobile must maintain readable real fixtures, keyboard focus, comfortable touch targets and responsive layouts.
 - Motion serves state change and interaction; no continuously moving liquid layers, fake magnification, exaggerated distortion or neon conic-gradient outlines.
 - Respect reduced-motion, reduced-transparency, higher-contrast settings and browsers without backdrop-filter.
-- Never recreate the rejected opaque dark rectangular league cards or enormous blurred schedule lens. Only individual focused fixtures acquire optical glass; league grouping and resting rows remain lightweight, readable and free of giant containers.
+- Do not recreate the rejected giant schedule-wide glass sheet, flat black fixture strips, or hover-only glass. Permanent optical competition panels must remain visually recognizable and readable at rest, including on bright portions of the approved wallpaper.
 - Screenshot-test the populated real schedule at desktop and mobile widths and verify computed control/material properties before approval.
 - Live status must never be conflated with the read-only demo snapshot. Keep production `main` unchanged until explicit approval.
