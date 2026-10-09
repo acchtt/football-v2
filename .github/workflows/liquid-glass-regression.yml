@@ -6,6 +6,8 @@ on:
     paths:
       - "pages/**"
       - "demo-preview/check-repair.mjs"
+      - "demo-preview/check-preview.mjs"
+      - "demo-preview/browser-smoke.mjs"
       - ".github/workflows/liquid-glass-regression.yml"
   workflow_dispatch:
 
@@ -39,3 +41,23 @@ jobs:
         run: node demo-preview/check-repair.mjs
       - name: Verify snapshot API routing and CORS
         run: node demo-preview/check-preview.mjs
+      - name: Check available Chrome version
+        shell: bash
+        run: |
+          which google-chrome || which google-chrome-stable
+          google-chrome --version || google-chrome-stable --version
+      - name: Install headless Chrome automation library
+        shell: bash
+        run: |
+          mkdir -p /tmp/arcxi-browser
+          npm install --prefix /tmp/arcxi-browser --no-save --no-audit --no-fund puppeteer-core@24
+      - name: Test desktop and mobile schedule with real saved fixtures
+        run: node demo-preview/browser-smoke.mjs
+      - name: Upload visual proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liquid-glass-repair-screenshots
+          path: demo-preview/screenshots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
