@@ -58,16 +58,16 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionList::after{cont
 html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup {
   --lg-x:38%;--lg-y:0%;position:relative;z-index:1;isolation:isolate;
   margin:0;padding:0;overflow:hidden;border-radius:19px;
-  border:1px solid rgba(249,252,255,.47);
+  border:1px solid rgba(249,252,255,.42);
   background:
     linear-gradient(146deg,rgba(245,249,255,.26),rgba(239,245,255,.095) 13%,
       rgba(14,22,43,.09) 40%,rgba(17,23,42,.16) 82%,rgba(250,246,255,.11)),
-    rgba(13,19,38,.30);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.60),
+    rgba(13,19,38,.25);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.54),
     inset 0 -1px 0 rgba(248,244,255,.20),
     0 7px 19px rgba(1,4,17,.28),0 19px 41px rgba(1,4,17,.16);
-  backdrop-filter:blur(13px) saturate(160%) brightness(1.12);
-  -webkit-backdrop-filter:blur(13px) saturate(160%) brightness(1.12);
+  backdrop-filter:blur(10px) saturate(155%) brightness(1.10);
+  -webkit-backdrop-filter:blur(10px) saturate(155%) brightness(1.10);
   transition:border-color .22s var(--lg-ease),box-shadow .22s var(--lg-ease);
 }
 html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup::before {
@@ -99,8 +99,8 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup:is(:hover,
 html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead {
   position:relative;z-index:2;min-height:40px;margin:0;padding-inline:17px;
   border:0;border-bottom:1px solid rgba(250,252,255,.23);
-  background:linear-gradient(180deg,rgba(248,250,255,.17),rgba(225,235,252,.05)),
-    rgba(22,30,53,.14);
+  background:linear-gradient(180deg,rgba(248,250,255,.11),rgba(225,235,252,.027)),
+    rgba(22,30,53,.11);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.21);
   backdrop-filter:none;-webkit-backdrop-filter:none;
 }
@@ -357,8 +357,8 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleSnapshotNotice {
   html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup {
     border-radius:15px;
     background:linear-gradient(145deg,rgba(241,246,255,.22),rgba(15,22,41,.15) 70%),rgba(12,19,37,.38);
-    backdrop-filter:blur(10px) saturate(150%) brightness(1.08);
-    -webkit-backdrop-filter:blur(10px) saturate(150%) brightness(1.08);
+    backdrop-filter:blur(8px) saturate(148%) brightness(1.08);
+    -webkit-backdrop-filter:blur(8px) saturate(148%) brightness(1.08);
   }
   html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead {
     padding-inline:8px;min-height:37px;
