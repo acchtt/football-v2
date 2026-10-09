@@ -43,6 +43,8 @@
     const normalized = normalize(name);
     const filename = local[kind]?.[normalized];
     if (filename) return Promise.resolve('./media/football/' + filename + '.png');
+    // Static demos must not attempt unavailable live lookup endpoints.
+    if (window.__ARCXI_DEMO_SNAPSHOT__) return Promise.resolve(null);
     const key = kind + ':' + normalized;
     const saved = cache[key];
     const image = id => 'https://sports.bzzoiro.com/img/' + (kind === 'team' ? 'team' : 'league') + '/' + id + '/?bg=transparent';
@@ -55,7 +57,11 @@
     const read = response => response.ok ? response.json() : null;
     // The league collection works; upstream name-filtered league requests fail.
     const lookup = kind === 'competition' ?
-      (leagueRequest ||= fetch(API + '/api/bsd/leagues?limit=200', {signal:controller.signal}).then(read)) :
+      (leagueRequest ||= fetch(API + '/api/bsd/leagues?limit=200', {signal:controller.signal})
+        .then(read).then(payload => {
+          if (!payload) leagueRequest = null;
+          return payload;
+        }).catch(() => { leagueRequest = null; return null; })) :
       fetch(API + '/api/bsd/teams?name=' + encodeURIComponent(normalized) + '&limit=100', {signal:controller.signal}).then(read);
     const task = lookup.then(payload => {
         const entities = payload?.data?.results;
