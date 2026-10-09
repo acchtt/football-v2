@@ -274,5 +274,5 @@
   });
 
   setUpcomingDefault();
-  setInterval(refreshOnTimelineChange, TIMELINE_POLL_MS);
+  if (!window.__ARCXI_DEMO_SNAPSHOT__) setInterval(refreshOnTimelineChange, TIMELINE_POLL_MS);
 })();
