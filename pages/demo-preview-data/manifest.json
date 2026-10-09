@@ -1,0 +1,105 @@
+{
+  "source": "public football-v2 API",
+  "mode": "read-only-snapshot",
+  "capturedAt": "2026-10-09T16:25:55.960Z",
+  "timeZone": "Asia/Ho_Chi_Minh",
+  "scheduleRows": 100,
+  "dates": [
+    {
+      "date": "2026-10-04",
+      "hasBoard": true,
+      "eventsCaptured": true
+    },
+    {
+      "date": "2026-10-05",
+      "hasBoard": false
+    },
+    {
+      "date": "2026-10-06",
+      "hasBoard": true,
+      "eventsCaptured": true
+    },
+    {
+      "date": "2026-10-07",
+      "hasBoard": true,
+      "eventsCaptured": true
+    },
+    {
+      "date": "2026-10-08",
+      "hasBoard": true,
+      "eventsCaptured": true
+    },
+    {
+      "date": "2026-10-09",
+      "hasBoard": true,
+      "eventsCaptured": true
+    },
+    {
+      "date": "2026-10-10",
+      "hasBoard": false
+    },
+    {
+      "date": "2026-10-11",
+      "hasBoard": false
+    },
+    {
+      "date": "2026-10-12",
+      "hasBoard": false
+    },
+    {
+      "date": "2026-10-13",
+      "hasBoard": false
+    },
+    {
+      "date": "2026-10-14",
+      "hasBoard": false
+    }
+  ],
+  "soccerway": [
+    {
+      "date": "2026-10-04",
+      "captured": true
+    },
+    {
+      "date": "2026-10-05",
+      "skipped": true
+    },
+    {
+      "date": "2026-10-06",
+      "captured": true
+    },
+    {
+      "date": "2026-10-07",
+      "captured": true
+    },
+    {
+      "date": "2026-10-08",
+      "captured": true
+    },
+    {
+      "date": "2026-10-09",
+      "captured": true
+    },
+    {
+      "date": "2026-10-10",
+      "skipped": true
+    },
+    {
+      "date": "2026-10-11",
+      "skipped": true
+    },
+    {
+      "date": "2026-10-12",
+      "skipped": true
+    },
+    {
+      "date": "2026-10-13",
+      "skipped": true
+    },
+    {
+      "date": "2026-10-14",
+      "skipped": true
+    }
+  ],
+  "liveCaptured": true
+}
