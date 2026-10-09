@@ -542,6 +542,43 @@ body.embed[data-skin=clear]{
   .embed[data-skin=clear] .search{background:rgba(23,24,30,.95)}
 }
 
+
+/* Balanced Glass v7: neutral mid-opacity material; no wallpaper-displacing blur. */
+.embed[data-skin=clear] .competition,
+.embed[data-skin=clear].optical-refraction .competition{
+  background:linear-gradient(115deg,rgba(9,10,20,.39),rgba(10,10,20,.31) 58%,rgba(13,11,22,.37));
+  border:1px solid rgba(244,244,255,.24);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 8px 23px rgba(0,0,0,.24);
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.embed[data-skin=clear] .competition-head{
+  background:rgba(9,10,21,.30);
+  border-bottom:1px solid rgba(239,239,255,.16);
+}
+.embed[data-skin=clear] .match-row{
+  background:rgba(7,8,16,.16);
+  border-bottom-color:rgba(245,245,255,.12);
+}
+.embed[data-skin=clear] .match-row:hover,
+.embed[data-skin=clear] .match-row:focus-visible{background:rgba(255,255,255,.095)}
+.embed[data-skin=clear] .filters button:not([aria-pressed=true]),
+.embed[data-skin=clear] .search,
+.embed[data-skin=clear].optical-refraction .filters button:not([aria-pressed=true]),
+.embed[data-skin=clear].optical-refraction .search{
+  background:linear-gradient(120deg,rgba(20,20,32,.30),rgba(10,12,23,.24));
+  border-color:rgba(245,245,255,.26);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.21),0 5px 12px rgba(0,0,0,.20);
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+@media(max-width:900px){
+  .embed[data-skin=clear] .competition{background:rgba(8,9,19,.43)}
+  .embed[data-skin=clear] .competition-head{background:rgba(7,8,17,.35)}
+}
+@media(prefers-reduced-transparency:reduce){
+  .embed[data-skin=clear] .competition,
+  .embed[data-skin=clear].optical-refraction .competition{background:rgba(8,9,16,.91)}
+}
+
 </style>
   <link rel="stylesheet" href="../cosmic-schedule-background.css?v=4">
 <link rel="stylesheet" href="./cosmic-wallpaper.css?v=1">
