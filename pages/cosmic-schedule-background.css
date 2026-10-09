@@ -3,14 +3,14 @@
    The approved cosmic wallpaper and Wonyoung + Liz foreground remain unchanged. */
 :root {
   --arcxi-cosmic-image: url("./media/arcxi/cosmic-wallpaper-3840.webp");
-  --lg-tint: rgba(12, 19, 36, .20);
+  --lg-tint: rgba(12, 19, 36, .15);
   --lg-text: #fff;
   --lg-stroke: rgba(246, 250, 255, .42);
   --lg-soft-edge: rgba(246, 250, 255, .13);
   --lg-highlight: rgba(255, 255, 255, .62);
   --lg-depth: 0 6px 16px rgba(2, 6, 18, .24), 0 16px 33px rgba(2, 6, 18, .15);
   --lg-ease: cubic-bezier(.2,.75,.2,1);
-  --arcxi-reading: rgba(9, 13, 26, .77);
+  --arcxi-reading: rgba(9, 13, 26, .83);
   --arcxi-reading-seam: rgba(233, 238, 255, .13);
 }
 html.scheduleCornerMode body { isolation:isolate; }
@@ -155,20 +155,20 @@ html.scheduleCornerMode :is(
   border-radius:999px;
   color:var(--lg-text);
   background:
-    linear-gradient(135deg,rgba(248,252,255,.20),rgba(244,249,255,.055) 38%,rgba(10,17,37,.19) 100%),
+    linear-gradient(135deg,rgba(248,252,255,.16),rgba(244,249,255,.045) 38%,rgba(10,17,37,.16) 100%),
     var(--lg-tint);
   border-color:rgba(240,246,255,.23);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.32),
     inset 0 -1px 0 rgba(255,255,255,.08),
     var(--lg-depth);
-  backdrop-filter:blur(10px) saturate(155%) brightness(1.10);
-  -webkit-backdrop-filter:blur(10px) saturate(155%) brightness(1.10);
+  backdrop-filter:blur(7px) saturate(160%) brightness(1.12);
+  -webkit-backdrop-filter:blur(7px) saturate(160%) brightness(1.12);
   transform:translateY(0);
   transition:background-color .22s var(--lg-ease),box-shadow .22s var(--lg-ease),
     transform .22s var(--lg-ease),border-color .22s var(--lg-ease);
 }
-html.scheduleCornerMode .scheduleDateNav .dateBtn {
+html.scheduleCornerMode .scheduleDateNav .dateStrip .dateBtn {
   border-radius:15px;
   border-color:rgba(240,246,255,.20)!important;
 }
@@ -329,17 +329,17 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleSnapshotNotice {
   html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup,
   html.scheduleCornerMode .scheduleBoardRoute .scheduleLoadingRows {
     border-radius:11px;
-    background:rgba(9,13,26,.86);
+    background:rgba(9,13,26,.91);
   }
   html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead > strong {letter-spacing:.08em;}
   html.scheduleCornerMode :is(
     .scheduleDateNav .dateBtn,.scheduleDateNav > button,.scheduleMenuButton,
     .scheduleBoardRoute .statusFilters button,.scheduleBoardRoute .scheduleSearch
   ) {
-    backdrop-filter:blur(7px) saturate(140%);
-    -webkit-backdrop-filter:blur(7px) saturate(140%);
+    backdrop-filter:blur(6px) saturate(145%);
+    -webkit-backdrop-filter:blur(6px) saturate(145%);
   }
-  html.scheduleCornerMode .scheduleDateNav .dateBtn {border-radius:12px;}
+  html.scheduleCornerMode .scheduleDateNav .dateStrip .dateBtn {border-radius:12px;}
 }
 @media (prefers-reduced-motion:reduce) {
   html.scheduleCornerMode :is(
