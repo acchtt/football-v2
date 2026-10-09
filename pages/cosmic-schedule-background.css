@@ -10,21 +10,65 @@ html.scheduleCornerMode body::before{
   background-repeat:no-repeat;
   background-size:cover;
   background-position:50% 47%;
-  opacity:.61;
+  opacity:.66;
 }
 html.scheduleCornerMode body::after{
   content:"";
   position:fixed;inset:0;z-index:0;
   pointer-events:none;
-  background:linear-gradient(180deg,rgba(2,3,8,.19),rgba(2,3,8,.34) 55%,rgba(2,3,8,.53));
+  background:linear-gradient(180deg,rgba(2,3,8,.12),rgba(2,3,8,.23) 55%,rgba(2,3,8,.36));
 }
 html.scheduleCornerMode body > #app{position:relative;z-index:1}
 @media(max-width:700px){
-  html.scheduleCornerMode body::before{opacity:.38;background-position:50% 44%}
+  html.scheduleCornerMode body::before{opacity:.46;background-position:50% 44%}
   html.scheduleCornerMode body::after{
-    background:linear-gradient(180deg,rgba(2,3,8,.36),rgba(2,3,8,.49) 63%,rgba(2,3,8,.63));
+    background:linear-gradient(180deg,rgba(2,3,8,.24),rgba(2,3,8,.35) 63%,rgba(2,3,8,.49));
   }
 }
 @media(prefers-contrast:more){
   html.scheduleCornerMode body::before{opacity:.24}
+}
+
+/* Clear Glass v5 — actual schedule: neutral translucent surfaces, no artificial optical distortion. */
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup{
+  border:1px solid rgba(248,248,255,.20);
+  border-radius:15px;
+  background:rgba(9,10,19,.075);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.19),0 8px 22px rgba(0,0,0,.16);
+  backdrop-filter:blur(1px);
+  -webkit-backdrop-filter:blur(1px);
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead{
+  background:rgba(8,10,19,.13);
+  border-bottom-color:rgba(255,255,255,.14);
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleMatchCard,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleMatchCard:first-child{
+  background:rgba(6,7,15,.075);
+  border-bottom-color:rgba(255,255,255,.11);
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture:hover,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture:focus-visible{
+  background:rgba(255,255,255,.065);
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTime > strong,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleScore strong,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead > strong{
+  text-shadow:0 1px 6px rgba(0,0,0,.84);
+}
+@media(max-width:700px){
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup{
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:rgba(7,8,17,.12);
+  }
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead{background:rgba(7,8,17,.22)}
+}
+@media(prefers-reduced-transparency:reduce){
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup,
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead,
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleMatchCard{
+    background:rgba(8,9,15,.89);
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
 }
