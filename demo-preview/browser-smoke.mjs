@@ -131,6 +131,8 @@ try{
     material.searchBlur.includes("blur("),"Liquid Glass missing from control plane: "+JSON.stringify(material));
   assert(material.contentBlur==="none","Competition rows must use standard material: "+JSON.stringify(material));
   assert(material.rimContent!=="none","Control edge-optics layer missing");
+  assert.equal(material.dateBorderRadius,target.name==="desktop" ? "15px" : "12px",
+    "Selected date should be a clear-glass tile, not an oversized capsule");
   console.log("MATERIAL "+target.name+" "+JSON.stringify(material));
   const glowTarget=await page.$(".statusFilters button.active");
   const bounds=await glowTarget.boundingBox();
@@ -154,6 +156,9 @@ try{
     input.dispatchEvent(new Event("input",{bubbles:true}));
   });
   await new Promise(ok=>setTimeout(ok,350));
+  // Record the settled, idle material rather than an accidental focused input ring.
+  await page.evaluate(()=>document.activeElement?.blur());
+  await new Promise(ok=>setTimeout(ok,300));
   await fs.mkdir("demo-preview/screenshots",{recursive:true});
   await page.screenshot({path:"demo-preview/screenshots/"+target.name+".png",fullPage:true});
   summary.push({viewport:target.name,...before,search:after.value});
