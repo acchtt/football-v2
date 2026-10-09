@@ -11,7 +11,7 @@
     ".scheduleMenuButton",
     ".scheduleBoardRoute .statusFilters button",
     ".scheduleBoardRoute .scheduleSearch",
-    ".scheduleBoardRoute .scheduleCompetitionList"
+    ".scheduleBoardRoute .scheduleMatchCard"
   ].join(",");
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   const noTransparency = window.matchMedia("(prefers-reduced-transparency: reduce)");
