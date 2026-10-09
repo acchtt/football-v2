@@ -80,6 +80,8 @@ try{
   await page.waitForSelector(".scheduleDateNav", {timeout:20000});
   await page.waitForSelector('[data-date="2026-10-09"]',{timeout:12000});
   await page.click('[data-date="2026-10-09"]');
+  await page.waitForSelector('[data-status-filter="all"]',{timeout:12000});
+  await page.click('[data-status-filter="all"]');
   await page.waitForFunction(()=>document.querySelectorAll(".scheduleMatchCard").length>0,{timeout:25000});
   const before=await page.evaluate(()=>({
     rows:document.querySelectorAll(".scheduleMatchCard").length,
@@ -89,6 +91,7 @@ try{
     readOnly:document.querySelectorAll("[data-manual-score]").length===0,
     documentWidth:document.documentElement.scrollWidth,windowWidth:innerWidth
   }));
+  console.log("POPULATED "+target.name+" "+JSON.stringify(before));
   assert(before.rows>=8,"Missing real match rows at "+target.name);
   assert.equal(before.selectedDate,"2026-10-09");
   assert(before.snapshot&&before.readOnly);
