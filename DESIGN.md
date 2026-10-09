@@ -14,7 +14,7 @@ This contract records the approved Impeccable Shape direction for the football s
 
 1. **Environment:** existing cosmic image with localized, not global, readability protection. Never blur the wallpaper to fake depth.
 2. **Control plane:** Apple-inspired *clear Liquid Glass* applied consistently to selected date, date arrows, status filters, search and menu. Use a transmitted center, refraction-like rim lighting, restrained directional highlights, subtle depth and a lightweight response to real pointer movement.
-3. **Schedule glass plane:** a single transparent, raised Liquid Glass reading sheet spans the real fixture list. The sheet has directional specular edging, restrained backdrop blur and a pointer-responsive optical rim; individual competition groups and fixture rows remain clear, non-blurred subdivisions inside the shared material. Readability stays non-negotiable.
+3. **Schedule content canvas:** no gigantic glass sheet and no opaque league cards. The board is a quiet, translucent, legible fixture list with understated league dividers. Only the hovered or keyboard-focused match becomes a temporarily raised Liquid Glass surface with directional optical rim and pointer-responsive light. The glass returns to quiet after focus leaves.
 4. **Foreground art:** approved IVE artwork positioned independently above the schedule.
 
 ## Behavior, quality and anti-goals
@@ -22,6 +22,6 @@ This contract records the approved Impeccable Shape direction for the football s
 - Desktop and mobile must maintain readable real fixtures, keyboard focus, comfortable touch targets and responsive layouts.
 - Motion serves state change and interaction; no continuously moving liquid layers, fake magnification, exaggerated distortion or neon conic-gradient outlines.
 - Respect reduced-motion, reduced-transparency, higher-contrast settings and browsers without backdrop-filter.
-- Never recreate the rejected opaque dark rectangular league cards. The schedule itself must visibly belong to the same Liquid Glass family as its controls: one continuous sheet, subtle optical perimeter, uncluttered divisions and contrast-safe text.
+- Never recreate the rejected opaque dark rectangular league cards or enormous blurred schedule lens. Only individual focused fixtures acquire optical glass; league grouping and resting rows remain lightweight, readable and free of giant containers.
 - Screenshot-test the populated real schedule at desktop and mobile widths and verify computed control/material properties before approval.
 - Live status must never be conflated with the read-only demo snapshot. Keep production `main` unchanged until explicit approval.
