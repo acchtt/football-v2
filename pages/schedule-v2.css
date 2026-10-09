@@ -297,3 +297,48 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleBoardRoute .statusFilters button { font-size:10px; }
   .scheduleDateNav .dateBtn .scheduleDateLabel { font-size:10px; }
 }
+
+
+/* Date strip: seven evenly spaced optical controls on a shared grid.
+   Arrow tracks and date tracks must have the SAME width and visible gap. */
+.scheduleDateNav {
+  --schedule-date-gap: 8px;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:var(--schedule-date-gap);
+}
+.scheduleDateNav .dateStrip {
+  grid-column:2 / span 5;
+  grid-row:1;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:var(--schedule-date-gap);
+  min-width:0;
+}
+.scheduleDateNav > button,
+.scheduleDateNav .dateBtn {
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  height:64px;
+  min-height:64px;
+}
+@media(max-width:700px) {
+  .scheduleDateNav {
+    --schedule-date-gap:5px;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+    gap:var(--schedule-date-gap);
+  }
+  .scheduleDateNav .dateStrip {
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:var(--schedule-date-gap);
+  }
+  .scheduleDateNav > button,
+  .scheduleDateNav .dateBtn {
+    width:100%;
+    min-width:0;
+    height:54px;
+    min-height:54px;
+  }
+}
+@media(max-width:360px) {
+  .scheduleDateNav { --schedule-date-gap:3px; }
+}
