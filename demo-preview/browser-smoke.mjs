@@ -120,9 +120,11 @@ try{
   assert.equal(after.value,"Al Wakrah","Search text was lost");
   assert.equal(after.focus,"boardSearch","Search focus was lost");
   assert(after.visibleRows>=1&&after.visibleRows<before.rows,"Search should narrow fixtures");
-  await page.click("#boardSearch",{clickCount:3});
-  await page.keyboard.press("Control+A");
-  await page.keyboard.press("Backspace");
+  await page.evaluate(() => {
+    const input=document.querySelector("#boardSearch");
+    input.value="";
+    input.dispatchEvent(new Event("input",{bubbles:true}));
+  });
   await new Promise(ok=>setTimeout(ok,350));
   await fs.mkdir("demo-preview/screenshots",{recursive:true});
   await page.screenshot({path:"demo-preview/screenshots/"+target.name+".png",fullPage:true});
