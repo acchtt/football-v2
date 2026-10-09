@@ -36,6 +36,43 @@
     }
     return null; // No invented data for match details or other endpoints.
   }
+  async function snapshotEvents(url, init) {
+    const from = url.searchParams.get("date_from");
+    const to = url.searchParams.get("date_to");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from || "") || !/^\d{4}-\d{2}-\d{2}$/.test(to || "")) {
+      return new Response("Invalid snapshot date", {status:400});
+    }
+    const start = Date.parse(from + "T12:00:00Z");
+    const end = Date.parse(to + "T12:00:00Z");
+    const span = Math.round((end - start) / 86400000);
+    if (span < 0 || span > 1) return new Response("Snapshot window unsupported", {status:400});
+    const dates = span === 0 ? [from] : [from,to];
+    const responses = await Promise.all(dates.map(day =>
+      nativeFetch(snapshotRoot + "events/" + day + ".json?ts=" + Math.floor(Date.now()/60000),
+        {cache:"no-store",credentials:"omit",signal:init?.signal})
+    ));
+    const bad = responses.find(r => !r.ok);
+    if (bad) return bad;
+    const payloads = await Promise.all(responses.map(r => r.json()));
+    const merged = new Map();
+    for (const payload of payloads) {
+      const events = payload?.data?.results || payload?.data?.events || [];
+      for (const e of events) {
+        const key = String(e.id ?? e.event_id ?? e.eventId ??
+          [e.event_date,e.home_team?.name,e.away_team?.name].join("|"));
+        merged.set(key,e);
+      }
+    }
+    const all = [...merged.values()];
+    const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
+    const limit = Math.min(200,Math.max(1, Number(url.searchParams.get("limit")) || 200));
+    const selected = all.slice(offset,offset+limit);
+    const original = payloads[0] || {};
+    return new Response(JSON.stringify({
+      ...original, data:{...(original.data || {}), count:all.length,
+        results:selected,events:selected,next:null,previous:null}
+    }),{status:200,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
+  }
   function makeNotice() {
     if (!isStatic || document.getElementById("arcxiSnapshotLabel")) return;
     const n = document.createElement("div");
@@ -80,6 +117,7 @@
       const target = location.origin + url.pathname + url.search;
       return input instanceof Request ? nativeFetch(new Request(target, input),init) : nativeFetch(target,init);
     }
+    if (url.pathname === "/api/bsd/events") return snapshotEvents(url,init);
     const file = snapshotAsset(url);
     if (!file) return Promise.resolve(new Response(JSON.stringify({
       ok:false,error:"This endpoint is unavailable in the read-only snapshot. Use the live demo host."
