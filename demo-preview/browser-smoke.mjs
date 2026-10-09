@@ -1,0 +1,117 @@
+// Smoke-test the actual demo renderer with authentic captured fixture JSON.
+// Browser requests are intercepted locally. No production writes or API access.
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import http from "node:http";
+import {createRequire} from "node:module";
+import {extname,resolve,sep} from "node:path";
+const require=createRequire(import.meta.url);
+const puppeteer=require("/tmp/arcxi-browser/node_modules/puppeteer-core");
+const root=resolve("pages");
+const mediaTypes={".html":"text/html",".css":"text/css",".js":"text/javascript",
+ ".svg":"image/svg+xml",".json":"application/json",".webp":"image/webp",
+ ".png":"image/png",".jpg":"image/jpeg",".avif":"image/avif",".ico":"image/x-icon",
+ ".ttf":"font/ttf",".woff2":"font/woff2"};
+const server=http.createServer(async(req,res)=>{
+ let file;
+ try{file=resolve(root,"."+decodeURIComponent(new URL(req.url,"http://localhost").pathname));}
+ catch{res.writeHead(400).end();return;}
+ if(file!==root&&!file.startsWith(root+sep)){res.writeHead(403).end();return;}
+ if(file===root)file=resolve(root,"index.html");
+ try{const b=await fs.readFile(file);res.writeHead(200,{"Content-Type":mediaTypes[extname(file)]||"application/octet-stream"});res.end(b);}
+ catch{res.writeHead(404).end("Not found");}
+});
+await new Promise(ok=>server.listen(0,"127.0.0.1",ok));
+const address="http://127.0.0.1:"+server.address().port+"/";
+const readJSON=async path=>JSON.parse(await fs.readFile(root+"/demo-preview-data/"+path,"utf8"));
+const dashboard=await readJSON("dashboard.json");
+const live=await readJSON("live.json");
+const fixtureFiles=new Map();
+async function fixtures(day){
+ if(fixtureFiles.has(day))return fixtureFiles.get(day);
+ try{const data=await readJSON("events/"+day+".json");fixtureFiles.set(day,data);return data;}
+ catch{return {ok:false,error:"Saved fixture coverage missing for "+day};}
+}
+function jsonReply(data,status=200){return {status,contentType:"application/json; charset=utf-8",
+ headers:{"access-control-allow-origin":"*","cache-control":"no-store"},
+ body:JSON.stringify(data)};}
+const browser=await puppeteer.launch({headless:true,executablePath:process.env.CHROME_BIN||"/usr/bin/google-chrome",
+ args:["--no-sandbox","--disable-setuid-sandbox"]});
+const summary=[];
+try{
+ for(const target of [{name:"desktop",width:1440,height:900},{name:"mobile",width:390,height:844}]){
+  const page=await browser.newPage();
+  await page.setViewport({width:target.width,height:target.height,deviceScaleFactor:1});
+  await page.evaluateOnNewDocument(()=>{
+   window.__ARCXI_DEMO_SNAPSHOT__=true;
+   window.__ARCXI_DEMO_READ_ONLY__=true;
+   window.__ARCXI_SNAPSHOT_CAPTURED_AT="2026-10-09T16:50:07.991Z";
+  });
+  await page.setRequestInterception(true);
+  page.on("request", async request=>{
+   const url=new URL(request.url());
+   if(url.hostname!=="football-v2.acchtt.workers.dev"){await request.continue();return;}
+   const pathname=url.pathname;
+   let payload,status=200;
+   if(pathname==="/api/dashboard-data")payload=dashboard;
+   else if(pathname==="/api/bsd/live")payload=live;
+   else if(pathname==="/api/bsd/events"){
+     const first=url.searchParams.get("date_from"),last=url.searchParams.get("date_to")||first;
+     const days=first===last?[first]:[first,last];
+     const retrieved=await Promise.all(days.map(fixtures));
+     if(retrieved.some(x=>x.ok===false)){payload={ok:false,error:"Snapshot day unavailable"};status=503;}
+     else{
+       const merged=new Map();
+       retrieved.forEach(d=>(d.data?.results||d.data?.events||[]).forEach(e=>merged.set(String(e.id),e)));
+       const all=[...merged.values()],offset=Number(url.searchParams.get("offset")||0),
+         limit=Number(url.searchParams.get("limit")||200);
+       payload={ok:true,data:{count:all.length,results:all.slice(offset,offset+limit),events:all.slice(offset,offset+limit)}};
+     }
+   }else if(pathname==="/api/soccerway/board"){
+     const offset=Number(url.searchParams.get("day")||0);
+     const day=new Date(Date.now()+7*3600000);
+     day.setUTCDate(day.getUTCDate()+offset);
+     try{payload=await readJSON("soccerway/"+day.toISOString().slice(0,10)+".json");}
+     catch{payload={ok:true,fixtures:[],count:0};}
+   }else{status=404;payload={ok:false,error:"Not available in snapshot smoke test"};}
+   try{await request.respond(jsonReply(payload,status));}catch{}
+  });
+  await page.goto(address,{waitUntil:"domcontentloaded",timeout:25000});
+  await page.waitForSelector(".scheduleDateNav", {timeout:20000});
+  await page.waitForSelector('[data-date="2026-10-09"]',{timeout:12000});
+  await page.click('[data-date="2026-10-09"]');
+  await page.waitForFunction(()=>document.querySelectorAll(".scheduleMatchCard").length>0,{timeout:25000});
+  const before=await page.evaluate(()=>({
+    rows:document.querySelectorAll(".scheduleMatchCard").length,
+    groups:document.querySelectorAll(".scheduleCompetitionGroup").length,
+    selectedDate:document.querySelector(".dateBtn.active")?.dataset.date,
+    snapshot:Boolean(document.querySelector(".scheduleSnapshotNotice")),
+    readOnly:document.querySelectorAll("[data-manual-score]").length===0,
+    documentWidth:document.documentElement.scrollWidth,windowWidth:innerWidth
+  }));
+  assert(before.rows>=8,"Missing real match rows at "+target.name);
+  assert.equal(before.selectedDate,"2026-10-09");
+  assert(before.snapshot&&before.readOnly);
+  assert(before.documentWidth<=before.windowWidth+3,
+    "Horizontal overflow on "+target.name+": "+before.documentWidth+" > "+before.windowWidth);
+  await page.type("#boardSearch","Al Wakrah",{delay:10});
+  await new Promise(ok=>setTimeout(ok,350));
+  const after=await page.evaluate(()=>({
+    value:document.querySelector("#boardSearch")?.value,
+    focus:document.activeElement?.id,
+    visibleRows:document.querySelectorAll(".scheduleMatchCard").length
+  }));
+  assert.equal(after.value,"Al Wakrah","Search text was lost");
+  assert.equal(after.focus,"boardSearch","Search focus was lost");
+  assert(after.visibleRows>=1&&after.visibleRows<before.rows,"Search should narrow fixtures");
+  await page.click("#boardSearch",{clickCount:3});
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.press("Backspace");
+  await new Promise(ok=>setTimeout(ok,350));
+  await fs.mkdir("demo-preview/screenshots",{recursive:true});
+  await page.screenshot({path:"demo-preview/screenshots/"+target.name+".png",fullPage:true});
+  summary.push({viewport:target.name,...before,search:after.value});
+  await page.close();
+ }
+ console.log("PASS real-data Chrome smoke:",JSON.stringify(summary));
+}finally{await browser.close();await new Promise(ok=>server.close(ok));}
