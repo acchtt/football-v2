@@ -1,13 +1,19 @@
 {
   "source": "public football-v2 API",
   "mode": "read-only-snapshot",
-  "capturedAt": "2026-10-09T17:10:49.536Z",
+  "capturedAt": "2026-10-09T17:11:41.505Z",
   "timeZone": "Asia/Ho_Chi_Minh",
   "scheduleRows": 100,
   "dates": [
     {
+      "date": "2026-10-04",
+      "hasBoard": true,
+      "eventsCaptured": true
+    },
+    {
       "date": "2026-10-05",
-      "hasBoard": false
+      "hasBoard": false,
+      "eventsCaptured": true
     },
     {
       "date": "2026-10-06",
@@ -36,26 +42,40 @@
     },
     {
       "date": "2026-10-11",
-      "hasBoard": false
+      "hasBoard": false,
+      "eventsCaptured": true
     },
     {
       "date": "2026-10-12",
-      "hasBoard": false
+      "hasBoard": false,
+      "eventsCaptured": true
     },
     {
       "date": "2026-10-13",
-      "hasBoard": false
+      "hasBoard": false,
+      "eventsCaptured": true
     },
     {
       "date": "2026-10-14",
-      "hasBoard": false
+      "hasBoard": false,
+      "eventsCaptured": true
     },
     {
       "date": "2026-10-15",
-      "hasBoard": false
+      "hasBoard": false,
+      "eventsCaptured": true
+    },
+    {
+      "date": "2026-10-16",
+      "hasBoard": false,
+      "eventsCaptured": true
     }
   ],
   "soccerway": [
+    {
+      "date": "2026-10-04",
+      "captured": true
+    },
     {
       "date": "2026-10-05",
       "skipped": true
@@ -98,6 +118,10 @@
     },
     {
       "date": "2026-10-15",
+      "skipped": true
+    },
+    {
+      "date": "2026-10-16",
       "skipped": true
     }
   ],
