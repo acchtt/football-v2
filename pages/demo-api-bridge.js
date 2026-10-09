@@ -52,7 +52,9 @@
         {cache:"no-store",credentials:"omit",signal:init?.signal})
     ));
     const bad = responses.find(r => !r.ok);
-    if (bad) return bad;
+    if (bad) return new Response(JSON.stringify({
+      ok:false,error:"Saved fixture coverage is unavailable for this date. The preview is not live."
+    }), {status:503,headers:{"Content-Type":"application/json; charset=utf-8"}});
     const payloads = await Promise.all(responses.map(r => r.json()));
     const merged = new Map();
     for (const payload of payloads) {
@@ -96,6 +98,8 @@
           const time = new Intl.DateTimeFormat("en-GB", {
             timeZone:"Asia/Ho_Chi_Minh",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"
           }).format(captured);
+          window.__ARCXI_SNAPSHOT_CAPTURED_AT = m.capturedAt;
+          window.dispatchEvent(new CustomEvent("arcxi:snapshot-ready"));
           n.textContent = "ARC XI demo · snapshot " + time + " ICT · NOT LIVE";
         }
       }).catch(() => {n.textContent="ARC XI demo · snapshot unavailable · NOT LIVE";});
@@ -104,6 +108,7 @@
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", makeNotice, {once:true});
     else makeNotice();
     window.__ARCXI_DEMO_SNAPSHOT__ = true;
+    window.__ARCXI_DEMO_READ_ONLY__ = true;
   } else window.__ARCXI_DEMO_READ_ONLY__ = true;
 
   window.fetch = function demoPreviewFetch(input, init) {
