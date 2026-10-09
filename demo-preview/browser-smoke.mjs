@@ -139,7 +139,7 @@ try{
     const sheet=computed(".scheduleCompetitionList");
     const row=computed(".scheduleMatchCard");
     const rim=getComputedStyle(document.querySelector(".dateBtn.active"),"::after");
-    const rowRim=getComputedStyle(document.querySelector(".scheduleMatchCard"),"::before");
+    const rowRim=getComputedStyle(document.querySelector(".scheduleCompetitionGroup"),"::after");
     return {
       dateBlur:date.backdropFilter||date.webkitBackdropFilter,
       filterBlur:filter.backdropFilter||filter.webkitBackdropFilter,
@@ -156,10 +156,12 @@ try{
   });
   assert(material.dateBlur.includes("blur(")&&material.filterBlur.includes("blur(")&&
     material.searchBlur.includes("blur("),"Liquid Glass missing from control plane: "+JSON.stringify(material));
-  assert(material.contentBlur==="none","Resting competition groups must not blur the background");
-  assert(material.sheetBlur==="none","Giant schedule glass sheet must be removed");
-  assert(material.rowBlur==="none","Resting fixture rows must stay quiet and blur-free");
-  assert(material.rowRim!=="none","Transient fixture glass optics are missing");
+  assert(material.contentBlur.includes("blur("),"Competition panels must be Liquid Glass at REST");
+  assert(material.sheetBlur==="none","Do not reintroduce a giant whole-board lens");
+  assert(material.rowBlur==="none","Fixture text must rest on a readable, unblurred inner veil");
+  assert(material.rowRim!=="none","Always-on competition optical rim is missing");
+  assert(parseFloat(material.contentBackground.match(/rgba?\([^)]*,\s*([\d.]+)\)/)?.[1] || "0")<.6,
+    "Glass competition center must remain transparent");
   assert(material.rimContent!=="none","Control edge-optics layer missing");
   assert.equal(material.dateBorderRadius,target.name==="desktop" ? "15px" : "12px",
     "Selected date should be a clear-glass tile, not an oversized capsule");
@@ -170,51 +172,48 @@ try{
   await new Promise(ok=>setTimeout(ok,100));
   const optical=await page.evaluate(()=>document.querySelector(".statusFilters button.active")?.style.getPropertyValue("--lg-x"));
   assert(optical.endsWith("%"),"Pointer-following specular light did not respond");
-  // A fixture temporarily rises into optical glass only while hovered or focused.
-  const firstFixture=await page.$(".scheduleMatchCard .scheduleFixture");
-  assert(firstFixture,"A focusable match row must exist");
-  const rowBox=await firstFixture.boundingBox();
-  await page.mouse.move(rowBox.x+rowBox.width*.63,rowBox.y+rowBox.height*.5);
-  await new Promise(ok=>setTimeout(ok,260));
-  const interaction=await page.evaluate(()=>{
-    const row=document.querySelector(".scheduleMatchCard");
-    const computed=getComputedStyle(row);
+  // At rest the glass perimeter is already visible. Hover only redirects light.
+  const fixture=await page.$(".scheduleMatchCard .scheduleFixture");
+  assert(fixture,"A focusable match fixture must exist");
+  const firstGroup=await page.$(".scheduleCompetitionGroup");
+  const groupBox=await firstGroup.boundingBox();
+  await page.mouse.move(groupBox.x+groupBox.width*.63,groupBox.y+Math.min(groupBox.height*.67,68));
+  await new Promise(ok=>setTimeout(ok,240));
+  const hover=await page.evaluate(()=>{
+    const group=document.querySelector(".scheduleCompetitionGroup");
+    const style=getComputedStyle(group);
     return {
-      glass:computed.backdropFilter||computed.webkitBackdropFilter,
-      pointer:row.style.getPropertyValue("--lg-x"),
-      active:row.matches(":hover")||row.matches(":focus-within"),
-      rimOpacity:getComputedStyle(row,"::before").opacity
+      hovering:group.matches(":hover"),glass:style.backdropFilter||style.webkitBackdropFilter,
+      pointer:group.style.getPropertyValue("--lg-x"),
+      rim:getComputedStyle(group,"::after").opacity
     };
   });
-  assert(interaction.active,"Hover did not select fixture");
-  assert(interaction.glass.includes("blur("),"Focused match must acquire real glass material");
-  assert(interaction.pointer.endsWith("%"),"Fixture-edge highlight did not track pointer");
-  assert(Number(interaction.rimOpacity)>.5,"Interactive fixture optical edge is invisible");
-  console.log("FOCUSED "+target.name+" "+JSON.stringify(interaction));
+  assert(hover.hovering&&hover.glass.includes("blur("),"Hovered panel is not glass");
+  assert(hover.pointer.endsWith("%"),"Competition optical rim does not track pointer");
+  assert(Number(hover.rim)>.9,"Hovered rim lacks responsive highlight");
+  console.log("FOCUSED "+target.name+" "+JSON.stringify(hover));
   await fs.mkdir("demo-preview/screenshots",{recursive:true});
   await page.screenshot({path:"demo-preview/screenshots/"+target.name+"-focused.png",fullPage:true});
   await page.mouse.move(0,0);
-  await new Promise(ok=>setTimeout(ok,280));
-  const idle=await page.evaluate(()=>{
-    const row=document.querySelector(".scheduleMatchCard");
-    const computed=getComputedStyle(row);
-    return {hover:row.matches(":hover"),glass:computed.backdropFilter||computed.webkitBackdropFilter};
+  await new Promise(ok=>setTimeout(ok,220));
+  const resting=await page.evaluate(()=>{
+    const group=document.querySelector(".scheduleCompetitionGroup");
+    return {hover:group.matches(":hover"),glass:getComputedStyle(group).backdropFilter,
+      rim:getComputedStyle(group,"::after").opacity};
   });
-  assert(!idle.hover&&idle.glass==="none","Fixture failed to return to quiet reading surface");
-  // Keyboard focus should activate the identical optical treatment.
+  assert(!resting.hover&&resting.glass.includes("blur("),
+    "Persistent Liquid Glass should still exist when hover leaves");
+  assert(Number(resting.rim)>.7,"Resting panel optical rim disappeared");
   const keyboardFocus=await page.evaluate(()=>{
     const fixture=document.querySelector(".scheduleMatchCard .scheduleFixture");
     fixture.focus({preventScroll:true});
-    const row=fixture.closest(".scheduleMatchCard");
-    const style=getComputedStyle(row);
-    return {
-      focus:document.activeElement===fixture,
-      focusWithin:row.matches(":focus-within"),
-      glass:style.backdropFilter||style.webkitBackdropFilter
-    };
+    const group=fixture.closest(".scheduleCompetitionGroup");
+    return {focus:document.activeElement===fixture,
+      focusWithin:group.matches(":focus-within"),
+      glass:getComputedStyle(group).backdropFilter};
   });
-  assert(keyboardFocus.focus&&keyboardFocus.focusWithin,"Keyboard focus did not reach a fixture");
-  assert(keyboardFocus.glass.includes("blur("),"Keyboard-focused fixture lacks Liquid Glass");
+  assert(keyboardFocus.focus&&keyboardFocus.focusWithin,"Keyboard could not focus fixture");
+  assert(keyboardFocus.glass.includes("blur("),"Keyboard-focus panel glass missing");
   console.log("KEYBOARD "+target.name+" "+JSON.stringify(keyboardFocus));
   await page.evaluate(()=>document.activeElement?.blur());
   await page.type("#boardSearch","Al Wakrah",{delay:10});
