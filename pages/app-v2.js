@@ -423,14 +423,14 @@
       const count = boardDateCount(date);
       const active = state.date === date;
       const unavailable = count === 0 && !active;
-      // Visible order must appear within the accessible name (WCAG 2.5.3).
-      const label = weekday + ' ' +
-        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) +
-        ' ' + d.getUTCDate();
+      // Name from the actual visible text; supplemental count is screen-reader-only.
+      // Avoid an aria-label that may not match CSS-transformed date text (WCAG 2.5.3).
       html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
-        '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no ranked board matches')) +
-        '" aria-pressed="' + active + '"><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
-        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + ' ' + d.getUTCDate() + '</strong></button>';
+        '" data-date="' + date + '" aria-pressed="' + active +
+        '"><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
+        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + ' ' + d.getUTCDate() +
+        '</strong><span class="srOnly">' + (count ? ', ' + count + ' board matches' : ', no ranked board matches') +
+        '</span></button>';
     });
     return html + '</div>';
   }
