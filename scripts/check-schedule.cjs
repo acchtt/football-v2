@@ -92,7 +92,7 @@ const index=fs.readFileSync('pages/index.html','utf8');
 assert(index.includes('icons/arc-xi-schedule.svg?v=2'));
 assert(index.includes('<div id="app"></div>') && !index.includes('<main id="app">'),
   'Rendered main landmarks must not be nested');
-assert(index.includes('app-v2.js?v=69') && index.includes('schedule-v2.css?v=26'));
+assert(index.includes('app-v2.js?v=70') && index.includes('schedule-v2.css?v=27'));
 assert(source.includes("event.key !== 'Tab'"),'Manual score modal must trap keyboard focus');
 assert(source.includes("if (!state.board) throw error"),'Initial dashboard failures must surface errors');
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
