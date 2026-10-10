@@ -276,6 +276,60 @@ try{
   });
   assert(scrollPerf.groups>=30,"Long fixture list could not be rendered for stress test");
   console.log("LONG_BOARD "+target.name+" "+JSON.stringify(scrollPerf));
+  // Accessibility: run standardized checks on the actual populated UI.
+  if(target.name!=="narrow"){
+    const axeText=await fs.readFile("/tmp/arcxi-browser/node_modules/axe-core/axe.min.js","utf8");
+    // Restore authentic fixture DOM after synthetic stress, then run axe.
+    await page.evaluate(()=>document.querySelector('[data-status-filter="all"]')?.click());
+    await new Promise(ok=>setTimeout(ok,150));
+    await page.evaluate(axeText);
+    const accessibility=await page.evaluate(async()=>{
+      const result=await axe.run(document,{runOnly:{type:"tag",values:[
+        "wcag2a","wcag2aa","wcag21a","wcag21aa"]}});
+      return result.violations.map(v=>({id:v.id,impact:v.impact,
+        nodes:v.nodes.length,examples:v.nodes.slice(0,2).map(n=>n.target)}));
+    });
+    await fs.writeFile("demo-preview/screenshots/"+target.name+"-a11y.json",
+      JSON.stringify({viewport:target.name,violations:accessibility},null,2));
+    console.log("AXE "+target.name+" "+JSON.stringify(accessibility));
+  }
+  if(target.name==="desktop"){
+    // Both legitimate empty coverage and missing saved coverage must be distinct.
+    const nextDay=(day,shift=1)=>{
+      const d=new Date(day+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+shift);
+      return d.toISOString().slice(0,10);
+    };
+    let day="2026-10-09";
+    for(let i=0;i<8;i++){
+      const next=nextDay(day);
+      await page.evaluate(()=>document.querySelector('[data-date-shift="1"]')?.click());
+      await page.waitForFunction(date=>document.querySelector(".dateBtn.active")?.dataset.date===date,
+        {timeout:15000},next);
+      await page.waitForFunction(()=>document.querySelector(".scheduleStage")?.getAttribute("aria-busy")==="false",
+        {timeout:15000});
+      day=next;
+      if(day==="2026-10-11"){
+        const state=await page.evaluate(()=>({
+          empty:document.querySelector(".emptyState")?.innerText||"",
+          error:document.querySelector(".statusBanner")?.innerText||""
+        }));
+        assert(state.empty.includes("No scheduled Board matches")&&!state.error,
+          "Covered empty date should not look like an API failure: "+JSON.stringify(state));
+        console.log("CONFIRMED_EMPTY "+JSON.stringify(state));
+      }
+    }
+    await page.waitForFunction(()=>Boolean(document.querySelector(".statusBanner")),
+      {timeout:15000});
+    const absent=await page.evaluate(()=>({
+      error:document.querySelector(".statusBanner")?.innerText||"",
+      empty:document.querySelector(".emptyState")?.innerText||""
+    }));
+    assert(absent.error.includes("Snapshot data unavailable") &&
+      absent.empty.includes("Saved fixture coverage unavailable") &&
+      !absent.empty.includes("No scheduled Board matches"),
+      "Missing fixture day must not be reported as confirmed empty: "+JSON.stringify(absent));
+    console.log("MISSING_COVERAGE "+JSON.stringify(absent));
+  }
   summary.push({viewport:target.name,...before,search:after.value,scrollPerf});
   await page.close();
  }
