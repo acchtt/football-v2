@@ -1,9 +1,9 @@
 {
   "source": "public football-v2 API",
   "mode": "read-only-snapshot",
-  "capturedAt": "2026-10-09T18:27:01.231Z",
+  "capturedAt": "2026-10-10T13:01:20.388Z",
   "timeZone": "Asia/Ho_Chi_Minh",
-  "scheduleRows": 100,
+  "scheduleRows": 107,
   "dates": [
     {
       "date": "2026-10-04",
@@ -37,7 +37,7 @@
     },
     {
       "date": "2026-10-10",
-      "hasBoard": false,
+      "hasBoard": true,
       "eventsCaptured": true
     },
     {
@@ -98,7 +98,7 @@
     },
     {
       "date": "2026-10-10",
-      "skipped": true
+      "captured": true
     },
     {
       "date": "2026-10-11",
