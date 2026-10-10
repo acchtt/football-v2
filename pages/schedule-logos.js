@@ -5,6 +5,7 @@
   const CACHE_KEY = 'arcxi.logo-ids.v1';
   const requests = new Map();
   const failedImages = new Set();
+  const retryAfter = new Map();
   let leagueRequest;
   const local = {
     team: {
@@ -44,6 +45,7 @@
     const filename = local[kind]?.[normalized];
     if (filename) return Promise.resolve('./media/football/' + filename + '.png');
     const key = kind + ':' + normalized;
+    if ((retryAfter.get(key) || 0) > Date.now()) return Promise.resolve(null);
     const saved = cache[key];
     const image = id => 'https://sports.bzzoiro.com/img/' + (kind === 'team' ? 'team' : 'league') + '/' + id + '/?bg=transparent';
     if (saved && Number.isSafeInteger(saved.id) && saved.id > 0 && Date.now() - saved.at < 7 * 86400000) {
@@ -55,16 +57,19 @@
     const read = response => response.ok ? response.json() : null;
     // The league collection works; upstream name-filtered league requests fail.
     const lookup = kind === 'competition' ?
-      (leagueRequest ||= fetch(API + '/api/bsd/leagues?limit=200', {signal:controller.signal}).then(read)) :
+      (leagueRequest ||= fetch(API + '/api/bsd/leagues?limit=200', {signal:controller.signal})
+        .then(read).then(data => { if (!data) leagueRequest = null; return data; })
+        .catch(() => { leagueRequest = null; return null; })) :
       fetch(API + '/api/bsd/teams?name=' + encodeURIComponent(normalized) + '&limit=100', {signal:controller.signal}).then(read);
     const task = lookup.then(payload => {
         const entities = payload?.data?.results;
         const entity = Array.isArray(entities) ? selectEntity(entities, name, kind) : null;
-        if (!entity) return null;
+        if (!entity) { retryAfter.set(key, Date.now() + 120000); return null; }
         cache[key] = {id:entity.id, at:Date.now()};
         try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch {}
         return image(entity.id);
-      }).catch(() => null).finally(() => clearTimeout(timer));
+      }).catch(() => { retryAfter.set(key, Date.now() + 120000); return null; })
+        .finally(() => { requests.delete(key); clearTimeout(timer); });
     requests.set(key, task);
     return task;
   }

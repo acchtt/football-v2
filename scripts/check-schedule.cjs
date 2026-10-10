@@ -10,7 +10,7 @@ const context = {window:{},document:{getElementById:id=>id==='app'?root:null},
   localStorage:storage,sessionStorage:storage,location:{hash:'#board'},Date,Intl,console};
 vm.createContext(context);
 vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashchange'")) +
-  'window.test = {state, todayKey, boardMatchBlock, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest};})();', context);
+  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest};})();', context);
 const t = context.window.test;
 const date = t.todayKey();
 const kickoff = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
@@ -37,6 +37,33 @@ row=t.boardMatchBlock(upcoming,3);
 assert(row.includes('FOLLOW') && row.includes('#1'));
 assert(t.boardMatchBlock(make('legacy','Legacy Upcoming vs Legacy Away'),4).includes('PRE'));
 assert.equal(t.formatTime(fixedKickoff),'18:00');
+const older = make('old','Unknown Town vs Unknown City',{
+  kickoff:new Date(Date.now()-4*3600000).toISOString(),
+  competition:'Unmatched League'
+});
+const notVerified=t.boardMatchBlock(older,5);
+assert(notVerified.includes('UNVERIFIED')&&notVerified.includes('NO RESULT'),
+  'An unmatched old fixture must not fabricate provider-confirmed FT');
+const previousDate=new Date(Date.now()+86400000*9).toISOString().slice(0,10);
+t.state.date=previousDate;
+let dateButtons=t.dateStrip();
+assert(dateButtons.includes('data-date="'+previousDate+'" aria-pressed="true"'),
+  'Visible date strip must follow selected date');
+assert(!/class="dateBtn[^"]*"[^>]*disabled/.test(dateButtons),
+  'Dates without board rows must remain navigable');
+assert(!/<button[^>]*aria-label=/.test(dateButtons),
+  'Date buttons should derive accessible names from visible text');
+t.state.date=date;
+const sortedBoard=t.boardMatchList([
+  make('one','Club A vs Team One',{competition:'League A',kickoff:new Date(Date.now()+3600000).toISOString()}),
+  make('two','Club B vs Team Two',{competition:'League B',kickoff:new Date(Date.now()+5400000).toISOString()}),
+  make('three','Club C vs Team Three',{competition:'League A',kickoff:new Date(Date.now()+7200000).toISOString()})
+]);
+assert(sortedBoard.indexOf('Club A') < sortedBoard.indexOf('Club B') &&
+  sortedBoard.indexOf('Club B') < sortedBoard.indexOf('Club C'),
+  'Competition grouping must not break global kickoff chronology');
+assert((sortedBoard.match(/boardCompetitionGroup/g)||[]).length===3,
+  'Reopened league groups must remain separate in time order');
 assert(t.crest('team',1,'Arsenal').includes('data-external-logo="team"'));
 assert(t.externalLogo('https://untrusted.invalid/logo.svg','Unknown','team').includes('crestFallback'));
 t.state.statusFilter='live'; t.renderMatchday();
@@ -60,5 +87,10 @@ assert.equal((root.innerHTML.match(/class="iveCorner iveCorner--bottom"/g)||[]).
 assert(root.innerHTML.indexOf('iveCorner--bottom') > root.innerHTML.indexOf('scheduleMatchSection'), 'artwork follows the match table');
 const index=fs.readFileSync('pages/index.html','utf8');
 assert(index.includes('icons/arc-xi-schedule.svg?v=2'));
+assert(index.includes('<div id="app"></div>') && !index.includes('<main id="app">'),
+  'Rendered main landmarks must not be nested');
+assert(index.includes('app-v2.js?v=67') && index.includes('schedule-v2.css?v=25'));
+assert(source.includes("event.key !== 'Tab'"),'Manual score modal must trap keyboard focus');
+assert(source.includes("if (!state.board) throw error"),'Initial dashboard failures must surface errors');
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
 console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');
