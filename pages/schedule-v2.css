@@ -342,3 +342,64 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
 @media(max-width:360px) {
   .scheduleDateNav { --schedule-date-gap:3px; }
 }
+
+
+/* Impeccable Adapt — legible football information on compact touch screens.
+   Retains the approved optical panels and the existing crest/score structure. */
+@media (max-width:700px) {
+  .scheduleBoardRoute .scheduleCompetitionHead > strong {
+    font-size:12px;
+    letter-spacing:.085em;
+    line-height:1.4;
+    overflow-wrap:anywhere;
+  }
+  .scheduleBoardRoute .scheduleTeam span {
+    font-size:13px;
+    line-height:1.37;
+    font-weight:560;
+    overflow-wrap:break-word;
+  }
+  .scheduleBoardRoute .scheduleScore small {
+    font-size:11px;
+    line-height:1.3;
+    font-variant-numeric:tabular-nums;
+  }
+  .scheduleBoardRoute .scheduleTime > strong {
+    font-size:13px;
+    font-weight:600;
+  }
+  .scheduleBoardRoute .scheduleFixture {
+    min-height:80px;
+    grid-template-columns:70px minmax(0,1fr) 15px;
+    padding:9px 5px;
+    gap:5px;
+  }
+  .scheduleBoardRoute .scheduleTeams {
+    gap:5px;
+    grid-template-columns:minmax(0,1fr) 49px minmax(0,1fr);
+  }
+  .scheduleBoardRoute .scheduleTime .fixtureStatus {
+    min-height:27px;
+    min-width:65px;
+    box-sizing:border-box;
+    font-size:11px;
+    font-weight:700;
+  }
+  .scheduleBoardRoute .scheduleScore strong {
+    font-variant-numeric:tabular-nums;
+  }
+  .scheduleBoardRoute .scheduleSearch input { font-size:16px; }
+}
+@media (max-width:360px) {
+  .scheduleBoardRoute .scheduleFixture {
+    grid-template-columns:65px minmax(0,1fr) 12px;
+    padding-inline:3px;
+    gap:3px;
+  }
+  .scheduleBoardRoute .scheduleTeams {
+    grid-template-columns:minmax(0,1fr) 43px minmax(0,1fr);
+    gap:3px;
+  }
+  .scheduleBoardRoute .scheduleTeam span {font-size:12px;}
+  .scheduleBoardRoute .scheduleCompetitionHead > strong {font-size:11px;}
+}
