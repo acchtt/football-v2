@@ -195,7 +195,11 @@
       const id = eventId(event);
       const teams = teamKey(event);
       const key = eventKey(event);
-      const liveEvent = (id && liveById.get(id)) || (teams && liveByTeams.get(teams)) || null;
+      // Never override a provider-ID fixture with a different ID merely because
+      // both clubs have the same names (cups/replays/age-group fixtures).
+      const alias = teams && liveByTeams.get(teams);
+      const liveEvent = (id && liveById.get(id)) ||
+        ((!id || (alias && !eventId(alias))) ? alias : null) || null;
       const dayStatus = normalizedStatus(event);
 
       if (liveEvent) {

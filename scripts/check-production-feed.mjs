@@ -80,14 +80,19 @@ async function check(name,task){
 const timeZoneDate=ictDate();
 const page=await check('deployed page',async()=>{
   const {value:html}=await request(SITE,{json:false});
-  if(!html.includes('app-v2.js?v=68'))throw Error('Expected live-score repair app asset is not deployed');
-  if(!html.includes('config.js?v=14'))throw Error('Expected runtime guard is not deployed');
+  // PR checks observe the currently deployed release (68/14), while this
+  // branch stages the next cache-busted release (69/15). Reject all older builds.
+  const appVersion=html.match(/app-v2\.js\?v=(68|69)\b/)?.[1];
+  const guardVersion=html.match(/config\.js\?v=(14|15)\b/)?.[1];
+  if(!appVersion)throw Error('Expected provider-owned score renderer is not deployed');
+  if(!guardVersion)throw Error('Expected runtime guard is not deployed');
   if(html.includes('matchday-behavior.js?v=3') || html.includes('status-sync.js?v=4')){
     throw Error('Legacy synthetic clock or DOM updater is still loaded');
   }
-  const script=await request(new URL('app-v2.js?v=68',SITE).href,{json:false});
+  const asset='app-v2.js?v='+appVersion;
+  const script=await request(new URL(asset,SITE).href,{json:false});
   if(!script.value.includes('boardLiveSignature()'))throw Error('Provider-owned score renderer missing');
-  return {asset:'app-v2.js?v=68',bytes:script.value.length};
+  return {asset,guard:'config.js?v='+guardVersion,bytes:script.value.length};
 });
 const dashboard=await check('public dashboard',async()=>{
   const {value}=await request(API+'/api/dashboard-data',{api:true});
@@ -98,7 +103,8 @@ const dashboard=await check('public dashboard',async()=>{
     const age=Number(value.staleAgeMs);
     warnings.push('Dashboard using '+(value.cacheSource||'cached')+
       ' data'+(Number.isFinite(age)?' ('+Math.round(age/1000)+'s old)':''));
-    if(Number.isFinite(age)&&age>300000)throw Error('Dashboard stale for more than five minutes');
+    if(!Number.isFinite(age)||age<0)throw Error('Degraded dashboard has no verifiable freshness age');
+    if(age>300000)throw Error('Dashboard stale for more than five minutes');
   }
   return {schedule:value.schedule.length,picks:value.picks.length,
     cached:value.cached===true,degraded:value.degraded===true,

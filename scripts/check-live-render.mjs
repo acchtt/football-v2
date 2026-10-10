@@ -65,7 +65,9 @@ try{
   }));
   const after=await getProvider();
   const parity=compareStableLive(before,after,dom.fixtures);
-  report={time:new Date().toISOString(),status:parity.status,selectedDateICT:dom.date,
+  // A browser exception is not a passing comparison even if displayed scores match.
+  const observedStatus = pageErrors.length ? 'FAIL' : parity.status;
+  report={time:new Date().toISOString(),status:observedStatus,selectedDateICT:dom.date,
     liveProviderStart:providerRows(before).length,liveProviderEnd:providerRows(after).length,
     boardRows:dom.boardRows,providerMatched:parity.compared,
     stableProviderRows:parity.stableProviderRows,

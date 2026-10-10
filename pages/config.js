@@ -235,6 +235,10 @@
   function rememberDashboard(payload) {
     payload = normalizeDashboardPayload(payload);
     if (!payload || !Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) return;
+    // A degraded upstream response cannot advance the last-confirmed timestamp.
+    if (payload.ok !== false && payload.cached !== true && payload.degraded !== true) {
+      payload = { ...payload, _arcxiConfirmedAt: Date.now() };
+    }
     boardSnapshot = payload;
     boardSnapshotAt = Date.now();
     try { localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(payload)); } catch {}
@@ -266,17 +270,18 @@
           const payload = normalizeDashboardPayload(await response.json());
           if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
             rememberDashboard(payload);
-            return payload;
+            return boardSnapshot;
           }
         }
       } catch {}
       const cached = readCachedDashboard();
       if (cached) {
-        boardSnapshot = cached;
+        boardSnapshot = degradedDashboard(cached);
         boardSnapshotAt = Date.now();
-        return cached;
+        return boardSnapshot;
       }
-      return { ok: true, schedule: [], picks: [], degraded: true };
+      return { ok: false, schedule: [], picks: [], degraded: true,
+        error: 'Dashboard unavailable; no confirmed board is stored.' };
     })();
 
     try { return await boardSnapshotPromise; }
@@ -295,8 +300,9 @@
 
     const filtered = data.results.filter(event => boardRows.some(row => {
       const teams = splitMatch(row.match || '');
-      const score = nameScore(teams.home, eventTeamName(event, 'home')) + nameScore(teams.away, eventTeamName(event, 'away'));
-      return score >= 6;
+      const homeScore = nameScore(teams.home, eventTeamName(event, 'home'));
+      const awayScore = nameScore(teams.away, eventTeamName(event, 'away'));
+      return homeScore >= 3 && awayScore >= 3 && homeScore + awayScore >= 6;
     }));
 
     return {
@@ -318,14 +324,21 @@
     });
   }
 
+  function degradedDashboard(cached) {
+    const confirmedAt = Number(cached._arcxiConfirmedAt);
+    const valid = Number.isFinite(confirmedAt) && confirmedAt > 0 && confirmedAt <= Date.now();
+    return { ...cached, cached: true, degraded: true, cacheSource: 'browser',
+      staleAgeMs: valid ? Date.now() - confirmedAt : null,
+      lastConfirmedAt: valid ? new Date(confirmedAt).toISOString() : null };
+  }
   function cachedDashboardResponse() {
     const cached = readCachedDashboard();
-    if (cached) return new Response(JSON.stringify({ ...cached, ok: true, cached: true, degraded: true }), {
-      status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
-    });
-    return new Response(JSON.stringify({ ok: true, schedule: [], picks: [], cached: true, degraded: true }), {
-      status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
-    });
+    const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
+    if (cached) return new Response(JSON.stringify(degradedDashboard(cached)), { status: 200, headers });
+    // Fail closed: an empty board is not proof of a zero-fixture day.
+    return new Response(JSON.stringify({ ok: false, schedule: [], picks: [],
+      degraded: true, cached: false, error: 'Dashboard unavailable; no confirmed board is stored.' }),
+      { status: 503, headers });
   }
 
   function boardSignature(payload) {
@@ -369,6 +382,7 @@
         rememberDashboard(payload);
         return;
       }
+      if (payload.degraded || payload.cached) return;
       if (next !== baseline) publishBoardRefresh(payload);
       else {
         boardWatchSignature = next;
@@ -394,7 +408,7 @@
           const payload = normalizeDashboardPayload(await response.clone().json());
           if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
             rememberDashboard(payload);
-            return jsonResponse(payload, response);
+            return jsonResponse(boardSnapshot, response);
           }
           return response;
         }
