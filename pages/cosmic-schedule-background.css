@@ -468,6 +468,19 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleSnapshotNotice {
     border-color:#fff;
   }
 }
+/* Chrome skips painting nonvisible league interiors on long slates. The optical
+   material is unchanged for visible panels; auto remembers measured row heights. */
+@supports (content-visibility:auto) {
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup {
+    content-visibility:auto;
+    contain-intrinsic-size:auto 92px;
+  }
+  @media (max-width:700px) {
+    html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup {
+      contain-intrinsic-size:auto 142px;
+    }
+  }
+}
 /* Comparison surface shares the approved wallpaper, never the data-plane treatment. */
 body.embed[data-skin=clear] #site {
   background-image:linear-gradient(180deg,rgba(4,5,12,.17),rgba(4,5,12,.26) 60%,rgba(4,5,12,.38)),var(--arcxi-cosmic-image);
