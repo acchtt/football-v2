@@ -10,7 +10,7 @@ const context = {window:{},document:{getElementById:id=>id==='app'?root:null},
   localStorage:storage,sessionStorage:storage,location:{hash:'#board'},Date,Intl,console};
 vm.createContext(context);
 vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashchange'")) +
-  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest};})();', context);
+  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest, boardEventScore, eventForBoardRow, statusKey, statusLabel, boardWarning};})();', context);
 const t = context.window.test;
 const date = t.todayKey();
 const kickoff = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
@@ -96,4 +96,42 @@ assert(index.includes('app-v2.js?v=68') && index.includes('schedule-v2.css?v=25'
 assert(source.includes("event.key !== 'Tab'"),'Manual score modal must trap keyboard focus');
 assert(source.includes("if (!state.board) throw error"),'Initial dashboard failures must surface errors');
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
+
+/* Impeccable regression: provider identity requires both teams and credible kickoff. */
+const rowToMatch=make('identity','Arsenal vs Chelsea');
+const validSource={id:991,home_team:{name:'Arsenal'},away_team:{name:'Chelsea'},
+  league:{name:'Test League'},event_date:kickoff,status:'inprogress',home_score:1,away_score:0};
+const wrongAway={...validSource,id:992,away_team:{name:'Brighton'}};
+assert(t.boardEventScore(rowToMatch,validSource)>=6,'Both teams should match');
+assert.equal(t.boardEventScore(rowToMatch,wrongAway),-1,'One matching team must not be sufficient');
+assert.equal(t.boardEventScore(rowToMatch,{...validSource,id:993,
+  event_date:new Date(Date.parse(kickoff)+24*3600000).toISOString()}),-1,
+  'Same clubs on another date must not attach to the board row');
+assert.equal(t.boardEventScore(make('female','Arsenal Women vs Chelsea Women',
+  {competition:"Women's Super League"}),validSource),-1,
+  'Women and men cannot share a provider fixture merely by club names');
+t.state.today=[wrongAway];
+assert.equal(t.eventForBoardRow(rowToMatch),null,'Never render wrong opponent scores');
+t.state.today=[validSource,{...validSource,id:994}];
+assert.equal(t.eventForBoardRow(rowToMatch),null,'Ambiguous same-time provider identities must fail closed');
+t.state.today=[validSource];
+assert.equal(t.eventForBoardRow(rowToMatch).id,991);
+const statuses={postponed:'PP',cancelled:'CANC',abandoned:'ABD',suspended:'SUSP'};
+for(const [source,label] of Object.entries(statuses)){
+  const event={...validSource,status:source};
+  t.state.today=[event];
+  assert.equal(t.statusKey(event),source,'Preserve exceptional status '+source);
+  assert(t.boardMatchBlock(rowToMatch,0).includes('>'+label+'</span>'),
+    'Show provider-confirmed '+source+' instead of PRE');
+}
+const halftime={...validSource,status:'inprogress',
+  time:{status:'inprogress',period:'HT',minute:45}};
+t.state.today=[halftime];
+assert.equal(t.statusKey(halftime),'live');
+assert.equal(t.statusLabel(halftime),'HT');
+assert(t.boardMatchBlock(rowToMatch,0).includes('>HT</span>'),
+  'Half-time must not be displayed as ordinary LIVE or PRE');
+assert.equal(t.boardWarning({cached:true,degraded:true,staleAgeMs:300000}).includes('5 minute(s)'),true);
+assert(t.boardWarning({cached:true,degraded:true,staleAgeMs:null}).includes('unknown age'));
+
 console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');
