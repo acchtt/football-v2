@@ -44,6 +44,9 @@ const older = make('old','Unknown Town vs Unknown City',{
 const notVerified=t.boardMatchBlock(older,5);
 assert(notVerified.includes('UNVERIFIED')&&notVerified.includes('NO RESULT'),
   'An unmatched old fixture must not fabricate provider-confirmed FT');
+assert(!notVerified.includes('fixtureStatus finished') &&
+  notVerified.includes('is-unverified-row'),
+  'An unmatched historical fixture must not enter the confirmed FT lane');
 const previousDate=new Date(Date.now()+86400000*9).toISOString().slice(0,10);
 t.state.date=previousDate;
 let dateButtons=t.dateStrip();
@@ -89,7 +92,7 @@ const index=fs.readFileSync('pages/index.html','utf8');
 assert(index.includes('icons/arc-xi-schedule.svg?v=2'));
 assert(index.includes('<div id="app"></div>') && !index.includes('<main id="app">'),
   'Rendered main landmarks must not be nested');
-assert(index.includes('app-v2.js?v=67') && index.includes('schedule-v2.css?v=25'));
+assert(index.includes('app-v2.js?v=68') && index.includes('schedule-v2.css?v=25'));
 assert(source.includes("event.key !== 'Tab'"),'Manual score modal must trap keyboard focus');
 assert(source.includes("if (!state.board) throw error"),'Initial dashboard failures must surface errors');
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));

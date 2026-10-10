@@ -25,7 +25,7 @@ jobs:
           test -s pages/media/ive/wonyoung-liz-bottom-right.webp
           test -s pages/media/arcxi/reference-artwork.png
           test -s pages/media/arcxi/arc-xi-schedule-logo.svg
-          for file in pages/*.js scripts/check-schedule.cjs scripts/check-schedule-logos.cjs scripts/browser-main-repair.cjs; do
+          for file in pages/*.js scripts/check-schedule.cjs scripts/check-schedule-logos.cjs scripts/browser-main-repair.cjs scripts/browser-live-pipeline.cjs; do
             node --check "$file"
           done
           node scripts/check-schedule.cjs
@@ -37,6 +37,8 @@ jobs:
           which google-chrome || which google-chrome-stable
       - name: Real browser desktop and mobile tests
         run: node scripts/browser-main-repair.cjs
+      - name: Verify authoritative live-score transitions and outage handling
+        run: node scripts/browser-live-pipeline.cjs
       - name: Upload screenshots and accessibility checks
         if: always()
         uses: actions/upload-artifact@v4
