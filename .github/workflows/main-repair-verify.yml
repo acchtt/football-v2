@@ -30,6 +30,7 @@ jobs:
           done
           node scripts/check-schedule.cjs
           node scripts/check-schedule-logos.cjs
+          node scripts/test-dashboard-fallback.cjs
       - name: Set up Chrome test dependencies
         run: |
           mkdir -p /tmp/arcxi-browser
