@@ -53,7 +53,7 @@ assert(listing.includes('role="heading" aria-level="2"'));
 
 // Guard major regression classes. Syntax validation runs separately in CI.
 assert(html.includes('<div id="app"></div>')&&!html.includes('<main id="app">'));
-assert(html.includes("app-v2.js?v=70"));
+assert(html.includes("app-v2.js?v=71"));
 assert(app.includes("root.inert = true")&&app.includes("root.inert = false"));
 assert(app.includes("event.key !== 'Tab'")&&app.includes("returnFocus?.isConnected"));
 assert(app.includes("if (IS_SNAPSHOT || document.visibilityState"));
@@ -72,6 +72,7 @@ assert(app.includes("Saved fixture coverage unavailable"));
 const formatted=vm.runInNewContext("(function(){"+displayNameCode+";return displayCompetitionName('QATAR_STARS_LEAGUE')})()");
 assert.equal(formatted,"Qatar Stars League","Raw league IDs must become readable labels");
 assert(app.includes("Older than 6 hours"),"Stale snapshots must be labeled");
+assert(app.includes("NO RESULT"),"Unverified historical scores must be labeled");
 assert(css.includes("min-width:44px")&&css.includes("min-height:44px"));
 assert(css.includes("scheduleSnapshotNotice")&&css.includes("grid-template-columns:44px"));
 assert(glass.includes("cosmic-wallpaper-3840.webp"));
