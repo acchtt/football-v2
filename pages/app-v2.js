@@ -142,21 +142,27 @@
     return obj(event && event.time);
   }
   function eventStatus(event) {
-    const values = [event && event.status, eventTime(event).status,
-      event && event.match_status, event && event.state, eventTime(event).period]
+    const normalize = function (value) {
+      return String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    };
+    // Periods can lag behind the current lifecycle; only use them when no
+    // explicit provider status is available. In particular, an old 2H clock
+    // must never turn a confirmed UPCOMING fixture into a LIVE match.
+    const statuses = [event && event.status, eventTime(event).status,
+      event && event.match_status, event && event.state]
       .filter(function (value) { return value !== null && value !== undefined && value !== ''; })
-      .map(function (value) { return String(value).trim().toLowerCase().replace(/[\s-]+/g, '_'); });
-    // Explicit stopped/terminal lifecycle beats an old LIVE period or clock.
+      .map(normalize);
+    const period = normalize(eventTime(event).period);
     const finished = ['ended','complete','completed','final','ft','full_time','fulltime','aet','after_extra_time','after_penalties'];
     const stopped = ['postponed','cancelled','canceled','abandoned','suspended'];
     const live = ['live','inprogress','in_progress','playing','ongoing','1st_half','first_half','2nd_half','second_half','ht','halftime','half_time','break','extra_time','penalties'];
-    if (values.some(function (value) { return stopped.includes(value); })) {
-      const match = values.find(function (value) { return stopped.includes(value); });
-      return match === 'canceled' ? 'cancelled' : match;
-    }
-    if (values.some(function (value) { return finished.includes(value); })) return 'finished';
-    if (values.some(function (value) { return live.includes(value); })) return 'live';
-    return values[0] || 'upcoming';
+    const stop = statuses.find(function (value) { return stopped.includes(value); });
+    if (stop) return stop === 'canceled' ? 'cancelled' : stop;
+    if (statuses.some(function (value) { return finished.includes(value); })) return 'finished';
+    if (statuses.some(function (value) { return live.includes(value); })) return 'live';
+    if (statuses.some(function (value) { return ['upcoming','not_started','notstarted','scheduled','pending'].includes(value); })) return 'upcoming';
+    if (live.includes(period)) return 'live';
+    return statuses[0] || 'upcoming';
   }
   function statusKey(event) {
     const status = eventStatus(event);
