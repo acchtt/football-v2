@@ -534,7 +534,9 @@
     const declared = String(row && (row.status || row.matchStatus) || '').toLowerCase();
     if (['finished','ft','ended','complete','completed','final'].includes(declared)) return 'finished';
     const kickoff = Date.parse(row && (row.kickoff || row.displayKickoff));
-    if (Number.isFinite(kickoff) && Date.now() > kickoff + 3 * 60 * 60 * 1000) return 'finished';
+    // Elapsed time is not evidence of kickoff, LIVE, or FT. Keep unsupported
+    // historical matches explicitly unverified until a provider reports status.
+    if (Number.isFinite(kickoff) && Date.now() > kickoff + 3 * 60 * 60 * 1000) return 'unverified';
     return 'upcoming';
   }
   function boardKickoff(row) {
@@ -581,6 +583,7 @@
     const hasManualScore = Boolean(manualScore);
     const finished = status === 'finished';
     const live = status === 'live';
+    const unverified = status === 'unverified';
     const sourceConfirmed = Boolean(event || fallback || /^(ft|finished|ended|complete|completed|final)$/i.test(
       String(row && (row.status || row.matchStatus) || '')));
     const canManualScore = !event && (!fallback || status !== 'upcoming');
@@ -598,12 +601,14 @@
       scoreLabel = soccerwayScoreText(fallback);
       detail = live ? soccerwayMinuteText(fallback) : (scoreLabel === 'VS' ? 'NO RESULT' : 'FT');
       if (finished && scoreLabel === 'VS') scoreLabel = '—';
-    } else if (finished) {
+    } else if (finished || unverified) {
       scoreLabel = '—';
       detail = 'NO RESULT';
     }
-    const statusName = finished && !sourceConfirmed ? 'UNVERIFIED' : finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
-    const statusClass = finished ? 'finished' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
+    const statusName = unverified || (finished && !sourceConfirmed) ? 'UNVERIFIED' :
+      finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
+    const statusClass = unverified ? 'unverified' : finished ? 'finished' :
+      live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture scheduleFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
