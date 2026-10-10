@@ -100,6 +100,7 @@ jobs:
           node --check pages/schedule-logos.js
           node scripts/check-schedule-logos.cjs
           node scripts/test-dashboard-fallback.cjs
+          node scripts/test-status-precedence.cjs
           echo "Active JavaScript syntax, dashboard fallback and schedule rendering validated"
 
       - name: Setup Pages
@@ -115,3 +116,39 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # The deploy job only validates the artifact. This independent post-deploy
+  # check visits the actual public URL and does not write scores or bet data.
+  production-smoke:
+    name: Post-deployment public feed and live-score parity
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Wait briefly for GitHub Pages edge propagation
+        run: sleep 20
+      - name: Confirm deployed assets, API health and schedule
+        run: node scripts/check-production-feed.mjs
+      - name: Confirm comparator behavior
+        run: node --test scripts/test-live-score-parity.mjs
+      - name: Prepare Chrome parity probe
+        run: |
+          mkdir -p /tmp/arcxi-browser
+          npm install --prefix /tmp/arcxi-browser --no-audit --no-fund --no-save puppeteer-core@24
+          which google-chrome || which google-chrome-stable
+      - name: Compare public live scores and rendered fixtures
+        run: node scripts/check-live-render.mjs
+      - name: Upload production parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deployment-live-parity
+          path: |
+            audit-live/parity.json
+            audit-live/production-board.png
+          retention-days: 14
+          if-no-files-found: ignore
