@@ -635,6 +635,27 @@
       '<span class="scheduleArrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"></path></svg></span>' +
       close + (manualControl ? '<div class="scheduleRowTools">' + manualControl + '</div>' : '') + '</article>';
   }
+  function displayCompetitionName(name) {
+    // Display-only: do not change the source competition key or matching logic.
+    const raw = String(name || 'Competition').trim();
+    if (!/^[A-Z0-9_]+$/.test(raw) || !raw.includes('_')) return raw;
+    const exact = {
+      QATAR_STARS_LEAGUE:'Qatar Stars League',
+      FINLAND_VEIKKAUSLIIGA:'Finland Veikkausliiga',
+      JORDAN_PRO_LEAGUE:'Jordan Pro League',
+      SAUDI_DIVISION1:'Saudi Division 1',
+      TANZANIA_PREMIER_LEAGUE:'Tanzania Premier League',
+      UAE_LEAGUE_CUP:'UAE League Cup',
+      ALGERIA_LIGUE1:'Algeria Ligue 1',
+      ROMANIA_LIGA1:'Romania Liga 1',
+      IRELAND_PREMIER:'Ireland Premier'
+    };
+    return exact[raw] || raw.split('_').map(part =>
+      part === 'UAE' || part === 'USA' || part === 'CAF' ? part :
+      part.replace(/([A-Z]+)([0-9]+)/g,'$1 $2').toLowerCase()
+        .replace(/\b[a-z]/g,char=>char.toUpperCase())
+    ).join(' ');
+  }
   function boardMatchList(boardRows) {
     // Group only consecutive matches so kickoff ordering survives competition headers.
     const groups = [];
@@ -654,7 +675,7 @@
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
         (group.id ? '<span class="scheduleCompetitionLogo">' + crest('league', group.id, group.name) + '</span>' :
           group.logo ? externalLogo(group.logo, group.name, 'competition') : competitionMark()) +
-        '<strong role="heading" aria-level="2">' + esc(group.name) + '</strong><span>' + group.rows.length + ' match' +
+        '<strong role="heading" aria-level="2">' + esc(displayCompetitionName(group.name)) + '</strong><span>' + group.rows.length + ' match' +
         (group.rows.length === 1 ? '' : 'es') + '</span></header>' +
         '<div class="matchList boardMatchList chronologicalBoardList">' +
         group.rows.map(function (row, index) { return boardMatchBlock(row, index); }).join('') + '</div></section>';
@@ -869,12 +890,16 @@
           '<div class="scheduleTeams"><div class="scheduleTeam home"><i class="schedulePlaceholder team"></i><i class="schedulePlaceholder crest"></i></div>' +
           '<div class="scheduleScore"><i class="schedulePlaceholder score"></i></div><div class="scheduleTeam away"><i class="schedulePlaceholder crest"></i><i class="schedulePlaceholder team"></i></div></div></div></div>';
       }).join('') + '</div>' : state.error && !boardRows.length ?
-      '<div class="emptyState connectionEmpty"><strong>Schedule unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
+      '<div class="emptyState connectionEmpty"><strong>' +
+        (IS_SNAPSHOT ? 'Saved fixture coverage unavailable' : 'Schedule unavailable') + '</strong><span>' +
+        (IS_SNAPSHOT ? 'The saved fixture source did not load for this date. This is not a confirmed zero-match day.' :
+          'Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.') +
+        '</span></div>' :
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches found</strong><span>Change the status filter or clear the schedule search.</span>' +
         '<button type="button" class="emptyAction" data-reset-board-filters>Show all matches</button></div>' :
         '<div class="emptyState"><strong>No scheduled Board matches</strong><span>' +
-        (IS_SNAPSHOT ? 'No ranked fixtures were recorded for this date in the saved snapshot.' :
+        (IS_SNAPSHOT ? 'No ranked fixtures appear for this date in the captured board. This is historical, not live coverage.' :
         'No operational entries were added for this date.') + '</span></div>';
     const content =
       '<section class="scheduleStage" aria-label="ARC XI football schedule" aria-busy="' + Boolean(loading) + '">' +
@@ -907,9 +932,10 @@
     const timestamp = Date.parse(window.__ARCXI_SNAPSHOT_CAPTURED_AT || '');
     const value = Number.isFinite(timestamp)
       ? 'Captured ' + new Intl.DateTimeFormat('en-GB', {
-          timeZone:TZ, day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
-        }).format(timestamp) + ' ICT · Not live'
-      : 'Public-data snapshot · Not live';
+          timeZone:TZ, day:'2-digit', month:'short', hour:'2-digit'
+        }).format(timestamp) + ' ICT · ' +
+          (Date.now() - timestamp > 6 * 60 * 60 * 1000 ? 'Older than 6 hours · ' : '') + 'Not live'
+      : 'Snapshot time unavailable · Not live';
     root.querySelectorAll('[data-snapshot-status]').forEach(function (node) { node.textContent = value; });
   }
 
@@ -931,7 +957,9 @@
     try {
       state.board = await request;
       return state.board;
-    } catch {
+    } catch (error) {
+      // A failed dashboard request is not a confirmed zero-fixture slate.
+      if (!state.board) throw error;
       return state.board;
     } finally {
       if (state.boardPromise === request) state.boardPromise = null;
@@ -980,8 +1008,8 @@
       state.lastSync = Date.now();
     } catch (error) {
       if (requestId !== state.matchdayRequest || state.date !== requestedDate) return [];
-      state.error = IS_SNAPSHOT && state.board && !boardRowsForDate().length ? '' :
-        (error.message || String(error));
+      // Do not confuse missing saved coverage with a legitimately empty matchday.
+      state.error = error.message || String(error);
     }
     if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
     fallbackTask.then(function () {
