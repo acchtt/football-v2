@@ -1,6 +1,9 @@
 // Read-only production Chrome observation. Compares stable BSD LIVE event IDs to
 // the rendered ARC XI schedule; never edits matches, scores or model records.
-import puppeteer from '/tmp/arcxi-browser/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js';
+import {createRequire} from 'node:module';
+import {existsSync} from 'node:fs';
+const require=createRequire(import.meta.url);
+const puppeteer=require('/tmp/arcxi-browser/node_modules/puppeteer-core');
 import {mkdir,writeFile,appendFile} from 'node:fs/promises';
 import {compareStableLive,providerRows} from './live-score-parity.mjs';
 
@@ -27,12 +30,7 @@ const getProvider=async()=>{
   throw last;
 };
 const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium']
-  .find(p=>{try{return !!(process.env.CHROME_BIN===p || requireFile(p));}catch{return false;}});
-function requireFile(file){
-  // Node in Actions always provides a chrome executable at one of these paths.
-  return Boolean((awaitImportPath(file)));
-}
-function awaitImportPath(file){return file;}
+  .find(existsSync);
 // Avoid treating unavailable browser as success.
 const browser=await puppeteer.launch({executablePath:process.env.CHROME_BIN||binary||'/usr/bin/google-chrome',
   headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']});
