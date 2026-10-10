@@ -9,11 +9,17 @@ on:
     branches: ["main"]
     paths:
       - "scripts/check-production-feed.mjs"
+      - "scripts/live-score-parity.mjs"
+      - "scripts/check-live-render.mjs"
+      - "scripts/test-live-score-parity.mjs"
       - ".github/workflows/production-feed-health.yml"
   push:
-    branches: ["monitor/production-feed-20261010"]
+    branches: ["monitor/production-feed-20261010", "monitor/live-render-parity-20261010"]
     paths:
       - "scripts/check-production-feed.mjs"
+      - "scripts/live-score-parity.mjs"
+      - "scripts/check-live-render.mjs"
+      - "scripts/test-live-score-parity.mjs"
       - ".github/workflows/production-feed-health.yml"
 
 permissions:
@@ -41,3 +47,25 @@ jobs:
           fi
       - name: Probe public production page, dashboard, live and day-feed
         run: node scripts/check-production-feed.mjs
+      - name: Validate score comparison logic and browser script
+        run: |
+          node --check scripts/check-live-render.mjs
+          node --test scripts/test-live-score-parity.mjs
+      - name: Set up headless Chrome comparison
+        run: |
+          mkdir -p /tmp/arcxi-browser
+          npm install --prefix /tmp/arcxi-browser --no-audit --no-fund --no-save puppeteer-core@24
+          which google-chrome || which google-chrome-stable
+      - name: Compare real live scores with rendered production fixtures
+        run: node scripts/check-live-render.mjs
+      - name: Store real-browser parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arcxi-production-live-score-parity
+          path: |
+            audit-live/parity.json
+            audit-live/production-board.png
+          retention-days: 14
+          if-no-files-found: ignore
+
