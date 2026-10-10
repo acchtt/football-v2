@@ -117,6 +117,7 @@ async function run(){
   assert.equal(phase.find(row=>row.label==='Club Alpha')?.status,'LIVE');console.log('LIVE_1_0 '+JSON.stringify(phase));
   await page.click('#boardSearch');
   await page.type('#boardSearch','Alpha',{delay:8});
+  await page.keyboard.press('Enter');
   await page.waitForFunction(()=>document.querySelectorAll('.scheduleMatchCard').length===1);
   const phase2=await next(2,()=>document.querySelector('.scheduleScore strong')?.textContent==='1–1');
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'boardSearch',
