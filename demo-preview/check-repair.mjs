@@ -27,6 +27,8 @@ assert.deepEqual([...dateHtml.matchAll(/data-date="(\d{4}-\d{2}-\d{2})"/g)].map(
 ]);
 assert(!dateHtml.includes(" disabled"),"Empty days must stay navigable");
 assert(dateHtml.includes('aria-pressed="true"'));
+assert(!dateHtml.includes('aria-label="'),"Date button must derive name from visible text");
+assert(dateHtml.includes('class="srOnly"'),"Date counts must remain available to assistive tech");
 
 // Run REAL competition grouping against interleaved competitions.
 const displayNameCode=extract(app,"  function displayCompetitionName(name) {","  function boardMatchList(");
@@ -51,7 +53,7 @@ assert(listing.includes('role="heading" aria-level="2"'));
 
 // Guard major regression classes. Syntax validation runs separately in CI.
 assert(html.includes('<div id="app"></div>')&&!html.includes('<main id="app">'));
-assert(html.includes("app-v2.js?v=69"));
+assert(html.includes("app-v2.js?v=70"));
 assert(app.includes("root.inert = true")&&app.includes("root.inert = false"));
 assert(app.includes("event.key !== 'Tab'")&&app.includes("returnFocus?.isConnected"));
 assert(app.includes("if (IS_SNAPSHOT || document.visibilityState"));
