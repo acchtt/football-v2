@@ -24,6 +24,20 @@
   };
   let cache = {};
   try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch {}
+  // Source is regenerated from public fixture provider IDs. Never infer a badge
+  // from league/country similarity or invent missing identities.
+  let snapshotLogoIndex;
+  function verifiedSnapshotLogos() {
+    if (!snapshotLogoIndex) {
+      snapshotLogoIndex = fetch(
+        'https://raw.githubusercontent.com/acchtt/football-v2/refs/heads/demo/liquid-glass/pages/demo-preview-data/logos.json',
+        {credentials:'omit',cache:'no-store'}
+      ).then(r => r.ok ? r.json() : null)
+       .then(data => data && typeof data.teams === 'object' ? data.teams : {})
+       .catch(() => ({}));
+    }
+    return snapshotLogoIndex;
+  }
 
   function normalize(name) {
     return String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
@@ -43,13 +57,19 @@
     const normalized = normalize(name);
     const filename = local[kind]?.[normalized];
     if (filename) return Promise.resolve('./media/football/' + filename + '.png');
-    // Static demos must not attempt unavailable live lookup endpoints.
-    if (window.__ARCXI_DEMO_SNAPSHOT__) return Promise.resolve(null);
     const key = kind + ':' + normalized;
     const saved = cache[key];
     const image = id => 'https://sports.bzzoiro.com/img/' + (kind === 'team' ? 'team' : 'league') + '/' + id + '/?bg=transparent';
     if (saved && Number.isSafeInteger(saved.id) && saved.id > 0 && Date.now() - saved.at < 7 * 86400000) {
       return Promise.resolve(image(saved.id));
+    }
+    if (window.__ARCXI_DEMO_SNAPSHOT__) {
+      if (kind !== 'team') return Promise.resolve(null);
+      return verifiedSnapshotLogos().then(index => {
+        const found = index[normalized];
+        return found && normalize(found.name) === normalized &&
+          Number.isSafeInteger(found.id) && found.id > 0 ? image(found.id) : null;
+      });
     }
     if (requests.has(key)) return requests.get(key);
     const controller = new AbortController();
