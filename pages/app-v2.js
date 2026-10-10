@@ -423,8 +423,10 @@
       const count = boardDateCount(date);
       const active = state.date === date;
       const unavailable = count === 0 && !active;
-      const label = weekday + ' ' + d.getUTCDate() + ' ' +
-        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d);
+      // Visible order must appear within the accessible name (WCAG 2.5.3).
+      const label = weekday + ' ' +
+        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) +
+        ' ' + d.getUTCDate();
       html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
         '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no ranked board matches')) +
         '" aria-pressed="' + active + '"><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
