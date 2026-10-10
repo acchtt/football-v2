@@ -129,8 +129,33 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Wait briefly for GitHub Pages edge propagation
-        run: sleep 20
+      - name: Confirm this release reached the public Pages URL
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const local = readFileSync('pages/index.html','utf8');
+          const assets = ['app-v2.js','config.js','canonical-live-source.js','schedule-v2.css'];
+          const required = assets.map(asset => {
+            const match = local.match(new RegExp(asset.replaceAll('.', '\\.') + '\\?v=\\d+'));
+            if (!match) throw Error('Release marker missing: ' + asset);
+            return match[0];
+          });
+          let confirmed = false;
+          for (let attempt = 1; attempt <= 10; attempt++) {
+            try {
+              const url = 'https://acchtt.github.io/football-v2/?postdeploy=' + Date.now();
+              const response = await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+              const html = await response.text();
+              if (response.ok && required.every(marker => html.includes(marker))) {
+                console.log('PASS deployed release markers', required.join(', '));
+                confirmed = true; break;
+              }
+              console.log('Waiting for Pages edge release, attempt ' + attempt);
+            } catch (error) { console.log('Transient Pages check: ' + error.message); }
+            await new Promise(resolve => setTimeout(resolve,5000));
+          }
+          if (!confirmed) throw Error('New Pages build not yet visible at public URL');
+          NODE
       - name: Confirm deployed assets, API health and schedule
         run: node scripts/check-production-feed.mjs
       - name: Confirm comparator behavior
