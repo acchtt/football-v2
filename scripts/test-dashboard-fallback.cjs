@@ -39,9 +39,17 @@ const endpoint='https://football-v2.acchtt.workers.dev/api/dashboard-data';
   assert(payload.staleAgeMs>=360000,'Browser cache age must be retained');
   assert.equal(payload.schedule.length,1);
   store.set('sliptrace.dashboard.compat.v4',JSON.stringify({
+    ok:true,_arcxiConfirmedAt:Date.now()-7*3600000,
+    schedule:[{id:'expired'}],picks:[]}));
+  response=await context.window.fetch(endpoint);
+  payload=await response.json();
+  assert.equal(response.status,503,'Expired six-hour snapshot must fail closed');
+  assert.equal(payload.ok,false);
+  store.set('sliptrace.dashboard.compat.v4',JSON.stringify({
     ok:true,schedule:[{id:'old'}],picks:[]}));
   response=await context.window.fetch(endpoint);
   payload=await response.json();
-  assert.equal(payload.staleAgeMs,null,'Legacy cache age must remain unknown');
-  console.log('PASS dashboard outage, confirmed cache freshness, legacy unknown-age handling');
+  assert.equal(response.status,503,'Legacy cache without confirmed time must fail closed');
+  assert.equal(payload.cached,false);
+  console.log('PASS dashboard cold outage, recent fallback, expired cache and unknown age rejection');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -5,6 +5,10 @@
   --schedule-text:#f5f5f5;--schedule-muted:#b9b9bd;--schedule-line:#303034;
   --schedule-font:"ARC Grotesk",Helvetica,Arial,sans-serif;
   --schedule-score-secondary:#ff9dd0;
+  --schedule-control-surface:#111112;
+  --schedule-control-counter:#2c2c2d;
+  --schedule-control-ink:#101010;
+  --schedule-subtle-hover:#ffffff08;
   --schedule-art-width:clamp(380px,32vw,580px);
   --schedule-width:min(85vw,1600px);--schedule-row:41px;--schedule-crest:34px;
 }
@@ -32,7 +36,7 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:2;pointe
 .scheduleDateNav .dateBtn.active small{font-size:14px;font-weight:650}
 .scheduleDateNav .dateBtn.active .scheduleDateLabel{font-weight:550}
 .scheduleDateNav .dateBtn:after{display:none}
-.scheduleDateNav .dateBtn:not(:disabled):hover{background:#ffffff08}
+.scheduleDateNav .dateBtn:not(:disabled):hover{background:var(--schedule-subtle-hover)}
 .scheduleDateNav .dateBtn:disabled{opacity:.45;cursor:default}
 .scheduleHeaderActions{justify-self:end;display:flex;align-items:flex-start;gap:48px;margin-top:19px;margin-right:-5%}
 .scheduleIdentity{display:flex;flex-direction:column;gap:11px;color:var(--schedule-pink);font-size:13px;font-weight:550;letter-spacing:.38em;white-space:nowrap}
@@ -42,7 +46,7 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:2;pointe
 .scheduleMenuButton::-webkit-details-marker{display:none}
 .scheduleMenuButton i{height:1.5px;background:var(--schedule-text)}
 .scheduleMenu[open] .scheduleMenuButton i{background:var(--schedule-pink)}
-.scheduleMenuPanel{position:absolute;right:0;top:46px;width:195px;padding:10px;border:1px solid var(--schedule-line);border-radius:12px;background:#111112;box-shadow:0 16px 40px #0009;display:grid;gap:4px}
+.scheduleMenuPanel{position:absolute;right:0;top:46px;width:195px;padding:10px;border:1px solid var(--schedule-line);border-radius:12px;background:var(--schedule-control-surface);box-shadow:0 16px 40px #0009;display:grid;gap:4px}
 .scheduleMenuPanel a,.scheduleMenuPanel button{border:0;border-radius:6px;padding:10px 12px;background:transparent;text-align:left;color:var(--schedule-text);font:inherit;font-size:13px}
 .scheduleMenuPanel a:hover,.scheduleMenuPanel button:hover{background:#ffffff0b;color:var(--schedule-yellow)}
 /* Override the legacy Board layout once, including its status-dependent card surfaces. */
@@ -54,12 +58,12 @@ html.scheduleCornerMode .iveCorner{display:block;position:fixed;z-index:2;pointe
 .scheduleToolbar{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:20px;min-height:40px}
 .scheduleBoardRoute .statusFilters{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;width:max-content;margin:0;padding:0;border:0;background:none}
 .scheduleBoardRoute .statusFilters button{min-width:0;min-height:40px;padding:0 16px;border:1px solid var(--schedule-line);border-radius:999px;display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;color:var(--schedule-text);font-family:var(--schedule-font);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;white-space:nowrap}
-.scheduleBoardRoute .statusFilters button b{display:grid;place-items:center;min-width:23px;height:23px;padding:0 5px;border-radius:99px;background:#2c2c2d;color:var(--schedule-text);font-size:12px;font-weight:550;letter-spacing:0}
+.scheduleBoardRoute .statusFilters button b{display:grid;place-items:center;min-width:23px;height:23px;padding:0 5px;border-radius:99px;background:var(--schedule-control-counter);color:var(--schedule-text);font-size:12px;font-weight:550;letter-spacing:0}
 .scheduleBoardRoute .statusFilters button[data-status-filter="live"] b,.scheduleBoardRoute .statusFilters button[data-status-filter="finished"] b{color:var(--schedule-pink)}
-.scheduleBoardRoute .statusFilters button:hover{border-color:#626266;background:#ffffff08}
-.scheduleBoardRoute .statusFilters button.active{border-color:var(--schedule-yellow);background:var(--schedule-yellow);color:#101010}
+.scheduleBoardRoute .statusFilters button:hover{border-color:#626266;background:var(--schedule-subtle-hover)}
+.scheduleBoardRoute .statusFilters button.active{border-color:var(--schedule-yellow);background:var(--schedule-yellow);color:var(--schedule-control-ink)}
 .scheduleBoardRoute .statusFilters button.active b{background:#8e8300;color:#fff}
-.scheduleBoardRoute .statusFilters button[data-status-filter="live"].active{border-color:var(--schedule-pink);background:var(--schedule-pink);color:#101010}
+.scheduleBoardRoute .statusFilters button[data-status-filter="live"].active{border-color:var(--schedule-pink);background:var(--schedule-pink);color:var(--schedule-control-ink)}
 .scheduleBoardRoute .statusFilters button[data-status-filter="live"].active b{background:#8a164d;color:#fff}
 .scheduleSearch{width:24.5%;min-width:245px;min-height:40px;display:flex;align-items:center;gap:13px;margin-right:5px;padding:0 16px;border:1px solid var(--schedule-line);border-radius:99px;background:linear-gradient(90deg,#151516,#121213)}
 .scheduleSearch svg{width:21px;height:21px;flex:0 0 21px;fill:none;stroke:var(--schedule-text);stroke-width:1.8;stroke-linecap:round}
@@ -182,7 +186,7 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
 /* Focused improvement pass: maintain the approved schedule while improving clarity. */
 .scheduleBoardRoute .scheduleFixture,
 .scheduleBoardRoute .scheduleMatchCard{transition:background-color .14s ease}
-.scheduleBoardRoute .scheduleMatchCard:focus-within{background:#ffffff08}
+.scheduleBoardRoute .scheduleMatchCard:focus-within{background:var(--schedule-subtle-hover)}
 .scheduleBoardRoute .scheduleFixture:focus-visible,
 .scheduleDateNav>button:focus-visible,
 .scheduleDateNav .dateBtn:focus-visible,
@@ -349,4 +353,14 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleScore small {
   }
   .scheduleDateNav .dateStrip .dateBtn:first-child,
   .scheduleDateNav .dateStrip .dateBtn:last-child{display:none}
+}
+
+/* Accessible five-way lifecycle filtering on small screens: preserve 44px+
+   touch surfaces, no horizontal scroller and no change to artwork placement. */
+@media(max-width:700px){
+  .scheduleBoardRoute .statusFilters{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .scheduleBoardRoute .statusFilters button{
+    min-height:55px;flex-direction:column;gap:2px;padding:3px 1px;
+    font-size:9px;letter-spacing:0;overflow-wrap:anywhere
+  }
 }

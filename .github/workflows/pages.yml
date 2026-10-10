@@ -66,8 +66,8 @@ jobs:
           assert 'pwa-v2.js' not in index, 'PWA runtime should be disabled'
           assert 'alerts-center.js' not in index, 'PWA-linked alerts runtime should be disabled'
           assert 'pwa-off.js?v=1' in index, 'service-worker cleanup script is missing'
-          assert 'app-v2.js?v=69' in index, 'unexpected app asset version'
-          assert 'schedule-v2.css?v=26' in index, 'unexpected schedule CSS version'
+          assert 'app-v2.js?v=70' in index, 'unexpected app asset version'
+          assert 'schedule-v2.css?v=27' in index, 'unexpected schedule CSS version'
           assert 'ive-sidebars.js?v=29' in index, 'unexpected corner asset loader version'
           assert 'icons/arc-xi-schedule.svg?v=2' in index, 'current favicon not wired'
           assert 'schedule-logos.js?v=2' in index, 'independent schedule logo lookup is missing'
@@ -100,6 +100,7 @@ jobs:
           node --check pages/schedule-logos.js
           node scripts/check-schedule-logos.cjs
           node scripts/test-dashboard-fallback.cjs
+          node scripts/test-status-precedence.cjs
           echo "Active JavaScript syntax, dashboard fallback and schedule rendering validated"
 
       - name: Setup Pages
@@ -115,3 +116,64 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # The deploy job only validates the artifact. This independent post-deploy
+  # check visits the actual public URL and does not write scores or bet data.
+  production-smoke:
+    name: Post-deployment public feed and live-score parity
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Confirm this release reached the public Pages URL
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const local = readFileSync('pages/index.html','utf8');
+          const assets = ['app-v2.js','config.js','canonical-live-source.js','schedule-v2.css'];
+          const required = assets.map(asset => {
+            const match = local.match(new RegExp(asset.replaceAll('.', '\\.') + '\\?v=\\d+'));
+            if (!match) throw Error('Release marker missing: ' + asset);
+            return match[0];
+          });
+          let confirmed = false;
+          for (let attempt = 1; attempt <= 10; attempt++) {
+            try {
+              const url = 'https://acchtt.github.io/football-v2/?postdeploy=' + Date.now();
+              const response = await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+              const html = await response.text();
+              if (response.ok && required.every(marker => html.includes(marker))) {
+                console.log('PASS deployed release markers', required.join(', '));
+                confirmed = true; break;
+              }
+              console.log('Waiting for Pages edge release, attempt ' + attempt);
+            } catch (error) { console.log('Transient Pages check: ' + error.message); }
+            await new Promise(resolve => setTimeout(resolve,5000));
+          }
+          if (!confirmed) throw Error('New Pages build not yet visible at public URL');
+          NODE
+      - name: Confirm deployed assets, API health and schedule
+        run: node scripts/check-production-feed.mjs
+      - name: Confirm comparator behavior
+        run: node --test scripts/test-live-score-parity.mjs
+      - name: Prepare Chrome parity probe
+        run: |
+          mkdir -p /tmp/arcxi-browser
+          npm install --prefix /tmp/arcxi-browser --no-audit --no-fund --no-save puppeteer-core@24
+          which google-chrome || which google-chrome-stable
+      - name: Compare public live scores and rendered fixtures
+        run: node scripts/check-live-render.mjs
+      - name: Upload production parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deployment-live-parity
+          path: |
+            audit-live/parity.json
+            audit-live/production-board.png
+          retention-days: 14
+          if-no-files-found: ignore

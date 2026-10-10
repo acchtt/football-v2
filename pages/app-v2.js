@@ -142,11 +142,27 @@
     return obj(event && event.time);
   }
   function eventStatus(event) {
-    const value = String(pick(event && event.status, eventTime(event).status, 'upcoming')).trim().toLowerCase().replace(/[\s-]+/g, '_');
-    if (['ended','complete','completed','final','ft','full_time','fulltime','aet','after_extra_time','after_penalties'].includes(value)) return 'finished';
-    if (['inprogress','in_progress','playing','ongoing','1st_half','first_half','2nd_half','second_half','ht','halftime','half_time','break','extra_time','penalties'].includes(value)) return 'live';
-    if (value === 'canceled') return 'cancelled';
-    return value;
+    const normalize = function (value) {
+      return String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    };
+    // Periods can lag behind the current lifecycle; only use them when no
+    // explicit provider status is available. In particular, an old 2H clock
+    // must never turn a confirmed UPCOMING fixture into a LIVE match.
+    const statuses = [event && event.status, eventTime(event).status,
+      event && event.match_status, event && event.state]
+      .filter(function (value) { return value !== null && value !== undefined && value !== ''; })
+      .map(normalize);
+    const period = normalize(eventTime(event).period);
+    const finished = ['ended','complete','completed','final','ft','full_time','fulltime','aet','after_extra_time','after_penalties'];
+    const stopped = ['postponed','cancelled','canceled','abandoned','suspended'];
+    const live = ['live','inprogress','in_progress','playing','ongoing','1st_half','first_half','2nd_half','second_half','ht','halftime','half_time','break','extra_time','penalties'];
+    const stop = statuses.find(function (value) { return stopped.includes(value); });
+    if (stop) return stop === 'canceled' ? 'cancelled' : stop;
+    if (statuses.some(function (value) { return finished.includes(value); })) return 'finished';
+    if (statuses.some(function (value) { return live.includes(value); })) return 'live';
+    if (statuses.some(function (value) { return ['upcoming','not_started','notstarted','scheduled','pending'].includes(value); })) return 'upcoming';
+    if (live.includes(period)) return 'live';
+    return statuses[0] || 'upcoming';
   }
   function statusKey(event) {
     const status = eventStatus(event);
@@ -298,6 +314,16 @@
     const ratio = overlap / Math.max(aa.size, bb.size);
     return ratio >= 0.75 ? 4 : ratio >= 0.5 ? 3 : 0;
   }
+  function youthQualifier(value) {
+    const match = String(value || '').match(/\b(?:u[\s-]?(1[5-9]|2[0-3])|under[\s-]?(1[5-9]|2[0-3]))\b/i);
+    return match ? 'u' + (match[1] || match[2]) : '';
+  }
+  function competitionKind(value) {
+    const text = String(value || '').toLowerCase();
+    if (/\b(cup|copa|pokal|coupe|trophy)\b/.test(text)) return 'cup';
+    if (/\b(league|liga|ligue|bundesliga|division|premier|serie|eredivisie|superliga|championship)\b/.test(text)) return 'league';
+    return '';
+  }
   // A single shared club name must never be enough to assign a provider score.
   // Apply kickoff proximity when both sources supply timestamps; do not infer a
   // date match from wall-clock time or treat an Airtable row ID as a BSD ID.
@@ -310,6 +336,12 @@
     const boardWomen = women.test(String(row?.competition || '') + ' ' + String(row?.match || ''));
     const providerWomen = women.test(leagueName(event) + ' ' + teamName(event,'home') + ' ' + teamName(event,'away'));
     if (boardWomen !== providerWomen) return -1;
+    const boardYouth = youthQualifier(String(row?.match || '') + ' ' + String(row?.competition || ''));
+    const providerYouth = youthQualifier(teamName(event,'home') + ' ' + teamName(event,'away') + ' ' + leagueName(event));
+    if (boardYouth !== providerYouth) return -1;
+    const boardKind = competitionKind(row && row.competition);
+    const providerKind = competitionKind(leagueName(event));
+    if (boardKind && providerKind && boardKind !== providerKind) return -1;
     if (home < 3 || away < 3 || home + away < 6) return -1;
     const boardTime = Date.parse(row && (row.kickoff || row.displayKickoff));
     const providerTime = Date.parse(eventKickoff(event));
@@ -563,7 +595,9 @@
     if (event) return statusKey(event);
     const fallback = soccerwayForBoardRow(row);
     if (fallback) return soccerwayStatusKey(fallback);
-    const declared = String(row && (row.status || row.matchStatus) || '').toLowerCase();
+    const declared = String(row && (row.status || row.matchStatus) || '').trim().toLowerCase().replace(/[\s-]+/g,'_');
+    if (['postponed','cancelled','canceled','abandoned','suspended'].includes(declared))
+      return declared === 'canceled' ? 'cancelled' : declared;
     if (['finished','ft','ended','complete','completed','final'].includes(declared)) return 'finished';
     const kickoff = Date.parse(row && (row.kickoff || row.displayKickoff));
     // Elapsed time is not evidence of kickoff, LIVE, or FT. Keep unsupported
@@ -877,11 +911,14 @@
       all: boardRows.length,
       live: boardRows.filter(function (row) { return boardStatus(row) === 'live'; }).length,
       upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length,
-      finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length
+      finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length,
+      stopped: boardRows.filter(function (row) { return ['postponed','cancelled','abandoned','suspended'].includes(boardStatus(row)); }).length
     };
     const query = String(state.boardQuery || '').trim().toLowerCase();
     const filtered = boardRows.filter(function (row) {
-      if (state.statusFilter !== 'all' && boardStatus(row) !== state.statusFilter) return false;
+      if (state.statusFilter !== 'all' && (state.statusFilter === 'stopped' ?
+          !['postponed','cancelled','abandoned','suspended'].includes(boardStatus(row)) :
+          boardStatus(row) !== state.statusFilter)) return false;
       if (query) {
         const haystack = [row.match, row.competition].filter(Boolean).join(' ').toLowerCase();
         if (!haystack.includes(query)) return false;
@@ -894,6 +931,7 @@
     };
     const controls = '<div class="scheduleToolbar"><div class="statusFilters" role="group" aria-label="Match status">' +
       statusButton('all','All') + statusButton('live','Live') + statusButton('upcoming','Upcoming') + statusButton('finished','FT') +
+      statusButton('stopped','Stopped') +
       '</div><form class="scheduleSearch" id="boardSearchForm" role="search">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>' +
       '<input id="boardSearch" type="search" autocomplete="off" value="' + esc(state.boardQuery || '') +
@@ -982,6 +1020,7 @@
     const priorBoard = JSON.stringify(state.board?.schedule || []);
     const priorWarning = state.error || state.boardWarning;
     const requestedDate = date || state.date;
+    const dateChanged = requestedDate !== state.date;
     const requestId = ++state.matchdayRequest;
     const fallbackTask = loadSoccerwayFallback(requestedDate, Boolean(force));
     const cached = state.matchdayCache.get(requestedDate);
@@ -990,19 +1029,19 @@
     const fresh = cached && cacheAge < cacheTtl;
 
     state.date = requestedDate;
-    state.error = '';
-    state.today = cached ? cached.events.slice() : [];
+    if (!silent || dateChanged) state.error = '';
+    if (!silent || dateChanged) state.today = cached ? cached.events.slice() : [];
     if (requestedDate !== todayKey()) state.live = [];
 
     if (!silent && !state.today.length && !state.board) {
       skeleton('board', 'Loading decision board');
-    } else if (routeName() === 'board') {
+    } else if ((!silent || dateChanged) && routeName() === 'board') {
       renderMatchday();
     }
 
     if (fresh && !force) {
       if (!state.board) await loadBoard(false);
-      if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+      if ((!silent || dateChanged) && routeName() === 'board' && state.date === requestedDate) renderMatchday();
       fallbackTask.then(function (changed) {
         if (changed && routeName() === 'board' && state.date === requestedDate) renderMatchday();
       });
@@ -1020,13 +1059,14 @@
       if (requestId !== state.matchdayRequest || state.date !== requestedDate) return events;
       state.today = events;
       state.live = rows(results[1]);
+      state.error = '';
       state.lastSync = Date.now();
     } catch (error) {
       if (requestId !== state.matchdayRequest || state.date !== requestedDate) return [];
       state.error = error.message || String(error);
     }
     if (routeName() === 'board' && state.date === requestedDate &&
-        (!silent || priorSignature !== boardLiveSignature() ||
+        (!silent || dateChanged || priorSignature !== boardLiveSignature() ||
          priorBoard !== JSON.stringify(state.board?.schedule || []) ||
          priorWarning !== (state.error || state.boardWarning))) renderMatchday();
     fallbackTask.then(function (changed) {
