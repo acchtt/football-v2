@@ -292,6 +292,8 @@ try{
     await fs.writeFile("demo-preview/screenshots/"+target.name+"-a11y.json",
       JSON.stringify({viewport:target.name,violations:accessibility},null,2));
     console.log("AXE "+target.name+" "+JSON.stringify(accessibility));
+    assert(!accessibility.some(item=>item.impact==="serious"||item.impact==="critical"),
+      "Accessible fixture navigation has serious/critical WCAG violations: "+JSON.stringify(accessibility));
   }
   if(target.name==="desktop"){
     // Both legitimate empty coverage and missing saved coverage must be distinct.
