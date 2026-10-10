@@ -88,11 +88,13 @@ async function run(){
     });
   }
   let initial=await inspect();
-  assert(initial[0].status!=='LIVE'&&initial[0].status!=='FT',
+  const beforeKickoff=initial.find(row=>row.label==='Club Alpha');
+  const unsupported=initial.find(row=>row.label==='Unknown City');
+  assert(beforeKickoff && !['LIVE','FT'].includes(beforeKickoff.status),
     'Elapsed kickoff time must not fabricate LIVE or FT: '+JSON.stringify(initial));
-  assert.equal(initial[1].status,'UNVERIFIED',
+  assert.equal(unsupported?.status,'UNVERIFIED',
     'Old unsupported fixture must be UNVERIFIED');
-  assert.notEqual(initial[1].dataset,'finished',
+  assert.notEqual(unsupported?.dataset,'finished',
     'Unsupported fixture may not be in confirmed FT lane');
   console.log('INITIAL '+JSON.stringify(initial));
   const next=async(scene,expected)=>{
@@ -106,9 +108,13 @@ async function run(){
     await page.waitForFunction(expected,{timeout:18000});
     return inspect();
   };
-  let phase=await next(1,()=>document.querySelector('.scheduleMatchCard .scheduleScore strong')?.textContent==='1–0'&&
-    document.querySelector('.scheduleMatchCard .fixtureStatus')?.textContent==='LIVE');
-  assert.equal(phase[0].status,'LIVE');console.log('LIVE_1_0 '+JSON.stringify(phase));
+  let phase=await next(1,()=>{
+    const row=[...document.querySelectorAll('.scheduleMatchCard')].find(n=>
+      n.querySelector('.scheduleTeam.home span')?.textContent==='Club Alpha');
+    return row?.querySelector('.scheduleScore strong')?.textContent==='1–0'&&
+      row?.querySelector('.fixtureStatus')?.textContent==='LIVE';
+  });
+  assert.equal(phase.find(row=>row.label==='Club Alpha')?.status,'LIVE');console.log('LIVE_1_0 '+JSON.stringify(phase));
   await page.click('#boardSearch');
   await page.type('#boardSearch','Alpha',{delay:8});
   await page.waitForFunction(()=>document.querySelectorAll('.scheduleMatchCard').length===1);
