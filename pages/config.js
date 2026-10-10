@@ -6,6 +6,7 @@
   const API = 'https://football-v2.acchtt.workers.dev';
   const TZ = 'Asia/Ho_Chi_Minh';
   const DASHBOARD_CACHE_KEY = 'sliptrace.dashboard.compat.v4';
+  const MAX_DASHBOARD_CACHE_MS = 6 * 60 * 60 * 1000;
   const nativeFetch = window.fetch.bind(window);
   const nativeSetInterval = window.setInterval.bind(window);
 
@@ -244,10 +245,25 @@
     try { localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(payload)); } catch {}
   }
 
+  function isUsableDashboard(payload) {
+    if (!payload || payload.ok === false || !Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) return false;
+    if (payload.cached === true || payload.degraded === true) {
+      const age = payload.staleAgeMs;
+      return typeof age === 'number' && Number.isFinite(age) &&
+        age >= 0 && age <= MAX_DASHBOARD_CACHE_MS;
+    }
+    return true;
+  }
   function readCachedDashboard() {
     try {
       const cached = JSON.parse(localStorage.getItem(DASHBOARD_CACHE_KEY) || 'null');
-      if (cached && Array.isArray(cached.schedule) && Array.isArray(cached.picks)) return normalizeDashboardPayload(cached);
+      if (!cached || !Array.isArray(cached.schedule) || !Array.isArray(cached.picks)) return null;
+      // Legacy/expired snapshots cannot be presented as today's confirmed board.
+      const confirmedAt = cached._arcxiConfirmedAt;
+      const age = Date.now() - confirmedAt;
+      if (typeof confirmedAt !== 'number' || !Number.isFinite(age) ||
+          age < 0 || age > MAX_DASHBOARD_CACHE_MS) return null;
+      return normalizeDashboardPayload(cached);
     } catch {}
     return null;
   }
@@ -268,7 +284,7 @@
         const response = await timedFetch(`${API}/api/dashboard-data?board_only=${Date.now()}`, { cache: 'no-store' }, 6500);
         if (response.ok) {
           const payload = normalizeDashboardPayload(await response.json());
-          if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
+          if (isUsableDashboard(payload)) {
             rememberDashboard(payload);
             return boardSnapshot;
           }
@@ -281,7 +297,7 @@
         return boardSnapshot;
       }
       return { ok: false, schedule: [], picks: [], degraded: true,
-        error: 'Dashboard unavailable; no confirmed board is stored.' };
+        error: 'Dashboard unavailable; no recent confirmed board is stored.' };
     })();
 
     try { return await boardSnapshotPromise; }
@@ -337,7 +353,7 @@
     if (cached) return new Response(JSON.stringify(degradedDashboard(cached)), { status: 200, headers });
     // Fail closed: an empty board is not proof of a zero-fixture day.
     return new Response(JSON.stringify({ ok: false, schedule: [], picks: [],
-      degraded: true, cached: false, error: 'Dashboard unavailable; no confirmed board is stored.' }),
+      degraded: true, cached: false, error: 'Dashboard unavailable; no recent confirmed board is stored.' }),
       { status: 503, headers });
   }
 
@@ -406,10 +422,11 @@
         const response = await timedFetch(input, init, 6500);
         if (response.ok) {
           const payload = normalizeDashboardPayload(await response.clone().json());
-          if (payload?.ok !== false && Array.isArray(payload.schedule) && Array.isArray(payload.picks)) {
+          if (isUsableDashboard(payload)) {
             rememberDashboard(payload);
             return jsonResponse(boardSnapshot, response);
           }
+          if (payload?.cached || payload?.degraded) return cachedDashboardResponse();
           return response;
         }
         return cachedDashboardResponse();
