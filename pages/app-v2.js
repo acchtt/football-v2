@@ -216,12 +216,18 @@
     }
     return phaseLabel || String(fixture && fixture.statusText || 'LIVE');
   }
+  function soccerwaySignature(fixtures) {
+    return JSON.stringify(fixtures.map(function (fixture) {
+      return [fixture.boardId, fixture.boardMatch, fixture.status, fixture.homeScore,
+        fixture.awayScore, fixture.minute, fixture.livePhase, fixture.homeLogoUrl, fixture.awayLogoUrl];
+    }));
+  }
   async function loadSoccerwayFallback(date, force) {
     const day = soccerwayDayOffset(date);
-    if (day === null) return [];
+    if (day === null) return false;
     const current = state.soccerwayCache.get(date);
     const ttl = date === todayKey() ? 15000 : 300000;
-    if (!force && current && Date.now() - current.loadedAt < ttl) return current.fixtures;
+    if (!force && current && Date.now() - current.loadedAt < ttl) return false;
     if (state.soccerwayPromises.has(date)) return state.soccerwayPromises.get(date);
 
     const task = api('/api/soccerway/board?day=' + day + '&t=' + Date.now())
@@ -237,7 +243,10 @@
             const key = soccerwayFixtureKey(fixture.boardMatch || ((fixture.homeTeam || '') + ' vs ' + (fixture.awayTeam || '')));
             if (key && key !== '|') byFixture.set(key, fixture);
           });
+          const signature = soccerwaySignature(matched);
+          const changed = !current || signature !== current.signature;
           state.soccerwayCache.set(date, {
+            signature: signature,
             fixtures: matched,
             byId: byId,
             byFixture: byFixture,
@@ -246,14 +255,14 @@
             totalCount: Number(payload.count) || payload.fixtures.length,
             error: ''
           });
-          return matched;
+          return changed;
       })
       .catch(function (error) {
         const previous = state.soccerwayCache.get(date);
         state.soccerwayCache.set(date, previous ? Object.assign({}, previous, {error:error.message || String(error)}) : {
           fixtures: [], byId: new Map(), byFixture: new Map(), loadedAt: Date.now(), matchedCount: 0, totalCount: 0, error:error.message || String(error)
         });
-        return [];
+        return false;
       })
       .finally(function () { state.soccerwayPromises.delete(date); });
     state.soccerwayPromises.set(date, task);
@@ -964,6 +973,9 @@
     }
   }
   async function loadMatchday(date, silent, force) {
+    const priorSignature = boardLiveSignature();
+    const priorBoard = JSON.stringify(state.board?.schedule || []);
+    const priorWarning = state.error || state.boardWarning;
     const requestedDate = date || state.date;
     const requestId = ++state.matchdayRequest;
     const fallbackTask = loadSoccerwayFallback(requestedDate, Boolean(force));
@@ -986,8 +998,8 @@
     if (fresh && !force) {
       if (!state.board) await loadBoard(false);
       if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
-      fallbackTask.then(function () {
-        if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+      fallbackTask.then(function (changed) {
+        if (changed && routeName() === 'board' && state.date === requestedDate) renderMatchday();
       });
       return state.today;
     }
@@ -1008,9 +1020,12 @@
       if (requestId !== state.matchdayRequest || state.date !== requestedDate) return [];
       state.error = error.message || String(error);
     }
-    if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
-    fallbackTask.then(function () {
-      if (routeName() === 'board' && state.date === requestedDate) renderMatchday();
+    if (routeName() === 'board' && state.date === requestedDate &&
+        (!silent || priorSignature !== boardLiveSignature() ||
+         priorBoard !== JSON.stringify(state.board?.schedule || []) ||
+         priorWarning !== (state.error || state.boardWarning))) renderMatchday();
+    fallbackTask.then(function (changed) {
+      if (changed && routeName() === 'board' && state.date === requestedDate) renderMatchday();
     });
     return state.today;
   }
@@ -1700,13 +1715,15 @@
       return [eventId(event),eventStatus(event),scoreText(event)];
     }));
   }
+  let liveRefreshInFlight = false;
   async function refreshLive() {
-    if (document.visibilityState === 'hidden') return;
+    if (liveRefreshInFlight || document.visibilityState === 'hidden') return;
     if (routeName() === 'board' && state.date !== todayKey()) return;
+    liveRefreshInFlight = true;
     state.refreshTick += 1;
     if (routeName() === 'board' && state.date === todayKey() && state.refreshTick % 2 === 0) {
-      loadSoccerwayFallback(state.date, true).then(function () {
-        if (routeName() === 'board' && state.date === todayKey()) renderMatchday();
+      loadSoccerwayFallback(state.date, true).then(function (changed) {
+        if (changed && routeName() === 'board' && state.date === todayKey()) renderMatchday();
       });
     }
     try {
@@ -1759,6 +1776,8 @@
         state.error = message;
         if (routeName() === 'board') renderMatchday();
       }
+    } finally {
+      liveRefreshInFlight = false;
     }
   }
   function tickClocks() {
