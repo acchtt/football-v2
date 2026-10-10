@@ -15,6 +15,7 @@
     date: todayKey(),
     board: null,
     error: '',
+    boardWarning: '',
     lastSync: 0,
     refreshTick: 0,
     statusFilter: readStore('sliptrace.statusFilter.v4', 'all', sessionStorage),
@@ -141,14 +142,17 @@
     return obj(event && event.time);
   }
   function eventStatus(event) {
-    const value = String(pick(event && event.status, eventTime(event).status, 'upcoming')).toLowerCase();
-    if (['ended','complete','completed','final','ft'].includes(value)) return 'finished';
-    if (['inprogress','in_progress','playing','ongoing'].includes(value)) return 'live';
+    const value = String(pick(event && event.status, eventTime(event).status, 'upcoming')).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    if (['ended','complete','completed','final','ft','full_time','fulltime','aet','after_extra_time','after_penalties'].includes(value)) return 'finished';
+    if (['inprogress','in_progress','playing','ongoing','1st_half','first_half','2nd_half','second_half','ht','halftime','half_time','break','extra_time','penalties'].includes(value)) return 'live';
+    if (value === 'canceled') return 'cancelled';
     return value;
   }
   function statusKey(event) {
-    if (eventStatus(event) === 'live') return 'live';
-    if (['finished','ft','ended','complete','completed'].includes(eventStatus(event))) return 'finished';
+    const status = eventStatus(event);
+    if (status === 'live') return 'live';
+    if (status === 'finished') return 'finished';
+    if (['postponed','cancelled','abandoned','suspended'].includes(status)) return status;
     return 'upcoming';
   }
   function isLive(event) { return statusKey(event) === 'live'; }
@@ -191,8 +195,9 @@
   }
   function soccerwayStatusKey(fixture) {
     const value = String(fixture && fixture.status || '').toLowerCase();
-    if (value === 'live') return 'live';
+    if (value === 'live' || ['ht','halftime','1st_half','2nd_half'].includes(value)) return 'live';
     if (['finished','ft','ended','complete','completed'].includes(value)) return 'finished';
+    if (['postponed','cancelled','canceled','abandoned','suspended'].includes(value)) return value === 'canceled' ? 'cancelled' : value;
     return 'upcoming';
   }
   function soccerwayScoreText(fixture) {
@@ -257,7 +262,6 @@
 
   function normalizeName(value) {
     return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-      .replace(/\b(women|woman|ladies|w|femenino|feminine)\b/g, ' ')
       .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|sv|cd|sd|ifk|bk|ff|dff|ik)\b/g, ' ')
       .replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(Boolean)
       .map(function (token) { return token.length > 5 && token.endsWith('s') ? token.slice(0, -1) : token; })
@@ -285,35 +289,45 @@
     const ratio = overlap / Math.max(aa.size, bb.size);
     return ratio >= 0.75 ? 4 : ratio >= 0.5 ? 3 : 0;
   }
+  // A single shared club name must never be enough to assign a provider score.
+  // Apply kickoff proximity when both sources supply timestamps; do not infer a
+  // date match from wall-clock time or treat an Airtable row ID as a BSD ID.
+  function boardEventScore(row, event) {
+    const teams = splitMatch(row && row.match);
+    const home = nameScore(teams.home, teamName(event, 'home'));
+    const away = nameScore(teams.away, teamName(event, 'away'));
+    if (home < 3 || away < 3 || home + away < 6) return -1;
+    const boardTime = Date.parse(row && (row.kickoff || row.displayKickoff));
+    const providerTime = Date.parse(eventKickoff(event));
+    if (Number.isFinite(boardTime) && Number.isFinite(providerTime) &&
+        Math.abs(boardTime - providerTime) > 6 * 60 * 60 * 1000) return -1;
+    return home + away;
+  }
   function boardRowFor(event) {
     const rows = state.board && Array.isArray(state.board.schedule) ? state.board.schedule : [];
-    return rows.map(function (row) {
-      const teams = splitMatch(row.match);
-      return {
-        row: row,
-        score: nameScore(teams.home, teamName(event, 'home')) + nameScore(teams.away, teamName(event, 'away'))
-      };
-    }).filter(function (item) {
-      return item.score >= 6;
-    }).sort(function (a, b) {
-      return b.score - a.score;
-    })[0]?.row || null;
+    const matches = rows.map(function (row) { return {row:row,score:boardEventScore(row,event)}; })
+      .filter(function (candidate) { return candidate.score >= 6; })
+      .sort(function (a,b) { return b.score - a.score; });
+    if (matches.length > 1 && matches[0].score === matches[1].score) return null;
+    return matches[0]?.row || null;
   }
   function picksFor(event) {
     const picks = state.board && Array.isArray(state.board.picks) ? state.board.picks : [];
-    return picks.filter(function (row) {
-      const teams = splitMatch(row.match);
-      return nameScore(teams.home, teamName(event, 'home')) + nameScore(teams.away, teamName(event, 'away')) >= 6;
-    });
+    return picks.filter(function (row) { return boardEventScore(row,event) >= 6; });
   }
   function eventForBoardRow(row) {
-    const teams = splitMatch(row.match);
-    return state.today.find(function (event) {
-      // Ignore synthetic Board placeholders. They have no BSD event id and were
-      // masking the richer Soccerway fallback (score + logos) for unsupported games.
-      if (!eventId(event)) return false;
-      return nameScore(teams.home, teamName(event, 'home')) + nameScore(teams.away, teamName(event, 'away')) >= 6;
-    }) || null;
+    const boardTime = Date.parse(row && (row.kickoff || row.displayKickoff));
+    const candidates = state.today.filter(function (event) { return Boolean(eventId(event)); })
+      .map(function (event) {
+        const eventTime = Date.parse(eventKickoff(event));
+        return {event:event,score:boardEventScore(row,event),
+          offset:Number.isFinite(boardTime) && Number.isFinite(eventTime) ? Math.abs(boardTime-eventTime) : Infinity};
+      }).filter(function (candidate) { return candidate.score >= 6; })
+      .sort(function (a,b) { return b.score - a.score || a.offset - b.offset; });
+    if (candidates.length > 1 && candidates[0].score === candidates[1].score &&
+        (candidates[0].offset === candidates[1].offset ||
+         Math.abs(candidates[0].offset - candidates[1].offset) < 15*60*1000)) return null;
+    return candidates[0]?.event || null;
   }
 
   function routeName() {
@@ -447,15 +461,19 @@
     if (isFinished(event)) return 'FT';
     if (isLive(event)) {
       const time = eventTime(event);
+      if (/^(ht|half_time|halftime|break)$/.test(String(time.period || '').toLowerCase().replace(/[\\s-]+/g, '_'))) return 'HT';
       return pick(time.display, time.minute !== undefined ? time.minute + '′' : null, 'LIVE');
     }
     const status = eventStatus(event);
     if (status === 'postponed') return 'PP';
-    if (status === 'cancelled' || status === 'canceled') return 'CANC';
+    if (status === 'cancelled') return 'CANC';
+    if (status === 'abandoned') return 'ABD';
+    if (status === 'suspended') return 'SUSP';
     return formatTime(eventKickoff(event));
   }
   function liveClock(event) {
     if (!isLive(event)) return statusLabel(event);
+    if (statusLabel(event) === 'HT') return 'HT';
     const anchor = anchorClock(event);
     if (!anchor) return statusLabel(event);
     const total = anchor.minute * 60 + anchor.second + Math.max(0, Math.floor((Date.now() - anchor.at) / 1000));
@@ -584,6 +602,7 @@
     const finished = status === 'finished';
     const live = status === 'live';
     const unverified = status === 'unverified';
+    const stopped = ['postponed','cancelled','abandoned','suspended'].includes(status);
     const sourceConfirmed = Boolean(event || fallback || /^(ft|finished|ended|complete|completed|final)$/i.test(
       String(row && (row.status || row.matchStatus) || '')));
     const canManualScore = !event && (!fallback || status !== 'upcoming');
@@ -601,18 +620,20 @@
       scoreLabel = soccerwayScoreText(fallback);
       detail = live ? soccerwayMinuteText(fallback) : (scoreLabel === 'VS' ? 'NO RESULT' : 'FT');
       if (finished && scoreLabel === 'VS') scoreLabel = '—';
-    } else if (finished || unverified) {
+    } else if (finished || unverified || stopped) {
       scoreLabel = '—';
-      detail = 'NO RESULT';
+      detail = stopped ? 'NOT PLAYING' : 'NO RESULT';
     }
     const statusName = unverified || (finished && !sourceConfirmed) ? 'UNVERIFIED' :
-      finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
+      finished ? 'FT' : stopped ? ({postponed:'PP',cancelled:'CANC',abandoned:'ABD',suspended:'SUSP'}[status]) :
+      live ? (event && statusLabel(event) === 'HT' ? 'HT' : 'LIVE') : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
     const statusClass = unverified ? 'unverified' : finished ? 'finished' :
-      live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
+      stopped ? 'stopped' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture scheduleFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
       (id ? 'href="#match/' + id + '" ' : '') +
       'data-live-event="' + (id || '') + '" data-match-status="' + status + '" data-signal-tier="' + esc(tier) + '"' +
+      ' data-board-home="' + esc(splitMatch(row.match).home) + '" data-board-away="' + esc(splitMatch(row.match).away) + '"' +
       (lane ? ' data-operational-lane="' + esc(lane) + '"' : '') +
       (rank ? ' data-board-rank="' + esc(rank) + '"' : '') +
       (fallback ? ' data-score-source="soccerway"' : '');
@@ -826,6 +847,7 @@
   }
   function renderMatchday(loading) {
     state.route = 'board';
+    const sourceWarning = state.error || state.boardWarning;
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
       return tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'PASS';
@@ -869,7 +891,7 @@
         return '<div class="scheduleMatchCard"><div class="scheduleFixture"><div class="scheduleTime"><i class="schedulePlaceholder time"></i><i class="schedulePlaceholder lane"></i></div>' +
           '<div class="scheduleTeams"><div class="scheduleTeam home"><i class="schedulePlaceholder team"></i><i class="schedulePlaceholder crest"></i></div>' +
           '<div class="scheduleScore"><i class="schedulePlaceholder score"></i></div><div class="scheduleTeam away"><i class="schedulePlaceholder crest"></i><i class="schedulePlaceholder team"></i></div></div></div></div>';
-      }).join('') + '</div>' : state.error && !boardRows.length ?
+      }).join('') + '</div>' : sourceWarning && !boardRows.length ?
       '<div class="emptyState connectionEmpty"><strong>Schedule unavailable</strong><span>Live football data could not be confirmed. ARC XI will retry without treating this as a zero-match day.</span></div>' :
       filtered.length ? boardMatchList(filtered) : boardRows.length ?
         '<div class="emptyState"><strong>No matches found</strong><span>Change the status filter or clear the schedule search.</span>' +
@@ -878,7 +900,7 @@
     const content =
       '<section class="scheduleStage" aria-label="ARC XI football schedule" aria-busy="' + Boolean(loading) + '">' +
       '<h1 class="srOnly">ARC XI football schedule</h1>' +
-      (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
+      (sourceWarning ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(sourceWarning) + '</span></div>' : '') +
       '<div class="scheduleTop">' + controls + '</div>' +
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
       '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
@@ -915,6 +937,14 @@
     if (host) host.insertAdjacentHTML('beforeend', '<section class="matchSection">' + rows + '</section>');
     bindGlobal();
   }
+  function boardWarning(payload) {
+    if (!payload || (!payload.degraded && !payload.cached)) return '';
+    const age = Number(payload.staleAgeMs);
+    const known = payload.staleAgeMs !== null && payload.staleAgeMs !== undefined &&
+      Number.isFinite(age) && age >= 0;
+    return known ? 'Using a cached board last confirmed ' + Math.ceil(age/60000) + ' minute(s) ago. Live source freshness is not confirmed.' :
+      'Using a cached board of unknown age. Live source freshness is not confirmed.';
+  }
   async function loadBoard(force) {
     if (state.board && !force) return state.board;
     if (state.boardPromise && !force) return state.boardPromise;
@@ -922,8 +952,10 @@
     state.boardPromise = request;
     try {
       state.board = await request;
+      state.boardWarning = boardWarning(state.board);
       return state.board;
     } catch (error) {
+      state.boardWarning = 'Dashboard refresh failed; the last confirmed schedule may be outdated.';
       // A missing initial dashboard cannot be represented as a genuine empty slate.
       if (!state.board) throw error;
       return state.board;
@@ -1704,8 +1736,7 @@
         if (!id || state.today.some(function (row) {return eventId(row) === id;})) return;
         const matched = boardFixtures.some(function (row) {
           const teams = splitMatch(row.match);
-          return nameScore(teams.home,teamName(event,'home')) +
-            nameScore(teams.away,teamName(event,'away')) >= 6;
+          return boardEventScore(row,event) >= 6;
         });
         if (matched) state.today.push(Object.assign({},event,{status:'live'}));
       });
