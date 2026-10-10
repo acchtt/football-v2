@@ -403,3 +403,32 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleBoardRoute .scheduleTeam span {font-size:12px;}
   .scheduleBoardRoute .scheduleCompetitionHead > strong {font-size:11px;}
 }
+
+
+/* Impeccable mobile finding: logo wrappers were hidden by the generic
+   competition count rule, collapsing certain headings into the icon column. */
+@media (max-width:700px) {
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead {
+    display:grid;
+    grid-template-columns:24px minmax(0,1fr);
+    align-items:center;
+    gap:9px;
+  }
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead > .scheduleCompetitionLogo {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+  }
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead > span:not(.scheduleCompetitionLogo):not(.competitionMark) {
+    display:none;
+  }
+  html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead > strong {
+    min-width:0;
+    grid-column:2;
+    overflow-wrap:normal;
+    word-break:normal;
+    white-space:normal;
+  }
+}
