@@ -29,13 +29,14 @@ assert(!dateHtml.includes(" disabled"),"Empty days must stay navigable");
 assert(dateHtml.includes('aria-pressed="true"'));
 
 // Run REAL competition grouping against interleaved competitions.
+const displayNameCode=extract(app,"  function displayCompetitionName(name) {","  function boardMatchList(");
 const groupCode=extract(app,"  function boardMatchList(boardRows) {","  function groupedMatches(");
 const rows=[
   {match:"Fixture A",competition:"League X"},
   {match:"Fixture B",competition:"League Y"},
   {match:"Fixture C",competition:"League X"}
 ];
-const listing=vm.runInNewContext("(function(){"+groupCode+";return boardMatchList(rows)})()",{
+const listing=vm.runInNewContext("(function(){"+displayNameCode+groupCode+";return boardMatchList(rows)})()",{
   rows,eventForBoardRow:()=>null,soccerwayForBoardRow:()=>null,
   leagueName:()=>"unknown",leagueId:()=>null,esc:x=>x,
   boardMatchBlock:r=>'<article data-fixture="'+r.match+'"></article>',
@@ -50,7 +51,7 @@ assert(listing.includes('role="heading" aria-level="2"'));
 
 // Guard major regression classes. Syntax validation runs separately in CI.
 assert(html.includes('<div id="app"></div>')&&!html.includes('<main id="app">'));
-assert(html.includes("app-v2.js?v=67"));
+assert(html.includes("app-v2.js?v=68"));
 assert(app.includes("root.inert = true")&&app.includes("root.inert = false"));
 assert(app.includes("event.key !== 'Tab'")&&app.includes("returnFocus?.isConnected"));
 assert(app.includes("if (IS_SNAPSHOT || document.visibilityState"));
@@ -62,7 +63,13 @@ assert(snapshot.includes("Array.from({length: 13}") &&
        !snapshot.includes("if (!hasBoard && day !== today)"));
 assert(config.includes("window.__ARCXI_BUILD__ !== 'schedule-reference-v67-demo-repair'"));
 assert(behavior.includes("if (!window.__ARCXI_DEMO_SNAPSHOT__) setInterval("));
-assert(logos.includes("if (window.__ARCXI_DEMO_SNAPSHOT__) return Promise.resolve(null)"));
+assert(logos.includes("verifiedSnapshotLogos()")&&logos.includes("normalize(found.name) === normalized"));
+assert(snapshot.includes('logos.json')&&snapshot.includes('conflictingTeams.add(key)'));
+assert(!app.includes("IS_SNAPSHOT && state.board && !boardRowsForDate().length ? ''"));
+assert(app.includes("Saved fixture coverage unavailable"));
+const formatted=vm.runInNewContext("(function(){"+displayNameCode+";return displayCompetitionName('QATAR_STARS_LEAGUE')})()");
+assert.equal(formatted,"Qatar Stars League","Raw league IDs must become readable labels");
+assert(app.includes("Older than 6 hours"),"Stale snapshots must be labeled");
 assert(css.includes("min-width:44px")&&css.includes("min-height:44px"));
 assert(css.includes("scheduleSnapshotNotice")&&css.includes("grid-template-columns:44px"));
 assert(glass.includes("cosmic-wallpaper-3840.webp"));
