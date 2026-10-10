@@ -9,7 +9,6 @@
   const nativeFetch = window.fetch.bind(window);
   const nativeSetInterval = window.setInterval.bind(window);
 
-  let replacedAppLiveTimer = false;
   let boardSnapshot = null;
   let boardSnapshotAt = 0;
   let boardSnapshotPromise = null;
@@ -421,65 +420,14 @@
     return timedFetch(input, init, 10000);
   };
 
-  function quietLiveRefresh() {
-    if (document.visibilityState === 'hidden') return;
-    window.fetch(`${API}/api/bsd/live?t=${Date.now()}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(payload => {
-        const source = payload?.data?.results || payload?.data?.events || [];
-        if (!Array.isArray(source)) return;
-        const rows = source.map(normalizeEvent);
-        const byId = new Map(rows.map(e => [String(pick(e.id, e.event_id)), e]));
-
-        document.querySelectorAll('.matchRow[data-live-event]').forEach(node => {
-          const event = byId.get(String(node.dataset.liveEvent || ''));
-          if (!event) return;
-          const home = finite(event.home_score ?? event.score?.home);
-          const away = finite(event.away_score ?? event.score?.away);
-          const minute = finite(event.time?.minute ?? event.current_minute ?? event.minute);
-          const period = String(pick(event.time?.period, event.period, '') || '').replace(/_/g, ' ');
-
-          const score = node.querySelector('.matchScore strong');
-          if (score && home !== null && away !== null) score.textContent = `${home}–${away}`;
-          const clock = node.querySelector('.matchScore [data-clock]');
-          if (clock) clock.textContent = minute !== null ? `${minute}′` : 'LIVE';
-          const time = node.querySelector('.matchTime');
-          if (time) time.innerHTML = `<span class="tag live"><i class="dot bad"></i>LIVE</span><small>${period}</small>`;
-        });
-
-        const system = document.querySelector('.systemState');
-        if (system) {
-          const spans = system.querySelectorAll('span');
-          if (spans[0]) spans[0].innerHTML = '<i class="dot live"></i>BSD LIVE';
-          if (spans[1]) spans[1].textContent = new Date().toLocaleTimeString('en-GB', { hour12: false });
-        }
-      }).catch(() => {});
-  }
-
-  // Prevent app-v2's legacy live timer from rebuilding Matchday.
-  window.setInterval = function sliptraceSetInterval(callback, delay, ...args) {
-    if (!replacedAppLiveTimer && Number(delay) === 10000 && callback?.name === 'refreshLive') {
-      replacedAppLiveTimer = true;
-      return nativeSetInterval(quietLiveRefresh, 10000);
-    }
-    return nativeSetInterval(callback, delay, ...args);
-  };
-
-  // app-v2's legacy focus/visibility listeners call the full loader. Because this
-  // script loads first, capture-phase guards prevent those handlers from firing.
-  // We refresh live values silently instead, leaving the current board mounted.
-  document.addEventListener('visibilitychange', event => {
-    if (document.visibilityState !== 'visible') return;
-    event.stopImmediatePropagation();
-    quietLiveRefresh();
-    checkBoardRefresh();
-  }, true);
-
-  window.addEventListener('focus', event => {
-    event.stopImmediatePropagation();
-    quietLiveRefresh();
-    checkBoardRefresh();
-  }, true);
+  // The schedule renderer (app-v2.js) exclusively owns score and state
+  // updates. Older DOM patchers targeted .matchScore/.matchTime, which are no
+  // longer present in the board's .scheduleScore/.scheduleTime markup.
+  // Keep Airtable publication checks independent from live-score refresh.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkBoardRefresh();
+  });
+  window.addEventListener('focus', () => checkBoardRefresh());
 
   // New Airtable publications should appear without a reload, but Matchday is
   // only rebuilt when the board fingerprint actually changes.
