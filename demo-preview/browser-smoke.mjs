@@ -39,7 +39,7 @@ const browser=await puppeteer.launch({headless:true,executablePath:process.env.C
  args:["--no-sandbox","--disable-setuid-sandbox"]});
 const summary=[];
 try{
- for(const target of [{name:"desktop",width:1440,height:900},{name:"mobile",width:390,height:844}]){
+ for(const target of [{name:"desktop",width:1440,height:900},{name:"mobile",width:390,height:844},{name:"narrow",width:320,height:740}]){
   const page=await browser.newPage();
   await page.setViewport({width:target.width,height:target.height,deviceScaleFactor:1});
   await page.evaluateOnNewDocument(()=>{
@@ -79,6 +79,21 @@ try{
   await page.goto(address,{waitUntil:"domcontentloaded",timeout:25000});
   await page.waitForSelector(".scheduleDateNav", {timeout:20000});
   await page.waitForSelector('[data-date="2026-10-09"]',{timeout:12000});
+  await page.waitForFunction(()=>document.querySelector('.scheduleStage')?.getAttribute('aria-busy')==="false",{timeout:22000});
+  const initial = await page.evaluate(()=>({
+    date:document.querySelector(".dateBtn.active")?.dataset.date,
+    rows:document.querySelectorAll(".scheduleMatchCard").length,
+    empty:Boolean(document.querySelector(".emptyState")),
+    error:Boolean(document.querySelector(".statusBanner")),
+    snapshot:document.querySelector(".scheduleSnapshotNotice")?.innerText||""
+  }));
+  assert(initial.date&&initial.snapshot.includes("Not live"),
+    "Default date must identify the read-only data mode");
+  assert(initial.rows>0||initial.empty||initial.error,
+    "Default date must not be silently blank");
+  assert(initial.snapshot.includes("Older than 6 hours"),
+    "An older snapshot must disclose staleness");
+  console.log("DEFAULT "+target.name+" "+JSON.stringify(initial));
   // The schedule may replace the entire board while its first data request settles.
   // Dispatch synchronously inside the page so Chrome never holds a detached node.
   await page.evaluate(()=>{
@@ -237,7 +252,31 @@ try{
   await new Promise(ok=>setTimeout(ok,300));
   await fs.mkdir("demo-preview/screenshots",{recursive:true});
   await page.screenshot({path:"demo-preview/screenshots/"+target.name+".png",fullPage:true});
-  summary.push({viewport:target.name,...before,search:after.value});
+  // Emulate a longer, densely populated schedule for compositing diagnostics.
+  // This is a headless rendering indication, not a real-device benchmark.
+  const scrollPerf=await page.evaluate(async()=>{
+    const host=document.querySelector(".scheduleCompetitionList");
+    if(!host)return {groups:0,reason:"no competition list"};
+    const source=[...host.children];
+    while(host.children.length<30)host.appendChild(source[host.children.length%source.length].cloneNode(true));
+    await new Promise(ok=>requestAnimationFrame(ok));
+    const samples=[];
+    const scrollMax=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+    window.scrollTo(0,0);
+    for(let frame=0;frame<75;frame++){
+      window.scrollTo(0,scrollMax*(frame/74));
+      const now=await new Promise(ok=>requestAnimationFrame(ok));
+      samples.push(now);
+    }
+    const frameIntervals=samples.slice(1).map((t,i)=>t-samples[i]).sort((a,b)=>a-b);
+    return {groups:host.children.length,scrollHeight:document.documentElement.scrollHeight,
+      medianFrameMs:Math.round(frameIntervals[Math.floor(frameIntervals.length/2)]*10)/10,
+      p95FrameMs:Math.round(frameIntervals[Math.floor(frameIntervals.length*.95)]*10)/10,
+      contentVisibility:getComputedStyle(host.firstElementChild).contentVisibility};
+  });
+  assert(scrollPerf.groups>=30,"Long fixture list could not be rendered for stress test");
+  console.log("LONG_BOARD "+target.name+" "+JSON.stringify(scrollPerf));
+  summary.push({viewport:target.name,...before,search:after.value,scrollPerf});
   await page.close();
  }
  console.log("PASS real-data Chrome smoke:",JSON.stringify(summary));
