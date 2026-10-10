@@ -1,0 +1,49 @@
+name: ARC XI Production Repair Verification
+
+on:
+  push:
+    branches: ["repair/main-impeccable-20261010"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify production artifacts and script syntax
+        run: |
+          set -euo pipefail
+          test -s pages/media/ive/wonyoung-liz-bottom-right.webp
+          test -s pages/media/arcxi/reference-artwork.png
+          test -s pages/media/arcxi/arc-xi-schedule-logo.svg
+          for file in pages/*.js scripts/check-schedule.cjs scripts/check-schedule-logos.cjs scripts/browser-main-repair.cjs; do
+            node --check "$file"
+          done
+          node scripts/check-schedule.cjs
+          node scripts/check-schedule-logos.cjs
+      - name: Set up Chrome test dependencies
+        run: |
+          mkdir -p /tmp/arcxi-browser
+          npm install --prefix /tmp/arcxi-browser --no-audit --no-fund --no-save puppeteer-core@24 axe-core@4
+          which google-chrome || which google-chrome-stable
+      - name: Real browser desktop and mobile tests
+        run: node scripts/browser-main-repair.cjs
+      - name: Upload screenshots and accessibility checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-repair-browser-proof
+          path: |
+            audit-screenshots/*.png
+            audit-screenshots/*.json
+          if-no-files-found: ignore
+          retention-days: 7
