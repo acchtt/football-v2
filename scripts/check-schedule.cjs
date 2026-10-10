@@ -10,7 +10,7 @@ const context = {window:{},document:{getElementById:id=>id==='app'?root:null},
   localStorage:storage,sessionStorage:storage,location:{hash:'#board'},Date,Intl,console};
 vm.createContext(context);
 vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashchange'")) +
-  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest, boardEventScore, eventForBoardRow, statusKey, statusLabel, boardWarning};})();', context);
+  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest, boardEventScore, eventForBoardRow, statusKey, statusLabel, boardStatus, eventStatus, boardWarning};})();', context);
 const t = context.window.test;
 const date = t.todayKey();
 const kickoff = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
@@ -133,5 +133,28 @@ assert(t.boardMatchBlock(rowToMatch,0).includes('>HT</span>'),
   'Half-time must not be displayed as ordinary LIVE or PRE');
 assert.equal(t.boardWarning({cached:true,degraded:true,staleAgeMs:300000}).includes('5 minute(s)'),true);
 assert(t.boardWarning({cached:true,degraded:true,staleAgeMs:null}).includes('unknown age'));
+
+
+/* Coordinated follow-up: lifecycle conflicts, youth identity, competition and stopped filter. */
+const halted={...validSource,status:'live',time:{status:'suspended',period:'1st_half'}};
+assert.equal(t.eventStatus(halted),'suspended','Suspension must beat stale first-half status');
+assert.equal(t.statusKey(halted),'suspended');
+const ageBoard=make('junior','Arsenal U21 vs Chelsea U21');
+const ageProvider={...validSource,home_team:{name:'Arsenal U19'},away_team:{name:'Chelsea U19'}};
+assert.equal(t.boardEventScore(ageBoard,ageProvider),-1,'U19 and U21 fixture identities must differ');
+assert.equal(t.boardEventScore(make('cup','Arsenal vs Chelsea',{competition:'FA Cup'}),
+  {...validSource,league:{name:'Premier League'}}),-1,
+  'Cup/league competition conflicts must fail closed');
+const stoppedRow=make('stopped','Fixture X vs Fixture Y',{status:'cancelled'});
+assert.equal(t.boardStatus(stoppedRow),'cancelled','Board-only cancellation must remain stopped');
+assert(t.boardMatchBlock(stoppedRow,0).includes('>CANC</span>'));
+t.state.board={schedule:[stoppedRow,make('open','Fixture C vs Fixture D')],picks:[]};
+t.state.today=[];
+t.state.statusFilter='stopped';
+t.renderMatchday();
+assert.equal((root.innerHTML.match(/class="boardMatchCard/g)||[]).length,1);
+assert(root.innerHTML.includes('Stopped') && root.innerHTML.includes('CANC'),
+  'Stopped tab should show only stopped fixtures');
+t.state.statusFilter='all';
 
 console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');
