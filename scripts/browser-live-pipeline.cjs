@@ -95,6 +95,11 @@ async function run(){
   // The four-hour-old fixture may belong to the prior ICT calendar day.
   if(earlierDay!==day){
     await page.evaluate(date=>document.querySelector('[data-date="'+date+'"]')?.click(),earlierDay);
+    await page.waitForFunction(date=>document.querySelector('.dateBtn.active')?.dataset.date===date,
+      {timeout:12000},earlierDay);
+    // Past-day navigation defaults to FT; switch back to All to inspect the
+    // intentionally unverified historical fixture.
+    await page.evaluate(()=>document.querySelector('[data-status-filter="all"]')?.click());
     await page.waitForFunction(()=>[...document.querySelectorAll('.scheduleMatchCard')].some(
       card=>card.querySelector('.scheduleTeam.home span')?.textContent==='Unknown City'),{timeout:12000});
   }
