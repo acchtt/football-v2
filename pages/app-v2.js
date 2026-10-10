@@ -361,7 +361,12 @@
     const picks = state.board && Array.isArray(state.board.picks) ? state.board.picks : [];
     return picks.filter(function (row) { return boardEventScore(row,event) >= 6; });
   }
+  // Per-render cache: the same fixture is visited for chronological sorting,
+  // each status counter, filtering, grouping and score drawing. Never share
+  // matches across renders: live, date and fallback state can change.
+  let matchdayRenderMatches = null;
   function eventForBoardRow(row) {
+    if (matchdayRenderMatches && matchdayRenderMatches.has(row)) return matchdayRenderMatches.get(row);
     const boardTime = Date.parse(row && (row.kickoff || row.displayKickoff));
     const candidates = state.today.filter(function (event) { return Boolean(eventId(event)); })
       .map(function (event) {
@@ -373,7 +378,9 @@
     if (candidates.length > 1 && candidates[0].score === candidates[1].score &&
         (candidates[0].offset === candidates[1].offset ||
          Math.abs(candidates[0].offset - candidates[1].offset) < 15*60*1000)) return null;
-    return candidates[0]?.event || null;
+    const selected = candidates[0]?.event || null;
+    if (matchdayRenderMatches) matchdayRenderMatches.set(row, selected);
+    return selected;
   }
 
   function routeName() {
@@ -895,6 +902,7 @@
   }
   function renderMatchday(loading) {
     state.route = 'board';
+    matchdayRenderMatches = new WeakMap();
     const sourceWarning = state.error || state.boardWarning;
     const boardRows = boardRowsForDate().filter(function (row) {
       const tier = String(row.tier || '').toUpperCase();
@@ -907,18 +915,24 @@
       if (!Number.isFinite(right)) return -1;
       return left - right;
     });
+    const statusCache = new WeakMap();
+    const statusOf = function (row) {
+      if (!statusCache.has(row)) statusCache.set(row, boardStatus(row));
+      return statusCache.get(row);
+    };
+    const stopped = ['postponed','cancelled','abandoned','suspended'];
     const counts = {
       all: boardRows.length,
-      live: boardRows.filter(function (row) { return boardStatus(row) === 'live'; }).length,
-      upcoming: boardRows.filter(function (row) { return boardStatus(row) === 'upcoming'; }).length,
-      finished: boardRows.filter(function (row) { return boardStatus(row) === 'finished'; }).length,
-      stopped: boardRows.filter(function (row) { return ['postponed','cancelled','abandoned','suspended'].includes(boardStatus(row)); }).length
+      live: boardRows.filter(function (row) { return statusOf(row) === 'live'; }).length,
+      upcoming: boardRows.filter(function (row) { return statusOf(row) === 'upcoming'; }).length,
+      finished: boardRows.filter(function (row) { return statusOf(row) === 'finished'; }).length,
+      stopped: boardRows.filter(function (row) { return stopped.includes(statusOf(row)); }).length
     };
     const query = String(state.boardQuery || '').trim().toLowerCase();
     const filtered = boardRows.filter(function (row) {
       if (state.statusFilter !== 'all' && (state.statusFilter === 'stopped' ?
-          !['postponed','cancelled','abandoned','suspended'].includes(boardStatus(row)) :
-          boardStatus(row) !== state.statusFilter)) return false;
+          !stopped.includes(statusOf(row)) :
+          statusOf(row) !== state.statusFilter)) return false;
       if (query) {
         const haystack = [row.match, row.competition].filter(Boolean).join(' ').toLowerCase();
         if (!haystack.includes(query)) return false;
@@ -977,6 +991,7 @@
         }
       }
     }
+    matchdayRenderMatches = null;
   }
 
   function skeleton(route, title) {
