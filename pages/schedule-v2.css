@@ -320,3 +320,9 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
   .scheduleTeams {grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);gap:3px}
   .scheduleBoardRoute .scheduleTeam span {font-size:12px}
 }
+
+
+/* Small score-status labels require WCAG AA contrast on the dark fixture canvas. */
+html.scheduleCornerMode .scheduleBoardRoute .scheduleScore small {
+  color:#ff9dd0;
+}
