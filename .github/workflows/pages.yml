@@ -99,7 +99,8 @@ jobs:
           node scripts/check-schedule.cjs
           node --check pages/schedule-logos.js
           node scripts/check-schedule-logos.cjs
-          echo "Active JavaScript syntax and schedule rendering validated"
+          node scripts/test-dashboard-fallback.cjs
+          echo "Active JavaScript syntax, dashboard fallback and schedule rendering validated"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
