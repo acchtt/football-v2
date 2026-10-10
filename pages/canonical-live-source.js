@@ -17,33 +17,34 @@
   }
 
   function normalizedStatus(event) {
-    const candidates = [
-      event?.status,
-      event?.time?.status,
-      event?.time?.period,
-      event?.current_period,
-      event?.period,
-      event?.match_period,
-      event?.time?.display,
-      event?.display,
-      event?.state,
-      event?.match_status,
+    // Explicit lifecycle states beat stale clock/period labels. A scheduled
+    // fixture with a lingering 2H value is not LIVE, and a cancelled game
+    // carrying an old FT period is not a completed result.
+    const explicit = [
+      event?.status, event?.time?.status, event?.state, event?.match_status
     ].map(normalizeToken).filter(Boolean);
-
+    const stopped = new Set(['postponed','cancelled','canceled','abandoned','suspended']);
     const finished = new Set([
       'finished','ended','complete','completed','final','ft','full_time','fulltime',
       'aet','after_extra_time','after_penalties','penalties_finished','penalty_shootout_finished'
     ]);
-    if (candidates.some(value => finished.has(value) || /^ft\b/.test(value) || /^full_time\b/.test(value))) return 'finished';
-
     const live = new Set([
       'live','inprogress','in_progress','playing','ongoing','1st_half','first_half','2nd_half','second_half',
       'ht','halftime','half_time','break','paused','extra_time','extra_time_first_half','extra_time_second_half',
       'penalties','penalty_shootout'
     ]);
-    // A prior first-half/live clock must not override a subsequent stopped state.
-    if (candidates.some(value => ['postponed','cancelled','canceled','abandoned','suspended'].includes(value))) return 'stopped';
-    if (candidates.some(value => live.has(value))) return 'live';
+    const upcoming = new Set(['upcoming','notstarted','not_started','scheduled','pending']);
+    if (explicit.some(value => stopped.has(value))) return 'stopped';
+    if (explicit.some(value => finished.has(value) || /^ft\\b/.test(value) || /^full_time\\b/.test(value))) return 'finished';
+    if (explicit.some(value => live.has(value))) return 'live';
+    if (explicit.some(value => upcoming.has(value))) return 'upcoming';
+    const periods = [
+      event?.time?.period, event?.current_period, event?.period,
+      event?.match_period, event?.time?.display, event?.display
+    ].map(normalizeToken).filter(Boolean);
+    if (periods.some(value => stopped.has(value))) return 'stopped';
+    if (periods.some(value => finished.has(value) || /^ft\\b/.test(value))) return 'finished';
+    if (periods.some(value => live.has(value))) return 'live';
     return 'upcoming';
   }
 
