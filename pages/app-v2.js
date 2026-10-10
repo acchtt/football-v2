@@ -597,13 +597,15 @@
       detail = live && fallback ? soccerwayMinuteText(fallback) : finished ? 'FT' : 'MANUAL';
     } else if (event && (live || finished)) {
       scoreLabel = scoreText(event);
-      detail = live ? liveClock(event) : 'FT';
+      detail = live ? liveClock(event) : (scoreLabel === 'VS' ? 'NO RESULT' : 'FT');
+      if (finished && scoreLabel === 'VS') scoreLabel = '—';
     } else if (fallback && (live || finished)) {
       scoreLabel = soccerwayScoreText(fallback);
-      detail = live ? soccerwayMinuteText(fallback) : 'FT';
+      detail = live ? soccerwayMinuteText(fallback) : (scoreLabel === 'VS' ? 'NO RESULT' : 'FT');
+      if (finished && scoreLabel === 'VS') scoreLabel = '—';
     } else if (finished) {
       scoreLabel = '—';
-      detail = 'FT';
+      detail = 'NO RESULT';
     }
     const statusName = finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
     const statusClass = finished ? 'finished' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
