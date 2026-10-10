@@ -881,8 +881,23 @@
       }).join('') + '<small>Always more than a game</small></footer>' +
       '<aside class="iveCorner iveCorner--bottom" aria-hidden="true"><span class="iveCornerPhoto">' +
       '<img class="iveCornerArtwork" src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside></section>';
+    // A score can change while a user is typing. Preserve search focus and
+    // caret across the occasional data-driven board rebuild.
+    const focusedSearch = document.activeElement?.id === 'boardSearch';
+    const previousSearch = focusedSearch ? document.activeElement : null;
+    const caretStart = focusedSearch ? previousSearch.selectionStart : null;
+    const caretEnd = focusedSearch ? previousSearch.selectionEnd : null;
     root.innerHTML = shell(content, '', 'boardHomeRoute scheduleBoardRoute' + (loading ? ' scheduleLoadingRoute' : ''));
     bindGlobal();
+    if (focusedSearch) {
+      const replacement = root.querySelector('#boardSearch');
+      if (replacement && !replacement.disabled) {
+        replacement.focus({preventScroll:true});
+        if (caretStart !== null && caretEnd !== null) {
+          replacement.setSelectionRange(caretStart, caretEnd);
+        }
+      }
+    }
   }
 
   function skeleton(route, title) {
@@ -1641,6 +1656,13 @@
     }
     location.hash = '#board';
   }
+  function boardLiveSignature() {
+    // Clocks are updated by tickClocks(), not by rebuilding the whole board.
+    // Only render for score/status/identity changes or changed source errors.
+    return JSON.stringify(state.today.map(function (event) {
+      return [eventId(event),eventStatus(event),scoreText(event)];
+    }));
+  }
   async function refreshLive() {
     if (document.visibilityState === 'hidden') return;
     if (routeName() === 'board' && state.date !== todayKey()) return;
@@ -1655,8 +1677,11 @@
         await loadMatchday(state.date, true, true);
         return;
       }
+      const before = boardLiveSignature();
+      const previousLive = new Set(state.live.map(function (event) {return String(eventId(event));}));
       const payload = await api('/api/bsd/live');
       const liveRows = rows(payload);
+      const activeIds = new Set(liveRows.map(function (event) {return String(eventId(event));}));
       state.live = liveRows;
       state.lastSync = Date.now();
       const byId = new Map(liveRows.map(function (event) { return [String(eventId(event)), event]; }));
@@ -1664,13 +1689,40 @@
         const current = byId.get(String(eventId(event)));
         return current ? Object.assign({}, event, current, {status:'live'}) : event;
       });
+      // A newly reported LIVE event may not yet exist in the delayed day feed.
+      // Admit it only if its exact team pairing matches a current board fixture.
+      const boardFixtures = (state.board?.schedule || []).filter(function (row) {
+        return row && row.slateDate === state.date;
+      });
+      liveRows.forEach(function (event) {
+        const id = eventId(event);
+        if (!id || state.today.some(function (row) {return eventId(row) === id;})) return;
+        const matched = boardFixtures.some(function (row) {
+          const teams = splitMatch(row.match);
+          return nameScore(teams.home,teamName(event,'home')) +
+            nameScore(teams.away,teamName(event,'away')) >= 6;
+        });
+        if (matched) state.today.push(Object.assign({},event,{status:'live'}));
+      });
       if (state.date === todayKey()) {
         state.matchdayCache.set(state.date, {events:state.today.slice(), loadedAt:Date.now()});
       }
-      if (routeName() === 'board') renderMatchday();
+      // Loss of LIVE membership is not evidence of FT. Ask the day feed for
+      // provider status instead of leaving an indefinitely stale LIVE badge.
+      if ([...previousLive].some(function (id) {return id !== 'null' && !activeIds.has(id);}) &&
+          routeName() === 'board' && state.date === todayKey()) {
+        await loadMatchday(state.date, true, true);
+        return;
+      }
+      const changed = before !== boardLiveSignature();
+      if (state.error) {state.error='';if (routeName() === 'board') renderMatchday();}
+      else if (changed && routeName() === 'board') renderMatchday();
     } catch (error) {
-      state.error = error.message || String(error);
-      if (routeName() === 'board') renderMatchday();
+      const message = error.message || String(error);
+      if (state.error !== message) {
+        state.error = message;
+        if (routeName() === 'board') renderMatchday();
+      }
     }
   }
   function tickClocks() {
