@@ -34,6 +34,13 @@ if (!dashboard || !Array.isArray(dashboard.schedule) || !Array.isArray(dashboard
 // Include one extra UTC day on either side so ICT midnight windows stay covered.
 const dates = [...new Set(Array.from({length: 13}, (_, i) => date(i - 6)))];
 const today = date(0);
+// Only source-confirmed provider identifiers can ever supply preview crests.
+const providerTeams = new Map();
+const conflictingTeams = new Set();
+const normalizeTeam = name => String(name || '').normalize('NFKD')
+  .replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  .replace(/\b(fc|cf|afc|sc|ac|sk|fk|club|and)\b/g,' ')
+  .replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 const results = await Promise.all(dates.map(async day => {
   // Capture genuine empty fixture days as well as ranked days.
   // Missing files must mean unavailable, never silently "zero matches".
@@ -42,6 +49,17 @@ const results = await Promise.all(dates.map(async day => {
   if (events) {
     await fs.mkdir(path.join(ROOT,"events"),{recursive:true});
     await fs.writeFile(path.join(ROOT,"events",day+".json"),JSON.stringify(events));
+    for (const event of (events.data?.results || events.data?.events || [])) {
+      for (const side of ["home","away"]) {
+        const id = Number(event[side+"_team_id"]);
+        const name = String(event[side+"_team"] || "");
+        const key = normalizeTeam(name);
+        if (!key || !Number.isSafeInteger(id) || id <= 0) continue;
+        if (providerTeams.has(key) && providerTeams.get(key).id !== id) {
+          conflictingTeams.add(key);
+        } else if (!providerTeams.has(key)) providerTeams.set(key,{name,id});
+      }
+    }
   }
   return {date:day,hasBoard,eventsCaptured:Boolean(events)};
 }));
@@ -56,6 +74,14 @@ const soccer = await Promise.all(dates.map(async day => {
     await fs.writeFile(path.join(ROOT,"soccerway",day+".json"),JSON.stringify(value));
   }
   return {date:day,captured:Boolean(value)};
+}));
+// Do not publish ambiguous aliases. Empty mappings are explicit, never guessed.
+const verifiedTeams = Object.fromEntries([...providerTeams].filter(([name]) =>
+  !conflictingTeams.has(name)).sort(([a],[b]) => a.localeCompare(b)));
+await fs.writeFile(path.join(ROOT,"logos.json"),JSON.stringify({
+  source:"captured public football-v2 fixture IDs",
+  capturedAt:new Date().toISOString(),
+  teams:verifiedTeams
 }));
 await fs.writeFile(path.join(ROOT,"dashboard.json"), JSON.stringify(dashboard));
 await fs.writeFile(path.join(ROOT,"manifest.json"), JSON.stringify({
