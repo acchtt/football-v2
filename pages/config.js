@@ -276,9 +276,9 @@
       } catch {}
       const cached = readCachedDashboard();
       if (cached) {
-        boardSnapshot = cached;
+        boardSnapshot = degradedDashboard(cached);
         boardSnapshotAt = Date.now();
-        return degradedDashboard(cached);
+        return boardSnapshot;
       }
       return { ok: false, schedule: [], picks: [], degraded: true,
         error: 'Dashboard unavailable; no confirmed board is stored.' };
