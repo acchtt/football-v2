@@ -32,6 +32,9 @@ jobs:
           node scripts/check-schedule-logos.cjs
           node scripts/test-dashboard-fallback.cjs
           node scripts/test-status-precedence.cjs
+          node --check scripts/check-live-render.mjs
+          node --check scripts/live-score-parity.mjs
+          node --test scripts/test-live-score-parity.mjs
       - name: Set up Chrome test dependencies
         run: |
           mkdir -p /tmp/arcxi-browser

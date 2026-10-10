@@ -54,6 +54,8 @@ async function main(){
   await fs.promises.mkdir('audit-screenshots',{recursive:true});
   try{
     for(const view of [{name:'desktop',width:1440,height:900},
+      {name:'tablet-wide',width:960,height:840},{name:'tablet',width:834,height:800},
+      {name:'tablet-narrow',width:720,height:800},
       {name:'mobile',width:390,height:844},{name:'narrow',width:320,height:740}]){
       const page=await browser.newPage();
       const errors=[];
@@ -95,7 +97,17 @@ async function main(){
           overflow:doc.scrollWidth-innerWidth,
           headings,hasArtwork:!!document.querySelector('.iveCornerArtwork'),
           mainLandmarks:document.querySelectorAll('main').length,
-          hasPageHeading:!!document.querySelector('.scheduleStage h1')};
+          hasPageHeading:!!document.querySelector('.scheduleStage h1'),
+          statusControls:[...document.querySelectorAll('.statusFilters button')].map(n=>{
+            const box=n.getBoundingClientRect();
+            return {name:n.dataset.statusFilter,width:box.width,height:box.height};
+          }),
+          toolbarOverlap:(()=>{
+            const f=document.querySelector('.statusFilters')?.getBoundingClientRect();
+            const q=document.querySelector('.scheduleSearch')?.getBoundingClientRect();
+            return f&&q ? Math.max(0,Math.min(f.right,q.right)-Math.max(f.left,q.left))*
+              Math.max(0,Math.min(f.bottom,q.bottom)-Math.max(f.top,q.top)) : 0;
+          })()};
       });
       assert.deepEqual(data.headers,['League A','League B','League A'],
         'Global kickoff sorting must survive repeated competition headings');
@@ -105,6 +117,13 @@ async function main(){
       assert(data.headings.every(x=>x.width>100),'League heading has collapsed at '+view.name);
       assert.equal(data.mainLandmarks,1,'Exactly one main landmark');
       assert(data.hasPageHeading&&data.hasArtwork,'Required accessible heading or IVE artwork missing');
+      assert.deepEqual(data.statusControls.map(x=>x.name),
+        ['all','live','upcoming','finished','stopped'],'All five lifecycle controls remain visible');
+      if(view.width>=701&&view.width<=1000){
+        assert.equal(data.toolbarOverlap,0,'Status controls collide with tablet search at '+view.width);
+        assert(data.statusControls.every(x=>x.height>=44&&x.width>=44),
+          'Tablet status filters require 44 by 44 touch targets');
+      }
       await page.screenshot({path:'audit-screenshots/'+view.name+'.png',fullPage:true});
       // Validate independent keyboard-opened score editor can trap focus.
       await page.evaluate(()=>{
@@ -150,7 +169,7 @@ async function main(){
       await page.close();
     }
     fs.writeFileSync('audit-screenshots/summary.json',JSON.stringify(results,null,2));
-    console.log('PASS: production schedule browser checks at desktop, mobile and 320px');
+    console.log('PASS: schedule checks at desktop, 960/834/720px tablet, 390/320px mobile');
   }finally{await browser.close()}
 }
 server.listen(0,'127.0.0.1',()=>{

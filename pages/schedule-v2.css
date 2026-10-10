@@ -364,3 +364,44 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleScore small {
     font-size:9px;letter-spacing:0;overflow-wrap:anywhere
   }
 }
+
+/* Impeccable tablet pass. Five explicit status filters and search must share
+   available width at 701–1000px without overlap or a horizontal scroller. */
+@media (min-width:701px) and (max-width:1000px) {
+  .scheduleBoardRoute .scheduleToolbar {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(160px,29%);
+    column-gap:12px;
+    align-items:center;
+  }
+  .scheduleBoardRoute .statusFilters {
+    position:static;
+    transform:none;
+    width:100%;
+    min-width:0;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:4px;
+  }
+  .scheduleBoardRoute .statusFilters button {
+    min-width:0;
+    min-height:44px;
+    padding:0 3px;
+    gap:3px;
+    font-size:10px;
+    letter-spacing:0;
+  }
+  .scheduleBoardRoute .statusFilters button b {
+    min-width:17px;
+    height:19px;
+    padding:0 2px;
+    font-size:10px;
+  }
+  .scheduleBoardRoute .scheduleSearch {
+    width:100%;
+    min-width:0;
+    margin-right:0;
+    padding-inline:10px;
+    gap:7px;
+  }
+}
