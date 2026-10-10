@@ -51,7 +51,7 @@ assert(listing.includes('role="heading" aria-level="2"'));
 
 // Guard major regression classes. Syntax validation runs separately in CI.
 assert(html.includes('<div id="app"></div>')&&!html.includes('<main id="app">'));
-assert(html.includes("app-v2.js?v=68"));
+assert(html.includes("app-v2.js?v=69"));
 assert(app.includes("root.inert = true")&&app.includes("root.inert = false"));
 assert(app.includes("event.key !== 'Tab'")&&app.includes("returnFocus?.isConnected"));
 assert(app.includes("if (IS_SNAPSHOT || document.visibilityState"));
