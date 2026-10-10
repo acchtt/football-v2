@@ -41,9 +41,9 @@
       'ht','halftime','half_time','break','paused','extra_time','extra_time_first_half','extra_time_second_half',
       'penalties','penalty_shootout'
     ]);
-    if (candidates.some(value => live.has(value))) return 'live';
-
+    // A prior first-half/live clock must not override a subsequent stopped state.
     if (candidates.some(value => ['postponed','cancelled','canceled','abandoned','suspended'].includes(value))) return 'stopped';
+    if (candidates.some(value => live.has(value))) return 'live';
     return 'upcoming';
   }
 
