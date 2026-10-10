@@ -82,8 +82,8 @@ const page=await check('deployed page',async()=>{
   const {value:html}=await request(SITE,{json:false});
   // PR checks observe the currently deployed release (70/16), while this
   // branch stages the next cache-busted release (70/16). Reject all older builds.
-  const appVersion=html.match(/app-v2\.js\?v=(69|70)\b/)?.[1];
-  const guardVersion=html.match(/config\.js\?v=(15|16)\b/)?.[1];
+  const appVersion=html.match(/app-v2\.js\?v=(70|71)\b/)?.[1];
+  const guardVersion=html.match(/config\.js\?v=(16|17)\b/)?.[1];
   if(!appVersion)throw Error('Expected provider-owned score renderer is not deployed');
   if(!guardVersion)throw Error('Expected runtime guard is not deployed');
   if(html.includes('matchday-behavior.js?v=3') || html.includes('status-sync.js?v=4')){
