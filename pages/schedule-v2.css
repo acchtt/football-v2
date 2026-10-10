@@ -223,3 +223,100 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
 @keyframes schedule-loading{50%{opacity:.45}}
 @media(max-width:700px){.scheduleLoadingRows .scheduleTime{gap:5px}.scheduleLoadingRows .schedulePlaceholder.time{width:36px}.scheduleLoadingRows .scheduleTeam.home .schedulePlaceholder.team{order:2}}
 @media(prefers-reduced-motion:reduce){.scheduleLoadingRows{animation:none}}
+
+
+/* Production Impeccable repair: consistent date navigation and tactile mobile UI.
+   Schedule styling/IVE identity remain unchanged; this is layout-only. */
+.scheduleDateNav {
+  --schedule-date-gap:8px;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:var(--schedule-date-gap);
+}
+.scheduleDateNav .dateStrip {
+  grid-column:2/span 5;
+  grid-row:1;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:var(--schedule-date-gap);
+  min-width:0;
+}
+.scheduleDateNav > button,
+.scheduleDateNav .dateBtn {
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:64px;
+}
+.scheduleDateNav .dateBtn .srOnly {
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+@media (max-width:700px) {
+  .scheduleDateNav {
+    --schedule-date-gap:5px;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+  }
+  .scheduleDateNav .dateStrip {
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:var(--schedule-date-gap);
+  }
+  .scheduleDateNav > button,.scheduleDateNav .dateBtn {
+    min-height:54px;
+    height:54px;
+    width:100%;
+    padding:0 2px;
+  }
+  .scheduleBoardRoute .scheduleCompetitionHead {
+    display:grid;
+    grid-template-columns:24px minmax(0,1fr) 17px;
+    gap:9px;
+    padding-inline:6px;
+  }
+  .scheduleBoardRoute .scheduleCompetitionHead > .scheduleCompetitionLogo {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+  }
+  .scheduleBoardRoute .scheduleCompetitionHead > span:not(.competitionMark):not(.scheduleCompetitionLogo) {
+    display:none;
+  }
+  .scheduleBoardRoute .scheduleCompetitionHead > strong {
+    grid-column:2;
+    min-width:0;
+    font-size:12px;
+    letter-spacing:.085em;
+    line-height:1.35;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+  .scheduleBoardRoute .scheduleTeam span {
+    font-size:13px;
+    line-height:1.35;
+    overflow-wrap:break-word;
+  }
+  .scheduleScore small {font-size:11px;line-height:1.3}
+  .scheduleBoardRoute .scheduleTime .fixtureStatus {
+    font-size:10px;
+    min-height:24px;
+  }
+  .scheduleBoardRoute .scheduleTime > strong {font-size:13px}
+  .scheduleBoardRoute .scheduleFixture {
+    min-height:80px;
+    grid-template-columns:70px minmax(0,1fr) 15px;
+    padding:9px 5px;
+    gap:5px;
+  }
+  .scheduleTeams {grid-template-columns:minmax(0,1fr) 47px minmax(0,1fr);gap:5px}
+  .scheduleManualScore {min-height:40px;padding:5px 9px;font-size:11px}
+  .scheduleMatchCard:has(.scheduleManualScore) .scheduleFixture {padding-bottom:42px}
+  .scheduleRowTools {right:8px;bottom:0}
+}
+@media (max-width:360px) {
+  .scheduleDateNav {--schedule-date-gap:3px}
+  .scheduleBoardRoute .scheduleFixture {
+    grid-template-columns:64px minmax(0,1fr) 12px;
+    padding-inline:3px;gap:3px;
+  }
+  .scheduleTeams {grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);gap:3px}
+  .scheduleBoardRoute .scheduleTeam span {font-size:12px}
+}
