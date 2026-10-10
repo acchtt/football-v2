@@ -10,6 +10,13 @@
     && location.pathname.includes("/acchtt/football-v2/")
     && location.pathname.includes("/pages/");
   if (!isWorker && !isStatic) return;
+  // Public preview metadata must not promise real-time scores.
+  document.title = isStatic ? "ARC XI — Saved Matchday Demo (Not Live)" :
+    "ARC XI — Read-only Matchday Demo";
+  const description = document.querySelector('meta[name="description"]');
+  if (description) description.setAttribute("content", isStatic ?
+    "ARC XI Liquid Glass demo using saved public football fixtures; not live scores." :
+    "ARC XI Liquid Glass read-only matchday demonstration.");
 
   const sourceOrigin = "https://football-v2.acchtt.workers.dev";
   const snapshotRoot = "https://raw.githubusercontent.com/acchtt/football-v2/refs/heads/demo/liquid-glass/pages/demo-preview-data/";
