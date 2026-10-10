@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for script in pages/app-v2.js pages/config.js pages/demo-api-bridge.js pages/schedule-logos.js pages/matchday-behavior.js demo-preview/capture-snapshot.mjs; do
+          for script in pages/app-v2.js pages/config.js pages/demo-api-bridge.js pages/schedule-logos.js pages/matchday-behavior.js pages/liquid-glass-controls.js demo-preview/capture-snapshot.mjs demo-preview/browser-smoke.mjs; do
             node --check "$script"
           done
       - name: Verify actual date grouping and safe preview behavior
@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p /tmp/arcxi-browser
-          npm install --prefix /tmp/arcxi-browser --no-save --no-audit --no-fund puppeteer-core@24
+          npm install --prefix /tmp/arcxi-browser --no-save --no-audit --no-fund puppeteer-core@24 axe-core@4
       - name: Test desktop and mobile schedule with real saved fixtures
         run: node demo-preview/browser-smoke.mjs
       - name: Upload visual proof
@@ -58,6 +58,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: liquid-glass-repair-screenshots
-          path: demo-preview/screenshots/*.png
+          path: |
+            demo-preview/screenshots/*.png
+            demo-preview/screenshots/*-a11y.json
           if-no-files-found: ignore
           retention-days: 7
