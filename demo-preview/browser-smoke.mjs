@@ -125,6 +125,15 @@ try{
   assert(before.snapshot&&before.readOnly);
   assert(before.documentWidth<=before.windowWidth+3,
     "Horizontal overflow on "+target.name+": "+before.documentWidth+" > "+before.windowWidth);
+  const competitionHeadings=await page.evaluate(()=>[...document.querySelectorAll(".scheduleCompetitionHead")].map(head=>{
+    const title=head.querySelector("strong");
+    const logo=head.querySelector(".scheduleCompetitionLogo");
+    return {name:title?.textContent||"",width:Math.round(title?.getBoundingClientRect().width||0),
+      logoHidden:Boolean(logo)&&getComputedStyle(logo).display==="none"};
+  }));
+  assert(competitionHeadings.every(h=>h.width>=100 && !h.logoHidden),
+    "Competition title collapsed or real-logo wrapper hidden: "+JSON.stringify(competitionHeadings));
+  console.log("HEADINGS "+target.name+" "+JSON.stringify(competitionHeadings.slice(0,7)));
   const dateGeometry=await page.evaluate(()=>{
     const nav=document.querySelector(".scheduleDateNav");
     const strip=nav?.querySelector(".dateStrip");
