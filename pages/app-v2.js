@@ -411,18 +411,19 @@
   function dateStrip() {
     let html = '<div class="dateStrip" aria-label="Match date">';
     [-2,-1,0,1,2].forEach(function (offset) {
-      const date = todayKey(offset);
+      const base = new Date(state.date + 'T12:00:00Z');
+      base.setUTCDate(base.getUTCDate() + offset);
+      const date = base.toISOString().slice(0,10);
       const d = new Date(date + 'T12:00:00Z');
       const weekday = new Intl.DateTimeFormat('en-US', {weekday:'short',timeZone:'UTC'}).format(d);
       const count = boardDateCount(date);
       const active = state.date === date;
-      const unavailable = count === 0 && !active;
-      const label = weekday + ' ' + d.getUTCDate() + ' ' +
-        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d);
-      html += '<button type="button" class="dateBtn ' + (active ? 'active ' : '') + (unavailable ? 'unavailable' : '') +
-        '" data-date="' + date + '" aria-label="' + esc(label + (count ? ', ' + count + ' board matches' : ', no ranked board matches')) +
-        '" aria-pressed="' + active + '"' + (unavailable ? ' disabled' : '') + '><small>' + weekday + '</small><strong class="scheduleDateLabel">' +
-        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + ' ' + d.getUTCDate() + '</strong></button>';
+      html += '<button type="button" class="dateBtn ' + (active ? 'active' : '') +
+        '" data-date="' + date + '" aria-pressed="' + active + '"><small>' + weekday +
+        '</small><strong class="scheduleDateLabel">' +
+        new Intl.DateTimeFormat('en-US', {month:'short',timeZone:'UTC'}).format(d) + ' ' + d.getUTCDate() +
+        '</strong><span class="srOnly">' + (count ? ', ' + count + ' board matches' : ', no ranked board matches') +
+        '</span></button>';
     });
     return html + '</div>';
   }
@@ -580,6 +581,8 @@
     const hasManualScore = Boolean(manualScore);
     const finished = status === 'finished';
     const live = status === 'live';
+    const sourceConfirmed = Boolean(event || fallback || /^(ft|finished|ended|complete|completed|final)$/i.test(
+      String(row && (row.status || row.matchStatus) || '')));
     const canManualScore = !event && (!fallback || status !== 'upcoming');
     const kickoffText = formatTime(kickoff);
     let scoreLabel = 'VS';
@@ -589,15 +592,17 @@
       detail = live && fallback ? soccerwayMinuteText(fallback) : finished ? 'FT' : 'MANUAL';
     } else if (event && (live || finished)) {
       scoreLabel = scoreText(event);
-      detail = live ? liveClock(event) : 'FT';
+      detail = live ? liveClock(event) : (scoreLabel === 'VS' ? 'NO RESULT' : 'FT');
+      if (finished && scoreLabel === 'VS') scoreLabel = '—';
     } else if (fallback && (live || finished)) {
       scoreLabel = soccerwayScoreText(fallback);
-      detail = live ? soccerwayMinuteText(fallback) : 'FT';
+      detail = live ? soccerwayMinuteText(fallback) : (scoreLabel === 'VS' ? 'NO RESULT' : 'FT');
+      if (finished && scoreLabel === 'VS') scoreLabel = '—';
     } else if (finished) {
       scoreLabel = '—';
-      detail = 'FT';
+      detail = 'NO RESULT';
     }
-    const statusName = finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
+    const statusName = finished && !sourceConfirmed ? 'UNVERIFIED' : finished ? 'FT' : live ? 'LIVE' : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
     const statusClass = finished ? 'finished' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
     const attrs = 'class="matchRow boardFixture scheduleFixture is-' + status + '-row ' + (unsupported ? 'boardPendingRow' : '') + '" ' +
@@ -606,7 +611,9 @@
       (lane ? ' data-operational-lane="' + esc(lane) + '"' : '') +
       (rank ? ' data-board-rank="' + esc(rank) + '"' : '') +
       (fallback ? ' data-score-source="soccerway"' : '');
-    const open = id ? '<a ' + attrs + '>' : '<div ' + attrs + '>';
+    const open = id ? '<a ' + attrs + '>' :
+      '<div ' + attrs + ' tabindex="0" role="group" aria-label="' +
+      esc('Fixture ' + (teams.home || 'Home') + ' versus ' + (teams.away || 'Away') + ', ' + kickoffText + ' ICT') + '">';
     const close = id ? '</a>' : '</div>';
     const manualControl = canManualScore ?
       '<button type="button" class="manualScoreButton scheduleManualScore" data-manual-score="' + esc(manualKey) + '" aria-label="' +
@@ -625,7 +632,7 @@
       close + (manualControl ? '<div class="scheduleRowTools">' + manualControl + '</div>' : '') + '</article>';
   }
   function boardMatchList(boardRows) {
-    const groups = new Map();
+    const groups = [];
     boardRows.forEach(function (row) {
       const event = eventForBoardRow(row);
       const fallback = event ? null : soccerwayForBoardRow(row);
@@ -633,11 +640,15 @@
       const id = event && leagueId(event);
       const logo = fallback && fallback.competitionLogo || '';
       const key = String(id || '') + ':' + name;
-      if (!groups.has(key)) groups.set(key, {name:name, id:id, event:event, logo:logo, rows:[]});
-      else if (!groups.get(key).logo && logo) groups.get(key).logo = logo;
-      groups.get(key).rows.push(row);
+      // Merge adjacent rows only; non-adjacent matches must remain in kickoff order.
+      let group = groups[groups.length - 1];
+      if (!group || group.key !== key) {
+        group = {key:key, name:name, id:id, event:event, logo:logo, rows:[]};
+        groups.push(group);
+      } else if (!group.logo && logo) group.logo = logo;
+      group.rows.push(row);
     });
-    return '<div class="boardCompetitionList scheduleCompetitionList">' + Array.from(groups.values()).map(function (group) {
+    return '<div class="boardCompetitionList scheduleCompetitionList">' + groups.map(function (group) {
       return '<section class="boardCompetitionGroup scheduleCompetitionGroup"><header class="boardCompetitionHead scheduleCompetitionHead">' +
         (group.id ? '<span class="scheduleCompetitionLogo">' + crest('league', group.id, group.name) + '</span>' :
           group.logo ? externalLogo(group.logo, group.name, 'competition') : competitionMark()) +
@@ -861,6 +872,7 @@
         '<div class="emptyState"><strong>No scheduled Board matches</strong><span>No operational entries were added for this date.</span></div>';
     const content =
       '<section class="scheduleStage" aria-label="ARC XI football schedule" aria-busy="' + Boolean(loading) + '">' +
+      '<h1 class="srOnly">ARC XI football schedule</h1>' +
       (state.error ? '<div class="statusBanner"><b>Schedule data delayed.</b><span>' + esc(state.error) + '</span></div>' : '') +
       '<div class="scheduleTop">' + controls + '</div>' +
       '<section class="matchSection scheduleMatchSection">' + boardBody + '</section>' +
@@ -891,7 +903,9 @@
     try {
       state.board = await request;
       return state.board;
-    } catch {
+    } catch (error) {
+      // A missing initial dashboard cannot be represented as a genuine empty slate.
+      if (!state.board) throw error;
       return state.board;
     } finally {
       if (state.boardPromise === request) state.boardPromise = null;
@@ -1388,6 +1402,7 @@
     const teams = splitMatch(row.match);
     const existing = row.manualScore &&
       Number.isInteger(Number(row.manualScore.home)) && Number.isInteger(Number(row.manualScore.away));
+    const focusReturn = document.activeElement;
     const sheet = document.createElement('div');
     sheet.className = 'manualScoreSheet';
     sheet.innerHTML = '<section class="manualScoreDialog" role="dialog" aria-modal="true" aria-labelledby="manualScoreTitle">' +
@@ -1414,8 +1429,18 @@
     const close = function () {
       document.removeEventListener('keydown', onKey);
       closeManualScoreEditor();
+      if (focusReturn && focusReturn.isConnected && typeof focusReturn.focus === 'function') focusReturn.focus();
     };
-    const onKey = function (event) { if (event.key === 'Escape') close(); };
+    const onKey = function (event) {
+      if (event.key === 'Escape') {event.preventDefault();close();return;}
+      if (event.key !== 'Tab') return;
+      const controls = Array.from(sheet.querySelectorAll('button:not(:disabled),input:not(:disabled)'));
+      if (!controls.length) {event.preventDefault();return;}
+      const first=controls[0],last=controls[controls.length-1];
+      if (event.shiftKey && document.activeElement === first) {event.preventDefault();last.focus();}
+      else if (!event.shiftKey && document.activeElement === last) {event.preventDefault();first.focus();}
+      else if (!sheet.contains(document.activeElement)) {event.preventDefault();first.focus();}
+    };
     const setBusy = function (busy) {
       sheet.classList.toggle('is-busy', busy);
       sheet.querySelectorAll('button,input').forEach(function (control) { control.disabled = busy; });
@@ -1486,6 +1511,8 @@
         if (!shift) return;
         const current = new Date(state.date + 'T12:00:00Z');
         current.setUTCDate(current.getUTCDate() + shift);
+        state.statusFilter = current.toISOString().slice(0,10) < todayKey() ? 'finished' : 'all';
+        writeStore('sliptrace.statusFilter.v4', state.statusFilter, sessionStorage);
         loadMatchday(current.toISOString().slice(0,10), false);
       });
     });
