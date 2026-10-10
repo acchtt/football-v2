@@ -27,7 +27,7 @@ assert.deepEqual([...dateHtml.matchAll(/data-date="(\d{4}-\d{2}-\d{2})"/g)].map(
 ]);
 assert(!dateHtml.includes(" disabled"),"Empty days must stay navigable");
 assert(dateHtml.includes('aria-pressed="true"'));
-assert(!dateHtml.includes('aria-label="'),"Date button must derive name from visible text");
+assert(!/<button[^>]*aria-label=/.test(dateHtml),"Date button must derive name from visible text");
 assert(dateHtml.includes('class="srOnly"'),"Date counts must remain available to assistive tech");
 
 // Run REAL competition grouping against interleaved competitions.
