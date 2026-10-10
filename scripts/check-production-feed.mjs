@@ -98,7 +98,8 @@ const dashboard=await check('public dashboard',async()=>{
     const age=Number(value.staleAgeMs);
     warnings.push('Dashboard using '+(value.cacheSource||'cached')+
       ' data'+(Number.isFinite(age)?' ('+Math.round(age/1000)+'s old)':''));
-    if(Number.isFinite(age)&&age>300000)throw Error('Dashboard stale for more than five minutes');
+    if(!Number.isFinite(age)||age<0)throw Error('Degraded dashboard has no verifiable freshness age');
+    if(age>300000)throw Error('Dashboard stale for more than five minutes');
   }
   return {schedule:value.schedule.length,picks:value.picks.length,
     cached:value.cached===true,degraded:value.degraded===true,
