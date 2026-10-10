@@ -4,6 +4,7 @@
   --schedule-yellow:#fff000;--schedule-pink:#f52c91;--schedule-bg:#0a0a0a;
   --schedule-text:#f5f5f5;--schedule-muted:#b9b9bd;--schedule-line:#303034;
   --schedule-font:"ARC Grotesk",Helvetica,Arial,sans-serif;
+  --schedule-score-secondary:#ff9dd0;
   --schedule-art-width:clamp(380px,32vw,580px);
   --schedule-width:min(85vw,1600px);--schedule-row:41px;--schedule-crest:34px;
 }
@@ -324,5 +325,28 @@ html.scheduleCornerMode .youtubeHubMount{display:none!important}
 
 /* Small score-status labels require WCAG AA contrast on the dark fixture canvas. */
 html.scheduleCornerMode .scheduleBoardRoute .scheduleScore small {
-  color:#ff9dd0;
+  color:var(--schedule-score-secondary);
+}
+
+/* Coordinated Impeccable pass: enlarge effective mobile touch areas without
+   changing the approved desktop schedule or ARC XI artwork. */
+@media(max-width:700px){
+  .scheduleManualScore{min-height:44px}
+}
+@media(max-width:360px){
+  /* Seven 44px controls cannot fit into 320px without overflow. Show the
+     centered three dates while preserving all five dates in the DOM. */
+  .scheduleDateNav{
+    grid-template-columns:44px minmax(0,1fr) 44px;
+    gap:4px;
+  }
+  .scheduleDateNav > button{width:44px;min-height:54px}
+  .scheduleDateNav .dateStrip{
+    grid-column:2;
+    grid-row:1;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:3px;
+  }
+  .scheduleDateNav .dateStrip .dateBtn:first-child,
+  .scheduleDateNav .dateStrip .dateBtn:last-child{display:none}
 }
