@@ -16,8 +16,8 @@ const server=http.createServer((req,res)=>{
  fs.readFile(target,(err,bytes)=>{if(err){res.writeHead(404).end('Not found');return;}
  res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream'});res.end(bytes);});
 });
-function todayICT(){
- const dt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+function todayICT(moment=new Date()){
+ const dt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(moment);
  const get=type=>dt.find(x=>x.type===type).value;
  return get('year')+'-'+get('month')+'-'+get('day');
 }
@@ -25,9 +25,10 @@ async function run(){
  const day=todayICT();
  const kickoff=new Date(Date.now()-14*60000).toISOString();
  const earlier=new Date(Date.now()-4*3600000).toISOString();
+ const earlierDay=todayICT(new Date(earlier));
  const schedule=[
   {id:'board-live',slateDate:day,competition:'Test League',match:'Club Alpha vs Club Beta',tier:'FOCUS',kickoff},
-  {id:'board-unverified',slateDate:day,competition:'Test League',match:'Unknown City vs Missing United',tier:'FOCUS',kickoff:earlier}
+  {id:'board-unverified',slateDate:earlierDay,competition:'Test League',match:'Unknown City vs Missing United',tier:'FOCUS',kickoff:earlier}
  ];
  const chromium=fs.existsSync('/usr/bin/google-chrome')?'/usr/bin/google-chrome':
   fs.existsSync('/usr/bin/google-chrome-stable')?'/usr/bin/google-chrome-stable':'/usr/bin/chromium';
@@ -73,8 +74,8 @@ async function run(){
   },{schedule,kickoff});
   await page.goto('http://127.0.0.1:'+server.address().port+'/index.html#board',
     {waitUntil:'domcontentloaded',timeout:25000});
-  await page.waitForFunction(()=>document.querySelectorAll('.scheduleMatchCard').length===2,
-    {timeout:25000});
+  await page.waitForFunction(expected=>document.querySelectorAll('.scheduleMatchCard').length===expected,
+    {timeout:25000},earlierDay===day?2:1);
   async function inspect(){
     return page.evaluate(()=>{
       const nodes=[...document.querySelectorAll('.scheduleMatchCard')];
@@ -89,13 +90,25 @@ async function run(){
   }
   let initial=await inspect();
   const beforeKickoff=initial.find(row=>row.label==='Club Alpha');
-  const unsupported=initial.find(row=>row.label==='Unknown City');
   assert(beforeKickoff && !['LIVE','FT'].includes(beforeKickoff.status),
     'Elapsed kickoff time must not fabricate LIVE or FT: '+JSON.stringify(initial));
+  // The four-hour-old fixture may belong to the prior ICT calendar day.
+  if(earlierDay!==day){
+    await page.evaluate(date=>document.querySelector('[data-date="'+date+'"]')?.click(),earlierDay);
+    await page.waitForFunction(()=>[...document.querySelectorAll('.scheduleMatchCard')].some(
+      card=>card.querySelector('.scheduleTeam.home span')?.textContent==='Unknown City'),{timeout:12000});
+  }
+  const historical=await inspect();
+  const unsupported=historical.find(row=>row.label==='Unknown City');
   assert.equal(unsupported?.status,'UNVERIFIED',
-    'Old unsupported fixture must be UNVERIFIED');
+    'Unsupported past fixture must stay unverified on its actual ICT date');
   assert.notEqual(unsupported?.dataset,'finished',
     'Unsupported fixture may not be in confirmed FT lane');
+  if(earlierDay!==day){
+    await page.evaluate(date=>document.querySelector('[data-date="'+date+'"]')?.click(),day);
+    await page.waitForFunction(()=>[...document.querySelectorAll('.scheduleMatchCard')].some(
+      card=>card.querySelector('.scheduleTeam.home span')?.textContent==='Club Alpha'),{timeout:12000});
+  }
   console.log('INITIAL '+JSON.stringify(initial));
   const next=async(scene,expected)=>{
     const before=await page.evaluate(()=>window.__ARCXI_LIVE_REQUESTS__);
