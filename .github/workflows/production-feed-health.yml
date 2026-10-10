@@ -1,0 +1,43 @@
+name: ARC XI Production Live Feed Health
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Observe read-only public endpoints twice per hour; empty live slates are healthy.
+    - cron: '12,42 * * * *'
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "scripts/check-production-feed.mjs"
+      - ".github/workflows/production-feed-health.yml"
+  push:
+    branches: ["monitor/production-feed-20261010"]
+    paths:
+      - "scripts/check-production-feed.mjs"
+      - ".github/workflows/production-feed-health.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arcxi-production-health
+  cancel-in-progress: true
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate probe syntax and read-only surface
+        run: |
+          node --check scripts/check-production-feed.mjs
+          if grep -E 'method:[[:space:]]*["'\''"](POST|PATCH|PUT|DELETE)' scripts/check-production-feed.mjs; then
+            echo "A write method was added to the production canary" >&2
+            exit 1
+          fi
+      - name: Probe public production page, dashboard, live and day-feed
+        run: node scripts/check-production-feed.mjs
