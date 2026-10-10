@@ -1020,6 +1020,7 @@
     const priorBoard = JSON.stringify(state.board?.schedule || []);
     const priorWarning = state.error || state.boardWarning;
     const requestedDate = date || state.date;
+    const dateChanged = requestedDate !== state.date;
     const requestId = ++state.matchdayRequest;
     const fallbackTask = loadSoccerwayFallback(requestedDate, Boolean(force));
     const cached = state.matchdayCache.get(requestedDate);
@@ -1028,19 +1029,19 @@
     const fresh = cached && cacheAge < cacheTtl;
 
     state.date = requestedDate;
-    if (!silent) state.error = '';
-    if (!silent) state.today = cached ? cached.events.slice() : [];
+    if (!silent || dateChanged) state.error = '';
+    if (!silent || dateChanged) state.today = cached ? cached.events.slice() : [];
     if (requestedDate !== todayKey()) state.live = [];
 
     if (!silent && !state.today.length && !state.board) {
       skeleton('board', 'Loading decision board');
-    } else if (!silent && routeName() === 'board') {
+    } else if ((!silent || dateChanged) && routeName() === 'board') {
       renderMatchday();
     }
 
     if (fresh && !force) {
       if (!state.board) await loadBoard(false);
-      if (!silent && routeName() === 'board' && state.date === requestedDate) renderMatchday();
+      if ((!silent || dateChanged) && routeName() === 'board' && state.date === requestedDate) renderMatchday();
       fallbackTask.then(function (changed) {
         if (changed && routeName() === 'board' && state.date === requestedDate) renderMatchday();
       });
@@ -1065,7 +1066,7 @@
       state.error = error.message || String(error);
     }
     if (routeName() === 'board' && state.date === requestedDate &&
-        (!silent || priorSignature !== boardLiveSignature() ||
+        (!silent || dateChanged || priorSignature !== boardLiveSignature() ||
          priorBoard !== JSON.stringify(state.board?.schedule || []) ||
          priorWarning !== (state.error || state.boardWarning))) renderMatchday();
     fallbackTask.then(function (changed) {
