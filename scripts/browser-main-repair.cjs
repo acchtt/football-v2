@@ -107,7 +107,11 @@ async function main(){
       assert(data.hasPageHeading&&data.hasArtwork,'Required accessible heading or IVE artwork missing');
       await page.screenshot({path:'audit-screenshots/'+view.name+'.png',fullPage:true});
       // Validate independent keyboard-opened score editor can trap focus.
-      await page.evaluate(()=>document.querySelector('.scheduleManualScore')?.click());
+      await page.evaluate(()=>{
+        const trigger=document.querySelector('.scheduleManualScore');
+        trigger?.focus();
+        trigger?.click();
+      });
       await page.waitForSelector('.manualScoreDialog',{timeout:10000});
       await page.evaluate(()=>document.querySelector('.manualScoreSave').focus());
       await page.keyboard.press('Tab');
