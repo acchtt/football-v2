@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import vm from "node:vm";
 const bridge = await fs.readFile("pages/demo-api-bridge.js", "utf8");
 const index = await fs.readFile("pages/index.html", "utf8");
-assert(index.includes("./demo-api-bridge.js?v=2"));
+assert(index.includes("./demo-api-bridge.js?v=3"));
 assert(index.indexOf("demo-api-bridge.js") < index.indexOf("ict-slate-fetch.js"));
 const called = [];
 const make = (body,status=200) => new Response(JSON.stringify(body),{
@@ -28,10 +28,15 @@ const loc = {hostname:"rawcdn.githack.com",
   origin:"https://rawcdn.githack.com",
   href:"https://rawcdn.githack.com/acchtt/football-v2/testcommit/pages/index.html"};
 const win={fetch:mockFetch,location:loc};
-const doc={readyState:"loading",addEventListener:()=>{}};
+const attributes={};
+const description={setAttribute:(key,value)=>{attributes[key]=value;}};
+const doc={readyState:"loading",addEventListener:()=>{},
+  querySelector:selector=>selector==='meta[name="description"]'?description:null};
 vm.runInNewContext(bridge,{window:win,location:loc,document:doc,
   URL,Request,Response,Date,Intl,console,Math,Promise}, {timeout:1500});
 assert.equal(win.__ARCXI_DEMO_SNAPSHOT__,true);
+assert(doc.title?.includes("Not Live"),"Static preview title must not promise live scores");
+assert(attributes.content?.includes("not live"),"Preview description must label saved fixtures");
 const dash=await win.fetch("https://football-v2.acchtt.workers.dev/api/dashboard-data");
 assert.equal((await dash.json()).ok,true);
 const event=await win.fetch("https://football-v2.acchtt.workers.dev/api/bsd/events?date_from=2026-10-08&date_to=2026-10-09&limit=200&offset=0");
