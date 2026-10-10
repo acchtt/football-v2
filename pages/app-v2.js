@@ -305,6 +305,11 @@
     const teams = splitMatch(row && row.match);
     const home = nameScore(teams.home, teamName(event, 'home'));
     const away = nameScore(teams.away, teamName(event, 'away'));
+    // Men/women qualifiers must not collapse into a shared club score.
+    const women = /\b(women|woman|ladies|femenino|feminine|feminin|women's)\b/i;
+    const boardWomen = women.test(String(row?.competition || '') + ' ' + String(row?.match || ''));
+    const providerWomen = women.test(leagueName(event) + ' ' + teamName(event,'home') + ' ' + teamName(event,'away'));
+    if (boardWomen !== providerWomen) return -1;
     if (home < 3 || away < 3 || home + away < 6) return -1;
     const boardTime = Date.parse(row && (row.kickoff || row.displayKickoff));
     const providerTime = Date.parse(eventKickoff(event));
