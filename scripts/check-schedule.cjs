@@ -139,6 +139,9 @@ assert(t.boardWarning({cached:true,degraded:true,staleAgeMs:null}).includes('unk
 const halted={...validSource,status:'live',time:{status:'suspended',period:'1st_half'}};
 assert.equal(t.eventStatus(halted),'suspended','Suspension must beat stale first-half status');
 assert.equal(t.statusKey(halted),'suspended');
+assert.equal(t.eventStatus({...validSource,status:'upcoming',
+  time:{status:'upcoming',period:'second_half'}}),'upcoming',
+  'Stale second-half clock cannot turn explicitly upcoming fixture LIVE');
 const ageBoard=make('junior','Arsenal U21 vs Chelsea U21');
 const ageProvider={...validSource,home_team:{name:'Arsenal U19'},away_team:{name:'Chelsea U19'}};
 assert.equal(t.boardEventScore(ageBoard,ageProvider),-1,'U19 and U21 fixture identities must differ');
