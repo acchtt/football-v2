@@ -1,11 +1,11 @@
 const API = "https://api.airtable.com/v0";
 
-export const BASE_ID = process.env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+export const BASE_ID = process.env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
 
 export const TABLES = {
-  coverage: "tblcl1UAyMqZT6Ub0",
-  picks: "tblg3J5sbJYbzuTYD",
-  manualScores: "tblvsHegh2WZ8qor2"
+  coverage: "tbl20jBW5dfgNnTV6",
+  picks: "tblmGd7XwTYbceIiL",
+  manualScores: "tbliGfSwMacpnmauM"
 } as const;
 
 export type Rec<T> = {
