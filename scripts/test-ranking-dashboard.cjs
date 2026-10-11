@@ -24,7 +24,7 @@ const excluded=row('recExcluded','Unranked Home vs Unranked Away','UNRESOLVED',n
 const calls=[];
 const fetch=async input=>{
  const url=new URL(input);calls.push(url);
- const ranked=url.searchParams.get('filterByFormula')?.includes('AND({C Rank}>0');
+ const ranked=url.searchParams.get('filterByFormula')?.startsWith('AND(AND({C Rank}>0');
  const table=url.pathname.split('/').at(-1);
  const rows=table==='tblcl1UAyMqZT6Ub0'?
    (ranked?[focus,watch,pass]:[focus,legacy,excluded]):[];
