@@ -8,7 +8,7 @@
   ],
   "workers_dev": true,
   "vars": {
-    "AIRTABLE_BASE_ID": "appWyZJjitSBATXAU",
+    "AIRTABLE_BASE_ID": "appbzxqXYf0lKfD4P",
     "BSD_API_BASE_URL": "https://sports.bzzoiro.com/api/v2",
     "ALLOWED_ORIGIN": "https://acchtt.github.io",
     "VAPID_SUBJECT": "https://acchtt.github.io/football-v2/"
