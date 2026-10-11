@@ -4,7 +4,7 @@
   const API = window.SLIPTRACE_API || 'https://football-v2.acchtt.workers.dev';
   const previousFetch = window.fetch.bind(window);
   const STOP = new Set(['fc','cf','sc','ac','afc','club','united','city','town','athletic','sporting','football','calcio']);
-  const CACHE_KEYS = ['sliptrace.dashboard.compat.v2','sliptrace.dashboard.compat.v1','sliptrace.dashboard.v4'];
+  const CACHE_KEYS = ['sliptrace.dashboard.compat.v5'];
   const BOARD_TTL = 12_000;
   const FALLBACK_GRACE_MS = 15 * 60_000;
   let board = null;
