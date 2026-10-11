@@ -185,5 +185,5 @@ jobs:
           check_json "BSD events" "$BASE/api/bsd/events?date_from=$TODAY&date_to=$TODAY&limit=5"
           check_json "BSD live" "$BASE/api/bsd/live"
           check_json "dashboard" "$BASE/api/dashboard-data"
-          node scripts/check-ranking-feed.mjs
+          REQUIRE_ACTIVE_BASE=1 node scripts/check-ranking-feed.mjs
           check_push_ready
