@@ -1,7 +1,7 @@
 const TABLES = {
-  coverage: "tblcl1UAyMqZT6Ub0",
-  picks: "tblg3J5sbJYbzuTYD",
-  manualScores: "tblvsHegh2WZ8qor2",
+  coverage: "tbl20jBW5dfgNnTV6",
+  picks: "tblmGd7XwTYbceIiL",
+  manualScores: "tbliGfSwMacpnmauM",
 };
 
 const COVERAGE_FIELDS = [
@@ -110,7 +110,7 @@ function manualScoreKey(match, kickoff) {
 
 async function airtableFetch(env, path, init = {}) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured in Cloudflare Workers.");
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
   const url = new URL(`https://api.airtable.com/v0/${base}/${path}`);
   const response = await fetch(url, {
     ...init,
@@ -131,7 +131,7 @@ async function airtableRecords(env, table, fields, sort) {
   const out = [];
   let offset;
   do {
-    const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+    const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
     const url = new URL(`https://api.airtable.com/v0/${base}/${table}`);
     url.searchParams.set("pageSize", "100");
     for (const field of fields) url.searchParams.append("fields[]", field);
