@@ -19,6 +19,19 @@ test('stale displayed score fails only when source is stable',()=>{
  const c=compareStableLive(p,p,[{id:'51',score:'0–0',status:'LIVE'}]);
  assert.equal(c.status,'FAIL');assert.equal(c.mismatches.length,1);
 });
+test('HT is a valid live-feed badge when the score remains accurate',()=>{
+ const p=live([e(51,2,2)]);
+ const c=compareStableLive(p,p,[{id:'51',score:'2–2',status:'HT'}]);
+ assert.equal(c.status,'PASS');assert.equal(c.compared,1);
+});
+test('HT badge cannot hide an incorrect score',()=>{
+ const p=live([e(51,2,2)]);
+ assert.equal(compareStableLive(p,p,[{id:'51',score:'1–1',status:'HT'}]).status,'FAIL');
+});
+test('displayed FT while source is still live must fail',()=>{
+ const p=live([e(51,1,0)]);
+ assert.equal(compareStableLive(p,p,[{id:'51',score:'1–0',status:'FT'}]).status,'FAIL');
+});
 test('displayed PRE while source live is a valid failure',()=>{
  const p=live([e(51,1,0)]);
  assert.equal(compareStableLive(p,p,[{id:'51',score:'1–0',status:'PRE'}]).status,'FAIL');
