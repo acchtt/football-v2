@@ -391,6 +391,7 @@ async function dashboardData(env) {
     generatedAt: new Date().toISOString(),
     backendMode: "airtable-with-decision-state-fallback",
     sync: {
+      sourceBaseId: env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P",
       websitePicks: websitePicks.length,
       decisionStateFallbacks: stateCandidates.length,
       rankedSourceRecords: rankedRows.length,
