@@ -351,6 +351,13 @@ async function dashboardData(env) {
   const picks = [...websitePicks, ...stateCandidates]
     .sort((a, b) => timestamp(b.recordedAt || b.kickoff) - timestamp(a.recordedAt || a.kickoff));
 
+  const rankedExpected = new Set(rankedRows.map(record => fixtureKey(record.fields || {})).filter(Boolean));
+  const rankedPublishedKeys = new Set(boardBase.filter(record => {
+    const row = record.fields || {};
+    return Number(row["C Rank"]) > 0 && Boolean(officialTier(row));
+  }).map(record => fixtureKey(record.fields || {})));
+  const missingRankedKeys = [...rankedExpected].filter(key => !rankedPublishedKeys.has(key));
+
   const schedule = boardBase.map((record) => {
     const row = record.fields || {};
     const match = row.Match || "Unknown fixture";
@@ -388,6 +395,8 @@ async function dashboardData(env) {
       decisionStateFallbacks: stateCandidates.length,
       rankedSourceRecords: rankedRows.length,
       rankedPublished: schedule.filter(row => row.cRank !== null).length,
+      missingRankedCount: missingRankedKeys.length,
+      missingRankedKeys: missingRankedKeys.slice(0,15),
       scheduleByDate: Object.fromEntries([...new Set(schedule.map(row => row.slateDate))].map(day =>
         [day, schedule.filter(row => row.slateDate === day).length])),
     },
