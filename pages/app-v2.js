@@ -13,12 +13,14 @@
     live: [],
     today: [],
     date: todayKey(),
+    calendarToday: todayKey(),
     board: null,
     error: '',
     boardWarning: '',
     lastSync: 0,
     refreshTick: 0,
-    statusFilter: readStore('sliptrace.statusFilter.v4', 'all', sessionStorage),
+    // A persisted FT/Stopped filter from yesterday must not hide today's new ranks.
+    statusFilter: 'all',
     signalFilter: readStore('sliptrace.signalFilter.v3', 'all', localStorage),
     boardQuery: '',
     pickFilter: readStore('sliptrace.pickFilter.v3', 'open', sessionStorage),
@@ -1828,7 +1830,22 @@
       liveRefreshInFlight = false;
     }
   }
+  function nextCalendarMatchday(currentDay) {
+    if (currentDay === state.calendarToday) return '';
+    const oldToday = state.calendarToday;
+    state.calendarToday = currentDay;
+    // Only follow ICT midnight if the viewer was looking at the live day.
+    // Preserve deliberately selected historical or future dates.
+    return state.date === oldToday ? currentDay : '';
+  }
   function tickClocks() {
+    const nowDay = todayKey();
+    const rollover = nextCalendarMatchday(nowDay);
+    if (rollover) {
+      state.statusFilter = 'all';
+      writeStore('sliptrace.statusFilter.v4','all',sessionStorage);
+      loadMatchday(rollover,false,true);
+    }
     const now = new Date();
     root.querySelectorAll('[data-context-clock]').forEach(function (node) {
       node.textContent = new Intl.DateTimeFormat('en-GB', {timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(now);
