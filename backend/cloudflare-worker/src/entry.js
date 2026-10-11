@@ -1,9 +1,9 @@
 import app from "./index.js";
 
 const TABLES = {
-  coverage: "tblcl1UAyMqZT6Ub0",
-  picks: "tblg3J5sbJYbzuTYD",
-  manualScores: "tblvsHegh2WZ8qor2",
+  coverage: "tbl20jBW5dfgNnTV6",
+  picks: "tblmGd7XwTYbceIiL",
+  manualScores: "tbliGfSwMacpnmauM",
 };
 
 const COVERAGE_FIELDS = [
@@ -72,7 +72,7 @@ function manualScoreKey(match, kickoff) {
 
 async function airtableRecords(env, table, fields, sort) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured in Cloudflare Workers.");
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
   const out = [];
   let offset;
   do {
