@@ -10,7 +10,7 @@ const context = {window:{},document:{getElementById:id=>id==='app'?root:null},
   localStorage:storage,sessionStorage:storage,location:{hash:'#board'},Date,Intl,console};
 vm.createContext(context);
 vm.runInContext(source.slice(0,source.indexOf("  window.addEventListener('hashchange'")) +
-  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest, boardEventScore, eventForBoardRow, statusKey, statusLabel, boardStatus, eventStatus, boardWarning};})();', context);
+  'window.test = {state, todayKey, boardMatchBlock, boardMatchList, renderMatchday, skeleton, formatTime, dateStrip, externalLogo, crest, boardEventScore, eventForBoardRow, statusKey, statusLabel, boardStatus, eventStatus, boardWarning, nextCalendarMatchday};})();', context);
 const t = context.window.test;
 const date = t.todayKey();
 const kickoff = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
@@ -159,5 +159,15 @@ assert.equal((root.innerHTML.match(/class="boardMatchCard/g)||[]).length,1);
 assert(root.innerHTML.includes('Stopped') && root.innerHTML.includes('CANC'),
   'Stopped tab should show only stopped fixtures');
 t.state.statusFilter='all';
+
+// Midnight: follow current ICT matchday without moving a deliberately browsed date.
+assert.equal(t.state.calendarToday,date);
+const tomorrow=new Date(Date.parse(date+'T12:00:00Z')+86400000).toISOString().slice(0,10);
+t.state.date=date;
+assert.equal(t.nextCalendarMatchday(tomorrow),tomorrow);
+t.state.calendarToday=date;
+t.state.date='2026-09-24';
+assert.equal(t.nextCalendarMatchday(tomorrow),'','Historical browsing must not be hijacked at midnight');
+assert.equal(t.state.calendarToday,tomorrow);
 
 console.log('Schedule renderer: provider precedence, statuses, ICT time, search/filter, manual actions, fallback logos and PWA checks passed.');
