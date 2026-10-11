@@ -621,6 +621,9 @@
     return lane === 'YES' ? 'FOLLOW' : lane;
   }
   function boardRank(row) {
+    // The official Airtable C ordinal outranks free-form legacy notes.
+    const cRank = Number(row && row.cRank);
+    if (Number.isInteger(cRank) && cRank > 0) return cRank;
     const source = [row && row.frozenPreSummary, row && row.coverageNotes].filter(Boolean).join(' ');
     const match = source.match(/\bRank\s*#?(\d+)\b/i);
     return match ? Number(match[1]) : null;
