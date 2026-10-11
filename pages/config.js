@@ -362,6 +362,7 @@
     const compactSchedule = payload.schedule.map(row => [
       row?.id || '', row?.slateDate || '', row?.match || '', row?.competition || '',
       row?.kickoff || row?.displayKickoff || '', row?.tier || '', row?.grade || '',
+      row?.cBoardState || '', row?.cRank ?? '',
       row?.structure || '', row?.xiStatus || '', row?.marketStatus || '',
       row?.coverageStatus || '', row?.frozenPreSummary || '', row?.coverageNotes || '',
       row?.manualScore?.home ?? '', row?.manualScore?.away ?? ''
