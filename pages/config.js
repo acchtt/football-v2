@@ -5,7 +5,7 @@
 
   const API = 'https://football-v2.acchtt.workers.dev';
   const TZ = 'Asia/Ho_Chi_Minh';
-  const DASHBOARD_CACHE_KEY = 'sliptrace.dashboard.compat.v4';
+  const DASHBOARD_CACHE_KEY = 'sliptrace.dashboard.compat.v5';
   const MAX_DASHBOARD_CACHE_MS = 6 * 60 * 60 * 1000;
   const nativeFetch = window.fetch.bind(window);
   const nativeSetInterval = window.setInterval.bind(window);
