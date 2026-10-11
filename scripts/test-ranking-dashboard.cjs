@@ -26,7 +26,7 @@ const fetch=async input=>{
  const url=new URL(input);calls.push(url);
  const ranked=url.searchParams.get('filterByFormula')?.startsWith('AND(AND({C Rank}>0');
  const table=url.pathname.split('/').at(-1);
- const rows=table==='tblcl1UAyMqZT6Ub0'?
+ const rows=table==='tbl20jBW5dfgNnTV6'?
    (ranked?[focus,watch,pass]:[focus,legacy,excluded]):[];
  return {ok:true,json:async()=>({records:rows})};
 };
@@ -49,7 +49,7 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier};',c
  assert.equal(body.sync.rankedSourceRecords,3);
  assert.equal(body.sync.rankedPublished,3);
  assert.equal(new Set(body.schedule.map(x=>x.id)).size,4,'Duplicate coverage and rank queries cannot duplicate fixtures');
- assert(calls.some(url=>url.pathname.endsWith('/tblcl1UAyMqZT6Ub0')&&
+ assert(calls.some(url=>url.pathname.endsWith('/tbl20jBW5dfgNnTV6')&&
    url.searchParams.get('filterByFormula')?.includes('C Rank')),
    'Worker must explicitly query official C ranking, not infer it from pick records');
  console.log('PASS rank->dashboard: C FOCUS/WATCH/PASS, legacy tiers, dedupe, unresolved excluded');
