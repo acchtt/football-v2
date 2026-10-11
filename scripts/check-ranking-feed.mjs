@@ -19,8 +19,11 @@ if(!response.ok)throw Error('Dashboard HTTP '+response.status);
 const data=await response.json();
 if(!data?.ok||!Array.isArray(data.schedule))throw Error('No valid ranking schedule');
 const names=new Set(data.schedule.map(row=>String(row.match||'').trim()));
-const matched=expected20261011.filter(name=>names.has(name));
-const missing=expected20261011.filter(name=>!names.has(name));
+// Pinned snapshot is a time-bounded incident diagnostic. After the fixture
+// window ages out, rely on the generic Worker rank reconciliation instead.
+const snapshotInWindow=Date.now()<Date.parse('2026-10-18T00:00:00Z');
+const matched=snapshotInWindow?expected20261011.filter(name=>names.has(name)):[];
+const missing=snapshotInWindow?expected20261011.filter(name=>!names.has(name)):[];
 const byDay={};
 for(const row of data.schedule)byDay[row.slateDate]=(byDay[row.slateDate]||0)+1;
 const diagnostic={schedule:data.schedule.length,ranked20261011:matched.length,
