@@ -1,10 +1,10 @@
 import app from "./index.js";
 
 const TABLES = {
-  coverage: "tblcl1UAyMqZT6Ub0",
-  picks: "tblg3J5sbJYbzuTYD",
-  decisionStates: "tblQmUpd5WjBLQ38X",
-  manualScores: "tblvsHegh2WZ8qor2",
+  coverage: "tbl20jBW5dfgNnTV6",
+  picks: "tblmGd7XwTYbceIiL",
+  decisionStates: "tblzMyYuDTi1UMd66",
+  manualScores: "tbliGfSwMacpnmauM",
 };
 
 const COVERAGE_FIELDS = [
@@ -157,7 +157,7 @@ function parseBetLine(row) {
 
 async function airtableRecords(env, table, fields, sort, options = {}) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured.");
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
   const out = [];
   const pageSize = Math.max(1, Math.min(100, Number(options.pageSize) || 100));
   const maxRecords = Math.max(0, Number(options.maxRecords) || 0);
@@ -188,7 +188,7 @@ async function airtableRecords(env, table, fields, sort, options = {}) {
 
 async function recentOfficialStates(env) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured.");
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
   const out = [];
   let offset;
   do {
