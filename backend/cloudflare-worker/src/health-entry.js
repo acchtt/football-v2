@@ -238,8 +238,8 @@ async function sortedDashboard(request, env, ctx) {
 
 async function probeAirtable(env) {
   if (!env.AIRTABLE_TOKEN) return { ok: false, status: 0, error: "AIRTABLE_TOKEN missing" };
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
-  const url = new URL(`https://api.airtable.com/v0/${base}/tblcl1UAyMqZT6Ub0`);
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
+  const url = new URL(`https://api.airtable.com/v0/${base}/tbl20jBW5dfgNnTV6`);
   url.searchParams.set("pageSize", "1");
   url.searchParams.append("fields[]", "Match");
   try {

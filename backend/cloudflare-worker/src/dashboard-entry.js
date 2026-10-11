@@ -1,16 +1,17 @@
 import app from "./index.js";
 
 const TABLES = {
-  coverage: "tblcl1UAyMqZT6Ub0",
-  picks: "tblg3J5sbJYbzuTYD",
-  decisionStates: "tblQmUpd5WjBLQ38X",
-  manualScores: "tblvsHegh2WZ8qor2",
+  coverage: "tbl20jBW5dfgNnTV6",
+  picks: "tblmGd7XwTYbceIiL",
+  decisionStates: "tblzMyYuDTi1UMd66",
+  manualScores: "tbliGfSwMacpnmauM",
 };
 
 const COVERAGE_FIELDS = [
   "Coverage ID", "Slate Date", "Match", "Competition", "Kickoff ICT",
   "Coverage Status", "PRE Grade", "Structural Type", "Board Tier",
   "XI Status", "Market Status", "Screened At", "Frozen PRE Summary", "Coverage Notes",
+  "C Board State", "C Rank",
 ];
 const PICK_FIELDS = [
   "Pick ID", "Match", "Competition", "Kickoff", "Model Version", "Verdict",
@@ -108,6 +109,20 @@ function selectName(value) {
   return "";
 }
 
+function officialTier(row) {
+  // Official C ranking is authoritative when an ordinal C Rank exists.
+  // A screened but unranked fixture must never be promoted to the website.
+  const rank = Number(row?.["C Rank"]);
+  const state = selectName(row?.["C Board State"]).toUpperCase();
+  if (Number.isInteger(rank) && rank > 0) {
+    if (state === "C-FOCUS" || state === "FOCUS") return "FOCUS";
+    if (state === "C-WATCH" || state === "WATCH") return "WATCHLIST";
+    if (state === "C-PASS" || state === "PASS") return "PASS";
+  }
+  const tier = selectName(row?.["Board Tier"]).toUpperCase();
+  return ["FOCUS","WATCHLIST","PASS"].includes(tier) ? tier : "";
+}
+
 function dateKey(value) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: ZONE, year: "numeric", month: "2-digit", day: "2-digit",
@@ -142,7 +157,7 @@ function parseBetLine(row) {
 
 async function airtableRecords(env, table, fields, sort, options = {}) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured.");
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
   const out = [];
   const pageSize = Math.max(1, Math.min(100, Number(options.pageSize) || 100));
   const maxRecords = Math.max(0, Number(options.maxRecords) || 0);
@@ -173,7 +188,7 @@ async function airtableRecords(env, table, fields, sort, options = {}) {
 
 async function recentOfficialStates(env) {
   if (!env.AIRTABLE_TOKEN) throw new Error("AIRTABLE_TOKEN is not configured.");
-  const base = env.AIRTABLE_BASE_ID || "appWyZJjitSBATXAU";
+  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
   const out = [];
   let offset;
   do {
@@ -222,11 +237,17 @@ function pickMatchesCandidate(pick, candidate) {
 }
 
 async function dashboardData(env) {
-  const coverageWindow = "AND(OR({Board Tier}='FOCUS',{Board Tier}='WATCHLIST',{Board Tier}='PASS'),IS_AFTER({Kickoff ICT},DATEADD(NOW(),-7,'days')),IS_BEFORE({Kickoff ICT},DATEADD(NOW(),14,'days')))";
+  const rankCondition = "AND({C Rank}>0,OR({C Board State}='C-FOCUS',{C Board State}='C-WATCH',{C Board State}='C-PASS',{C Board State}='FOCUS',{C Board State}='WATCH',{C Board State}='PASS'))";
+  const dateCondition = "IS_AFTER({Kickoff ICT},DATEADD(NOW(),-7,'days')),IS_BEFORE({Kickoff ICT},DATEADD(NOW(),14,'days'))";
+  const coverageWindow = "AND(OR({Board Tier}='FOCUS',{Board Tier}='WATCHLIST',{Board Tier}='PASS'," + rankCondition + ")," + dateCondition + ")";
+  // Separate ranked query avoids losing recent ranked rows to the legacy
+  // coverage cap when many unrelated fixtures were screened in the window.
+  const rankedWindow = "AND(" + rankCondition + "," + dateCondition + ")";
   const pickWindow = "AND(IS_AFTER({Kickoff},DATEADD(NOW(),-14,'days')),IS_BEFORE({Kickoff},DATEADD(NOW(),14,'days')))";
   const manualWindow = "IS_AFTER({Updated At},DATEADD(NOW(),-14,'days'))";
-  const [coverageRows, pickRows, decisionRows, manualRows] = await Promise.all([
+  const [coverageRows, rankedRows, pickRows, decisionRows, manualRows] = await Promise.all([
     airtableRecords(env, TABLES.coverage, COVERAGE_FIELDS, { field: "Screened At", direction: "desc" }, { filterByFormula: coverageWindow, maxRecords: 500 }),
+    airtableRecords(env, TABLES.coverage, COVERAGE_FIELDS, { field: "Screened At", direction: "desc" }, { filterByFormula: rankedWindow, maxRecords: 1000 }),
     airtableRecords(env, TABLES.picks, PICK_FIELDS, { field: "Recorded At", direction: "desc" }, { filterByFormula: pickWindow, maxRecords: 300 }),
     recentOfficialStates(env),
     airtableRecords(env, TABLES.manualScores, MANUAL_FIELDS, { field: "Updated At", direction: "desc" }, { filterByFormula: manualWindow, maxRecords: 300 }),
@@ -244,7 +265,10 @@ async function dashboardData(env) {
   }
 
   const latest = new Map();
-  for (const record of coverageRows) {
+  const uniqueRecords = new Map([...coverageRows, ...rankedRows].map(record => [record.id, record]));
+  const sorted = [...uniqueRecords.values()].sort((a,b) =>
+    timestamp(b.fields?.["Screened At"] || b.createdTime) - timestamp(a.fields?.["Screened At"] || a.createdTime));
+  for (const record of sorted) {
     const key = fixtureKey(record.fields || {});
     if (!key || key.endsWith("|") || latest.has(key)) continue;
     latest.set(key, record);
@@ -252,7 +276,7 @@ async function dashboardData(env) {
   const currentCoverage = [...latest.values()];
 
   const boardBase = currentCoverage
-    .filter((record) => ["FOCUS", "WATCHLIST", "PASS"].includes(selectName(record.fields?.["Board Tier"])))
+    .filter((record) => Boolean(officialTier(record.fields || {})))
     .filter((record) => Boolean(slateDay(record.fields || {})) && timestamp(record.fields?.["Kickoff ICT"]) > 0)
     .sort((a, b) => slateDay(a.fields || {}).localeCompare(slateDay(b.fields || {})) || timestamp(a.fields?.["Kickoff ICT"]) - timestamp(b.fields?.["Kickoff ICT"]));
 
@@ -327,6 +351,13 @@ async function dashboardData(env) {
   const picks = [...websitePicks, ...stateCandidates]
     .sort((a, b) => timestamp(b.recordedAt || b.kickoff) - timestamp(a.recordedAt || a.kickoff));
 
+  const rankedExpected = new Set(rankedRows.map(record => fixtureKey(record.fields || {})).filter(Boolean));
+  const rankedPublishedKeys = new Set(boardBase.filter(record => {
+    const row = record.fields || {};
+    return Number(row["C Rank"]) > 0 && Boolean(officialTier(row));
+  }).map(record => fixtureKey(record.fields || {})));
+  const missingRankedKeys = [...rankedExpected].filter(key => !rankedPublishedKeys.has(key));
+
   const schedule = boardBase.map((record) => {
     const row = record.fields || {};
     const match = row.Match || "Unknown fixture";
@@ -338,7 +369,9 @@ async function dashboardData(env) {
       competition: row.Competition || "",
       kickoff,
       displayKickoff: kickoff,
-      tier: selectName(row["Board Tier"]),
+      tier: officialTier(row),
+      cBoardState: selectName(row["C Board State"]),
+      cRank: Number.isInteger(Number(row["C Rank"])) && Number(row["C Rank"]) > 0 ? Number(row["C Rank"]) : null,
       grade: selectName(row["PRE Grade"]),
       structure: selectName(row["Structural Type"]),
       xiStatus: selectName(row["XI Status"]),
@@ -358,8 +391,15 @@ async function dashboardData(env) {
     generatedAt: new Date().toISOString(),
     backendMode: "airtable-with-decision-state-fallback",
     sync: {
+      sourceBaseId: env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P",
       websitePicks: websitePicks.length,
       decisionStateFallbacks: stateCandidates.length,
+      rankedSourceRecords: rankedRows.length,
+      rankedPublished: schedule.filter(row => row.cRank !== null).length,
+      missingRankedCount: missingRankedKeys.length,
+      missingRankedKeys: missingRankedKeys.slice(0,15),
+      scheduleByDate: Object.fromEntries([...new Set(schedule.map(row => row.slateDate))].map(day =>
+        [day, schedule.filter(row => row.slateDate === day).length])),
     },
   };
 }

@@ -29,7 +29,7 @@ After the first Worker exists, open Worker → Settings → Variables and Secret
 
 The non-secret values are already in `wrangler.jsonc`:
 
-- `AIRTABLE_BASE_ID=appWyZJjitSBATXAU`
+- `AIRTABLE_BASE_ID=appbzxqXYf0lKfD4P`
 - `BSD_API_BASE_URL=https://sports.bzzoiro.com/api/v2`
 - `ALLOWED_ORIGIN=https://acchtt.github.io`
 

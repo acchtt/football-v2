@@ -104,6 +104,9 @@ jobs:
           printf '%s' "$VAPID_PRIVATE_KEY" | npx wrangler@4 secret put VAPID_PRIVATE_KEY --config wrangler.jsonc >/dev/null
           echo "Generated and stored a persistent VAPID key pair in Cloudflare Worker secrets."
 
+      - name: Unit-test Airtable ranking publication
+        run: node scripts/test-ranking-dashboard.cjs
+
       - name: Deploy Worker
         run: npx wrangler@4 deploy --config wrangler.jsonc
 
@@ -182,4 +185,5 @@ jobs:
           check_json "BSD events" "$BASE/api/bsd/events?date_from=$TODAY&date_to=$TODAY&limit=5"
           check_json "BSD live" "$BASE/api/bsd/live"
           check_json "dashboard" "$BASE/api/dashboard-data"
+          REQUIRE_ACTIVE_BASE=1 node scripts/check-ranking-feed.mjs
           check_push_ready

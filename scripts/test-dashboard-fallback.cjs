@@ -26,7 +26,14 @@ const endpoint='https://football-v2.acchtt.workers.dev/api/dashboard-data';
   assert.equal(payload.degraded,true);
   assert(Array.isArray(payload.schedule)&&payload.schedule.length===0);
   const lastConfirmed=Date.now()-360000;
+  // The previous Airtable base's cache must never revive after source migration.
   store.set('sliptrace.dashboard.compat.v4',JSON.stringify({
+    ok:true,_arcxiConfirmedAt:lastConfirmed,
+    schedule:[{id:'old-base-fixture'}],picks:[]
+  }));
+  response=await context.window.fetch(endpoint);
+  assert.equal(response.status,503,'Old Airtable base cache must not masquerade as active data');
+  store.set('sliptrace.dashboard.compat.v5',JSON.stringify({
     ok:true,_arcxiConfirmedAt:lastConfirmed,
     schedule:[{id:'stored',match:'Arsenal vs Chelsea',kickoff:'2026-10-10T13:00:00Z'}],picks:[]
   }));
@@ -38,14 +45,14 @@ const endpoint='https://football-v2.acchtt.workers.dev/api/dashboard-data';
   assert.equal(payload.cacheSource,'browser');
   assert(payload.staleAgeMs>=360000,'Browser cache age must be retained');
   assert.equal(payload.schedule.length,1);
-  store.set('sliptrace.dashboard.compat.v4',JSON.stringify({
+  store.set('sliptrace.dashboard.compat.v5',JSON.stringify({
     ok:true,_arcxiConfirmedAt:Date.now()-7*3600000,
     schedule:[{id:'expired'}],picks:[]}));
   response=await context.window.fetch(endpoint);
   payload=await response.json();
   assert.equal(response.status,503,'Expired six-hour snapshot must fail closed');
   assert.equal(payload.ok,false);
-  store.set('sliptrace.dashboard.compat.v4',JSON.stringify({
+  store.set('sliptrace.dashboard.compat.v5',JSON.stringify({
     ok:true,schedule:[{id:'old'}],picks:[]}));
   response=await context.window.fetch(endpoint);
   payload=await response.json();

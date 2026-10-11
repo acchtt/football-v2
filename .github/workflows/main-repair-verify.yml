@@ -32,6 +32,10 @@ jobs:
           node scripts/check-schedule-logos.cjs
           node scripts/test-dashboard-fallback.cjs
           node scripts/test-status-precedence.cjs
+          node scripts/test-ranking-dashboard.cjs
+          node --check scripts/check-ranking-feed.mjs
+      - name: Observe public ranking synchronization
+        run: node scripts/check-ranking-feed.mjs
       - name: Set up Chrome test dependencies
         run: |
           mkdir -p /tmp/arcxi-browser
