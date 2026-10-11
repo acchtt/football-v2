@@ -44,7 +44,9 @@ export function compareStableLive(beforePayload,afterPayload,dom){
     const observed=parseScore(visible.score);
     const comparison={id,provider:end.score,display:visible.score||'',status:String(visible.status||'').trim()};
     matched.push(comparison);
-    if(observed!==end.score||comparison.status!=='LIVE'){
+    // Halftime remains part of the live feed; HT is the correct website badge.
+    // PRE/FT/stopped labels are still invalid while the same ID is LIVE.
+    if(observed!==end.score||!['LIVE','HT'].includes(comparison.status)){
       mismatches.push(comparison);
     }
   }
