@@ -46,6 +46,9 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier};',c
  assert.equal(body.schedule.find(x=>x.id==='recWatch').tier,'WATCHLIST');
  assert.equal(body.schedule.find(x=>x.id==='recWatch').cRank,2);
  assert.equal(body.schedule.find(x=>x.id==='recPass').tier,'PASS');
+ assert.equal(body.sync.sourceBaseId,'appbzxqXYf0lKfD4P');
+ assert(calls.every(url=>url.pathname.includes('/appbzxqXYf0lKfD4P/')),
+   'Every Airtable table read must come from Active Operations');
  assert.equal(body.sync.rankedSourceRecords,3);
  assert.equal(body.sync.rankedPublished,3);
  assert.equal(new Set(body.schedule.map(x=>x.id)).size,4,'Duplicate coverage and rank queries cannot duplicate fixtures');
