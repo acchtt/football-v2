@@ -431,7 +431,8 @@ async function dashboardData(env) {
       decisionStateFallbacks: stateCandidates.length,
       rankedSourceRecords: rankedRows.length,
       rankedPublished: schedule.filter(row => row.cRank !== null).length,
-      latestRankedBoardId: schedule.filter(row => row.cRank !== null).sort((a,b) => timestamp(b.kickoff)-timestamp(a.kickoff))[0]?.boardId || null,
+      latestRankedBoardId: boardBase.filter(record => Number(record.fields?.["C Rank"]) > 0)
+        .sort((a,b) => timestamp(b.fields?.["Screened At"]) - timestamp(a.fields?.["Screened At"]))[0]?.fields?.["Coverage ID"]?.split("|")[0] || null,
       stopDisplayed: schedule.filter(row => row.followLane === "STOP").length,
       missingRankedCount: missingRankedKeys.length,
       missingRankedKeys: missingRankedKeys.slice(0,15),
