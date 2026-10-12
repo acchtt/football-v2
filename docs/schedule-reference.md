@@ -1,5 +1,10 @@
 # ARC XI schedule reference implementation
 
+## Design authority — October 12, 2026
+
+The Liquid Glass direction is **discarded**. The active visual system is the existing flat, high-contrast ARC XI/IVE matchday: opaque dark canvas, exact league/fixture grid, crisp separators, legible goals and C ranking, and restrained yellow/pink emphasis. Navigation, filters and search must remain simple, solid and keyboard accessible rather than glass-effect controls. Do not add backdrop blur, frosted glass, refraction, translucent sheet overlays or floating glass cards. The prior glass demo is non-authoritative. Keep approved IVE artwork and functional match/data features unchanged.
+
+
 The approved ARCXI_REFERENCE.png is the visual specification. Match data remains live; reference fixtures are never substituted for operational Board rows.
 
 At the reference's 1672px width, the schedule canvas is 1421px wide (85vw), with its left edge at 125px. The masthead occupies 140px, filters 40px, and the first competition header ends at 239px. Rows are 42px, group gaps 18px, crests 34px. The score center sits at approximately 52% of the viewport; home and away names balance around it. Mobile rows wrap names and retain day arrows, status counts, search, and manual score actions.
