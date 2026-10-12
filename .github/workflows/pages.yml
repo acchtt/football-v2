@@ -156,7 +156,7 @@ jobs:
           }
           if (!confirmed) throw Error('New Pages build not yet visible at public URL');
           NODE
-      - name: Confirm deployed assets, API health and schedule
+      - name: Confirm deployed assets, API health and signed V4 schedule
         run: node scripts/check-production-feed.mjs
       - name: Confirm comparator behavior
         run: node --test scripts/test-live-score-parity.mjs
