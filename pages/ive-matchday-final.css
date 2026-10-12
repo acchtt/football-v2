@@ -48,7 +48,7 @@ body{background-image:radial-gradient(circle at 50% -20%,rgba(93,45,81,.2),trans
 ::selection{background:rgba(240,143,189,.28)}
 :focus-visible{outline-color:var(--ive-pink)}
 
-.appHeader{height:var(--header);border-bottom:1px solid #33313b;background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
+.appHeader{height:var(--header);border-bottom:1px solid #33313b;background:#08090d}
 .headerInner{max-width:none;padding:0 14px;gap:16px;justify-content:flex-start}
 .brand{gap:9px}
 .alertsCenterBtn,.pwaInstallBtn{display:none!important}
@@ -243,7 +243,7 @@ html{scrollbar-color:#4b3a47 #0b0c11;scrollbar-width:thin}::-webkit-scrollbar{wi
   #app,.appHeader,.appFrame{position:relative;z-index:2}
   .appHeader{background:transparent;border-bottom:0;backdrop-filter:none}
   .headerInner,.appFrame{width:var(--stage-width);margin-inline:auto}
-  .headerInner{border-bottom:1px solid #33313b;background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
+  .headerInner{border-bottom:1px solid #33313b;background:#08090d}
   .iveRailsReady .iveArtRail{position:fixed;inset-block:0;z-index:1;display:block;width:calc((100vw - var(--stage-width)) / 2);min-width:180px;overflow:hidden;pointer-events:none;background:#0a0b10;isolation:isolate}
   .iveArtRail--left{left:0;border-right:1px solid #312431}.iveArtRail--right{right:0;border-left:1px solid #25283a}
   .iveArtRail:after{content:"";position:absolute;inset-block:0;z-index:1;width:24px;pointer-events:none}
