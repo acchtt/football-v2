@@ -37,8 +37,8 @@ body{
 ::selection{background:rgba(246,233,40,.28);color:#050505}
 :focus-visible{outline-color:var(--ive-yellow)}
 
-.appHeader{border-bottom-color:#27282a;background:rgba(5,5,5,.97)}
-.headerInner{border-bottom-color:#27282a!important;background:rgba(5,5,5,.97)!important}
+.appHeader{border-bottom-color:#27282a;background:#050505}
+.headerInner{border-bottom-color:#27282a!important;background:#050505!important}
 .brandWords b{color:#f4f1e8}
 .brandWords small{border-left-color:rgba(246,233,40,.24);color:#aaa79e}
 .siteMenu>summary,.siteMenuSearch input,.siteMenuSearch button,.siteMenuAction{
