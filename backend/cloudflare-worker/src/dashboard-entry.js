@@ -11,7 +11,9 @@ const COVERAGE_FIELDS = [
   "Coverage ID", "Slate Date", "Match", "Competition", "Kickoff ICT",
   "Coverage Status", "PRE Grade", "Structural Type", "Board Tier",
   "XI Status", "Market Status", "Screened At", "Frozen PRE Summary", "Coverage Notes",
-  "C Board State", "C Rank",
+  "C Board State", "C Rank", "C Supported Line",
+  "C2 Shadow State", "C2 Shadow Rank", "C2 Supported Line",
+  "Step1 C Follow Lane", "Operational Grade",
 ];
 const PICK_FIELDS = [
   "Pick ID", "Match", "Competition", "Kickoff", "Model Version", "Verdict",
@@ -109,16 +111,29 @@ function selectName(value) {
   return "";
 }
 
+function officialLane(row) {
+  const rank = Number(row?.["C Rank"]);
+  if (!Number.isInteger(rank) || rank <= 0) return "";
+  const lane = selectName(row?.["Step1 C Follow Lane"]).toUpperCase();
+  return ["FOLLOW", "RESERVE", "STOP"].includes(lane) ? lane : "";
+}
+
 function officialTier(row) {
-  // Official C ranking is authoritative when an ordinal C Rank exists.
-  // A screened but unranked fixture must never be promoted to the website.
+  // A real C rank takes precedence over the older screening-era Board Tier.
+  // The follow lane is an operational schedule state, NEVER a priced C-BET.
   const rank = Number(row?.["C Rank"]);
   const state = selectName(row?.["C Board State"]).toUpperCase();
   if (Number.isInteger(rank) && rank > 0) {
+    const lane = officialLane(row);
+    if (lane === "FOLLOW") return "FOCUS";
+    if (lane === "RESERVE") return "WATCHLIST";
+    if (lane === "STOP") return "PASS"; // display STOP fixtures; do not publish a bet
     if (state === "C-FOCUS" || state === "FOCUS") return "FOCUS";
     if (state === "C-WATCH" || state === "WATCH") return "WATCHLIST";
     if (state === "C-PASS" || state === "PASS") return "PASS";
+    return "";
   }
+  // Historical board-tiers remain display-only; provisional V4 rows have none.
   const tier = selectName(row?.["Board Tier"]).toUpperCase();
   return ["FOCUS","WATCHLIST","PASS"].includes(tier) ? tier : "";
 }
@@ -132,10 +147,11 @@ function dateKey(value) {
 }
 
 function slateDay(row) {
-  const slate = row?.["Slate Date"];
-  if (slate && /^\d{4}-\d{2}-\d{2}$/.test(slate)) return slate;
+  // ICT kickoff owns the visible calendar day, including post-midnight games.
   const kickoff = row?.["Kickoff ICT"];
-  return kickoff && timestamp(kickoff) ? dateKey(kickoff) : "";
+  if (kickoff && timestamp(kickoff)) return dateKey(kickoff);
+  const slate = row?.["Slate Date"];
+  return slate && /^\d{4}-\d{2}-\d{2}$/.test(slate) ? slate : "";
 }
 
 function fixtureKey(row) {
@@ -270,8 +286,19 @@ async function dashboardData(env) {
     timestamp(b.fields?.["Screened At"] || b.createdTime) - timestamp(a.fields?.["Screened At"] || a.createdTime));
   for (const record of sorted) {
     const key = fixtureKey(record.fields || {});
-    if (!key || key.endsWith("|") || latest.has(key)) continue;
-    latest.set(key, record);
+    if (!key || key.endsWith("|")) continue;
+    const previous = latest.get(key);
+    if (!previous) {
+      latest.set(key, record);
+      continue;
+    }
+    // A newer sweep lead or pending enrichment is not a newer *ranked board*.
+    // Never allow an unranked V4/legacy coverage row to mask the signed C/C2
+    // result for the same fixture. Among equally ranked sources, screened-at
+    // descending (the original sort) preserves the latest valid freeze.
+    const ranked = Number(record.fields?.["C Rank"]) > 0 && Boolean(officialTier(record.fields));
+    const previousRanked = Number(previous.fields?.["C Rank"]) > 0 && Boolean(officialTier(previous.fields));
+    if (ranked && !previousRanked) latest.set(key, record);
   }
   const currentCoverage = [...latest.values()];
 
@@ -370,9 +397,17 @@ async function dashboardData(env) {
       kickoff,
       displayKickoff: kickoff,
       tier: officialTier(row),
+      // These fields are display-only; no odds, stake, WAIT or Website Pick is inferred.
+      sourceCoverageId: row["Coverage ID"] || "",
+      boardId: String(row["Coverage ID"] || "").split("|")[0] || "",
+      followLane: officialLane(row),
       cBoardState: selectName(row["C Board State"]),
       cRank: Number.isInteger(Number(row["C Rank"])) && Number(row["C Rank"]) > 0 ? Number(row["C Rank"]) : null,
-      grade: selectName(row["PRE Grade"]),
+      cSupportedLine: Number.isFinite(Number(row["C Supported Line"])) ? Number(row["C Supported Line"]) : null,
+      c2BoardState: selectName(row["C2 Shadow State"]),
+      c2Rank: Number.isInteger(Number(row["C2 Shadow Rank"])) && Number(row["C2 Shadow Rank"]) > 0 ? Number(row["C2 Shadow Rank"]) : null,
+      c2SupportedLine: Number.isFinite(Number(row["C2 Supported Line"])) ? Number(row["C2 Supported Line"]) : null,
+      grade: selectName(row["Operational Grade"]) || selectName(row["PRE Grade"]),
       structure: selectName(row["Structural Type"]),
       xiStatus: selectName(row["XI Status"]),
       marketStatus: selectName(row["Market Status"]),
@@ -396,6 +431,9 @@ async function dashboardData(env) {
       decisionStateFallbacks: stateCandidates.length,
       rankedSourceRecords: rankedRows.length,
       rankedPublished: schedule.filter(row => row.cRank !== null).length,
+      latestRankedBoardId: boardBase.filter(record => Number(record.fields?.["C Rank"]) > 0)
+        .sort((a,b) => timestamp(b.fields?.["Screened At"]) - timestamp(a.fields?.["Screened At"]))[0]?.fields?.["Coverage ID"]?.split("|")[0] || null,
+      stopDisplayed: schedule.filter(row => row.followLane === "STOP").length,
       missingRankedCount: missingRankedKeys.length,
       missingRankedKeys: missingRankedKeys.slice(0,15),
       scheduleByDate: Object.fromEntries([...new Set(schedule.map(row => row.slateDate))].map(day =>

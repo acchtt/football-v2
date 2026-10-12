@@ -17,8 +17,19 @@ const row=(id,match,tier,state,rank)=>({
   'Board Tier':tier,'C Board State':state,'C Rank':rank}
 });
 const focus=row('recFocus','Ranked Home vs Ranked Away','UNRESOLVED','C-FOCUS',1);
+focus.fields['Step1 C Follow Lane']='RESERVE';
+focus.fields['C Supported Line']=2.75;
+focus.fields['C2 Shadow Rank']=1;
+focus.fields['C2 Shadow State']='C2-FOCUS';
+focus.fields['C2 Supported Line']=2.75;
 const watch=row('recWatch','Ranked Ajax vs Ranked NEC',null,'C-WATCH',2);
+watch.fields['Step1 C Follow Lane']='STOP';
 const pass=row('recPass','Ranked Three vs Ranked Four','PASS','C-PASS',3);
+pass.fields['Step1 C Follow Lane']='STOP';
+// Latest screening may contain a newer *unranked* duplicate of a sealed rank.
+// It cannot hide the actual signed C/C2 result.
+const shadow=row('recShadow',focus.fields.Match,'WATCHLIST',null,null);
+shadow.fields['Screened At']=new Date(now-1000).toISOString();
 const legacy=row('recLegacy','Legacy Home vs Legacy Away','WATCHLIST',null,null);
 const excluded=row('recExcluded','Unranked Home vs Unranked Away','UNRESOLVED',null,null);
 const calls=[];
@@ -27,7 +38,7 @@ const fetch=async input=>{
  const ranked=url.searchParams.get('filterByFormula')?.startsWith('AND(AND({C Rank}>0');
  const table=url.pathname.split('/').at(-1);
  const rows=table==='tbl20jBW5dfgNnTV6'?
-   (ranked?[focus,watch,pass]:[focus,legacy,excluded]):[];
+   (ranked?[focus,watch,pass]:[shadow,focus,legacy,excluded]):[];
  return {ok:true,json:async()=>({records:rows})};
 };
 const context={fetch,Date,Intl,URL,Response,Headers,console};
@@ -42,8 +53,14 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier};',c
  assert(fixtures.includes(pass.fields.Match),'Official PASS lane missing');
  assert(fixtures.includes(legacy.fields.Match),'Legacy WATCHLIST must remain visible');
  assert(!fixtures.includes(excluded.fields.Match),'Unranked/unresolved coverage is not schedule');
- assert.equal(body.schedule.find(x=>x.id==='recFocus').tier,'FOCUS');
- assert.equal(body.schedule.find(x=>x.id==='recWatch').tier,'WATCHLIST');
+ assert.equal(body.schedule.find(x=>x.id==='recFocus').tier,'WATCHLIST','FOCUS on RESERVE must display as WATCHLIST');
+ assert.equal(body.schedule.find(x=>x.id==='recFocus').followLane,'RESERVE');
+ assert.equal(body.schedule.find(x=>x.id==='recFocus').cSupportedLine,2.75);
+ assert.equal(body.schedule.find(x=>x.id==='recFocus').c2Rank,1);
+ assert.equal(body.schedule.find(x=>x.id==='recFocus').c2SupportedLine,2.75);
+ assert.equal(body.schedule.find(x=>x.id==='recWatch').tier,'PASS','WATCH with STOP must still be displayed');
+ assert.equal(body.schedule.find(x=>x.id==='recWatch').followLane,'STOP');
+ assert(!body.schedule.some(x=>x.id==='recShadow'),'newer unranked screening must not hide older signed rank');
  assert.equal(body.schedule.find(x=>x.id==='recWatch').cRank,2);
  assert.equal(body.schedule.find(x=>x.id==='recPass').tier,'PASS');
  assert.equal(body.sync.sourceBaseId,'appbzxqXYf0lKfD4P');
@@ -51,9 +68,12 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier};',c
    'Every Airtable table read must come from Active Operations');
  assert.equal(body.sync.rankedSourceRecords,3);
  assert.equal(body.sync.rankedPublished,3);
+ assert.equal(body.sync.missingRankedCount,0);
+ assert.equal(body.sync.stopDisplayed,2);
+ assert.equal(context.workerTest.officialTier({'C Board State':'C-FOCUS','C Rank':8,'Step1 C Follow Lane':'FOLLOW'}),'FOCUS');
  assert.equal(new Set(body.schedule.map(x=>x.id)).size,4,'Duplicate coverage and rank queries cannot duplicate fixtures');
  assert(calls.some(url=>url.pathname.endsWith('/tbl20jBW5dfgNnTV6')&&
    url.searchParams.get('filterByFormula')?.includes('C Rank')),
    'Worker must explicitly query official C ranking, not infer it from pick records');
- console.log('PASS rank->dashboard: C FOCUS/WATCH/PASS, legacy tiers, dedupe, unresolved excluded');
+ console.log('PASS signed rank->dashboard: C/C2 independent ranks, RESERVE/STOP, newer unranked shadow protection, legacy, ICT and zero betting pollution');
 })().catch(error=>{console.error(error);process.exitCode=1;});
