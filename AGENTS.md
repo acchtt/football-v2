@@ -60,6 +60,13 @@ Use the smallest skill chain that fits the task. Ponytail remains an always-on i
    - `frontend-design` + `redesign-existing-projects` — preserve coherence with ARC XI and the existing product.
    - Ponytail `full` — implement the faithful minimal diff.
 
+### Active ARC XI visual direction (2026-10-12)
+
+- **Liquid Glass is retired**. Do not use glassmorphism, frosted/translucent panels, backdrop blur, faux refraction, giant glass sheets or raised-glass fixture effects as a design system.
+- Use the approved **flat, high-contrast schedule** in `docs/schedule-reference.md`: opaque charcoal/black surfaces, precise separators, restrained yellow/pink accents, clear fixture state and C model priority.
+- Preserve ARC XI/IVE identity, existing approved real-person artwork, accessible controls, schedule behavior, and readable mobile rows. Improve ranking visibility and usability before decoration.
+- Treat any `demo/liquid-glass` work as an archived experiment, **not** a reference for production. Do not port it to `main` absent a new explicit user decision.
+
 ### Precedence and boundaries
 
 - The ARC XI brief, approved assets, existing functionality, speed, and information readability override generic style advice from any imported skill.
