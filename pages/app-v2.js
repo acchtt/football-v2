@@ -431,19 +431,32 @@
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
       '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule">' +
       '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=3" alt="ARC XI — Live Football Schedule"></a>' +
-      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
-      dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
       '<details class="scheduleMenu"><summary class="scheduleMenuButton" aria-label="Open menu"><i></i><i></i></summary>' +
       '<nav class="scheduleMenuPanel" aria-label="Schedule menu"><a href="#board">Schedule</a><a href="#picks">Picks</a>' +
       '<a href="#leagues">Competitions</a><a href="#teams">Teams</a><button type="button" data-refresh-schedule>Refresh scores</button></nav></details>' +
       '</div></div></header>';
   }
+  // Demo-only shell adapted from the HERO OFFICE mission panel. Its existing
+  // date controls stay wired to the normal board state and navigation actions.
+  function heroOfficeMission() {
+    return '<aside class="heroOfficeMission" aria-label="Matchday controls">' +
+      '<div class="heroMissionTab"><b>01</b><span>SHOW YOUR MATCHDAY</span></div>' +
+      '<section class="heroMissionCard"><div class="heroMissionTag">MATCHDAY MISSION</div>' +
+      '<div class="heroMissionBubble"><strong>YOUR FOOTBALL<br>HERO BOARD!</strong></div>' +
+      '<p class="heroMissionIntro">CHOOSE YOUR MATCHDAY. FOLLOW THE LIVE BOARD.</p>' +
+      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
+      dateStrip() +
+      '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
+      '<div class="heroMissionLegend"><span><b>★</b> C official ranking</span><span><b>●</b> Live scores</span><span><b>✦</b> C2 shadow</span></div>' +
+      '<div class="heroMissionFooter">READY FOR KICKOFF? ★ LET’S GO!</div></section></aside>';
+  }
   function shell(content, context, className) {
     const classes = String(className || '');
     if (classes.includes('scheduleBoardRoute')) {
       return scheduleHeader() + '<div class="appFrame ' + esc(classes) + '">' +
-        '<div class="contentFrame"><main class="mainView">' + content + '</main></div></div>';
+        '<div class="contentFrame"><div class="heroOfficeGrid">' + heroOfficeMission() +
+        '<main class="mainView">' + content + '</main></div></div></div>';
     }
     return header() + '<div class="appFrame ' + esc(classes) + '">' +
       '<div class="contentFrame"><main class="mainView">' + content + '</main>' +
