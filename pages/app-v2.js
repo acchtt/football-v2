@@ -466,7 +466,7 @@
       return '<article class="heroUnionCard hu-'+hero.cls+'" role="listitem">' +
         '<span class="heroUnionCardLabel">'+hero.name+'</span>' +
         '<img src="./media/ive/hero-union/'+hero.image+'" alt="'+hero.member+' as '+hero.name+
-        '" width="720" height="2130" loading="lazy" decoding="async"></article>';
+        '" width="720" height="2130" loading="eager" decoding="async"></article>';
     }).join('');
     return '<section class="heroUnion" id="hero-union" aria-labelledby="heroUnionTitle">' +
       '<div class="heroUnionInner">' +
