@@ -472,7 +472,7 @@
       '<div class="heroUnionInner">' +
       '<h2 class="heroUnionTitle" id="heroUnionTitle">GIRL HERO UNION!</h2>' +
       '<p class="heroUnionMobileHint">SWIPE TO MEET ALL SIX HEROES <span aria-hidden="true">→</span></p>' +
-      '<div class="heroUnionCards" role="list" aria-label="Six IVE superhero character cards">'+cards+'</div>' +
+      '<div class="heroUnionCards" role="list" tabindex="0" aria-label="Six IVE superhero character cards, scroll horizontally to view all">'+cards+'</div>' +
       '<div class="heroUnionGlow" aria-label="Glow">GLOW</div>' +
       '<div class="heroUnionNote"><strong>HERO POWERS?</strong><span>lets Looks Can Kill</span></div>' +
       '<footer class="heroUnionFooter">' +
