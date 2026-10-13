@@ -66,6 +66,32 @@ async function main(){
      const response=await page.goto(target.url,{waitUntil:'domcontentloaded',timeout:35000});
      status=response?.status();finalUrl=page.url();
      await sleep(target.name==='reference'?4500:6500);
+     if(target.name==='arcxi'){
+       const artwork=await page.evaluate(async()=>{
+         const el=document.querySelector('.iveCorner--site');
+         if(!el)return {error:'Artwork missing'};
+         const image=el.querySelector('.iveCornerArtwork');
+         const before=el.getBoundingClientRect();
+         const position=getComputedStyle(el).position,visible=getComputedStyle(el).display!=='none';
+         window.scrollTo(0,Math.min(document.documentElement.scrollHeight-innerHeight,250));
+         await new Promise(requestAnimationFrame);
+         const after=el.getBoundingClientRect();
+         window.scrollTo(0,0);
+         return {
+           position,visible,inSchedulePanel:!!el.closest('.scheduleStage'),
+           imageLoaded:Boolean(image?.naturalWidth>0),count:document.querySelectorAll('.iveCorner--site').length,
+           rightGap:Math.round(innerWidth-before.right),bottomGap:Math.round(innerHeight-before.bottom),
+           scrollDelta:Math.round(after.bottom-before.bottom),width:Math.round(before.width),
+           overflowX:document.documentElement.scrollWidth>innerWidth
+         };
+       });
+       console.log('ARTWORK_CORNER',size.name,JSON.stringify(artwork));
+       if(artwork.position!=='fixed'||!artwork.visible||artwork.inSchedulePanel||!artwork.imageLoaded||
+          artwork.count!==1||Math.abs(artwork.rightGap)>3||Math.abs(artwork.bottomGap)>3||
+          Math.abs(artwork.scrollDelta)>3||artwork.overflowX){
+         throw Error('Site-corner artwork regression: '+JSON.stringify(artwork));
+       }
+     }
      await page.screenshot({path:path.join(out,target.name+'-'+size.name+'.png'),fullPage:false});
      const styles=await page.evaluate(()=>{
        const read=e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {tag:e.tagName,cls:typeof e.className==='string'?e.className.slice(0,100):'',text:(e.textContent||'').trim().slice(0,70),x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),font:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,borderRadius:s.borderRadius,letterSpacing:s.letterSpacing}};

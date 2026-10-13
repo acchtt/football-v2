@@ -456,7 +456,10 @@
     if (classes.includes('scheduleBoardRoute')) {
       return scheduleHeader() + '<div class="appFrame ' + esc(classes) + '">' +
         '<div class="contentFrame"><div class="heroOfficeGrid">' + heroOfficeMission() +
-        '<main class="mainView">' + content + '</main></div></div></div>';
+        '<main class="mainView">' + content + '</main></div></div></div>' +
+        '<aside class="iveCorner iveCorner--bottom iveCorner--site" aria-hidden="true">' +
+        '<span class="iveCornerPhoto"><img class="iveCornerArtwork" ' +
+        'src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside>';
     }
     return header() + '<div class="appFrame ' + esc(classes) + '">' +
       '<div class="contentFrame"><main class="mainView">' + content + '</main>' +
@@ -980,8 +983,7 @@
       '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
         return '<svg class="scheduleSpark' + color + '" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0c1 12 2 14 12 15-10 1-11 3-12 15C11 18 10 16 0 15c10-1 11-3 12-15Z"></path></svg>';
       }).join('') + '<small>Always more than a game</small></footer>' +
-      '<aside class="iveCorner iveCorner--bottom" aria-hidden="true"><span class="iveCornerPhoto">' +
-      '<img class="iveCornerArtwork" src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside></section>';
+      '</section>';
     // A score can change while a user is typing. Preserve search focus and
     // caret across the occasional data-driven board rebuild.
     const focusedSearch = document.activeElement?.id === 'boardSearch';
