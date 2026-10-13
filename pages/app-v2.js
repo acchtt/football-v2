@@ -430,9 +430,7 @@
   function scheduleHeader() {
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
       '<a class="scheduleBrand heroCoBrand" href="#board" aria-label="ARC XI × IVE schedule">' +
-      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-wordmark-lockup.svg?v=1" alt="ARC XI">' +
-      '<span class="heroBrandTimes" aria-hidden="true">×</span>' +
-      '<img class="heroIveLogo" src="./media/arcxi/ive-official-logo.svg?v=1" alt="IVE"></a>' +
+      '<img class="heroCombinedLogo" src="./media/arcxi/arc-xi-ive-co-brand.svg?v=1" alt="ARC XI × IVE"></a>' +
       '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>ARC XI × IVE</span><i aria-hidden="true"></i></div>' +
       '<details class="scheduleMenu"><summary class="scheduleMenuButton" aria-label="Open menu"><i></i><i></i></summary>' +
       '<nav class="scheduleMenuPanel" aria-label="Schedule menu"><a href="#board">Schedule</a><a href="#picks">Picks</a>' +
