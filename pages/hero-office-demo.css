@@ -156,3 +156,35 @@ html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span{
  }
  html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam{gap:3px}
 }
+
+/* User-approved ARC XI × IVE lockup: both symbols are from original reference artwork. */
+html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand{
+  width:max-content;max-width:calc(100% - 118px);margin:0;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  white-space:nowrap;text-decoration:none;
+}
+html.scheduleCornerMode .scheduleBrand.heroCoBrand .scheduleBrandLogo{
+  width:185px;height:auto;max-height:62px;flex:0 0 auto;filter:none;object-fit:contain;
+}
+html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroBrandTimes{
+  color:#f9f5ef;font:900 25px/1 "Office Demo Grotesk",Arial,sans-serif;
+  flex:0 0 auto;letter-spacing:0;
+}
+html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroIveLogo{
+  display:block;width:112px;height:auto;max-height:65px;object-fit:contain;flex:0 0 auto;
+}
+@media(max-width:820px){
+  html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand{
+    position:absolute;top:50%;left:calc(50% - 8px);
+    transform:translate(-50%,-50%);gap:10px;max-width:calc(100% - 80px);
+  }
+  html.scheduleCornerMode .scheduleBrand.heroCoBrand .scheduleBrandLogo{width:140px;max-height:44px}
+  html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroBrandTimes{font-size:19px}
+  html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroIveLogo{width:85px;max-height:49px}
+}
+@media(max-width:380px){
+  html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand{gap:7px}
+  html.scheduleCornerMode .scheduleBrand.heroCoBrand .scheduleBrandLogo{width:112px}
+  html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroBrandTimes{font-size:15px}
+  html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroIveLogo{width:68px}
+}
