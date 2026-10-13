@@ -429,9 +429,11 @@
   }
   function scheduleHeader() {
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
-      '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule">' +
-      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=3" alt="ARC XI — Live Football Schedule"></a>' +
-      '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
+      '<a class="scheduleBrand heroCoBrand" href="#board" aria-label="ARC XI × IVE schedule">' +
+      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-wordmark-lockup.svg?v=1" alt="ARC XI">' +
+      '<span class="heroBrandTimes" aria-hidden="true">×</span>' +
+      '<img class="heroIveLogo" src="./media/arcxi/ive-official-logo.svg?v=1" alt="IVE"></a>' +
+      '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>ARC XI × IVE</span><i aria-hidden="true"></i></div>' +
       '<details class="scheduleMenu"><summary class="scheduleMenuButton" aria-label="Open menu"><i></i><i></i></summary>' +
       '<nav class="scheduleMenuPanel" aria-label="Schedule menu"><a href="#board">Schedule</a><a href="#picks">Picks</a>' +
       '<a href="#leagues">Competitions</a><a href="#teams">Teams</a><button type="button" data-refresh-schedule>Refresh scores</button></nav></details>' +
