@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0d0d0d">
-<title>ARC XI × HERO OFFICE — Demo comparison</title>
+<title>ARC XI × IVE — HERO OFFICE demo comparisons</title>
 <meta name="description" content="Desktop and mobile design comparisons, HERO OFFICE reference beside the ARC XI demo, with a working sample-data preview.">
 <style>
 :root{--ink:#121212;--pink:#f708b0;--yellow:#fff241;--paper:#fff9f3;--line:#222;color-scheme:light}
@@ -66,10 +66,26 @@ input[type=range]{display:block;width:calc(100% - 32px);margin:15px 16px 20px;ac
  .sub{font-size:13px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.coWordmark{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.coWordmark img:first-child{width:145px;height:auto;display:block;flex:none}
+.coWordmark img:last-child{width:75px;height:auto;display:block;flex:none}
+.coWordmark span{font:900 23px/1 Arial,sans-serif;color:#fff}
+@media(max-width:740px){
+ .coWordmark{gap:6px}
+ .coWordmark img:first-child{width:94px}
+ .coWordmark img:last-child{width:51px}
+ .coWordmark span{font-size:15px}
+}
+@media(max-width:380px){
+ .coWordmark{gap:4px}
+ .coWordmark img:first-child{width:76px}
+ .coWordmark img:last-child{width:42px}
+ .coWordmark span{font-size:13px}
+}
 </style>
 </head>
 <body>
-<header><div class="top"><a class="wordmark" href="./">ARC XI × HERO OFFICE</a><nav class="topnav" aria-label="Comparison navigation"><a href="#compare">Compare</a><a class="preview" href="./app/">Open demo ↗</a></nav></div></header>
+<header><div class="top"><a class="wordmark coWordmark" href="./" aria-label="ARC XI × IVE"><img src="./app/media/arcxi/arc-xi-wordmark-lockup.svg?v=1" alt="ARC XI"><span aria-hidden="true">×</span><img src="./app/media/arcxi/ive-official-logo.svg?v=1" alt="IVE"></a><nav class="topnav" aria-label="Comparison navigation"><a href="#compare">Compare</a><a class="preview" href="./app/">Open demo ↗</a></nav></div></header>
 <main>
 <div class="kicker">OFFICIAL DESIGN STUDY · DEMO BRANCH</div>
 <h1>Same energy.<br>New matchday.</h1>
