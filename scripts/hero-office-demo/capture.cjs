@@ -29,6 +29,35 @@ async function main(){
    for(const size of [{name:'desktop',width:1440,height:900},{name:'mobile',width:390,height:844}]){
     const page=await browser.newPage();
     await page.setViewport({width:size.width,height:size.height,deviceScaleFactor:1});
+    if(target.name==='arcxi'){
+      const now=new Date();
+      const d=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'})
+        .formatToParts(now);
+      const part=t=>d.find(x=>x.type===t).value;
+      const day=part('year')+'-'+part('month')+'-'+part('day');
+      // Explicitly synthetic data for screenshot evaluation, never published as real schedules.
+      const schedule=[
+        ['1','UEFA Champions League','Barcelona vs Inter Milan','FOCUS',1,'C-FOCUS',0],
+        ['2','UEFA Women Champions League','Chelsea Women vs Arsenal Women','WATCHLIST',2,'C-WATCH',25],
+        ['3','J1 League','Urawa Red Diamonds vs Yokohama F. Marinos','PASS',3,'C-PASS',50],
+        ['4','Bundesliga','Dortmund vs Werder Bremen','FOCUS',4,'C-FOCUS',75]
+      ].map(([id,competition,match,tier,cRank,cBoardState,min])=>({
+        id:'demo-fixture-'+id,slateDate:day,competition,match,tier,cRank,cBoardState,
+        kickoff:new Date(Date.parse(day+'T16:15:00Z')+min*60000).toISOString(),
+        coverageNotes:'[FOLLOW: RESERVE]'
+      }));
+      await page.evaluateOnNewDocument((rows)=>{
+        const native=window.fetch.bind(window);
+        const make=x=>new Response(JSON.stringify(x),{status:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'}});
+        window.fetch=(input,init)=>{
+          const url=typeof input==='string'?input:input instanceof Request?input.url:String(input);
+          if(!url.startsWith('https://football-v2.acchtt.workers.dev/'))return native(input,init);
+          const parsed=new URL(url);
+          if(parsed.pathname==='/api/dashboard-data')return Promise.resolve(make({ok:true,schedule:rows,picks:[]}));
+          return Promise.resolve(make({ok:true,data:{results:[]},fixtures:[]}));
+        };
+      },schedule);
+    }
     const errors=[],failed=[];
     page.on('pageerror',e=>errors.push(e.message));
     page.on('requestfailed',r=>failed.push(r.url()+': '+r.failure()?.errorText));
