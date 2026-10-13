@@ -93,6 +93,31 @@ async function main(){
        }
      }
      await page.screenshot({path:path.join(out,target.name+'-'+size.name+'.png'),fullPage:false});
+     const memberPanel=target.name==='reference'?'img[alt="CAPTAIN PURPLE"]':'.heroUnion';
+     await page.waitForSelector(memberPanel,{timeout:15000});
+     await page.evaluate((selector)=>{
+       const el=document.querySelector(selector);
+       if(!el)return;
+       const y=el.getBoundingClientRect().top+window.scrollY-(selector.includes('CAPTAIN')?125:20);
+       window.scrollTo(0,Math.max(0,y));
+     },memberPanel);
+     await sleep(1200);
+     if(target.name==='arcxi'){
+       const qa=await page.evaluate(()=>{
+         const section=document.querySelector('.heroUnion');
+         const cards=[...section.querySelectorAll('.heroUnionCard')];
+         const images=cards.map(c=>c.querySelector('img'));
+         const footer=[...section.querySelectorAll('.heroUnionFooter img')];
+         return {cards:cards.length,loaded:images.filter(i=>i.complete&&i.naturalWidth>0).length,
+          footerLoaded:footer.filter(i=>i.complete&&i.naturalWidth>0).length,
+          mobileScrollable:innerWidth<=700?section.querySelector('.heroUnionCards').scrollWidth>section.querySelector('.heroUnionCards').clientWidth:true,
+          overflowX:document.documentElement.scrollWidth>innerWidth};
+       });
+       console.log('HERO_UNION_QA',size.name,JSON.stringify(qa));
+       if(qa.cards!==6||qa.loaded!==6||qa.footerLoaded!==2||!qa.mobileScrollable||qa.overflowX)throw Error('HERO UNION render fail: '+JSON.stringify(qa));
+     }
+     await page.screenshot({path:path.join(out,target.name+'-union-'+size.name+'.png'),fullPage:false});
+     await page.evaluate(()=>window.scrollTo(0,0));
      const styles=await page.evaluate(()=>{
        const read=e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {tag:e.tagName,cls:typeof e.className==='string'?e.className.slice(0,100):'',text:(e.textContent||'').trim().slice(0,70),x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),font:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,borderRadius:s.borderRadius,letterSpacing:s.letterSpacing}};
        const nodes=[...document.querySelectorAll('header,nav,h1,h2,button,a,main,section')].filter(e=>{const r=e.getBoundingClientRect();return r.width>20&&r.height>10&&r.y>=-50&&r.y<innerHeight}).slice(0,45).map(read);

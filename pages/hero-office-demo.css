@@ -208,3 +208,131 @@ html.scheduleCornerMode .iveCorner--site .iveCornerArtwork {
 @media(max-width:380px) {
   html.scheduleCornerMode .iveCorner.iveCorner--site {width:102px}
 }
+
+/* Complete Girl Hero Union mural, modeled from the actual HERO OFFICE
+   character-card layout and the original downloaded promo illustrations. */
+html.scheduleCornerMode .heroUnion{
+  position:relative;isolation:isolate;z-index:2;box-sizing:border-box;
+  width:100%;margin:0;padding:70px clamp(22px,5.8vw,95px) 32px;
+  background-color:#fff;
+  background-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  background-position:center top;background-repeat:repeat;background-size:330px auto;
+  color:#171717;font-family:"Office Demo Grotesk",Arial,sans-serif;
+}
+html.scheduleCornerMode .heroUnionInner{position:relative;max-width:1370px;margin:0 auto}
+html.scheduleCornerMode .heroUnionTitle{
+ display:table;position:relative;margin:0 0 49px 2.5%;padding:12px 23px 13px;
+ border:3px solid #161616;background:#fff9f3;
+ box-shadow:5px 6px 0 var(--ho-hot);
+ color:#080808;font-size:clamp(17px,2.2vw,29px);font-weight:1000;
+ font-style:italic;letter-spacing:-.065em;line-height:1.1;
+ text-transform:uppercase;transform:rotate(-7deg);
+}
+html.scheduleCornerMode .heroUnionTitle:after{
+ content:"";position:absolute;bottom:-15px;left:25%;
+ width:24px;height:24px;background:#fff9f3;border-right:3px solid #161616;
+ border-bottom:3px solid #161616;transform:skew(18deg) rotate(35deg);z-index:-1;
+}
+html.scheduleCornerMode .heroUnionMobileHint{display:none}
+html.scheduleCornerMode .heroUnionCards{
+ display:flex;align-items:flex-end;justify-content:center;width:100%;
+ height:clamp(325px,32vw,452px);padding:8px 0 0 0;
+ overflow:visible;
+}
+html.scheduleCornerMode .heroUnionCard{
+ position:relative;flex:0 0 19.25%;width:19.25%;height:88%;min-width:0;
+ margin-left:-2.5%;overflow:hidden;box-sizing:border-box;
+ border:4px solid #161616;box-shadow:5px 6px 0 #161616;
+ background-image:radial-gradient(#15151540 .85px, transparent 1px);
+ background-size:7px 7px;transform-origin:50% 85%;
+}
+html.scheduleCornerMode .heroUnionCard:first-child{margin-left:0}
+html.scheduleCornerMode .heroUnionCard:nth-child(2),
+html.scheduleCornerMode .heroUnionCard:nth-child(4){height:100%}
+html.scheduleCornerMode .heroUnionCard.hu-purple{background-color:#bc88dc;transform:rotate(-9deg);z-index:1}
+html.scheduleCornerMode .heroUnionCard.hu-green{background-color:#06c2da;transform:rotate(-3deg);z-index:3}
+html.scheduleCornerMode .heroUnionCard.hu-yellow{background-color:#fff143;transform:rotate(-6deg);z-index:2}
+html.scheduleCornerMode .heroUnionCard.hu-pink{background-color:#f207b0;transform:rotate(5deg);z-index:4}
+html.scheduleCornerMode .heroUnionCard.hu-blue{background-color:#8bc6e4;transform:rotate(-5deg);z-index:3}
+html.scheduleCornerMode .heroUnionCard.hu-red{background-color:#e9b3cf;transform:rotate(8deg);z-index:2}
+html.scheduleCornerMode .heroUnionCard img{
+ display:block;position:absolute;left:50%;bottom:-13%;transform:translateX(-50%);
+ width:auto;height:163%;max-width:none;object-fit:contain;object-position:center bottom;
+ pointer-events:none;
+}
+html.scheduleCornerMode .heroUnionCardLabel{
+ position:absolute;z-index:5;left:8px;top:11px;max-width:95%;
+ background:#111;color:#fff045;padding:5px 7px 4px;
+ font-size:clamp(9px,1.1vw,14px);font-weight:1000;line-height:1;
+ font-style:italic;letter-spacing:-.045em;white-space:nowrap;
+}
+html.scheduleCornerMode .heroUnionGlow{
+ position:absolute;right:-2.5%;top:52px;width:clamp(120px,15vw,199px);
+ aspect-ratio:1/1;display:grid;place-items:center;z-index:8;
+ background:url("./media/ive/hero-union/comic-impact-sticker.webp") center/contain no-repeat;
+ font-size:clamp(25px,3vw,48px);font-weight:1000;font-style:italic;
+ letter-spacing:-.07em;color:#111;text-shadow:2px 2px 0 #fff12f;transform:rotate(-9deg);
+}
+html.scheduleCornerMode .heroUnionNote{
+ position:absolute;z-index:8;right:0;bottom:82px;
+ display:grid;gap:4px;padding:12px 18px;border:3px solid #111;
+ box-shadow:4px 6px 0 #111;background:#fff9f3;transform:rotate(-5deg);
+ font-size:clamp(12px,1.4vw,18px);font-weight:950;font-style:italic;letter-spacing:-.055em;
+}
+html.scheduleCornerMode .heroUnionNote strong{font-weight:1000}
+html.scheduleCornerMode .heroUnionFooter{
+ margin:112px 0 0;border-top:3px solid #111;padding:15px 3%;
+ min-height:84px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+html.scheduleCornerMode .heroUnionFooter img{display:block;object-fit:contain;max-height:58px;max-width:35%}
+html.scheduleCornerMode .heroUnionFooter img:last-child{width:190px;max-height:57px}
+@media(max-width:980px) and (min-width:701px){
+ html.scheduleCornerMode .heroUnion{padding-inline:35px}
+ html.scheduleCornerMode .heroUnionCard{flex-basis:20%;width:20%;margin-left:-3%}
+ html.scheduleCornerMode .heroUnionGlow{right:0;width:135px}
+ html.scheduleCornerMode .heroUnionNote{bottom:73px}
+}
+@media(max-width:700px){
+ html.scheduleCornerMode .heroUnion{padding:54px 0 24px;background-size:250px auto}
+ html.scheduleCornerMode .heroUnionTitle{
+  margin-left:22px;margin-bottom:21px;
+  font-size:20px;padding:10px 15px;
+ }
+ html.scheduleCornerMode .heroUnionMobileHint{
+  display:block;margin:20px 19px 5px;color:#171717;
+  font-size:11px;font-weight:1000;letter-spacing:.035em;
+ }
+ html.scheduleCornerMode .heroUnionCards{
+  height:auto;min-height:424px;width:100%;
+  justify-content:flex-start;align-items:center;gap:16px;
+  overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  scroll-padding-inline:24px;overscroll-behavior-inline:contain;
+  -webkit-overflow-scrolling:touch;padding:24px 23px 28px;
+ }
+ html.scheduleCornerMode .heroUnionCard,
+ html.scheduleCornerMode .heroUnionCard:nth-child(2),
+ html.scheduleCornerMode .heroUnionCard:nth-child(4){
+  flex:0 0 215px;width:215px;height:350px;
+  margin-left:0;scroll-snap-align:start;
+  transform:rotate(-2deg);
+ }
+ html.scheduleCornerMode .heroUnionCard:nth-child(2n){transform:rotate(2deg)}
+ html.scheduleCornerMode .heroUnionCard img{height:161%;bottom:-12%}
+ html.scheduleCornerMode .heroUnionCardLabel{font-size:12px}
+ html.scheduleCornerMode .heroUnionGlow{
+  top:25px;right:7px;width:93px;font-size:25px;transform:rotate(-7deg)
+ }
+ html.scheduleCornerMode .heroUnionNote{
+  position:relative;right:auto;bottom:auto;
+  margin:0 22px 40px auto;width:max-content;max-width:calc(100% - 44px);
+  font-size:15px;padding:9px 12px;transform:rotate(-3deg);
+ }
+ html.scheduleCornerMode .heroUnionFooter{
+  min-height:69px;margin:38px 20px 0;padding:13px 2px;gap:20px
+ }
+ html.scheduleCornerMode .heroUnionFooter img{max-height:44px}
+ html.scheduleCornerMode .heroUnionFooter img:last-child{width:140px;max-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ html.scheduleCornerMode .heroUnionCards{scroll-behavior:auto}
+}

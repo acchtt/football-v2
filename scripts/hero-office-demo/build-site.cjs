@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve('hero-office-captures'),dest=path.resolve('hero-office-public');
-const files=['reference-desktop.png','reference-mobile.png','arcxi-desktop.png','arcxi-mobile.png'];
+const files=['reference-desktop.png','reference-mobile.png','arcxi-desktop.png','arcxi-mobile.png','reference-union-desktop.png','reference-union-mobile.png','arcxi-union-desktop.png','arcxi-union-mobile.png'];
 for(const file of files){
  const f=path.join(root,file);
  assert(fs.existsSync(f) && fs.statSync(f).size>5000,'Missing valid visual evidence '+f);

@@ -451,12 +451,42 @@
       '<div class="heroMissionLegend"><span><b>★</b> C official ranking</span><span><b>●</b> Live scores</span><span><b>✦</b> C2 shadow</span></div>' +
       '<div class="heroMissionFooter">READY FOR KICKOFF? ★ LET’S GO!</div></section></aside>';
   }
+  // HERO OFFICE's complete six-member Girl Hero Union comic mural.
+  // All illustration URLs are mirrored from the official reference at demo build time.
+  function heroUnionSection(){
+    const members=[
+      {name:'CAPTAIN PURPLE',member:'Yujin',image:'yujin.png',cls:'purple'},
+      {name:'WONDER GREEN',member:'Gaeul',image:'gaeul.png',cls:'green'},
+      {name:'JEAN YELLOW',member:'Rei',image:'rei.png',cls:'yellow'},
+      {name:'BAT PINK',member:'Wonyoung',image:'wonyoung.png',cls:'pink'},
+      {name:'SUPER BLUE',member:'Liz',image:'liz.png',cls:'blue'},
+      {name:'SPIDER RED',member:'Leeseo',image:'leeseo.png',cls:'red'}
+    ];
+    const cards=members.map(function(hero){
+      return '<article class="heroUnionCard hu-'+hero.cls+'" role="listitem">' +
+        '<span class="heroUnionCardLabel">'+hero.name+'</span>' +
+        '<img src="./media/ive/hero-union/'+hero.image+'" alt="'+hero.member+' as '+hero.name+
+        '" width="720" height="2130" loading="lazy" decoding="async"></article>';
+    }).join('');
+    return '<section class="heroUnion" id="hero-union" aria-labelledby="heroUnionTitle">' +
+      '<div class="heroUnionInner">' +
+      '<h2 class="heroUnionTitle" id="heroUnionTitle">GIRL HERO UNION!</h2>' +
+      '<p class="heroUnionMobileHint">SWIPE TO MEET ALL SIX HEROES <span aria-hidden="true">→</span></p>' +
+      '<div class="heroUnionCards" role="list" aria-label="Six IVE superhero character cards">'+cards+'</div>' +
+      '<div class="heroUnionGlow" aria-label="Glow">GLOW</div>' +
+      '<div class="heroUnionNote"><strong>HERO POWERS?</strong><span>lets Looks Can Kill</span></div>' +
+      '<footer class="heroUnionFooter">' +
+      '<img src="./media/ive/hero-union/ive-logo.svg" alt="IVE" width="110" height="60" loading="lazy">' +
+      '<img src="./media/ive/hero-union/girl-hero-union.svg" alt="GIRL HERO UNION" width="185" height="48" loading="lazy">' +
+      '</footer></div></section>';
+  }
   function shell(content, context, className) {
     const classes = String(className || '');
     if (classes.includes('scheduleBoardRoute')) {
       return scheduleHeader() + '<div class="appFrame ' + esc(classes) + '">' +
         '<div class="contentFrame"><div class="heroOfficeGrid">' + heroOfficeMission() +
         '<main class="mainView">' + content + '</main></div></div></div>' +
+        heroUnionSection() +
         '<aside class="iveCorner iveCorner--bottom iveCorner--site" aria-hidden="true">' +
         '<span class="iveCornerPhoto"><img class="iveCornerArtwork" ' +
         'src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside>';

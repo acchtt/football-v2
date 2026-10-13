@@ -43,8 +43,8 @@ jobs:
           mkdir -p /tmp/hero-browser
           npm install --prefix /tmp/hero-browser --no-audit --no-fund --no-save puppeteer-core@24
           which google-chrome || which chromium
-      - name: Inspect HERO OFFICE character-card section assets
-        run: node scripts/hero-office-demo/inspect-reference.cjs
+      - name: Download original IVE Girl Hero Union character art for demo
+        run: node scripts/hero-office-demo/fetch-union-assets.cjs
       - name: Capture reference and demo at desktop/mobile sizes
         run: node scripts/hero-office-demo/capture.cjs
       - name: Build comparison page plus isolated sample-data app
@@ -59,6 +59,10 @@ jobs:
           cmp site/app-v2.js production-copy/pages/app-v2.js
           test -s site/hero-office-demo/images/reference-desktop.png
           test -s site/hero-office-demo/images/arcxi-mobile.png
+          test -s site/hero-office-demo/images/arcxi-union-desktop.png
+          test -s site/hero-office-demo/images/reference-union-mobile.png
+          test -s site/hero-office-demo/app/media/ive/hero-union/yujin.png
+          test -s site/hero-office-demo/app/media/ive/hero-union/leeseo.png
           test -s site/hero-office-demo/app/demo-fixtures.js
           grep -q 'SYNTHETIC MATCHES' site/hero-office-demo/app/index.html
           echo "PASS production root preserved; isolated comparison built"
@@ -87,7 +91,7 @@ jobs:
         run: |
           set -euo pipefail
           base="https://acchtt.github.io/football-v2/"
-          for route in "hero-office-demo/" "hero-office-demo/images/reference-desktop.png" "hero-office-demo/images/arcxi-mobile.png" "hero-office-demo/app/" "index.html"; do
+          for route in "hero-office-demo/" "hero-office-demo/images/reference-desktop.png" "hero-office-demo/images/arcxi-mobile.png" "hero-office-demo/images/arcxi-union-desktop.png" "hero-office-demo/app/" "index.html"; do
             response=""
             for i in 1 2 3 4 5 6 7 8 9 10; do
               response=$(curl -sSL --max-time 20 -o /tmp/hero-public-body -w '%{http_code}' "${base}${route}?audit=$GITHUB_SHA" || true)
