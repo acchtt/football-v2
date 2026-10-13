@@ -1,4 +1,4 @@
-name: HERO OFFICE reference capture (demo only)
+name: HERO OFFICE reference capture and preview (demo only)
 
 on:
   push:
@@ -12,10 +12,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: hero-office-demo-preview
+  cancel-in-progress: true
+
 jobs:
-  capture:
+  capture-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,13 +33,44 @@ jobs:
           mkdir -p /tmp/hero-browser
           npm install --prefix /tmp/hero-browser --no-audit --no-fund --no-save puppeteer-core@24
           which google-chrome || which chromium
-      - name: Capture source and demo screenshots
+      - name: Capture actual reference and synthetic-demo screenshots
         run: node scripts/hero-office-demo/capture.cjs
-      - name: Upload reference comparison
+      - name: Build standalone comparison and functional sample-data preview
+        run: node scripts/hero-office-demo/build-site.cjs
+      - name: Archive original and demo comparisons
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: hero-office-reference-and-demo
-          path: hero-office-captures/
+          path: |
+            hero-office-captures/
+            hero-office-public/index.html
           retention-days: 14
           if-no-files-found: warn
+      - name: Publish separate Cloudflare Pages site (never touches production)
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4 pages project list > /tmp/hero-projects.txt
+          if ! grep -Fq 'arcxi-hero-office-demo' /tmp/hero-projects.txt; then
+            npx --yes wrangler@4 pages project create arcxi-hero-office-demo --production-branch=main
+          fi
+          npx --yes wrangler@4 pages deploy hero-office-public --project-name=arcxi-hero-office-demo --branch=main --commit-hash="$GITHUB_SHA"
+      - name: Public comparison smoke test
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          set -euo pipefail
+          for route in / /images/reference-desktop.png /images/arcxi-mobile.png /app/; do
+            response=$(curl --retry 8 --retry-delay 3 -sSL -o /tmp/hero-response -w '%{http_code}' "https://arcxi-hero-office-demo.pages.dev${route}?v=$GITHUB_SHA")
+            echo "PUBLIC_DEMO ${route}: ${response}"
+            test "$response" = 200
+            if [ "$route" = "/" ]; then grep -Fq "Same energy." /tmp/hero-response; fi
+            if [ "$route" = "/app/" ]; then grep -Fq "demo-fixtures.js" /tmp/hero-response; fi
+          done
+      - name: Publish status
+        if: always()
+        run: |
+          echo "Branch: $GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Public comparison (when Cloudflare Pages is enabled): https://arcxi-hero-office-demo.pages.dev/" >> "$GITHUB_STEP_SUMMARY"
+          echo "Sample-data app: https://arcxi-hero-office-demo.pages.dev/app/" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reference source: https://ive-herooffice.com/" >> "$GITHUB_STEP_SUMMARY"
