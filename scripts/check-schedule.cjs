@@ -86,8 +86,9 @@ assert.equal((root.innerHTML.match(/class="scheduleFixture"/g)||[]).length,6);
 assert(root.innerHTML.includes('disabled><span>All</span><b>—</b>'), 'loading must not claim zero matches');
 t.renderMatchday();
 assert(root.innerHTML.includes('aria-busy="false"') && !root.innerHTML.includes('scheduleLoadingRows'));
-assert.equal((root.innerHTML.match(/class="iveCorner iveCorner--bottom"/g)||[]).length,1);
-assert(root.innerHTML.indexOf('iveCorner--bottom') > root.innerHTML.indexOf('scheduleMatchSection'), 'artwork follows the match table');
+assert.equal((root.innerHTML.match(/class="iveCorner iveCorner--bottom iveCorner--site"/g)||[]).length,1);
+assert(root.innerHTML.indexOf('iveCorner--site') > root.innerHTML.lastIndexOf('</main>'),
+  'artwork must be a site-level sibling after the transformed fixture panel');
 const index=fs.readFileSync('pages/index.html','utf8');
 assert(index.includes('icons/arc-xi-schedule.svg?v=2'));
 assert(index.includes('<div id="app"></div>') && !index.includes('<main id="app">'),
