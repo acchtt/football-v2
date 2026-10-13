@@ -256,8 +256,8 @@ html.scheduleCornerMode .heroUnionCard.hu-pink{background-color:#f207b0;transfor
 html.scheduleCornerMode .heroUnionCard.hu-blue{background-color:#8bc6e4;transform:rotate(-5deg);z-index:3}
 html.scheduleCornerMode .heroUnionCard.hu-red{background-color:#e9b3cf;transform:rotate(8deg);z-index:2}
 html.scheduleCornerMode .heroUnionCard img{
- display:block;position:absolute;left:50%;bottom:-13%;transform:translateX(-50%);
- width:auto;height:163%;max-width:none;object-fit:contain;object-position:center bottom;
+ display:block;position:absolute;left:50%;bottom:-70%;transform:translateX(-50%);
+ width:auto;height:154%;max-width:none;object-fit:contain;object-position:center bottom;
  pointer-events:none;
 }
 html.scheduleCornerMode .heroUnionCardLabel{
@@ -317,7 +317,7 @@ html.scheduleCornerMode .heroUnionFooter img:last-child{width:190px;max-height:5
   transform:rotate(-2deg);
  }
  html.scheduleCornerMode .heroUnionCard:nth-child(2n){transform:rotate(2deg)}
- html.scheduleCornerMode .heroUnionCard img{height:161%;bottom:-12%}
+ html.scheduleCornerMode .heroUnionCard img{height:155%;bottom:-67%}
  html.scheduleCornerMode .heroUnionCardLabel{font-size:12px}
  html.scheduleCornerMode .heroUnionGlow{
   top:25px;right:7px;width:93px;font-size:25px;transform:rotate(-7deg)
@@ -335,4 +335,22 @@ html.scheduleCornerMode .heroUnionFooter img:last-child{width:190px;max-height:5
 }
 @media(prefers-reduced-motion:reduce){
  html.scheduleCornerMode .heroUnionCards{scroll-behavior:auto}
+}
+
+/* Reference comparison polish: soften the source pattern to pale pink,
+   expose all six faces, and keep monochrome footer marks legible. */
+html.scheduleCornerMode .heroUnion:before{
+  content:"";position:absolute;inset:0;background:rgba(255,255,255,.72);
+  z-index:-1;pointer-events:none;
+}
+html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(215px,20vw,310px)}
+html.scheduleCornerMode .heroUnionFooter img:first-child{filter:brightness(0)}
+html.scheduleCornerMode .heroUnionFooter img:last-child{filter:brightness(0)}
+html.scheduleCornerMode .heroUnionCards:focus-visible{
+  outline:3px solid #111;outline-offset:-3px;
+}
+@media(max-width:700px){
+  html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(100px,30vw,140px);gap:8px}
+  html.scheduleCornerMode .heroUnionFooter img:first-child{width:80px}
+  html.scheduleCornerMode .heroUnionFooter img:last-child{width:128px}
 }

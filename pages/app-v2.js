@@ -476,7 +476,7 @@
       '<div class="heroUnionGlow" aria-label="Glow">GLOW</div>' +
       '<div class="heroUnionNote"><strong>HERO POWERS?</strong><span>lets Looks Can Kill</span></div>' +
       '<footer class="heroUnionFooter">' +
-      '<img src="./media/ive/hero-union/ive-logo.svg" alt="IVE" width="110" height="60" loading="lazy">' +
+      '<img src="./media/arcxi/ive-official-logo.svg?v=1" alt="IVE" width="110" height="60" loading="lazy">' +
       '<img src="./media/ive/hero-union/girl-hero-union.svg" alt="GIRL HERO UNION" width="185" height="48" loading="lazy">' +
       '</footer></div></section>';
   }

@@ -103,6 +103,13 @@ async function main(){
      },memberPanel);
      await sleep(1200);
      if(target.name==='arcxi'){
+       await page.evaluate(async()=>{
+         await Promise.all([...document.querySelectorAll('.heroUnionCard img,.heroUnionFooter img')]
+           .map(async image=>{
+             if(image.loading==='lazy')image.loading='eager';
+             try{await image.decode()}catch(e){}
+           }));
+       });
        const qa=await page.evaluate(()=>{
          const section=document.querySelector('.heroUnion');
          const cards=[...section.querySelectorAll('.heroUnionCard')];
