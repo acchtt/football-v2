@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 16
     environment:
-      name: github-pages
+      name: hero-office-demo
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out isolated design branch
