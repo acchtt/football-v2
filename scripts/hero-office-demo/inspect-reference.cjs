@@ -3,6 +3,7 @@ const fs=require('node:fs');
 const puppeteer=require('/tmp/hero-browser/node_modules/puppeteer-core');
 (async()=>{
  const out='hero-office-captures/source-asset-audit.json';
+ fs.mkdirSync('hero-office-captures',{recursive:true});
  const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
  const browser=await puppeteer.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--ignore-certificate-errors']});
  try{
@@ -29,8 +30,9 @@ const puppeteer=require('/tmp/hero-browser/node_modules/puppeteer-core');
    return {title:document.title,height:document.documentElement.scrollHeight,imgs,style,bgs,visibleText:document.body.innerText.slice(-2600),scripts:[...document.scripts].map(s=>s.src).filter(Boolean)};
   });
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:'hero-office-captures/reference-full-page.png',fullPage:true});
-  fs.writeFileSync(out,JSON.stringify({data,responses:responses.slice(0,250)},null,2));
+  fs.writeFileSync(out,JSON.stringify({data,responses:responses.slice(0,350)},null,2));
+  try{await page.screenshot({path:'hero-office-captures/reference-full-page.png',fullPage:true})}
+  catch(e){console.log('OPTIONAL_FULL_CAPTURE_FAILED',String(e).slice(0,200))}
   console.log('SOURCE_AUDIT',JSON.stringify({imgCount:data.imgs.length,requestCount:responses.length,height:data.height,heroNodes:data.style,images:data.imgs.filter(i=>/hero|union|poster|purple|green|pink|yellow|blue|card|character/i.test(i.src)).slice(0,35)}));
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
