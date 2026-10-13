@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 27 257 51" role="img" aria-labelledby="title">
+<title id="title">ARC XI</title>
+<!-- Same original ARC XI wordmark, cropped for the horizontal ARC XI × IVE lockup. -->
+<g fill="#fff000" fill-rule="evenodd">
+<path d="M2 72 19 32h30l17 40H42l-1-3H26l-1 3H2Zm29-15h6l-2-10h-2l-2 10Z"/>
+<path d="M68 32h41c8 0 11 5 11 12 0 8-4 11-10 14l11 3v11H97l-7-10v10H68V32Zm22 12v5h7v-5h-7Z"/>
+<path d="M143 32h26v18h-25c-1 0-2 1-2 2s1 2 2 2h25v18h-34c-9 0-13-9-13-20s6-20 21-20Z"/>
+<path d="M231 32h23v40h-23Z"/>
+</g>
+<path fill="#f52c91" d="m185 29 15 13L249 2l-39 49 11 11-18-1-7 15-4-17h-14l12-9Z"/>
+
+</svg>
