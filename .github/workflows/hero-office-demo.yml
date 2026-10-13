@@ -1,0 +1,38 @@
+name: HERO OFFICE reference capture (demo only)
+
+on:
+  push:
+    branches: ["demo/hero-office-replica"]
+    paths:
+      - ".github/workflows/hero-office-demo.yml"
+      - "pages/**"
+      - "scripts/hero-office-demo/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser driver
+        run: |
+          mkdir -p /tmp/hero-browser
+          npm install --prefix /tmp/hero-browser --no-audit --no-fund --no-save puppeteer-core@24
+          which google-chrome || which chromium
+      - name: Capture source and demo screenshots
+        run: node scripts/hero-office-demo/capture.cjs
+      - name: Upload reference comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-office-reference-and-demo
+          path: hero-office-captures/
+          retention-days: 14
+          if-no-files-found: warn
