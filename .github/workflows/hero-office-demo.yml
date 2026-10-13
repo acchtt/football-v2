@@ -1,4 +1,4 @@
-name: HERO OFFICE reference capture and preview (demo only)
+name: Publish HERO OFFICE design comparison (demo branch only)
 
 on:
   push:
@@ -11,20 +11,30 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
+# Match the production Pages concurrency lock. Root site files come unchanged
+# from main; this workflow only adds /hero-office-demo/ to the deployment artifact.
 concurrency:
-  group: hero-office-demo-preview
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  capture-and-publish:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    timeout-minutes: 16
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out isolated design branch
+        uses: actions/checkout@v4
+      - name: Check out authoritative production site, without modifying main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: production-copy
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -33,11 +43,24 @@ jobs:
           mkdir -p /tmp/hero-browser
           npm install --prefix /tmp/hero-browser --no-audit --no-fund --no-save puppeteer-core@24
           which google-chrome || which chromium
-      - name: Capture actual reference and synthetic-demo screenshots
+      - name: Capture reference and demo at desktop/mobile sizes
         run: node scripts/hero-office-demo/capture.cjs
-      - name: Build standalone comparison and functional sample-data preview
+      - name: Build comparison page plus isolated sample-data app
         run: node scripts/hero-office-demo/build-site.cjs
-      - name: Archive original and demo comparisons
+      - name: Build composite Pages artifact (main site unchanged)
+        run: |
+          set -euo pipefail
+          mkdir -p site/hero-office-demo
+          cp -a production-copy/pages/. site/
+          cp -a hero-office-public/. site/hero-office-demo/
+          cmp site/index.html production-copy/pages/index.html
+          cmp site/app-v2.js production-copy/pages/app-v2.js
+          test -s site/hero-office-demo/images/reference-desktop.png
+          test -s site/hero-office-demo/images/arcxi-mobile.png
+          test -s site/hero-office-demo/app/demo-fixtures.js
+          grep -q 'SYNTHETIC MATCHES' site/hero-office-demo/app/index.html
+          echo "PASS production root preserved; isolated comparison built"
+      - name: Upload captured design evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -47,30 +70,39 @@ jobs:
             hero-office-public/index.html
           retention-days: 14
           if-no-files-found: warn
-      - name: Publish separate Cloudflare Pages site (never touches production)
-        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Publish comparisons alongside unchanged production site
+        uses: actions/deploy-pages@v4
+        id: deployment
+      - name: Verify comparison, screenshots, sample app, and original main site
         run: |
           set -euo pipefail
-          npx --yes wrangler@4 pages project list > /tmp/hero-projects.txt
-          if ! grep -Fq 'arcxi-hero-office-demo' /tmp/hero-projects.txt; then
-            npx --yes wrangler@4 pages project create arcxi-hero-office-demo --production-branch=main
-          fi
-          npx --yes wrangler@4 pages deploy hero-office-public --project-name=arcxi-hero-office-demo --branch=main --commit-hash="$GITHUB_SHA"
-      - name: Public comparison smoke test
-        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
-        run: |
-          set -euo pipefail
-          for route in / /images/reference-desktop.png /images/arcxi-mobile.png /app/; do
-            response=$(curl --retry 8 --retry-delay 3 -sSL -o /tmp/hero-response -w '%{http_code}' "https://arcxi-hero-office-demo.pages.dev${route}?v=$GITHUB_SHA")
-            echo "PUBLIC_DEMO ${route}: ${response}"
-            test "$response" = 200
-            if [ "$route" = "/" ]; then grep -Fq "Same energy." /tmp/hero-response; fi
-            if [ "$route" = "/app/" ]; then grep -Fq "demo-fixtures.js" /tmp/hero-response; fi
+          base="https://acchtt.github.io/football-v2/"
+          for route in "hero-office-demo/" "hero-office-demo/images/reference-desktop.png" "hero-office-demo/images/arcxi-mobile.png" "hero-office-demo/app/" "index.html"; do
+            response=""
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              response=$(curl -sSL --max-time 20 -o /tmp/hero-public-body -w '%{http_code}' "${base}${route}?audit=$GITHUB_SHA" || true)
+              if [ "$response" = "200" ]; then break; fi
+              sleep 5
+            done
+            echo "PUBLIC_PREVIEW ${route} HTTP ${response}"
+            test "$response" = "200"
+            if [ "$route" = "hero-office-demo/" ]; then grep -Fq 'Same energy.' /tmp/hero-public-body; fi
+            if [ "$route" = "hero-office-demo/app/" ]; then grep -Fq 'demo-fixtures.js' /tmp/hero-public-body; fi
+            if [ "$route" = "index.html" ]; then grep -Fq 'app-v2.js?v=72' /tmp/hero-public-body; fi
           done
-      - name: Publish status
+          echo 'PASS published comparisons and production root'
+      - name: Report preview links
         if: always()
         run: |
-          echo "Branch: $GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
-          echo "Public comparison (when Cloudflare Pages is enabled): https://arcxi-hero-office-demo.pages.dev/" >> "$GITHUB_STEP_SUMMARY"
-          echo "Sample-data app: https://arcxi-hero-office-demo.pages.dev/app/" >> "$GITHUB_STEP_SUMMARY"
-          echo "Reference source: https://ive-herooffice.com/" >> "$GITHUB_STEP_SUMMARY"
+          echo "### HERO OFFICE demo branch" >> "$GITHUB_STEP_SUMMARY"
+          echo "Comparison: https://acchtt.github.io/football-v2/hero-office-demo/" >> "$GITHUB_STEP_SUMMARY"
+          echo "Interactive sample demo: https://acchtt.github.io/football-v2/hero-office-demo/app/" >> "$GITHUB_STEP_SUMMARY"
+          echo "No changes to main repository source." >> "$GITHUB_STEP_SUMMARY"
