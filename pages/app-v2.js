@@ -444,11 +444,14 @@
       '<div class="heroMissionTab"><b>01</b><span>SHOW YOUR MATCHDAY</span></div>' +
       '<section class="heroMissionCard"><div class="heroMissionTag">MATCHDAY MISSION</div>' +
       '<div class="heroMissionBubble"><strong>YOUR FOOTBALL<br>HERO BOARD!</strong></div>' +
-      '<p class="heroMissionIntro">CHOOSE YOUR MATCHDAY. FOLLOW THE LIVE BOARD.</p>' +
+      '<div class="heroMissionStep"><b>01</b><p>Select the <strong>matchday</strong> you want to follow.</p></div>' +
       '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
       dateStrip() +
       '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
-      '<div class="heroMissionLegend"><span><b>★</b> C official ranking</span><span><b>●</b> Live scores</span><span><b>✦</b> C2 shadow</span></div>' +
+      '<div class="heroMissionStepsAfter">' +
+      '<div class="heroMissionStep"><b>02</b><p>Find your <strong>C official ranked fixtures</strong> in the scanner.</p></div>' +
+      '<div class="heroMissionStep"><b>03</b><p>Follow <strong>live scores</strong> with C2 shadow context.</p></div>' +
+      '</div>' +
       '<div class="heroMissionFooter">READY FOR KICKOFF? ★ LET’S GO!</div></section></aside>';
   }
   // HERO OFFICE's complete six-member Girl Hero Union comic mural.
@@ -471,7 +474,7 @@
     return '<section class="heroUnion" id="hero-union" aria-labelledby="heroUnionTitle">' +
       '<div class="heroUnionInner">' +
       '<h2 class="heroUnionTitle" id="heroUnionTitle">GIRL HERO UNION!</h2>' +
-      '<p class="heroUnionMobileHint">SWIPE TO MEET ALL SIX HEROES <span aria-hidden="true">→</span></p>' +
+      '<p class="heroUnionMobileHint">THE SIX HEROES. ONE UNION.</p>' +
       '<div class="heroUnionCards" role="list" tabindex="0" aria-label="Six IVE superhero character cards, scroll horizontally to view all">'+cards+'</div>' +
       '<div class="heroUnionGlow" aria-label="Glow">GLOW</div>' +
       '<div class="heroUnionNote"><strong>HERO POWERS?</strong><span>lets Looks Can Kill</span></div>' +
