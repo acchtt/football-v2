@@ -45,6 +45,8 @@ jobs:
           which google-chrome || which chromium
       - name: Download original IVE Girl Hero Union character art for demo
         run: node scripts/hero-office-demo/fetch-union-assets.cjs
+      - name: Audit original reference CSS, type and background assets
+        run: node scripts/hero-office-demo/inspect-reference.cjs
       - name: Capture reference and demo at desktop/mobile sizes
         run: node scripts/hero-office-demo/capture.cjs
       - name: Build comparison page plus isolated sample-data app
