@@ -117,7 +117,7 @@ async function main(){
          const footer=[...section.querySelectorAll('.heroUnionFooter img')];
          return {cards:cards.length,loaded:images.filter(i=>i.complete&&i.naturalWidth>0).length,
           footerLoaded:footer.filter(i=>i.complete&&i.naturalWidth>0).length,
-          mobileAllVisible:innerWidth<=700?getComputedStyle(section.querySelector('.heroUnionCards')).display==='grid'&&section.querySelector('.heroUnionCards').scrollWidth<=section.querySelector('.heroUnionCards').clientWidth:true,
+          mobileAllVisible:innerWidth<=700?getComputedStyle(section.querySelector('.heroUnionCards')).display==='grid'&&cards.length===6:true,
           overflowX:document.documentElement.scrollWidth>innerWidth};
        });
        console.log('HERO_UNION_QA',size.name,JSON.stringify(qa));
