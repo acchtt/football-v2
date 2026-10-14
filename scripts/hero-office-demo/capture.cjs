@@ -117,11 +117,11 @@ async function main(){
          const footer=[...section.querySelectorAll('.heroUnionFooter img')];
          return {cards:cards.length,loaded:images.filter(i=>i.complete&&i.naturalWidth>0).length,
           footerLoaded:footer.filter(i=>i.complete&&i.naturalWidth>0).length,
-          mobileScrollable:innerWidth<=700?section.querySelector('.heroUnionCards').scrollWidth>section.querySelector('.heroUnionCards').clientWidth:true,
+          mobileAllVisible:innerWidth<=700?getComputedStyle(section.querySelector('.heroUnionCards')).display==='grid'&&section.querySelector('.heroUnionCards').scrollWidth<=section.querySelector('.heroUnionCards').clientWidth:true,
           overflowX:document.documentElement.scrollWidth>innerWidth};
        });
        console.log('HERO_UNION_QA',size.name,JSON.stringify(qa));
-       if(qa.cards!==6||qa.loaded!==6||qa.footerLoaded!==2||!qa.mobileScrollable||qa.overflowX)throw Error('HERO UNION render fail: '+JSON.stringify(qa));
+       if(qa.cards!==6||qa.loaded!==6||qa.footerLoaded!==2||!qa.mobileAllVisible||qa.overflowX)throw Error('HERO UNION render fail: '+JSON.stringify(qa));
      }
      await page.screenshot({path:path.join(out,target.name+'-union-'+size.name+'.png'),fullPage:false});
      await page.evaluate(()=>window.scrollTo(0,0));
