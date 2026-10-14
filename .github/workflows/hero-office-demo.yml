@@ -61,7 +61,7 @@ jobs:
           curl -fsSL --retry 3 "$root/kanit/Kanit-Italic.ttf" -o pages/media/fonts/Kanit-Italic.ttf
           curl -fsSL --retry 3 "$root/kanit/Kanit-Regular.ttf" -o pages/media/fonts/Kanit-Regular.ttf
           curl -fsSL --retry 3 "$root/kanit/OFL.txt" -o pages/media/fonts/Kanit-OFL.txt
-          curl -fsSL --retry 3 "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2" -o pages/media/fonts/PretendardVariable.woff2
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2" -o pages/media/fonts/PretendardVariable.woff2
           curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/LICENSE.txt" -o pages/media/fonts/Pretendard-OFL.txt
           test "$(stat -c%s pages/media/fonts/Kanit-Italic.ttf)" -gt 20000
           test "$(stat -c%s pages/media/fonts/PretendardVariable.woff2)" -gt 20000
