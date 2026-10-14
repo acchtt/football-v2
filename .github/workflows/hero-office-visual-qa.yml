@@ -27,7 +27,7 @@ jobs:
           which google-chrome || which chromium
       - name: Retrieve licensed display fonts
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           root=https://raw.githubusercontent.com/google/fonts/main/ofl
           mkdir -p pages/media/fonts
           curl -fsSL --retry 3 "$root/archivoblack/ArchivoBlack-Regular.ttf" -o pages/media/fonts/ArchivoBlack-Regular.ttf
