@@ -443,7 +443,7 @@
     return '<aside class="heroOfficeMission" aria-label="Matchday controls">' +
       '<div class="heroMissionTab"><b>01</b><span>SHOW YOUR MATCHDAY</span></div>' +
       '<section class="heroMissionCard"><div class="heroMissionTag">MATCHDAY MISSION</div>' +
-      '<div class="heroMissionBubble"><strong>YOUR FOOTBALL<br>HERO BOARD!</strong></div>' +
+      '<div class="heroMissionBubble"><strong><span>Your Football</span><span>HERO BOARD!</span></strong></div>' +
       '<div class="heroMissionStep"><b>01</b><p>Select the <strong>matchday</strong> you want to follow.</p></div>' +
       '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
       dateStrip() +
