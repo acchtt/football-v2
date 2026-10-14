@@ -84,28 +84,28 @@ input[type=range]{display:block;width:calc(100% - 32px);margin:15px 16px 20px;ac
  <a href="./app/" class="cta">Try interactive demo ↗</a>
 </div>
 <div class="pairs" id="compare">
- <article class="panel"><h2>01 — Original reference <small>IVE HERO OFFICE</small></h2><div class="frame"><img id="original" src="./images/reference-desktop.png" alt="Original IVE HERO OFFICE desktop screenshot" width="1440" height="900"></div><a class="full" id="originalFull" href="./images/reference-desktop.png" target="_blank" rel="noopener noreferrer">Open full original ↗</a></article>
- <article class="panel"><h2>02 — ARC XI adaptation <small>DEMO BRANCH</small></h2><div class="frame"><img id="adapted" src="./images/arcxi-desktop.png" alt="ARC XI HERO OFFICE adaptation desktop screenshot" width="1440" height="900"></div><a class="full" id="adaptedFull" href="./images/arcxi-desktop.png" target="_blank" rel="noopener noreferrer">Open full ARC XI demo ↗</a></article>
+ <article class="panel"><h2>01 — Original reference <small>IVE HERO OFFICE</small></h2><div class="frame"><img id="original" src="./images/reference-desktop.png?v=9" alt="Original IVE HERO OFFICE desktop screenshot" width="1440" height="900"></div><a class="full" id="originalFull" href="./images/reference-desktop.png?v=9" target="_blank" rel="noopener noreferrer">Open full original ↗</a></article>
+ <article class="panel"><h2>02 — ARC XI adaptation <small>DEMO BRANCH</small></h2><div class="frame"><img id="adapted" src="./images/arcxi-desktop.png?v=9" alt="ARC XI HERO OFFICE adaptation desktop screenshot" width="1440" height="900"></div><a class="full" id="adaptedFull" href="./images/arcxi-desktop.png?v=9" target="_blank" rel="noopener noreferrer">Open full ARC XI demo ↗</a></article>
 </div>
 <section id="union-compare" aria-labelledby="union-title" style="margin-top:54px">
   <div class="kicker">SECTION 02 · COMPLETE SIX-MEMBER IVE GALLERY</div>
   <h2 id="union-title" style="font-size:clamp(24px,4vw,49px);font-style:italic;font-weight:1000;letter-spacing:-.055em;margin:15px 0 22px">GIRL HERO UNION!</h2>
   <div class="pairs">
    <article class="panel"><h2>03 — Original HERO UNION <small>IVE reference</small></h2>
-    <div class="frame"><img id="unionOriginal" src="./images/reference-union-desktop.png" alt="Original Girl Hero Union section on desktop" width="1440" height="900"></div>
-    <a class="full" id="unionOriginalFull" href="./images/reference-union-desktop.png" target="_blank" rel="noopener noreferrer">Open full original ↗</a>
+    <div class="frame"><img id="unionOriginal" src="./images/reference-union-desktop.png?v=9" alt="Original Girl Hero Union section on desktop" width="1440" height="900"></div>
+    <a class="full" id="unionOriginalFull" href="./images/reference-union-desktop.png?v=9" target="_blank" rel="noopener noreferrer">Open full original ↗</a>
    </article>
    <article class="panel"><h2>04 — Replicated section <small>ARC XI demo</small></h2>
-    <div class="frame"><img id="unionAdapted" src="./images/arcxi-union-desktop.png" alt="ARC XI Girl Hero Union section on desktop" width="1440" height="900"></div>
-    <a class="full" id="unionAdaptedFull" href="./images/arcxi-union-desktop.png" target="_blank" rel="noopener noreferrer">Open full ARC XI section ↗</a>
+    <div class="frame"><img id="unionAdapted" src="./images/arcxi-union-desktop.png?v=9" alt="ARC XI Girl Hero Union section on desktop" width="1440" height="900"></div>
+    <a class="full" id="unionAdaptedFull" href="./images/arcxi-union-desktop.png?v=9" target="_blank" rel="noopener noreferrer">Open full ARC XI section ↗</a>
    </article>
   </div>
  </section>
 <section class="compareSlider" aria-label="Design comparison slider">
  <h2>Slide to compare</h2>
  <div class="sliderArea" id="sliderArea">
-  <img id="originalOverlay" src="./images/reference-desktop.png" alt="Original reference under comparison">
-  <img id="adaptedOverlay" class="after" src="./images/arcxi-desktop.png" alt="ARC XI adaptation over comparison">
+  <img id="originalOverlay" src="./images/reference-desktop.png?v=9" alt="Original reference under comparison">
+  <img id="adaptedOverlay" class="after" src="./images/arcxi-desktop.png?v=9" alt="ARC XI adaptation over comparison">
   <span class="cutLine" aria-hidden="true"></span><span class="sliderLabel left">ORIGINAL</span><span class="sliderLabel right">ARC XI</span>
  </div>
  <label for="split" style="display:block;padding:12px 16px 0;font-size:12px;font-weight:900">Reveal ARC XI</label>
@@ -125,16 +125,16 @@ function switchView(view){
  for(const v of ['desktop','mobile'])$(v).setAttribute('aria-pressed',String(view===v));
  const d=view==='desktop'?{w:1440,h:900}:{w:390,h:844};
  for(const [id,prefix] of [['original','reference'],['adapted','arcxi'],['originalOverlay','reference'],['adaptedOverlay','arcxi']]){
-  const img=$(id);img.src='./images/'+prefix+'-'+view+'.png';img.width=d.w;img.height=d.h;
+  const img=$(id);img.src='./images/'+prefix+'-'+view+'.png?v=9';img.width=d.w;img.height=d.h;
   img.alt=(prefix==='reference'?'Original HERO OFFICE':'ARC XI adaptation')+' '+view+' screenshot';
  }
  for(const [id,prefix] of [['unionOriginal','reference'],['unionAdapted','arcxi']]){
-  const img=$(id);img.src='./images/'+prefix+'-union-'+view+'.png';img.width=d.w;img.height=d.h;
+  const img=$(id);img.src='./images/'+prefix+'-union-'+view+'.png?v=9';img.width=d.w;img.height=d.h;
  }
- $('unionOriginalFull').href='./images/reference-union-'+view+'.png';
- $('unionAdaptedFull').href='./images/arcxi-union-'+view+'.png';
- $('originalFull').href='./images/reference-'+view+'.png';
- $('adaptedFull').href='./images/arcxi-'+view+'.png';
+ $('unionOriginalFull').href='./images/reference-union-'+view+'.png?v=9';
+ $('unionAdaptedFull').href='./images/arcxi-union-'+view+'.png?v=9';
+ $('originalFull').href='./images/reference-'+view+'.png?v=9';
+ $('adaptedFull').href='./images/arcxi-'+view+'.png?v=9';
  $('sliderArea').style.aspectRatio=view==='desktop'?'16/10':'9/16';
 }
 $('desktop').addEventListener('click',()=>switchView('desktop'));
