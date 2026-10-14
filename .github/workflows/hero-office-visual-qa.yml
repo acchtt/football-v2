@@ -38,6 +38,8 @@ jobs:
           test "$(stat -c%s pages/media/fonts/RacingSansOne-Regular.ttf)" -gt 20000
       - name: Fetch authentic character images and vector logos
         run: node scripts/hero-office-demo/fetch-union-assets.cjs
+      - name: Inspect original computed backgrounds and source assets
+        run: node scripts/hero-office-demo/inspect-reference.cjs
       - name: Capture original and demo desktop/mobile and assert gallery completeness
         run: node scripts/hero-office-demo/capture.cjs
       - name: Assemble comparison page
