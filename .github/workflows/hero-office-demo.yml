@@ -56,6 +56,15 @@ jobs:
           curl -fsSL --retry 3 "$root/racingsansone/OFL.txt" -o pages/media/fonts/RacingSansOne-OFL.txt
           test "$(stat -c%s pages/media/fonts/ArchivoBlack-Regular.ttf)" -gt 20000
           test "$(stat -c%s pages/media/fonts/RacingSansOne-Regular.ttf)" -gt 20000
+          # Noka itself is Adobe Fonts licensed, and is never copied.
+          # Kanit is an independently licensed geometric OFL fallback.
+          curl -fsSL --retry 3 "$root/kanit/Kanit-BlackItalic.ttf" -o pages/media/fonts/Kanit-BlackItalic.ttf
+          curl -fsSL --retry 3 "$root/kanit/Kanit-Black.ttf" -o pages/media/fonts/Kanit-Black.ttf
+          curl -fsSL --retry 3 "$root/kanit/OFL.txt" -o pages/media/fonts/Kanit-OFL.txt
+          curl -fsSL --retry 3 "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2" -o pages/media/fonts/PretendardVariable.woff2
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/LICENSE.txt" -o pages/media/fonts/Pretendard-OFL.txt
+          test "$(stat -c%s pages/media/fonts/Kanit-BlackItalic.ttf)" -gt 20000
+          test "$(stat -c%s pages/media/fonts/PretendardVariable.woff2)" -gt 20000
       - name: Audit original reference CSS, type and background assets
         run: node scripts/hero-office-demo/inspect-reference.cjs
       - name: Capture reference and demo at desktop/mobile sizes
