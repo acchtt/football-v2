@@ -670,13 +670,13 @@ html.scheduleCornerMode .heroUnion::before {
 }
 @font-face{
   font-family:"Hero Noka Fallback OFL";
-  src:url("./media/fonts/Kanit-BlackItalic.ttf") format("truetype");
-  font-weight:900;font-style:italic;font-display:swap;
+  src:url("./media/fonts/Kanit-Italic.ttf") format("truetype");
+  font-weight:100 900;font-style:italic;font-display:swap;
 }
 @font-face{
   font-family:"Hero Noka Fallback OFL";
-  src:url("./media/fonts/Kanit-Black.ttf") format("truetype");
-  font-weight:900;font-style:normal;font-display:swap;
+  src:url("./media/fonts/Kanit-Regular.ttf") format("truetype");
+  font-weight:100 900;font-style:normal;font-display:swap;
 }
 /* Source uses licensed Noka 900 italic / Pretendard supporting text.
    When user supplies a licensed Adobe Fonts Web Project, its noka family
