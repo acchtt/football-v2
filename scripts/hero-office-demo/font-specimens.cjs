@@ -7,7 +7,7 @@ const faces=[['Archivo Black','ArchivoBlack-Regular.ttf','normal',null],['Anybod
 const exe=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
 const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
- const declarations=faces.map(f=>'@font-face{font-family:"'+f[0]+'";src:url(data:font/truetype;base64,'+fs.readFileSync(path.join(base,f[1])).toString('base64')+') format("truetype");font-weight:100 900;font-style:'+f[2]+';}').join('');
+ const declarations=faces.map(f=>'@font-face{font-family:"'+f[0]+'";src:url(data:font/truetype;base64,'+fs.readFileSync(path.join(base,f[1])).toString('base64')+') format("truetype");font-weight:900;font-style:'+f[2]+';}').join('');
  const rows=faces.map(f=>{
   const font='font-family:"'+f[0]+'";font-style:'+f[2]+';font-weight:900;'+(f[3]?'font-stretch:'+f[3]+'%;':'')+(f[2]==='normal'?'transform:skewX(-6deg);':'');
   return '<article class="card"><label>'+f[0]+'</label><div class="bar" style="'+font+'">SHOW YOUR MATCHDAY</div><div class="bubble"><div class="txt" style="'+font+'">Your Football<br><em>HERO BOARD!</em></div></div></article>';
@@ -17,7 +17,9 @@ try{
  const page=await browser.newPage();
  await page.setViewport({width:1600,height:1030,deviceScaleFactor:1});
  await page.setContent('<html><head><style>'+declarations+css+'</style></head><body><h1>Actual reference and licensed display-font alternatives</h1><div class="board"><article class="card ref"><label>Original Noka source</label><img src="data:image/png;base64,'+img+'"></article>'+rows+'</div></body></html>',{waitUntil:'load'});
- await page.evaluate(()=>document.fonts.ready);
+ const loaded=await page.evaluate(async (names)=>{for(const f of names){await document.fonts.load('900 36px "'+f+'"')}await document.fonts.ready;return names.map(name=>({name,ok:document.fonts.check('900 36px "'+name+'"')}));},faces.map(f=>f[0]));
+ console.log('SPECIMEN_FONT_LOADS',JSON.stringify(loaded));
+ if(loaded.some(x=>!x.ok))throw Error('Font specimens failed to load');
  await page.screenshot({path:'hero-office-captures/font-specimens.png',fullPage:true});
  console.log('FONT_SPECIMENS_READY',faces.map(f=>f[0]));
  await page.close();
