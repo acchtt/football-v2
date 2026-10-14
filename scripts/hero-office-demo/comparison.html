@@ -71,6 +71,18 @@ input[type=range]{display:block;width:calc(100% - 32px);margin:15px 16px 20px;ac
 .coWordmark:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 @media(max-width:740px){.coWordmark img{width:min(195px,calc(100vw - 180px));height:50px}}
 @media(max-width:380px){.topnav a:first-child{display:none}.coWordmark img{width:min(177px,calc(100vw - 127px));height:48px}}
+
+/* Gallery shares the measured source background rather than a generic dotted wallpaper. */
+body{position:relative;isolation:isolate;background:#fff;background-image:none}
+body::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(180deg,rgb(253,2,185) 0%,rgb(253,2,185) 35%,rgba(253,2,185,.5) 60%,transparent 85%);
+ -webkit-mask-image:url("./app/media/ive/hero-union/hero-symbol-pattern.svg");
+ mask-image:url("./app/media/ive/hero-union/hero-symbol-pattern.svg");
+ -webkit-mask-size:467px auto;mask-size:467px auto;
+ -webkit-mask-position:50% 0%;mask-position:50% 0%;
+ -webkit-mask-repeat:repeat;mask-repeat:repeat;opacity:.2;
+}
 </style>
 </head>
 <body>
