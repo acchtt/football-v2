@@ -110,6 +110,28 @@ async function main(){
              try{await image.decode()}catch(e){}
            }));
        });
+       const fidelity=await page.evaluate(async()=>{
+         await document.fonts.load('900 24px "Hero Pretendard OFL"');
+         await document.fonts.load('italic 900 24px "Hero Noka Fallback OFL"');
+         const bg=getComputedStyle(document.body,'::before');
+         const union=getComputedStyle(document.querySelector('.heroUnion'),'::before');
+         const title=getComputedStyle(document.querySelector('.heroMissionBubble strong'));
+         return {
+           maskSize:bg.maskSize,maskPosition:bg.maskPosition,opacity:bg.opacity,
+           gradient:bg.backgroundImage,maskUrl:bg.maskImage,
+           duplicateUnionLayer:union.display!=='none'&&union.content!=='none',
+           sourcePatternDocumentUrl:bg.maskImage.includes('hero-symbol-pattern.svg'),
+           pretendardLoaded:document.fonts.check('900 24px "Hero Pretendard OFL"'),
+           fallbackLoaded:document.fonts.check('italic 900 24px "Hero Noka Fallback OFL"'),
+           titleFamily:title.fontFamily,
+           footerVectorCount:[...document.querySelectorAll('.heroUnionFooter img')].filter(i=>/\.svg(\?|$)/.test(i.currentSrc)).length,
+         };
+       });
+       console.log('REFERENCE_STYLE_PARITY',size.name,JSON.stringify(fidelity));
+       if(fidelity.maskSize!=='467px auto'||fidelity.opacity!=='0.2'||fidelity.duplicateUnionLayer||
+          !fidelity.sourcePatternDocumentUrl||!fidelity.gradient.includes('linear-gradient')||
+          !fidelity.pretendardLoaded||!fidelity.fallbackLoaded||fidelity.footerVectorCount!==2)
+         throw Error('Original source style reconstruction failed: '+JSON.stringify(fidelity));
        const qa=await page.evaluate(()=>{
          const section=document.querySelector('.heroUnion');
          const cards=[...section.querySelectorAll('.heroUnionCard')];
