@@ -615,3 +615,12 @@ html.scheduleCornerMode .heroUnionMobileHint{display:none}
   html.scheduleCornerMode .heroUnionCard:nth-child(2),
   html.scheduleCornerMode .heroUnionCard:nth-child(4){height:190px}
 }
+
+
+/* Keep the actual two SVG footer marks legible beside the always-on site artwork. */
+@media(min-width:701px){
+  html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(205px,16vw,240px)}
+}
+@media(max-width:700px){
+  html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(108px,28vw,128px)}
+}
