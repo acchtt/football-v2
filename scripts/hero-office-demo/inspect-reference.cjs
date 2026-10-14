@@ -29,6 +29,32 @@ const puppeteer=require('/tmp/hero-browser/node_modules/puppeteer-core');
    const bgs=[...document.querySelectorAll('*')].map(el=>({cl:typeof el.className==='string'?el.className:'',bg:getComputedStyle(el).backgroundImage})).filter(x=>x.bg.includes('url(')).slice(0,80);
    return {title:document.title,height:document.documentElement.scrollHeight,imgs,style,bgs,visibleText:document.body.innerText.slice(-2600),scripts:[...document.scripts].map(s=>s.src).filter(Boolean)};
   });
+  const forensic=await page.evaluate(()=>{
+   const small=(s,n=190)=>String(s||'').slice(0,n);
+   const read=(el,ps='')=>{
+    let css=getComputedStyle(el,ps||null),b=el.getBoundingClientRect();
+    return {tag:el.tagName,cl:typeof el.className==='string'?small(el.className,100):'',text:small(el.innerText||el.textContent,72),pseudo:ps||'none',bounds:{x:Math.round(b.x),y:Math.round(b.y+scrollY),w:Math.round(b.width),h:Math.round(b.height)},
+      font:css.fontFamily,fontSize:css.fontSize,fontStyle:css.fontStyle,fontWeight:css.fontWeight,letterSpacing:css.letterSpacing,lineHeight:css.lineHeight,
+      backgroundColor:css.backgroundColor,backgroundImage:small(css.backgroundImage,600),backgroundSize:css.backgroundSize,backgroundPosition:css.backgroundPosition,backgroundRepeat:css.backgroundRepeat,
+      color:css.color,maskImage:small(css.maskImage,600),maskSize:css.maskSize,maskPosition:css.maskPosition,maskRepeat:css.maskRepeat,
+      opacity:css.opacity,transform:css.transform};
+   };
+   const textTags=[...document.querySelectorAll('h1,h2,h3,p,span,div,section,main')].filter(el=>{
+    let t=(el.innerText||'').trim();return t.length>4&&t.length<170&&/SHOW YOUR STREAM|How To Get Your|HERO LICENSE|GIRL HERO UNION|HERO OFFICE SCANNER|CAPTAIN PURPLE/i.test(t)
+   }).slice(0,28);
+   const layers=[];
+   for(const el of [...document.querySelectorAll('html,body,main,section,div')]){
+    if(layers.length>=130)break;
+    for(const pseudo of ['','::before','::after']){
+     const css=getComputedStyle(el,pseudo||null);
+     if(css.backgroundImage!=='none'||css.maskImage!=='none'||(pseudo&&css.content!=='none'&&css.content!=='normal'&&(css.backgroundColor!=='rgba(0, 0, 0, 0)')))
+      layers.push(read(el,pseudo));
+    }
+   }
+   return {root:[read(document.documentElement),read(document.body)],textElements:textTags.map(el=>read(el)),layers,fonts:[...document.fonts].map(f=>({family:f.family,weight:f.weight,style:f.style,status:f.status}))};
+  });
+  fs.writeFileSync('hero-office-captures/source-style-forensics.json',JSON.stringify(forensic,null,2));
+  console.log('SOURCE_FORENSICS',JSON.stringify({layers:forensic.layers.filter(x=>x.maskImage!=='none'||x.backgroundImage!=='none').slice(0,25),fonts:forensic.fonts,text:forensic.textElements.slice(0,8)}));
   await page.evaluate(()=>window.scrollTo(0,0));
   fs.writeFileSync(out,JSON.stringify({data,responses:responses.slice(0,350)},null,2));
   try{await page.screenshot({path:'hero-office-captures/reference-full-page.png',fullPage:true})}
