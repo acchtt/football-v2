@@ -45,24 +45,19 @@ jobs:
           curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/LICENSE.txt" -o pages/media/fonts/Pretendard-OFL.txt
           test "$(stat -c%s pages/media/fonts/Kanit-Italic.ttf)" -gt 20000
           test "$(stat -c%s pages/media/fonts/PretendardVariable.woff2)" -gt 20000
-      - name: Download candidate open-license font specimens
+      - name: Retrieve rounded display fallback font (SIL OFL)
         run: |
           set -euo pipefail
-          root=https://raw.githubusercontent.com/google/fonts/main/ofl
-          curl -fsSL --retry 3 "$root/anybody/Anybody-Italic%5Bwdth,wght%5D.ttf" -o pages/media/fonts/Anybody-Italic.ttf
-          curl -fsSL --retry 3 "$root/lilitaone/LilitaOne-Regular.ttf" -o pages/media/fonts/LilitaOne-Regular.ttf
-          curl -fsSL --retry 3 "$root/titanone/TitanOne-Regular.ttf" -o pages/media/fonts/TitanOne-Regular.ttf
-          test "$(stat -c%s pages/media/fonts/Anybody-Italic.ttf)" -gt 20000
+          root=https://raw.githubusercontent.com/google/fonts/main/ofl/lilitaone
+          curl -fsSL --retry 3 "$root/LilitaOne-Regular.ttf" -o pages/media/fonts/LilitaOne-Regular.ttf
+          curl -fsSL --retry 3 "$root/OFL.txt" -o pages/media/fonts/LilitaOne-OFL.txt
           test "$(stat -c%s pages/media/fonts/LilitaOne-Regular.ttf)" -gt 20000
-          test "$(stat -c%s pages/media/fonts/TitanOne-Regular.ttf)" -gt 20000
       - name: Fetch authentic character images and vector logos
         run: node scripts/hero-office-demo/fetch-union-assets.cjs
       - name: Inspect original computed backgrounds and source assets
         run: node scripts/hero-office-demo/inspect-reference.cjs
       - name: Capture original and demo desktop/mobile and assert gallery completeness
         run: node scripts/hero-office-demo/capture.cjs
-      - name: Render alternative font specimen grid against Noka screenshot
-        run: node scripts/hero-office-demo/font-specimens.cjs
       - name: Assemble comparison page
         run: node scripts/hero-office-demo/build-site.cjs
       - name: Check every source asset and screenshot
@@ -73,6 +68,7 @@ jobs:
           done
           test -s hero-office-public/app/media/ive/hero-union/yujin.png
           test -s hero-office-public/app/media/ive/hero-union/leeseo.png
+          test -s hero-office-public/app/media/fonts/LilitaOne-Regular.ttf
           test -s hero-office-public/app/media/fonts/ArchivoBlack-Regular.ttf
           test -s hero-office-public/app/media/fonts/RacingSansOne-Regular.ttf
           echo "PASS original artwork, footer logos, fonts and both viewport captures"
