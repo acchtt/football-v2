@@ -65,6 +65,9 @@ jobs:
           curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/LICENSE.txt" -o pages/media/fonts/Pretendard-OFL.txt
           test "$(stat -c%s pages/media/fonts/Kanit-Italic.ttf)" -gt 20000
           test "$(stat -c%s pages/media/fonts/PretendardVariable.woff2)" -gt 20000
+          curl -fsSL --retry 3 "$root/lilitaone/LilitaOne-Regular.ttf" -o pages/media/fonts/LilitaOne-Regular.ttf
+          curl -fsSL --retry 3 "$root/lilitaone/OFL.txt" -o pages/media/fonts/LilitaOne-OFL.txt
+          test "$(stat -c%s pages/media/fonts/LilitaOne-Regular.ttf)" -gt 20000
       - name: Audit original reference CSS, type and background assets
         run: node scripts/hero-office-demo/inspect-reference.cjs
       - name: Capture reference and demo at desktop/mobile sizes
