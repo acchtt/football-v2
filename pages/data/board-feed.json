@@ -3,7 +3,7 @@
   "sourceStore": "GOOGLE_SHEETS",
   "sourceWorkbook": "Football v2 — Active Operations",
   "generatedAt": "2026-10-15T07:32:47.302Z",
-  "migrationNote": "Initial public-safe projection from frozen rows recovered after Airtable quota exhaustion. No Decision State, engine-evidence JSON, or Actual Bets data is exposed.",
+  "migrationNote": "Public-safe projection from verified Google Sheets coverage rows. Decision States, Step1 engine evidence JSON, generic payload JSON, and Actual Bets are excluded.",
   "schedule": [
     {
       "id": "V4-20261015-0734-20261015-1200|1696697",
@@ -54,5 +54,6 @@
       "bsd": null
     }
   ],
-  "picks": []
+  "picks": [],
+  "projectionPolicy": "PUBLIC_SAFE_GOOGLE_SHEETS_V1"
 }
