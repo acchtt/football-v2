@@ -254,6 +254,7 @@ async function probeBoardProjection(env) {
       payload &&
       payload.schemaVersion === "football-v2-public-board-feed-v1" &&
       payload.sourceStore === "GOOGLE_SHEETS" &&
+      payload.projectionPolicy === "PUBLIC_SAFE_GOOGLE_SHEETS_V1" &&
       Array.isArray(payload.schedule) &&
       Array.isArray(payload.picks)
     );
@@ -262,6 +263,7 @@ async function probeBoardProjection(env) {
       status: r.status,
       sourceStore: payload?.sourceStore || null,
       schemaVersion: payload?.schemaVersion || null,
+      projectionPolicy: payload?.projectionPolicy || null,
       generatedAt: payload?.generatedAt || null,
       error: valid ? null : body.slice(0, 300),
     };
