@@ -6,7 +6,12 @@ const res=await fetch(API+'/api/dashboard-data?source_check='+Date.now(),{
   headers:{Origin:'https://acchtt.github.io',Accept:'application/json'},
   cache:'no-store',signal:AbortSignal.timeout(16000)
 });
-if(!res.ok)throw Error('Dashboard HTTP '+res.status);
+if(!res.ok){
+  const message='Dashboard HTTP '+res.status;
+  if(process.env.REQUIRE_GOOGLE_SHEETS_PROJECTION==='1')throw Error(message);
+  console.warn('OBSERVATION: '+message+' before the projection Worker is deployed');
+  process.exit(0);
+}
 const data=await res.json();
 if(!data.ok||!Array.isArray(data.schedule)||!Array.isArray(data.picks))
   throw Error('Invalid dashboard');
