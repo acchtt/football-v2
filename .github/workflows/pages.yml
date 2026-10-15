@@ -81,6 +81,18 @@ jobs:
           assert 'wonyoung-liz-bottom-right.webp' in app, 'Wonyoung + Liz artwork not wired'
           assert "buildCorner('top')" not in sidebars, 'upper-left artwork should be removed'
 
+          feed_path = root / 'data/board-feed.json'
+          assert feed_path.exists() and feed_path.stat().st_size > 0, 'missing public board projection'
+          import json
+          feed = json.loads(feed_path.read_text(encoding='utf-8'))
+          assert feed.get('schemaVersion') == 'football-v2-public-board-feed-v1', 'unexpected board projection schema'
+          assert feed.get('sourceStore') == 'GOOGLE_SHEETS', 'board projection must come from Google Sheets'
+          assert isinstance(feed.get('schedule'), list) and isinstance(feed.get('picks'), list), 'board projection arrays missing'
+          for forbidden in ('decisionStates', 'actualBets', 'engineResults', 'step1EngineResult'):
+              assert forbidden not in feed, f'private field leaked to public board projection: {forbidden}'
+          for row in feed['schedule']:
+              assert not any(str(key).lower().startswith('c2') for key in row), 'retired C2 field leaked to public schedule'
+
           for path in [
               root / 'icons/arc-xi-schedule.svg',
               root / 'media/arcxi/arc-xi-schedule-logo.svg',

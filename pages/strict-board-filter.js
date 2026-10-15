@@ -98,7 +98,7 @@
 
   function shouldFallback(row){
     const kickoff=Date.parse(rowKickoff(row));
-    // Before kickoff (and briefly after), Airtable can lead BSD fixture discovery.
+    // Before kickoff (and briefly after), the signed board projection can lead BSD fixture discovery.
     // Do not leave a synthetic scheduled row hanging deep into a live match.
     return !Number.isFinite(kickoff)||Date.now()<=kickoff+FALLBACK_GRACE_MS;
   }

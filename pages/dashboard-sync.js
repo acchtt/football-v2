@@ -1,4 +1,4 @@
-// Keep Airtable-backed schedule and picks fresh without requiring a hard reload.
+// Keep the Google Sheets public-safe schedule/picks projection fresh without a hard reload.
 (() => {
   const intervalMs = 30000;
   let syncing = false;

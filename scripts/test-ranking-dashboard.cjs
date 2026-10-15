@@ -1,79 +1,81 @@
-// Worker Airtable schedule contract: official C rank is sufficient for publication.
-// Exercises the actual dashboardData with mock API responses; no network writes.
+// Public dashboard projection contract: Google Sheets is the private source of truth,
+// and only safe schedule/pick fields are exposed through the GitHub Pages feed.
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+
 let source=fs.readFileSync('backend/cloudflare-worker/src/dashboard-entry.js','utf8');
-source=source.replace(/^import app from .*;\s*/,'const app = {fetch: async () => new Response(null,{status:404})};\n')
-  .replace('export default {','const workerHandler = {');
+source=source
+  .replace(/^import app from .*;\s*/,'const app = {fetch: async () => new Response(null,{status:404})};\n')
+  .replace('export default {','const workerHandler = {')
+  .replace(/export \{[^}]+\};?\s*$/m,'');
 if(/\bexport default\b|^import /m.test(source))throw Error('Worker module extraction changed');
-const now=Date.now(),kickoff=new Date(now+2*3600000).toISOString();
-const row=(id,match,tier,state,rank)=>({
- id,createdTime:new Date(now-3*3600000).toISOString(),
- fields:{'Coverage ID':id,'Slate Date':new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(kickoff)),
-  Match:match,Competition:'Test Competition','Kickoff ICT':kickoff,
-  'Screened At':new Date(now-3600000).toISOString(),
-  'Board Tier':tier,'C Board State':state,'C Rank':rank}
-});
-const focus=row('recFocus','Ranked Home vs Ranked Away','UNRESOLVED','C-FOCUS',1);
-focus.fields['Step1 C Follow Lane']='RESERVE';
-focus.fields['C Supported Line']=2.75;
-focus.fields['C2 Shadow Rank']=1;
-focus.fields['C2 Shadow State']='C2-FOCUS';
-focus.fields['C2 Supported Line']=2.75;
-const watch=row('recWatch','Ranked Ajax vs Ranked NEC',null,'C-WATCH',2);
-watch.fields['Step1 C Follow Lane']='STOP';
-const pass=row('recPass','Ranked Three vs Ranked Four','PASS','C-PASS',3);
-pass.fields['Step1 C Follow Lane']='STOP';
-// Latest screening may contain a newer *unranked* duplicate of a sealed rank.
-// It cannot hide the actual signed C/C2 result.
-const shadow=row('recShadow',focus.fields.Match,'WATCHLIST',null,null);
-shadow.fields['Screened At']=new Date(now-1000).toISOString();
-const legacy=row('recLegacy','Legacy Home vs Legacy Away','WATCHLIST',null,null);
-const excluded=row('recExcluded','Unranked Home vs Unranked Away','UNRESOLVED',null,null);
+
+const now=Date.now();
+const kickoff=new Date(now+2*3600000).toISOString();
+const slateDate=new Intl.DateTimeFormat('en-CA',{
+  timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'
+}).format(new Date(kickoff));
+
+const feed={
+  schemaVersion:'football-v2-public-board-feed-v1',
+  sourceStore:'GOOGLE_SHEETS',
+  sourceWorkbook:'Football v2 — Active Operations',
+  generatedAt:new Date(now-1000).toISOString(),
+  schedule:[
+    {
+      id:'cov-follow',sourceCoverageId:'cov-follow',boardId:'RUN-A',slateDate,
+      match:'Follow Home – Follow Away',competition:'Test Competition',kickoff,
+      followLane:'FOLLOW',tier:'PASS',cBoardState:'C-FOCUS',cRank:1,cSupportedLine:3.5,grade:'A'
+    },
+    {
+      id:'cov-reserve',sourceCoverageId:'cov-reserve',boardId:'RUN-A',slateDate,
+      match:'Reserve Home – Reserve Away',competition:'Test Competition',kickoff,
+      followLane:'RESERVE',tier:'FOCUS',cBoardState:'C-FOCUS',cRank:2,cSupportedLine:2.5,grade:'B'
+    },
+    {
+      id:'cov-stop',sourceCoverageId:'cov-stop',boardId:'RUN-A',slateDate,
+      match:'Stop Home – Stop Away',competition:'Test Competition',kickoff,
+      followLane:'STOP',tier:'WATCHLIST',cBoardState:'C-WATCH',cRank:3,cSupportedLine:2.5,grade:'B'
+    },
+    {id:'bad',match:'Missing kickoff',tier:'FOCUS'}
+  ],
+  picks:[]
+};
 const calls=[];
 const fetch=async input=>{
- const url=new URL(input);calls.push(url);
- const ranked=url.searchParams.get('filterByFormula')?.startsWith('AND(AND({C Rank}>0');
- const table=url.pathname.split('/').at(-1);
- const rows=table==='tbl20jBW5dfgNnTV6'?
-   (ranked?[focus,watch,pass]:[shadow,focus,legacy,excluded]):[];
- return {ok:true,json:async()=>({records:rows})};
+  calls.push(String(input));
+  return {ok:true,status:200,json:async()=>feed};
 };
 const context={fetch,Date,Intl,URL,Response,Headers,console};
 vm.createContext(context);
-vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier};',context,{filename:'dashboard-entry.js'});
+vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,validateFeed};',context,{filename:'dashboard-entry.js'});
+
 (async()=>{
- const body=await context.workerTest.dashboardData({AIRTABLE_TOKEN:'unit-token'});
- const fixtures=body.schedule.map(x=>x.match);
- assert.equal(fixtures.length,4,'Ranked fixtures and legacy display tiers must both publish');
- assert(fixtures.includes(focus.fields.Match),'C-FOCUS rank missing when Board Tier unresolved');
- assert(fixtures.includes(watch.fields.Match),'C-WATCH rank missing when Board Tier blank');
- assert(fixtures.includes(pass.fields.Match),'Official PASS lane missing');
- assert(fixtures.includes(legacy.fields.Match),'Legacy WATCHLIST must remain visible');
- assert(!fixtures.includes(excluded.fields.Match),'Unranked/unresolved coverage is not schedule');
- assert.equal(body.schedule.find(x=>x.id==='recFocus').tier,'WATCHLIST','FOCUS on RESERVE must display as WATCHLIST');
- assert.equal(body.schedule.find(x=>x.id==='recFocus').followLane,'RESERVE');
- assert.equal(body.schedule.find(x=>x.id==='recFocus').cSupportedLine,2.75);
- assert.equal(body.schedule.find(x=>x.id==='recFocus').c2Rank,1);
- assert.equal(body.schedule.find(x=>x.id==='recFocus').c2SupportedLine,2.75);
- assert.equal(body.schedule.find(x=>x.id==='recWatch').tier,'PASS','WATCH with STOP must still be displayed');
- assert.equal(body.schedule.find(x=>x.id==='recWatch').followLane,'STOP');
- assert(!body.schedule.some(x=>x.id==='recShadow'),'newer unranked screening must not hide older signed rank');
- assert.equal(body.schedule.find(x=>x.id==='recWatch').cRank,2);
- assert.equal(body.schedule.find(x=>x.id==='recPass').tier,'PASS');
- assert.equal(body.sync.sourceBaseId,'appbzxqXYf0lKfD4P');
- assert(calls.every(url=>url.pathname.includes('/appbzxqXYf0lKfD4P/')),
-   'Every Airtable table read must come from Active Operations');
- assert.equal(body.sync.rankedSourceRecords,3);
- assert.equal(body.sync.rankedPublished,3);
- assert.equal(body.sync.missingRankedCount,0);
- assert.equal(body.sync.stopDisplayed,2);
- assert.equal(context.workerTest.officialTier({'C Board State':'C-FOCUS','C Rank':8,'Step1 C Follow Lane':'FOLLOW'}),'FOCUS');
- assert.equal(new Set(body.schedule.map(x=>x.id)).size,4,'Duplicate coverage and rank queries cannot duplicate fixtures');
- assert(calls.some(url=>url.pathname.endsWith('/tbl20jBW5dfgNnTV6')&&
-   url.searchParams.get('filterByFormula')?.includes('C Rank')),
-   'Worker must explicitly query official C ranking, not infer it from pick records');
- console.log('PASS signed rank->dashboard: C/C2 independent ranks, RESERVE/STOP, newer unranked shadow protection, legacy, ICT and zero betting pollution');
+  const body=await context.workerTest.dashboardData({});
+  assert.equal(body.backendMode,'google-sheets-public-projection');
+  assert.equal(body.sync.sourceStore,'GOOGLE_SHEETS');
+  assert.equal(body.sync.projectionSchema,'football-v2-public-board-feed-v1');
+  assert.equal(body.schedule.length,3,'Invalid projection rows must fail closed');
+  assert.equal(body.schedule.find(x=>x.id==='cov-follow').tier,'FOCUS');
+  assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'WATCHLIST');
+  assert.equal(body.schedule.find(x=>x.id==='cov-stop').tier,'PASS');
+  assert.equal(body.sync.stopDisplayed,1);
+  assert.equal(body.sync.rankedPublished,3);
+  assert.equal(body.schedule.find(x=>x.id==='cov-follow').cSupportedLine,3.5);
+  assert(!('c2Rank' in body.schedule[0]),'Retired C2 data must not be republished');
+  assert.equal(calls.length,1,'Dashboard must use one public projection read');
+  assert(calls[0].includes('/acchtt/football-v2/main/pages/data/board-feed.json'),'Dashboard must read the public-safe projection');
+
+  assert.throws(
+    ()=>context.workerTest.validateFeed({...feed,actualBets:[]}),
+    /forbidden private field/
+  );
+  assert.throws(
+    ()=>context.workerTest.validateFeed({...feed,sourceStore:'AIRTABLE'}),
+    /Google Sheets/
+  );
+
+  console.log('PASS Google Sheets projection -> public dashboard: C lanes preserved, C2 retired, private stores excluded');
 })().catch(error=>{console.error(error);process.exitCode=1;});
