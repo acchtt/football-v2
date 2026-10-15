@@ -1,7 +1,7 @@
 import app from "./index.js";
 
 const FEED_SCHEMA = "football-v2-public-board-feed-v1";
-const DEFAULT_FEED_URL = "https://acchtt.github.io/football-v2/data/board-feed.json";
+const DEFAULT_FEED_URL = "https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json";
 
 function allowedOrigin(env, request) {
   const allowed = String(env.ALLOWED_ORIGIN || "https://acchtt.github.io")
