@@ -30,7 +30,7 @@ After the first Worker exists, open Worker → Settings → Variables and Secret
 
 The non-secret values are already in `wrangler.jsonc`:
 
-- `BOARD_FEED_URL=https://acchtt.github.io/football-v2/data/board-feed.json`
+- `BOARD_FEED_URL=https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json`
 - `BSD_API_BASE_URL=https://sports.bzzoiro.com/api/v2`
 - `ALLOWED_ORIGIN=https://acchtt.github.io`
 
