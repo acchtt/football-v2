@@ -216,6 +216,18 @@ export default {
         );
       }
     }
+    if (request.method === "POST" && url.pathname === "/api/manual-score") {
+      return json(
+        {
+          ok: false,
+          error: "Manual scores now live in the private Google Sheets Manual Scores tab; public direct writes are disabled.",
+          code: "MANUAL_SCORE_GOOGLE_SHEETS_OPERATOR_ONLY",
+        },
+        409,
+        env,
+        request,
+      );
+    }
     return app.fetch(request, env, ctx);
   },
 };
