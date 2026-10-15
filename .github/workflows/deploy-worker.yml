@@ -194,5 +194,19 @@ jobs:
           check_json "BSD events" "$BASE/api/bsd/events?date_from=$TODAY&date_to=$TODAY&limit=5"
           check_json "BSD live" "$BASE/api/bsd/live"
           check_json "dashboard" "$BASE/api/dashboard-data"
-          REQUIRE_GOOGLE_SHEETS_PROJECTION=1 node scripts/check-ranking-feed.mjs
+
+          projection_ready=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            echo "Checking deployed Google Sheets projection contract (attempt $attempt)"
+            if REQUIRE_GOOGLE_SHEETS_PROJECTION=1 node scripts/check-ranking-feed.mjs; then
+              projection_ready=1
+              break
+            fi
+            if [ "$attempt" -lt 8 ]; then sleep 3; fi
+          done
+          if [ "$projection_ready" != "1" ]; then
+            echo "::error::New Worker deployment did not expose the verified Sheets projection contract after propagation retries"
+            exit 1
+          fi
+
           check_push_ready
