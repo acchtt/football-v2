@@ -11,6 +11,7 @@ const app = {
 };
 
 const FEED_SCHEMA = "football-v2-public-board-feed-v1";
+const PROJECTION_POLICY = "PUBLIC_SAFE_GOOGLE_SHEETS_V1";
 const DEFAULT_FEED_URL = "https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json";
 
 function allowedOrigin(env, request) {
@@ -125,6 +126,9 @@ function validateFeed(payload) {
   if (payload.sourceStore !== "GOOGLE_SHEETS") {
     throw new Error("Board projection is not sourced from Google Sheets.");
   }
+  if (payload.projectionPolicy !== PROJECTION_POLICY) {
+    throw new Error("Board projection was not produced by the verified public-safe Sheets policy.");
+  }
   if (!Array.isArray(payload.schedule) || !Array.isArray(payload.picks)) {
     throw new Error("Board projection must contain schedule and picks arrays.");
   }
@@ -174,6 +178,7 @@ async function dashboardData(env) {
     sync: {
       sourceStore: "GOOGLE_SHEETS",
       projectionSchema: FEED_SCHEMA,
+      projectionPolicy: PROJECTION_POLICY,
       projectionUrl: String(env.BOARD_FEED_URL || DEFAULT_FEED_URL),
       rankedPublished: ranked.length,
       latestRankedBoardId,
