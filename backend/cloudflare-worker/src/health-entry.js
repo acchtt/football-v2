@@ -236,18 +236,44 @@ async function sortedDashboard(request, env, ctx) {
   return new Response(JSON.stringify(payload), { status: response.status, headers });
 }
 
-async function probeAirtable(env) {
-  if (!env.AIRTABLE_TOKEN) return { ok: false, status: 0, error: "AIRTABLE_TOKEN missing" };
-  const base = env.AIRTABLE_BASE_ID || "appbzxqXYf0lKfD4P";
-  const url = new URL(`https://api.airtable.com/v0/${base}/tbl20jBW5dfgNnTV6`);
-  url.searchParams.set("pageSize", "1");
-  url.searchParams.append("fields[]", "Match");
+async function probeBoardProjection(env) {
+  const url = String(
+    env.BOARD_FEED_URL ||
+    "https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json"
+  );
   try {
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` } });
+    const r = await fetch(`${url}?health=${Date.now()}`, {
+      headers: { Accept: "application/json" },
+      cf: { cacheTtl: 0, cacheEverything: false },
+    });
     const body = await r.text();
-    return { ok: r.ok, status: r.status, error: r.ok ? null : body.slice(0, 300) };
+    let payload = null;
+    try { payload = body ? JSON.parse(body) : null; } catch {}
+    const valid = Boolean(
+      r.ok &&
+      payload &&
+      payload.schemaVersion === "football-v2-public-board-feed-v1" &&
+      payload.sourceStore === "GOOGLE_SHEETS" &&
+      Array.isArray(payload.schedule) &&
+      Array.isArray(payload.picks)
+    );
+    return {
+      ok: valid,
+      status: r.status,
+      sourceStore: payload?.sourceStore || null,
+      schemaVersion: payload?.schemaVersion || null,
+      generatedAt: payload?.generatedAt || null,
+      error: valid ? null : body.slice(0, 300),
+    };
   } catch (error) {
-    return { ok: false, status: 0, error: error instanceof Error ? error.message : String(error) };
+    return {
+      ok: false,
+      status: 0,
+      sourceStore: null,
+      schemaVersion: null,
+      generatedAt: null,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -261,15 +287,28 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/health")) {
-      const [airtable, bsd] = await Promise.all([probeAirtable(env), probeBsd(env)]);
+      const [boardProjection, bsd] = await Promise.all([
+        probeBoardProjection(env),
+        probeBsd(env),
+      ]);
       return json({
-        ok: airtable.ok,
+        ok: boardProjection.ok,
         service: "football-v2",
-        airtable,
+        activeStore: "GOOGLE_SHEETS",
+        boardProjection,
         bsd,
-        dashboardMode: "airtable-plus-lightweight-bsd-scores",
+        dashboardMode: "google-sheets-public-projection-plus-lightweight-bsd-scores",
         generatedAt: new Date().toISOString(),
-      }, airtable.ok ? 200 : 502, env, request);
+      }, boardProjection.ok ? 200 : 502, env, request);
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/manual-score") {
+      return json({
+        ok: false,
+        error: "Website manual-score persistence was retired with Airtable. Use the private Google Sheets Manual Scores tab for operational overrides.",
+        activeStore: "GOOGLE_SHEETS",
+        sheet: "Manual Scores",
+      }, 410, env, request);
     }
 
     if (request.method === "GET" && url.pathname === "/api/live-scores") {
