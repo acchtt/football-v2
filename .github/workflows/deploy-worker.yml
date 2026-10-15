@@ -8,6 +8,11 @@ on:
       - "wrangler.jsonc"
       - "package.json"
       - "backend/cloudflare-worker/**"
+      - "app/api/dashboard-data/route.ts"
+      - "app/api/manual-score/route.ts"
+      - "lib/airtable.ts"
+      - "lib/manual-scores.ts"
+      - "scripts/test-no-airtable-runtime.cjs"
       - ".github/workflows/deploy-worker.yml"
   workflow_dispatch:
 
@@ -107,6 +112,9 @@ jobs:
       - name: Unit-test Google Sheets ranking projection
         run: node scripts/test-ranking-dashboard.cjs
 
+      - name: Assert active runtime has no Airtable dependency
+        run: node scripts/test-no-airtable-runtime.cjs
+
       - name: Deploy Worker
         run: npx wrangler@4 deploy --config wrangler.jsonc
 
@@ -182,6 +190,7 @@ jobs:
             exit 1
           }
 
+          check_json "health" "$BASE/health"
           check_json "BSD events" "$BASE/api/bsd/events?date_from=$TODAY&date_to=$TODAY&limit=5"
           check_json "BSD live" "$BASE/api/bsd/live"
           check_json "dashboard" "$BASE/api/dashboard-data"

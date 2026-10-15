@@ -193,7 +193,7 @@
         const calendarDate = kickoff ? ictDateKey(kickoff) : '';
         return {
           ...row,
-          // Keep the operational/Airtable board day only for audit and provider context.
+          // Keep the operational board day only for audit and provider context.
           // The visible schedule date must always follow the fixture's actual ICT kickoff
           // calendar day, so post-midnight matches do not remain on the previous board.
           sourceSlateDate: row?.sourceSlateDate || row?.slateDate || calendarDate || '',
@@ -455,13 +455,13 @@
   // The schedule renderer (app-v2.js) exclusively owns score and state
   // updates. Older DOM patchers targeted .matchScore/.matchTime, which are no
   // longer present in the board's .scheduleScore/.scheduleTime markup.
-  // Keep Airtable publication checks independent from live-score refresh.
+  // Keep board-publication checks independent from live-score refresh.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') checkBoardRefresh();
   });
   window.addEventListener('focus', () => checkBoardRefresh());
 
-  // New Airtable publications should appear without a reload, but Matchday is
+  // New Google Sheets board publications should appear without a reload, but Matchday is
   // only rebuilt when the board fingerprint actually changes.
   nativeSetInterval(checkBoardRefresh, 15000);
   setTimeout(checkBoardRefresh, 2500);
