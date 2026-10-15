@@ -2,6 +2,11 @@ import app from "./index.js";
 
 const FEED_SCHEMA = "football-v2-public-board-feed-v1";
 const DEFAULT_FEED_URL = "https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json";
+const FEED_TTL_MS = 15_000;
+const FEED_STALE_MS = 10 * 60_000;
+let feedCache = null;
+let feedCacheAt = 0;
+let feedInFlight = null;
 
 function allowedOrigin(env, request) {
   const allowed = String(env.ALLOWED_ORIGIN || "https://acchtt.github.io")
@@ -128,15 +133,32 @@ function validateFeed(payload) {
 }
 
 async function loadProjection(env) {
+  const now = Date.now();
+  if (feedCache && now - feedCacheAt < FEED_TTL_MS) return feedCache;
+  if (feedInFlight) return feedInFlight;
+
   const url = String(env.BOARD_FEED_URL || DEFAULT_FEED_URL);
-  const response = await fetch(`${url}?v=${Date.now()}`, {
-    headers: { Accept: "application/json" },
-    cf: { cacheTtl: 0, cacheEverything: false },
-  });
-  if (!response.ok) {
-    throw new Error(`Google Sheets board projection HTTP ${response.status}`);
-  }
-  return validateFeed(await response.json());
+  feedInFlight = (async () => {
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        cf: { cacheTtl: 15, cacheEverything: true },
+      });
+      if (!response.ok) {
+        throw new Error(`Google Sheets board projection HTTP ${response.status}`);
+      }
+      const payload = validateFeed(await response.json());
+      feedCache = payload;
+      feedCacheAt = Date.now();
+      return payload;
+    } catch (error) {
+      if (feedCache && Date.now() - feedCacheAt < FEED_STALE_MS) return feedCache;
+      throw error;
+    } finally {
+      feedInFlight = null;
+    }
+  })();
+  return feedInFlight;
 }
 
 async function dashboardData(env) {
