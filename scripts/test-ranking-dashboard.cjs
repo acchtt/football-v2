@@ -66,7 +66,7 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').cSupportedLine,3.5);
   assert(!('c2Rank' in body.schedule[0]),'Retired C2 data must not be republished');
   assert.equal(calls.length,1,'Dashboard must use one public projection read');
-  assert(calls[0].includes('/football-v2/data/board-feed.json'),'Dashboard must read the public-safe projection');
+  assert(calls[0].includes('/acchtt/football-v2/main/pages/data/board-feed.json'),'Dashboard must read the public-safe projection');
 
   assert.throws(
     ()=>context.workerTest.validateFeed({...feed,actualBets:[]}),
