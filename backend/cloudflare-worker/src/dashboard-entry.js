@@ -1,4 +1,14 @@
-import app from "./index.js";
+const app = {
+  async fetch() {
+    return new Response(
+      JSON.stringify({ ok: false, error: "Not found" }),
+      {
+        status: 404,
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+      },
+    );
+  },
+};
 
 const FEED_SCHEMA = "football-v2-public-board-feed-v1";
 const DEFAULT_FEED_URL = "https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json";
