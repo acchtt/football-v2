@@ -28,6 +28,8 @@ assert(!dashboard.includes('from "./index.js"'),
   'active dashboard must not import the legacy Airtable entry');
 assert(dashboard.includes('sourceStore !== "GOOGLE_SHEETS"'),
   'dashboard must validate the Google Sheets projection source');
+assert(dashboard.includes('PUBLIC_SAFE_GOOGLE_SHEETS_V1'),
+  'dashboard must require the verified public-safe Sheets projection policy');
 
 const health = fs.readFileSync(
   'backend/cloudflare-worker/src/health-entry.js',

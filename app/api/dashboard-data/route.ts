@@ -6,6 +6,7 @@ const ALLOWED_ORIGIN = "https://acchtt.github.io";
 const DEFAULT_FEED_URL =
   "https://raw.githubusercontent.com/acchtt/football-v2/main/pages/data/board-feed.json";
 const FEED_SCHEMA = "football-v2-public-board-feed-v1";
+const PROJECTION_POLICY = "PUBLIC_SAFE_GOOGLE_SHEETS_V1";
 
 function cors(headers: HeadersInit = {}) {
   return {
@@ -35,6 +36,7 @@ export async function GET() {
     if (
       feed.schemaVersion !== FEED_SCHEMA ||
       feed.sourceStore !== "GOOGLE_SHEETS" ||
+      feed.projectionPolicy !== PROJECTION_POLICY ||
       !Array.isArray(feed.schedule) ||
       !Array.isArray(feed.picks)
     ) {

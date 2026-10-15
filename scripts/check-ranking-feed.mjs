@@ -1,6 +1,7 @@
 // Read-only reconciliation of the public dashboard with the Google Sheets projection.
 const API='https://football-v2.acchtt.workers.dev';
 const FEED_SCHEMA='football-v2-public-board-feed-v1';
+const PROJECTION_POLICY='PUBLIC_SAFE_GOOGLE_SHEETS_V1';
 
 const res=await fetch(API+'/api/dashboard-data?source_check='+Date.now(),{
   headers:{Origin:'https://acchtt.github.io',Accept:'application/json'},
@@ -19,7 +20,8 @@ if(!data.ok||!Array.isArray(data.schedule)||!Array.isArray(data.picks))
 const active=
   data.backendMode==='google-sheets-public-projection' &&
   data.sync?.sourceStore==='GOOGLE_SHEETS' &&
-  data.sync?.projectionSchema===FEED_SCHEMA;
+  data.sync?.projectionSchema===FEED_SCHEMA &&
+  data.sync?.projectionPolicy===PROJECTION_POLICY;
 
 const invalidTier=data.schedule.filter(row=>!['FOCUS','WATCHLIST','PASS'].includes(String(row.tier||'')));
 const c2Leak=data.schedule.filter(row=>
@@ -32,6 +34,7 @@ console.log('RANKING_FEED '+JSON.stringify({
   backendMode:data.backendMode||'unverified/legacy',
   sourceStore:data.sync?.sourceStore||'unverified/legacy',
   projectionSchema:data.sync?.projectionSchema||null,
+  projectionPolicy:data.sync?.projectionPolicy||null,
   activeSource:active,
   scheduleCount:data.schedule.length,
   picksCount:data.picks.length,
