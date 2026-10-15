@@ -22,6 +22,7 @@ const feed={
   schemaVersion:'football-v2-public-board-feed-v1',
   sourceStore:'GOOGLE_SHEETS',
   sourceWorkbook:'Football v2 — Active Operations',
+  projectionPolicy:'PUBLIC_SAFE_GOOGLE_SHEETS_V1',
   generatedAt:new Date(now-1000).toISOString(),
   schedule:[
     {
@@ -57,6 +58,7 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.equal(body.backendMode,'google-sheets-public-projection');
   assert.equal(body.sync.sourceStore,'GOOGLE_SHEETS');
   assert.equal(body.sync.projectionSchema,'football-v2-public-board-feed-v1');
+  assert.equal(body.sync.projectionPolicy,'PUBLIC_SAFE_GOOGLE_SHEETS_V1');
   assert.equal(body.schedule.length,3,'Invalid projection rows must fail closed');
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').tier,'FOCUS');
   assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'WATCHLIST');
@@ -75,6 +77,10 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.throws(
     ()=>context.workerTest.validateFeed({...feed,sourceStore:'AIRTABLE'}),
     /Google Sheets/
+  );
+  assert.throws(
+    ()=>context.workerTest.validateFeed({...feed,projectionPolicy:'UNVERIFIED'}),
+    /public-safe Sheets policy/
   );
 
   console.log('PASS Google Sheets projection -> public dashboard: C lanes preserved, C2 retired, private stores excluded');
