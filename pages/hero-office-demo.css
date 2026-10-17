@@ -1,0 +1,791 @@
+/* HERO OFFICE visual replica study — demo branch only.
+   Authentic reference: https://ive-herooffice.com/ captured 2026-10-13.
+   ARC XI graphics, IVE artwork, data and behavior remain independently owned. */
+@font-face{font-family:"Office Demo Grotesk";src:url("./media/fonts/DM-Sans.ttf") format("truetype");font-style:normal;font-weight:100 1000;font-display:swap}
+:root{--ho-ink:#181818;--ho-yellow:#fff246;--ho-hot:#f706b1;--ho-paper:#faf6ed;--ho-pattern:#fff;--ho-shadow:8px 9px 0 var(--ho-ink)}
+html.scheduleCornerMode,html.scheduleCornerMode body{background:var(--ho-pattern);color:var(--ho-ink);font-family:"Office Demo Grotesk",Arial,sans-serif}
+html.scheduleCornerMode body{background-image:url("./media/arcxi/hero-office-demo-pattern.svg");background-size:270px 172px;background-attachment:fixed}
+html.scheduleCornerMode .scheduleHeader{height:80px;z-index:8;background:#000;border-bottom:5px solid var(--ho-hot)}
+html.scheduleCornerMode .scheduleHeaderInner{height:75px;width:100%;max-width:none;margin:0;padding:0 40px;display:flex;align-items:center;justify-content:center}
+html.scheduleCornerMode .scheduleBrand{width:215px;margin:0;flex:none}
+html.scheduleCornerMode .scheduleBrandLogo{display:block;width:100%;height:74px;object-fit:contain;filter:brightness(0) invert(1)}
+html.scheduleCornerMode .scheduleHeaderActions{position:absolute;right:40px;top:17px;margin:0;display:flex;align-items:center}
+html.scheduleCornerMode .scheduleIdentity{display:none}
+html.scheduleCornerMode .scheduleMenuButton{width:45px;height:42px;border:2px solid #faf6ed;background:transparent;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+html.scheduleCornerMode .scheduleMenuButton i{background:#faf6ed;width:22px;height:2px}
+html.scheduleCornerMode .scheduleMenuPanel{z-index:20;background:var(--ho-paper);color:var(--ho-ink);border:3px solid var(--ho-ink);border-radius:0;box-shadow:5px 6px 0 var(--ho-ink)}
+html.scheduleCornerMode .scheduleMenuPanel a,html.scheduleCornerMode .scheduleMenuPanel button{color:var(--ho-ink);font-weight:800}
+html.scheduleCornerMode .scheduleMenuPanel a:hover,html.scheduleCornerMode .scheduleMenuPanel button:hover{background:var(--ho-yellow);color:var(--ho-ink)}
+html.scheduleCornerMode .scheduleBoardRoute.appFrame{z-index:1;min-height:calc(100dvh - 80px)}
+html.scheduleCornerMode .scheduleBoardRoute .contentFrame{width:100%!important}
+html.scheduleCornerMode .scheduleBoardRoute .mainView{width:100%!important;min-width:0!important;max-width:none!important;padding:0!important;margin:0!important}
+html.scheduleCornerMode .heroOfficeGrid{width:min(1340px,calc(100% - 92px));margin:78px auto 140px;display:grid;grid-template-columns:minmax(0,38%) minmax(0,62%);align-items:start;gap:48px;box-sizing:border-box}
+html.scheduleCornerMode .heroOfficeMission{min-width:0;position:relative}
+html.scheduleCornerMode .heroMissionTab{height:62px;max-width:max-content;padding:8px 18px 8px 12px;background:var(--ho-ink);border:3px solid var(--ho-ink);box-shadow:5px 6px 0 var(--ho-hot);display:flex;gap:15px;align-items:center;transform:skew(-6deg) rotate(-1deg);color:var(--ho-yellow);font-size:clamp(17px,1.9vw,27px);font-weight:1000;font-style:italic;letter-spacing:-.045em;white-space:nowrap;text-shadow:2px 3px 0 #000}
+html.scheduleCornerMode .heroMissionTab>b{width:38px;height:40px;display:grid;place-items:center;background:var(--ho-yellow);color:#000;font-size:17px;font-weight:1000;text-shadow:none;transform:rotate(-3deg);border:2px solid #000}
+html.scheduleCornerMode .heroMissionCard{position:relative;overflow:visible;min-height:580px;margin:47px 5px 0;padding:28px 24px 76px;border:4px solid var(--ho-ink);background-color:var(--ho-yellow);background-image:radial-gradient(#18181838 .8px,transparent .8px);background-size:7px 7px;box-shadow:var(--ho-shadow);transform:rotate(-1.5deg)}
+html.scheduleCornerMode .heroMissionTag{display:inline-block;padding:7px 14px;background:var(--ho-ink);color:var(--ho-yellow);font-size:12px;font-weight:950;letter-spacing:.11em}
+html.scheduleCornerMode .heroMissionBubble{position:relative;margin:30px 0 60px;padding:27px 12px 23px;background:var(--ho-paper);border:4px solid var(--ho-ink);box-shadow:5px 6px 0 var(--ho-ink);transform:rotate(-3deg);text-align:center}
+html.scheduleCornerMode .heroMissionBubble:before{content:"";position:absolute;right:29px;bottom:-37px;width:52px;height:52px;border-right:4px solid var(--ho-ink);border-bottom:4px solid var(--ho-ink);background:var(--ho-paper);transform:skew(27deg) rotate(18deg);z-index:-1}
+html.scheduleCornerMode .heroMissionBubble strong{font-size:clamp(23px,3vw,40px);font-weight:1000;font-style:italic;line-height:1.02;letter-spacing:-.072em;color:var(--ho-hot);-webkit-text-stroke:1px var(--ho-ink);text-shadow:3px 4px 0 var(--ho-ink)}
+html.scheduleCornerMode .heroMissionIntro{margin:0 0 12px;font-size:13px;line-height:1.5;font-weight:850}
+html.scheduleCornerMode .scheduleDateNav{position:relative;left:auto;top:auto;transform:none;margin:0;display:grid;grid-template-columns:28px minmax(0,1fr) 28px;gap:4px;width:100%;height:auto;z-index:2}
+html.scheduleCornerMode .scheduleDateNav .dateStrip{grid-column:2;grid-row:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));min-width:0;gap:3px}
+html.scheduleCornerMode .scheduleDateNav>button{height:61px;min-height:61px;width:28px;min-width:0;padding:0;display:grid;place-items:center;border:2px solid var(--ho-ink);border-radius:0;background:var(--ho-paper);color:#000}
+html.scheduleCornerMode .scheduleDateNav>button svg{width:14px;stroke-width:3}
+html.scheduleCornerMode .scheduleDateNav .dateBtn{width:100%;min-width:0;height:61px;min-height:61px;padding:6px 1px;border:2px solid var(--ho-ink)!important;border-radius:0;background:var(--ho-paper);color:var(--ho-ink);box-shadow:2px 3px 0 var(--ho-ink);font:800 10px/1.1 "Office Demo Grotesk",sans-serif;letter-spacing:-.02em}
+html.scheduleCornerMode .scheduleDateNav .dateBtn small{font-size:10px;font-weight:850;letter-spacing:-.01em}
+html.scheduleCornerMode .scheduleDateNav .dateBtn .scheduleDateLabel{font-size:10px;font-weight:950;letter-spacing:-.035em}
+html.scheduleCornerMode .scheduleDateNav .dateBtn.active{background:var(--ho-hot);color:#000;border-color:var(--ho-ink)!important;box-shadow:3px 4px 0 #000}
+html.scheduleCornerMode .heroMissionLegend{display:grid;gap:9px;margin-top:27px;color:#171717;font-size:14px;font-weight:750}
+html.scheduleCornerMode .heroMissionLegend span{display:flex;align-items:center;gap:9px}
+html.scheduleCornerMode .heroMissionLegend b{width:24px;height:24px;display:grid;place-items:center;background:#000;color:var(--ho-yellow);font-size:14px}
+html.scheduleCornerMode .heroMissionFooter{position:absolute;left:0;right:0;bottom:15px;padding:17px 8px;border-top:3px solid #000;border-bottom:3px solid #000;background:var(--ho-hot);text-align:center;font-size:clamp(13px,1.35vw,18px);font-weight:1000;font-style:italic;letter-spacing:-.04em;transform:skewY(-3deg)}
+html.scheduleCornerMode .scheduleStage{position:relative;min-width:0;padding:62px 14px 30px!important;border:4px solid #181818;background:var(--ho-paper);box-shadow:var(--ho-shadow);transform:rotate(.65deg)}
+html.scheduleCornerMode .scheduleStage:before{content:"ARC XI MATCH SCANNER";position:absolute;left:17px;top:17px;padding:7px 12px;background:#181818;color:var(--ho-yellow);font-size:12px;letter-spacing:.07em;font-weight:950}
+html.scheduleCornerMode .scheduleStage:after{content:"★ READY FOR KICKOFF";position:absolute;right:16px;top:23px;color:#181818;font-size:10px;font-weight:950;letter-spacing:-.02em}
+html.scheduleCornerMode .scheduleBoardRoute .statusBanner{position:relative;margin:0 12px 16px;padding:12px;border:3px solid #181818;background:#fff;color:#181818;border-radius:0;font-size:12px}
+html.scheduleCornerMode .scheduleBoardRoute .statusBanner *{color:#181818}
+html.scheduleCornerMode .scheduleTop{padding:14px 11px 18px!important;border:3px solid #181818!important;background:var(--ho-hot);background-image:conic-gradient(#ef00a8 25%,#ff1bbd 0 50%,#ef00a8 0 75%,#ff1bbd 0);background-size:33px 33px}
+html.scheduleCornerMode .scheduleToolbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin:0!important}
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters{position:static;left:auto;transform:none;display:flex;flex:1 1 auto;flex-wrap:wrap;gap:6px;width:auto}
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button{min-height:44px!important;padding:0 11px;border:3px solid #181818;border-radius:0;background:var(--ho-paper);color:#181818;letter-spacing:-.03em;font-size:11px;font-weight:950;box-shadow:3px 4px 0 #181818}
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button.active{background:var(--ho-yellow);color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button[data-status-filter=live].active{background:var(--ho-yellow);color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button b{background:#181818;color:var(--ho-yellow);height:19px;min-width:20px;font-size:11px}
+html.scheduleCornerMode .scheduleSearch{flex:1 1 220px;min-width:0;max-width:none;min-height:44px;margin:0!important;padding:0 10px;border:3px solid #181818;border-radius:0;background:var(--ho-paper);box-shadow:3px 4px 0 #181818}
+html.scheduleCornerMode .scheduleSearch input{font-size:12px;color:#181818;font-weight:750}
+html.scheduleCornerMode .scheduleSearch input::placeholder{color:#505050;opacity:1}
+html.scheduleCornerMode .scheduleSearch svg{color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleMatchSection{margin:10px 0 0!important;padding:9px 11px 14px;border:3px solid #181818;background:var(--ho-paper)}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionGroup{background:var(--ho-paper)}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead{min-height:42px;padding:8px 10px;gap:8px;grid-template-columns:25px minmax(0,1fr) auto 17px;border:0;border-bottom:3px solid #181818;background:var(--ho-yellow)}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead>strong{color:#181818;font-size:13px;font-weight:1000;letter-spacing:-.025em}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead>span:not(.competitionMark){color:#181818;font-size:10px;font-weight:850}
+html.scheduleCornerMode .scheduleCompetitionHead svg{color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleMatchCard{background:#fff!important;border:0;border-bottom:2px solid #181818}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture{padding:7px 7px;min-height:67px;grid-template-columns:104px minmax(0,1fr) 14px;gap:8px;color:#181818;background:#fff}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture:hover,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleMatchCard:focus-within{background:var(--ho-yellow)!important}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTime>strong{color:#181818;font-size:12px;font-weight:950}
+html.scheduleCornerMode .scheduleRank{color:#181818;font-size:12px;font-weight:1000}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTime .fixtureStatus{color:#181818;background:var(--ho-yellow);border:2px solid #181818;border-radius:0;min-width:57px;min-height:23px;font-size:9px;font-weight:950;letter-spacing:0}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTime .fixtureStatus.live{background:var(--ho-hot);color:#181818;box-shadow:none}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span{font-size:12px;color:#181818;font-weight:900;line-height:1.2}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleScore strong{font-size:15px;color:#181818;font-weight:950}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleScore small{font-size:10px;color:#7d1256;font-weight:900}
+html.scheduleCornerMode .scheduleBoardRoute .is-live-row .scheduleScore strong{font-size:19px;color:#9d004f}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleArrow{color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFooter{position:static;min-height:44px;margin-top:15px;color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFooter small{font-size:10px;font-weight:950;letter-spacing:.14em;color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .emptyState{background:var(--ho-yellow);border:3px solid #181818;padding:20px;min-height:165px;color:#181818}
+html.scheduleCornerMode .scheduleBoardRoute .emptyState strong{color:#181818;font-weight:950}
+html.scheduleCornerMode .scheduleBoardRoute .emptyState span{color:#181818;font-size:12px}
+html.scheduleCornerMode .scheduleBoardRoute .emptyAction{background:#181818;border:2px solid #181818;border-radius:0;color:#fff;font-weight:950}
+html.scheduleCornerMode .schedulePlaceholder{background:#cfc7c1}
+
+html.scheduleCornerMode .iveCornerArtwork{object-fit:contain}
+html.scheduleCornerMode .scheduleMenuPanel a:focus-visible,html.scheduleCornerMode .scheduleMenuPanel button:focus-visible,
+html.scheduleCornerMode .scheduleDateNav button:focus-visible,html.scheduleCornerMode .scheduleFixture:focus-visible,
+html.scheduleCornerMode .statusFilters button:focus-visible,html.scheduleCornerMode .scheduleSearch input:focus-visible{outline:3px solid #181818;outline-offset:3px}
+@media(max-width:1120px){
+ html.scheduleCornerMode .heroOfficeGrid{width:calc(100% - 46px);grid-template-columns:minmax(0,40%) minmax(0,60%);gap:24px}
+ html.scheduleCornerMode .heroMissionCard{padding-inline:14px}
+ html.scheduleCornerMode .heroMissionTab{font-size:clamp(15px,1.8vw,22px)}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture{grid-template-columns:85px minmax(0,1fr) 12px;gap:4px}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span{font-size:11px}
+}
+@media(max-width:820px){
+ html.scheduleCornerMode .scheduleHeader{height:68px}
+ html.scheduleCornerMode .scheduleHeaderInner{height:63px;padding:0 16px}
+ html.scheduleCornerMode .scheduleBrand{width:195px}
+ html.scheduleCornerMode .scheduleBrandLogo{height:59px}
+ html.scheduleCornerMode .scheduleHeaderActions{right:12px;top:11px}
+ html.scheduleCornerMode .heroOfficeGrid{width:min(520px,calc(100% - 36px));margin:46px auto 160px;grid-template-columns:minmax(0,1fr);gap:33px}
+ html.scheduleCornerMode .heroMissionCard{min-height:450px;margin:36px 6px 0;padding:22px 18px 79px}
+ html.scheduleCornerMode .heroMissionTab{font-size:22px;height:52px}
+ html.scheduleCornerMode .heroMissionBubble{margin:23px 4px 56px;padding:19px 12px}
+ html.scheduleCornerMode .heroMissionBubble strong{font-size:clamp(26px,7vw,38px)}
+ html.scheduleCornerMode .heroMissionIntro{font-size:12px}
+ html.scheduleCornerMode .scheduleDateNav{grid-template-columns:36px minmax(0,1fr) 36px;gap:4px}
+ html.scheduleCornerMode .scheduleDateNav>button{width:36px;min-height:56px;height:56px}
+ html.scheduleCornerMode .scheduleDateNav .dateBtn{height:56px;min-height:56px}
+ html.scheduleCornerMode .scheduleStage{padding:57px 12px 24px!important;transform:rotate(.4deg)}
+ html.scheduleCornerMode .scheduleBoardRoute .statusFilters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;gap:4px}
+ html.scheduleCornerMode .scheduleBoardRoute .statusFilters button{padding:3px 1px;min-height:50px!important;display:flex;flex-direction:column;font-size:9px;gap:2px}
+ html.scheduleCornerMode .scheduleSearch{flex-basis:100%;width:100%}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture{grid-template-columns:68px minmax(0,1fr) 12px;min-height:78px;padding:8px 4px;gap:3px}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span{font-size:12px}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead{grid-template-columns:24px minmax(0,1fr) 16px}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead>span:not(.competitionMark):not(.scheduleCompetitionLogo){display:none}
+ html.scheduleCornerMode .scheduleTeams{grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr);gap:2px}
+
+}
+@media(max-width:380px){
+ html.scheduleCornerMode .heroOfficeGrid{width:calc(100% - 26px)}
+ html.scheduleCornerMode .heroMissionTab{font-size:19px}
+ html.scheduleCornerMode .heroMissionCard{padding-inline:11px}
+ html.scheduleCornerMode .scheduleDateNav{grid-template-columns:34px minmax(0,1fr) 34px;gap:3px}
+ html.scheduleCornerMode .scheduleDateNav .dateStrip{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+ html.scheduleCornerMode .scheduleDateNav .dateStrip .dateBtn:first-child,
+ html.scheduleCornerMode .scheduleDateNav .dateStrip .dateBtn:last-child{display:none}
+ html.scheduleCornerMode .scheduleDateNav>button{width:34px}
+ html.scheduleCornerMode .scheduleStage{padding-inline:7px!important}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture{grid-template-columns:63px minmax(0,1fr) 10px}
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){html.scheduleCornerMode .heroOfficeGrid *,html.scheduleCornerMode .scheduleStage{animation:none!important;transition:none!important}}
+
+/* Screenshot reconciliation: time/state cannot overrun team columns. */
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTime{
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;min-width:0
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTeams{
+ grid-template-columns:minmax(0,1fr) 45px minmax(0,1fr);gap:7px
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam{gap:6px}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam span{
+ white-space:normal;overflow-wrap:break-word;text-overflow:clip
+}
+@media(max-width:820px){
+ html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand{
+  position:absolute;top:4px;left:50%;margin:0!important;transform:translateX(-50%);
+ }
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleTeams{
+  grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);gap:3px
+ }
+ html.scheduleCornerMode .scheduleBoardRoute .scheduleTeam{gap:3px}
+}
+
+/* Unified ARC XI × IVE masthead: authentic contours, one vector and one baseline. */
+html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand {
+ display:block;position:relative;left:auto;top:auto;
+ width:350px;max-width:calc(100vw - 160px);height:72px;
+ margin:0!important;flex:0 0 auto;transform:none;
+ text-decoration:none;
+}
+html.scheduleCornerMode .scheduleBrand.heroCoBrand .heroCombinedLogo {
+ display:block;width:100%;height:100%;
+ max-width:100%;max-height:100%;object-fit:contain;
+}
+html.scheduleCornerMode .scheduleHeader{border-top:0;border-bottom:5px solid var(--ho-hot);background:#050505}
+html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand:focus-visible{
+ outline:3px solid var(--ho-yellow);outline-offset:2px;
+}
+@media(max-width:820px){
+ html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand{
+  position:absolute;left:calc(50% - 11px);top:50%;
+  transform:translate(-50%,-50%);
+  width:min(270px,calc(100vw - 107px));height:56px;
+ }
+}
+@media(max-width:380px){
+ html.scheduleCornerMode .scheduleHeaderInner .scheduleBrand.heroCoBrand{
+  width:calc(100vw - 108px);height:48px;
+  left:calc(50% - 13px);
+ }
+}
+
+/* IVE approved artwork belongs to the SITE corner, not to the transformed
+   cream fixture panel. Shell renders this once as a sibling of .appFrame. */
+html.scheduleCornerMode .iveCorner.iveCorner--site {
+  display:block;position:fixed;inset:auto 0 0 auto;
+  width:clamp(160px,16vw,245px);height:auto;aspect-ratio:4/3;
+  z-index:4;pointer-events:none;overflow:visible;
+  opacity:1;transform:none;margin:0;
+}
+html.scheduleCornerMode .iveCorner--site .iveCornerPhoto,
+html.scheduleCornerMode .iveCorner--site .iveCornerArtwork {
+  display:block;width:100%;height:100%;object-fit:contain;
+  object-position:right bottom;
+}
+@media(max-width:820px) {
+  html.scheduleCornerMode .iveCorner.iveCorner--site {
+    display:block;right:0;bottom:0;
+    width:clamp(108px,28vw,150px);
+  }
+}
+@media(max-width:380px) {
+  html.scheduleCornerMode .iveCorner.iveCorner--site {width:102px}
+}
+
+/* Complete Girl Hero Union mural, modeled from the actual HERO OFFICE
+   character-card layout and the original downloaded promo illustrations. */
+html.scheduleCornerMode .heroUnion{
+  position:relative;isolation:isolate;z-index:2;box-sizing:border-box;
+  width:100%;margin:0;padding:70px clamp(22px,5.8vw,95px) 32px;
+  background-color:#fff;
+  background-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  background-position:center top;background-repeat:repeat;background-size:330px auto;
+  color:#171717;font-family:"Office Demo Grotesk",Arial,sans-serif;
+}
+html.scheduleCornerMode .heroUnionInner{position:relative;max-width:1370px;margin:0 auto}
+html.scheduleCornerMode .heroUnionTitle{
+ display:table;position:relative;margin:0 0 49px 2.5%;padding:12px 23px 13px;
+ border:3px solid #161616;background:#fff9f3;
+ box-shadow:5px 6px 0 var(--ho-hot);
+ color:#080808;font-size:clamp(17px,2.2vw,29px);font-weight:1000;
+ font-style:italic;letter-spacing:-.065em;line-height:1.1;
+ text-transform:uppercase;transform:rotate(-7deg);
+}
+html.scheduleCornerMode .heroUnionTitle:after{
+ content:"";position:absolute;bottom:-15px;left:25%;
+ width:24px;height:24px;background:#fff9f3;border-right:3px solid #161616;
+ border-bottom:3px solid #161616;transform:skew(18deg) rotate(35deg);z-index:-1;
+}
+html.scheduleCornerMode .heroUnionMobileHint{display:none}
+html.scheduleCornerMode .heroUnionCards{
+ display:flex;align-items:flex-end;justify-content:center;width:100%;
+ height:clamp(325px,32vw,452px);padding:8px 0 0 0;
+ overflow:visible;
+}
+html.scheduleCornerMode .heroUnionCard{
+ position:relative;flex:0 0 19.25%;width:19.25%;height:88%;min-width:0;
+ margin-left:-2.5%;overflow:hidden;box-sizing:border-box;
+ border:4px solid #161616;box-shadow:5px 6px 0 #161616;
+ background-image:radial-gradient(#15151540 .85px, transparent 1px);
+ background-size:7px 7px;transform-origin:50% 85%;
+}
+html.scheduleCornerMode .heroUnionCard:first-child{margin-left:0}
+html.scheduleCornerMode .heroUnionCard:nth-child(2),
+html.scheduleCornerMode .heroUnionCard:nth-child(4){height:100%}
+html.scheduleCornerMode .heroUnionCard.hu-purple{background-color:#bc88dc;transform:rotate(-9deg);z-index:1}
+html.scheduleCornerMode .heroUnionCard.hu-green{background-color:#06c2da;transform:rotate(-3deg);z-index:3}
+html.scheduleCornerMode .heroUnionCard.hu-yellow{background-color:#fff143;transform:rotate(-6deg);z-index:2}
+html.scheduleCornerMode .heroUnionCard.hu-pink{background-color:#f207b0;transform:rotate(5deg);z-index:4}
+html.scheduleCornerMode .heroUnionCard.hu-blue{background-color:#8bc6e4;transform:rotate(-5deg);z-index:3}
+html.scheduleCornerMode .heroUnionCard.hu-red{background-color:#e9b3cf;transform:rotate(8deg);z-index:2}
+html.scheduleCornerMode .heroUnionCard img{
+ display:block;position:absolute;left:50%;bottom:-70%;transform:translateX(-50%);
+ width:auto;height:154%;max-width:none;object-fit:contain;object-position:center bottom;
+ pointer-events:none;
+}
+html.scheduleCornerMode .heroUnionCardLabel{
+ position:absolute;z-index:5;left:8px;top:11px;max-width:95%;
+ background:#111;color:#fff045;padding:5px 7px 4px;
+ font-size:clamp(9px,1.1vw,14px);font-weight:1000;line-height:1;
+ font-style:italic;letter-spacing:-.045em;white-space:nowrap;
+}
+html.scheduleCornerMode .heroUnionGlow{
+ position:absolute;right:-2.5%;top:52px;width:clamp(120px,15vw,199px);
+ aspect-ratio:1/1;display:grid;place-items:center;z-index:8;
+ background:url("./media/ive/hero-union/comic-impact-sticker.webp") center/contain no-repeat;
+ font-size:clamp(25px,3vw,48px);font-weight:1000;font-style:italic;
+ letter-spacing:-.07em;color:#111;text-shadow:2px 2px 0 #fff12f;transform:rotate(-9deg);
+}
+html.scheduleCornerMode .heroUnionNote{
+ position:absolute;z-index:8;right:0;bottom:82px;
+ display:grid;gap:4px;padding:12px 18px;border:3px solid #111;
+ box-shadow:4px 6px 0 #111;background:#fff9f3;transform:rotate(-5deg);
+ font-size:clamp(12px,1.4vw,18px);font-weight:950;font-style:italic;letter-spacing:-.055em;
+}
+html.scheduleCornerMode .heroUnionNote strong{font-weight:1000}
+html.scheduleCornerMode .heroUnionFooter{
+ margin:112px 0 0;border-top:3px solid #111;padding:15px 3%;
+ min-height:84px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+html.scheduleCornerMode .heroUnionFooter img{display:block;object-fit:contain;max-height:58px;max-width:35%}
+html.scheduleCornerMode .heroUnionFooter img:last-child{width:190px;max-height:57px}
+@media(max-width:980px) and (min-width:701px){
+ html.scheduleCornerMode .heroUnion{padding-inline:35px}
+ html.scheduleCornerMode .heroUnionCard{flex-basis:20%;width:20%;margin-left:-3%}
+ html.scheduleCornerMode .heroUnionGlow{right:0;width:135px}
+ html.scheduleCornerMode .heroUnionNote{bottom:73px}
+}
+@media(max-width:700px){
+ html.scheduleCornerMode .heroUnion{padding:54px 0 24px;background-size:250px auto}
+ html.scheduleCornerMode .heroUnionTitle{
+  margin-left:22px;margin-bottom:21px;
+  font-size:20px;padding:10px 15px;
+ }
+ html.scheduleCornerMode .heroUnionMobileHint{
+  display:block;margin:20px 19px 5px;color:#171717;
+  font-size:11px;font-weight:1000;letter-spacing:.035em;
+ }
+ html.scheduleCornerMode .heroUnionCards{
+  height:auto;min-height:424px;width:100%;
+  justify-content:flex-start;align-items:center;gap:16px;
+  overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  scroll-padding-inline:24px;overscroll-behavior-inline:contain;
+  -webkit-overflow-scrolling:touch;padding:24px 23px 28px;
+ }
+ html.scheduleCornerMode .heroUnionCard,
+ html.scheduleCornerMode .heroUnionCard:nth-child(2),
+ html.scheduleCornerMode .heroUnionCard:nth-child(4){
+  flex:0 0 215px;width:215px;height:350px;
+  margin-left:0;scroll-snap-align:start;
+  transform:rotate(-2deg);
+ }
+ html.scheduleCornerMode .heroUnionCard:nth-child(2n){transform:rotate(2deg)}
+ html.scheduleCornerMode .heroUnionCard img{height:155%;bottom:-67%}
+ html.scheduleCornerMode .heroUnionCardLabel{font-size:12px}
+ html.scheduleCornerMode .heroUnionGlow{
+  top:25px;right:7px;width:93px;font-size:25px;transform:rotate(-7deg)
+ }
+ html.scheduleCornerMode .heroUnionNote{
+  position:relative;right:auto;bottom:auto;
+  margin:0 22px 40px auto;width:max-content;max-width:calc(100% - 44px);
+  font-size:15px;padding:9px 12px;transform:rotate(-3deg);
+ }
+ html.scheduleCornerMode .heroUnionFooter{
+  min-height:69px;margin:38px 20px 0;padding:13px 2px;gap:20px
+ }
+ html.scheduleCornerMode .heroUnionFooter img{max-height:44px}
+ html.scheduleCornerMode .heroUnionFooter img:last-child{width:140px;max-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ html.scheduleCornerMode .heroUnionCards{scroll-behavior:auto}
+}
+
+/* Reference comparison polish: soften the source pattern to pale pink,
+   expose all six faces, and keep monochrome footer marks legible. */
+html.scheduleCornerMode .heroUnion:before{
+  content:"";position:absolute;inset:0;background:rgba(255,255,255,.72);
+  z-index:-1;pointer-events:none;
+}
+html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(215px,20vw,310px)}
+html.scheduleCornerMode .heroUnionFooter img:first-child{filter:brightness(0)}
+html.scheduleCornerMode .heroUnionFooter img:last-child{filter:brightness(0)}
+html.scheduleCornerMode .heroUnionCards:focus-visible{
+  outline:3px solid #111;outline-offset:-3px;
+}
+@media(max-width:700px){
+  html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(100px,30vw,140px);gap:8px}
+  html.scheduleCornerMode .heroUnionFooter img:first-child{width:80px}
+  html.scheduleCornerMode .heroUnionFooter img:last-child{width:128px}
+}
+
+
+/* Reference-led reconstruction v8. Original screenshot at 1440x900 / 390x844.
+ * UI remains real DOM; no screenshot slice is used for the union or footer.
+ * Noka is commercial; use OFL Archivo Black + Racing Sans One rather than
+ * copying the source site's unlicensed font binaries. */
+@font-face {
+  font-family:"Hero Display OFL";
+  src:url("./media/fonts/ArchivoBlack-Regular.ttf") format("truetype");
+  font-style:normal;font-weight:900;font-display:swap;
+}
+@font-face {
+  font-family:"Hero Action OFL";
+  src:url("./media/fonts/RacingSansOne-Regular.ttf") format("truetype");
+  font-style:normal;font-weight:900;font-display:swap;
+}
+html.scheduleCornerMode body {
+  background:#fff!important;
+  background-image:none!important;
+  isolation:isolate;
+}
+html.scheduleCornerMode body::before {
+  content:"";position:absolute;inset:0;z-index:0;
+  background-color:#f8b3df;opacity:.6;pointer-events:none;
+  -webkit-mask-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  mask-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  -webkit-mask-size:1440px auto;mask-size:1440px auto;
+  -webkit-mask-repeat:repeat;mask-repeat:repeat;
+  -webkit-mask-position:center top;mask-position:center top;
+}
+html.scheduleCornerMode .scheduleBoardRoute.appFrame {position:relative;z-index:1}
+html.scheduleCornerMode .heroMissionTab,
+html.scheduleCornerMode .heroMissionFooter,
+html.scheduleCornerMode .scheduleStage:before,
+html.scheduleCornerMode .heroUnionCardLabel,
+html.scheduleCornerMode .heroUnionTitle,
+html.scheduleCornerMode .heroUnionNote,
+html.scheduleCornerMode .heroUnionGlow {
+  font-family:"Hero Action OFL","Office Demo Grotesk",Arial,sans-serif;
+  font-weight:900;
+}
+html.scheduleCornerMode .scheduleStage:before,
+html.scheduleCornerMode .heroMissionTag,
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead>strong {
+  font-family:"Hero Display OFL","Office Demo Grotesk",sans-serif;
+  letter-spacing:-.055em;
+}
+html.scheduleCornerMode .heroMissionBubble strong {
+  font-family:"Hero Display OFL","Office Demo Grotesk",sans-serif;
+  font-weight:900;font-style:italic;
+  font-size:clamp(28px,2.9vw,43px);line-height:1.2;
+  letter-spacing:-.085em;color:#f706b1;
+  -webkit-text-stroke:2px #0a0a0a;
+  paint-order:stroke fill;
+  text-shadow:5px 6px 0 #080808;
+  display:block;transform:skew(-6deg);
+}
+html.scheduleCornerMode .heroMissionBubble {
+  padding:26px 11px 30px;margin:32px 0 52px;
+  transform:rotate(-4deg);
+  background:#fffaf3;
+}
+html.scheduleCornerMode .heroMissionTab {
+  background-image:radial-gradient(#fff5 .9px,transparent 1.1px);
+  background-size:7px 7px;
+  font-size:clamp(17px,1.75vw,26px);text-shadow:2px 3px 0 #000;
+  letter-spacing:-.035em;
+}
+html.scheduleCornerMode .heroMissionCard {
+  background-size:7px 7px;
+  min-height:575px;margin-top:36px;padding-bottom:78px;
+}
+html.scheduleCornerMode .heroMissionStep {
+  display:grid;grid-template-columns:34px minmax(0,1fr);gap:13px;
+  align-items:center;margin:14px 0;
+  font-family:"Office Demo Grotesk",Arial,sans-serif;
+  font-size:13px;line-height:1.5;
+}
+html.scheduleCornerMode .heroMissionStep>b {
+  display:grid;place-items:center;width:34px;height:34px;
+  background:#151515;color:#fff43a;
+  font:900 16px/1 "Hero Display OFL","Office Demo Grotesk",sans-serif;
+  transform:rotate(-4deg);
+}
+html.scheduleCornerMode .heroMissionStep p{margin:0}
+html.scheduleCornerMode .heroMissionStep strong{font-weight:1000}
+html.scheduleCornerMode .heroMissionStepsAfter{margin-top:14px}
+html.scheduleCornerMode .heroMissionFooter {
+  bottom:23px;background-image:radial-gradient(#1114 1px,transparent 1px);
+  background-size:7px 7px;font-size:clamp(14px,1.25vw,19px);
+}
+html.scheduleCornerMode .scheduleStage {
+  background-color:#faf7f0;
+  transform:rotate(1deg);
+  box-shadow:7px 10px 0 #161616;
+}
+html.scheduleCornerMode .scheduleStage:after{font-family:"Hero Display OFL","Office Demo Grotesk",sans-serif}
+html.scheduleCornerMode .scheduleTop {
+  position:relative;
+  min-height:198px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:82px 14px 18px!important;
+  background-size:37px 37px;
+}
+html.scheduleCornerMode .scheduleTop:before {
+  content:"★ MATCHDAY SCANNER!";
+  position:absolute;left:14px;top:16px;pointer-events:none;
+  color:#fff345;-webkit-text-stroke:1px #0c0c0c;
+  font:900 italic clamp(27px,3vw,42px)/1 "Hero Action OFL","Office Demo Grotesk",sans-serif;
+  letter-spacing:-.055em;text-shadow:4px 5px 0 #0c0c0c;
+  transform:rotate(-3deg);
+}
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead>strong {
+  font-size:clamp(11px,1vw,14px);
+}
+@media(min-width:821px){
+  html.scheduleCornerMode .heroOfficeGrid {
+    width:min(1320px,calc(100% - 120px));
+    grid-template-columns:minmax(0,480px) minmax(0,1fr);
+    gap:55px;margin-top:76px;
+  }
+  html.scheduleCornerMode .scheduleStage{margin-top:83px}
+}
+@media(max-width:820px){
+  html.scheduleCornerMode body::before {
+    -webkit-mask-size:930px auto;mask-size:930px auto;
+  }
+  html.scheduleCornerMode .heroMissionBubble strong {
+    font-size:clamp(23px,6.3vw,33px);
+    -webkit-text-stroke:1.5px #111;text-shadow:3px 4px 0 #111;
+  }
+  html.scheduleCornerMode .heroMissionCard {
+    min-height:570px;padding-bottom:87px;
+  }
+  html.scheduleCornerMode .heroMissionTab{font-size:clamp(17px,4.8vw,22px)}
+  html.scheduleCornerMode .heroMissionStep{font-size:12px;margin:12px 0;gap:9px}
+  html.scheduleCornerMode .heroMissionStep>b{width:30px;height:30px;font-size:13px}
+  html.scheduleCornerMode .scheduleStage{margin-top:9px}
+  html.scheduleCornerMode .scheduleTop{min-height:204px;padding:75px 7px 12px!important}
+  html.scheduleCornerMode .scheduleTop:before{top:15px;left:12px;font-size:29px}
+}
+/* Genuine original vector art as separate DOM elements. The footer is layout,
+ * not a screenshot crop or a giant image pasted onto the page. */
+html.scheduleCornerMode .heroUnion{
+  overflow:clip;background:#fff;background-image:none!important;
+  padding:48px clamp(20px,4.2vw,64px) 32px;
+}
+html.scheduleCornerMode .heroUnion::before {
+  content:"";position:absolute;inset:0;z-index:0;
+  background:#f5b2dd;opacity:.52;pointer-events:none;
+  -webkit-mask-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  mask-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  -webkit-mask-size:1440px auto;mask-size:1440px auto;
+  -webkit-mask-repeat:repeat;mask-repeat:repeat;
+}
+html.scheduleCornerMode .heroUnionInner{position:relative;z-index:1;max-width:1320px}
+html.scheduleCornerMode .heroUnionTitle{
+  margin:0 0 24px 18px;padding:12px 18px;
+  background:#fff;font-size:clamp(19px,2.1vw,31px);
+  box-shadow:5px 7px 0 #f706b1;
+  transform:rotate(-7deg);
+}
+html.scheduleCornerMode .heroUnionCards {
+  height:390px;padding:0 18px 0;
+  margin:0 auto;align-items:flex-end;overflow:visible;
+}
+html.scheduleCornerMode .heroUnionCard {
+  flex-basis:19%;width:19%;height:335px;margin-left:-2.3%;
+  border:4px solid #111;box-shadow:5px 7px 0 #111;
+}
+html.scheduleCornerMode .heroUnionCard:nth-child(2),
+html.scheduleCornerMode .heroUnionCard:nth-child(4){height:378px}
+html.scheduleCornerMode .heroUnionCard img{
+  width:auto;height:154%;bottom:-69%;
+}
+html.scheduleCornerMode .heroUnionCardLabel{
+  top:10px;left:9px;font-size:clamp(10px,.85vw,13px);
+  padding:5px 7px;white-space:nowrap;
+}
+html.scheduleCornerMode .heroUnionGlow{top:-19px;right:-8px;width:177px;font-size:43px}
+html.scheduleCornerMode .heroUnionNote{
+  bottom:35px;right:-8px;
+  font-size:18px;padding:8px 15px;
+}
+html.scheduleCornerMode .heroUnionFooter {
+  margin:128px 0 0;min-height:92px;padding:13px 0;
+  border-top:3px solid #171717;
+  background:#fff;display:flex;gap:20px;
+  justify-content:space-between;align-items:center;
+}
+html.scheduleCornerMode .heroUnionFooter img{
+  display:block;max-height:47px;max-width:260px;
+  height:auto;width:auto;object-fit:contain;filter:brightness(0);
+}
+html.scheduleCornerMode .heroUnionFooter img:last-child{
+  width:174px;max-height:47px;
+}
+html.scheduleCornerMode .heroUnionMobileHint{display:none}
+@media(max-width:700px){
+  html.scheduleCornerMode .heroUnion{
+    padding:38px 0 19px;overflow:hidden;
+  }
+  html.scheduleCornerMode .heroUnion::before{
+    -webkit-mask-size:930px auto;mask-size:930px auto;
+  }
+  html.scheduleCornerMode .heroUnionTitle{
+    margin:0 0 8px 20px;font-size:19px;padding:10px 12px;
+  }
+  html.scheduleCornerMode .heroUnionCards {
+    display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+    grid-template-rows:220px 220px;
+    width:100%;height:488px;min-height:0;
+    padding:36px 14px 0;gap:0;
+    justify-content:stretch;align-items:start;
+    overflow:visible;scroll-snap-type:none;
+  }
+  html.scheduleCornerMode .heroUnionCard,
+  html.scheduleCornerMode .heroUnionCard:nth-child(2),
+  html.scheduleCornerMode .heroUnionCard:nth-child(4){
+    grid-column:span 2;min-width:0;flex:none;
+    width:110%;height:208px;margin-left:-5%;
+    overflow:hidden;scroll-snap-align:none;
+    box-shadow:3px 5px 0 #111;
+  }
+  html.scheduleCornerMode .heroUnionCard:nth-child(1){transform:rotate(-10deg);z-index:1}
+  html.scheduleCornerMode .heroUnionCard:nth-child(2){transform:rotate(4deg);z-index:3}
+  html.scheduleCornerMode .heroUnionCard:nth-child(3){transform:rotate(10deg);z-index:2}
+  html.scheduleCornerMode .heroUnionCard:nth-child(4){transform:rotate(-8deg);z-index:1}
+  html.scheduleCornerMode .heroUnionCard:nth-child(5){transform:rotate(4deg);z-index:3}
+  html.scheduleCornerMode .heroUnionCard:nth-child(6){transform:rotate(8deg);z-index:2}
+  html.scheduleCornerMode .heroUnionCard img{height:157%;bottom:-67%}
+  html.scheduleCornerMode .heroUnionCardLabel{
+    font-size:clamp(7px,2.2vw,10px);top:7px;left:4px;padding:4px 3px;
+    letter-spacing:-.035em;
+  }
+  html.scheduleCornerMode .heroUnionGlow{
+    top:2px;right:12px;width:113px;font-size:26px;z-index:7;
+  }
+  html.scheduleCornerMode .heroUnionNote{
+    position:absolute;right:18px;bottom:72px;margin:0;
+    font-size:12px;padding:7px 9px;transform:rotate(-6deg);
+  }
+  html.scheduleCornerMode .heroUnionFooter{
+    margin:42px 0 0;padding:14px 20px;gap:18px;min-height:82px;
+  }
+  html.scheduleCornerMode .heroUnionFooter img:first-child{
+    width:73px;max-width:27%;max-height:38px;
+  }
+  html.scheduleCornerMode .heroUnionFooter img:last-child{
+    width:134px;max-width:43%;max-height:39px;
+  }
+}
+@media(max-width:380px){
+  html.scheduleCornerMode .heroUnionCards{
+    grid-template-rows:198px 198px;height:448px;
+  }
+  html.scheduleCornerMode .heroUnionCard,
+  html.scheduleCornerMode .heroUnionCard:nth-child(2),
+  html.scheduleCornerMode .heroUnionCard:nth-child(4){height:190px}
+}
+
+
+/* Keep the actual two SVG footer marks legible beside the always-on site artwork. */
+@media(min-width:701px){
+  html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(205px,16vw,240px)}
+}
+@media(max-width:700px){
+  html.scheduleCornerMode .heroUnionFooter{padding-right:clamp(108px,28vw,128px)}
+}
+
+
+/* v9 visual screenshot correction:
+   Original repeats small pink symbols; SVG's 2182px viewBox must NOT be
+   rendered at 1440px (that turns each icon into a huge foreground object).
+   Keep the original IVE vector contours but make a restrained tile. */
+html.scheduleCornerMode body::before,
+html.scheduleCornerMode .heroUnion::before {
+  -webkit-mask-size:465px auto;mask-size:465px auto;
+  opacity:.43;
+}
+@media(min-width:701px){
+  html.scheduleCornerMode .heroUnionFooter{margin-top:166px}
+  html.scheduleCornerMode .heroUnionNote{bottom:200px;right:0}
+}
+@media(max-width:820px){
+  html.scheduleCornerMode body::before,
+  html.scheduleCornerMode .heroUnion::before{
+    -webkit-mask-size:385px auto;mask-size:385px auto;
+    opacity:.38;
+  }
+}
+@media(max-width:700px){
+  html.scheduleCornerMode .heroUnionCards{
+    grid-template-rows:202px 202px;
+    height:438px;padding:4px 13px 0;
+  }
+  html.scheduleCornerMode .heroUnionFooter{margin-top:56px}
+  html.scheduleCornerMode .heroUnionNote{bottom:140px}
+}
+@media(max-width:380px){
+  html.scheduleCornerMode .heroUnionCards{grid-template-rows:188px 188px;height:411px}
+  html.scheduleCornerMode .heroUnionNote{bottom:135px}
+}
+
+
+/* v10 SOURCE MEASURED background: screenshot forensics from official
+   ive-herooffice.com computed ::before styles, not hand-tuned opacity/tiles.
+   One continuous motif behind both matchday and Girl Hero Union. */
+@font-face{
+  font-family:"Hero Pretendard OFL";
+  src:url("./media/fonts/PretendardVariable.woff2") format("woff2");
+  font-weight:100 900;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:"Hero Noka Fallback OFL";
+  src:url("./media/fonts/Kanit-Italic.ttf") format("truetype");
+  font-weight:100 900;font-style:italic;font-display:swap;
+}
+@font-face{
+  font-family:"Hero Noka Fallback OFL";
+  src:url("./media/fonts/Kanit-Regular.ttf") format("truetype");
+  font-weight:100 900;font-style:normal;font-display:swap;
+}
+/* Source uses licensed Noka 900 italic / Pretendard supporting text.
+   When user supplies a licensed Adobe Fonts Web Project, its noka family
+   will take precedence. No Noka binaries or source owner's kit copied. */
+html.scheduleCornerMode,
+html.scheduleCornerMode body{
+  background:#fff!important;
+  font-family:"Hero Pretendard OFL","Office Demo Grotesk",sans-serif!important;
+}
+html.scheduleCornerMode body{
+  position:relative;isolation:isolate;min-height:100%;
+  background-image:none!important;
+}
+html.scheduleCornerMode body::before{
+  content:"";display:block;
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(
+    180deg,
+    rgb(253,2,185) 0%,
+    rgb(253,2,185) 35%,
+    rgba(253,2,185,.5) 60%,
+    rgba(0,0,0,0) 85%
+  )!important;
+  opacity:.2!important;
+  -webkit-mask-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  mask-image:url("./media/ive/hero-union/hero-symbol-pattern.svg");
+  -webkit-mask-size:467px auto!important;mask-size:467px auto!important;
+  -webkit-mask-position:50% 0%!important;mask-position:50% 0%!important;
+  -webkit-mask-repeat:repeat!important;mask-repeat:repeat!important;
+}
+html.scheduleCornerMode .heroUnion::before{display:none!important;content:none!important}
+html.scheduleCornerMode .heroUnion{
+  background-color:transparent!important;
+  background-image:none!important;
+  position:relative;z-index:1;
+}
+html.scheduleCornerMode .heroOfficeGrid{position:relative;z-index:1}
+html.scheduleCornerMode .heroMissionStep,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleFixture,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleSearch input,
+html.scheduleCornerMode .heroMissionIntro,
+html.scheduleCornerMode .heroMissionLegend,
+html.scheduleCornerMode .heroUnionMobileHint {
+  font-family:"Hero Pretendard OFL","Office Demo Grotesk",sans-serif!important;
+}
+html.scheduleCornerMode .heroMissionTab,
+html.scheduleCornerMode .heroMissionBubble strong,
+html.scheduleCornerMode .heroMissionFooter,
+html.scheduleCornerMode .scheduleStage::before,
+html.scheduleCornerMode .scheduleTop::before,
+html.scheduleCornerMode .heroUnionTitle,
+html.scheduleCornerMode .heroUnionCardLabel,
+html.scheduleCornerMode .heroUnionNote,
+html.scheduleCornerMode .heroUnionGlow{
+  font-family:"noka","Hero Noka Fallback OFL","Hero Display OFL",sans-serif!important;
+  font-weight:900!important;
+  font-style:italic!important;
+}
+/* Exact source uses Noka with 900 italic and -0.7px title tracking.
+   The open-source fallback deliberately follows these metrics. */
+html.scheduleCornerMode .heroMissionBubble strong{
+  letter-spacing:-1px!important;
+  font-size:clamp(27px,2.85vw,41px)!important;
+  line-height:1.18!important;
+}
+html.scheduleCornerMode .heroMissionTab{
+  letter-spacing:-.7px!important;
+}
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead strong,
+html.scheduleCornerMode .heroMissionTag{
+  font-family:"noka","Hero Noka Fallback OFL","Hero Pretendard OFL",sans-serif!important;
+  font-weight:900!important;
+}
+@media(max-width:820px){
+  html.scheduleCornerMode .heroMissionBubble strong{font-size:clamp(25px,6.4vw,33px)!important}
+}
+
+
+/* v10.1 optical correction against captured official Noka 900 italic.
+   Kanit is geometrically related but noticeably too light for the comic UI.
+   Prefer the heavier OFL Archivo Black synthetic oblique until a licensed
+   Noka Web Project is configured; original Noka always takes precedence. */
+html.scheduleCornerMode .heroMissionTab,
+html.scheduleCornerMode .heroMissionBubble strong,
+html.scheduleCornerMode .heroMissionFooter,
+html.scheduleCornerMode .scheduleStage::before,
+html.scheduleCornerMode .scheduleTop::before,
+html.scheduleCornerMode .heroUnionTitle,
+html.scheduleCornerMode .heroUnionCardLabel,
+html.scheduleCornerMode .heroUnionNote,
+html.scheduleCornerMode .heroUnionGlow,
+html.scheduleCornerMode .heroMissionTag,
+html.scheduleCornerMode .scheduleBoardRoute .statusFilters button,
+html.scheduleCornerMode .scheduleBoardRoute .scheduleCompetitionHead strong{
+  font-family:"noka","Hero Display OFL","Hero Noka Fallback OFL",sans-serif!important;
+  font-weight:900!important;
+}
+html.scheduleCornerMode .heroMissionTab,
+html.scheduleCornerMode .heroMissionBubble strong,
+html.scheduleCornerMode .heroMissionFooter,
+html.scheduleCornerMode .scheduleTop::before,
+html.scheduleCornerMode .heroUnionTitle,
+html.scheduleCornerMode .heroUnionCardLabel,
+html.scheduleCornerMode .heroUnionNote,
+html.scheduleCornerMode .heroUnionGlow{
+  font-style:italic!important;
+}
+html.scheduleCornerMode .heroUnionTitle{
+  background-image:radial-gradient(rgba(17,17,17,.12) 1px,transparent 1.2px);
+  background-size:6px 6px;
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 12 530 106" role="img" aria-labelledby="title desc">
+<title id="title">ARC XI × IVE</title>
+<desc id="desc">ARC XI original wordmark, multiplication symbol, and official IVE star wordmark on a shared optical baseline.</desc>
+<!-- Position the unmodified IVE artwork contours and the established ARC XI contours on a common cap-height and baseline. -->
+<g transform="translate(12 14) scale(1.2)">
+<g fill="#fff12f" fill-rule="evenodd">
+<path d="M2 72 19 32h30l17 40H42l-1-3H26l-1 3H2Zm29-15h6l-2-10h-2l-2 10Z"/>
+<path d="M68 32h41c8 0 11 5 11 12 0 8-4 11-10 14l11 3v11H97l-7-10v10H68V32Zm22 12v5h7v-5h-7Z"/>
+<path d="M143 32h26v18h-25c-1 0-2 1-2 2s1 2 2 2h25v18h-34c-9 0-13-9-13-20s6-20 21-20Z"/>
+<path d="M231 32h23v40h-23Z"/>
+</g>
+<path fill="#f708b0" d="m185 29 15 13L249 2l-39 49 11 11-18-1-7 15-4-17h-14l12-9Z"/>
+</g>
+<path d="M338 70 360 92 M360 70 338 92" stroke="#f7a9dd" stroke-width="6.5" fill="none" stroke-linecap="square"/>
+<g transform="translate(381 29) scale(0.34)">
+<path fill="#fff" d="M133,72 L134,80 L138,93 L138,97 L142,110 L142,114 L146,127 L146,131 L150,144 L150,148 L155,165 L155,169 L156,170 L165,209 L251,209 L283,72 L218,72 L217,92 L216,93 L216,105 L215,106 L215,117 L214,118 L214,130 L213,131 L213,143 L212,144 L212,155 L211,156 L211,168 L210,169 L210,178 L209,179 L206,178 L206,171 L205,170 L205,159 L204,158 L204,146 L203,145 L203,133 L202,132 L202,121 L201,120 L201,108 L200,107 L198,72Z"/>
+<path fill="#fff" d="M289,72 L289,209 L382,209 L382,166 L343,179 L331,184 L329,183 L331,180 L336,178 L338,176 L343,174 L345,172 L350,170 L382,151 L382,99 L320,164 L318,163 L353,112 L375,82 L379,75 L382,72Z"/>
+<path fill="#fff" d="M135,121 L128,125 L126,125 L129,127 L132,131 L131,135 L127,138 L104,136 L75,150 L68,173 L64,177 L59,177 L57,175 L55,171 L53,161 L48,164 L48,209 L135,209Z"/>
+<path fill="#fff12f" stroke="#ad197c" stroke-width="2.4" stroke-linejoin="round" d="M151,8 L147,10 L67,84 L65,84 L30,56 L28,56 L42,105 L9,129 L8,131 L49,130 L61,172 L63,172 L76,131 L78,129 L126,133 L125,130 L94,109 L91,106 L91,104 L139,29Z"/>
+</g>
+</svg>

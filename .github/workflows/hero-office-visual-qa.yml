@@ -1,0 +1,76 @@
+name: HERO OFFICE Reference Visual QA (draft demo only)
+
+on:
+  pull_request:
+    paths:
+      - "pages/**"
+      - "scripts/hero-office-demo/**"
+      - ".github/workflows/hero-office-visual-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reference-comparison:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install headless browser
+        run: |
+          mkdir -p /tmp/hero-browser
+          npm install --prefix /tmp/hero-browser --no-audit --no-fund --no-save puppeteer-core@24
+          which google-chrome || which chromium
+      - name: Retrieve licensed display fonts
+        run: |
+          set -euxo pipefail
+          root=https://raw.githubusercontent.com/google/fonts/main/ofl
+          mkdir -p pages/media/fonts
+          curl -fsSL --retry 3 "$root/archivoblack/ArchivoBlack-Regular.ttf" -o pages/media/fonts/ArchivoBlack-Regular.ttf
+          curl -fsSL --retry 3 "$root/archivoblack/OFL.txt" -o pages/media/fonts/ArchivoBlack-OFL.txt
+          curl -fsSL --retry 3 "$root/racingsansone/RacingSansOne-Regular.ttf" -o pages/media/fonts/RacingSansOne-Regular.ttf
+          curl -fsSL --retry 3 "$root/racingsansone/OFL.txt" -o pages/media/fonts/RacingSansOne-OFL.txt
+          test "$(stat -c%s pages/media/fonts/ArchivoBlack-Regular.ttf)" -gt 20000
+          test "$(stat -c%s pages/media/fonts/RacingSansOne-Regular.ttf)" -gt 20000
+          # Noka itself is Adobe Fonts licensed, and is never copied.
+          # Kanit is an independently licensed geometric OFL variable fallback.
+          curl -fsSL --retry 3 "$root/kanit/Kanit-Italic.ttf" -o pages/media/fonts/Kanit-Italic.ttf
+          curl -fsSL --retry 3 "$root/kanit/Kanit-Regular.ttf" -o pages/media/fonts/Kanit-Regular.ttf
+          curl -fsSL --retry 3 "$root/kanit/OFL.txt" -o pages/media/fonts/Kanit-OFL.txt
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2" -o pages/media/fonts/PretendardVariable.woff2
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/LICENSE.txt" -o pages/media/fonts/Pretendard-OFL.txt
+          test "$(stat -c%s pages/media/fonts/Kanit-Italic.ttf)" -gt 20000
+          test "$(stat -c%s pages/media/fonts/PretendardVariable.woff2)" -gt 20000
+      - name: Fetch authentic character images and vector logos
+        run: node scripts/hero-office-demo/fetch-union-assets.cjs
+      - name: Inspect original computed backgrounds and source assets
+        run: node scripts/hero-office-demo/inspect-reference.cjs
+      - name: Capture original and demo desktop/mobile and assert gallery completeness
+        run: node scripts/hero-office-demo/capture.cjs
+      - name: Assemble comparison page
+        run: node scripts/hero-office-demo/build-site.cjs
+      - name: Check every source asset and screenshot
+        run: |
+          set -euo pipefail
+          for file in reference-desktop reference-mobile reference-union-desktop reference-union-mobile arcxi-desktop arcxi-mobile arcxi-union-desktop arcxi-union-mobile; do
+            test -s "hero-office-captures/$file.png"
+          done
+          test -s hero-office-public/app/media/ive/hero-union/yujin.png
+          test -s hero-office-public/app/media/ive/hero-union/leeseo.png
+          test -s hero-office-public/app/media/fonts/ArchivoBlack-Regular.ttf
+          test -s hero-office-public/app/media/fonts/RacingSansOne-Regular.ttf
+          echo "PASS original artwork, footer logos, fonts and both viewport captures"
+      - name: Upload inspectable visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-office-live-reference-comparison
+          path: |
+            hero-office-captures/
+            hero-office-public/index.html
+          retention-days: 14
+          if-no-files-found: warn

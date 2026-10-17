@@ -429,21 +429,70 @@
   }
   function scheduleHeader() {
     return '<header class="scheduleHeader"><div class="scheduleHeaderInner">' +
-      '<a class="scheduleBrand" href="#board" aria-label="ARC XI schedule">' +
-      '<img class="scheduleBrandLogo" src="./media/arcxi/arc-xi-schedule-logo.svg?v=3" alt="ARC XI — Live Football Schedule"></a>' +
-      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
-      dateStrip() + '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
-      '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>IVE × ARC XI</span><i aria-hidden="true"></i></div>' +
+      '<a class="scheduleBrand heroCoBrand" href="#board" aria-label="ARC XI × IVE schedule">' +
+      '<img class="heroCombinedLogo" src="./media/arcxi/arc-xi-ive-co-brand.svg?v=1" alt="ARC XI × IVE"></a>' +
+      '<div class="scheduleHeaderActions"><div class="scheduleIdentity"><span>ARC XI × IVE</span><i aria-hidden="true"></i></div>' +
       '<details class="scheduleMenu"><summary class="scheduleMenuButton" aria-label="Open menu"><i></i><i></i></summary>' +
       '<nav class="scheduleMenuPanel" aria-label="Schedule menu"><a href="#board">Schedule</a><a href="#picks">Picks</a>' +
       '<a href="#leagues">Competitions</a><a href="#teams">Teams</a><button type="button" data-refresh-schedule>Refresh scores</button></nav></details>' +
       '</div></div></header>';
   }
+  // Demo-only shell adapted from the HERO OFFICE mission panel. Its existing
+  // date controls stay wired to the normal board state and navigation actions.
+  function heroOfficeMission() {
+    return '<aside class="heroOfficeMission" aria-label="Matchday controls">' +
+      '<div class="heroMissionTab"><b>01</b><span>SHOW YOUR MATCHDAY</span></div>' +
+      '<section class="heroMissionCard"><div class="heroMissionTag">MATCHDAY MISSION</div>' +
+      '<div class="heroMissionBubble"><strong>YOUR FOOTBALL<br>HERO BOARD!</strong></div>' +
+      '<div class="heroMissionStep"><b>01</b><p>Select the <strong>matchday</strong> you want to follow.</p></div>' +
+      '<div class="scheduleDateNav"><button type="button" data-date-shift="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>' +
+      dateStrip() +
+      '<button type="button" data-date-shift="1" aria-label="Next day"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></button></div>' +
+      '<div class="heroMissionStepsAfter">' +
+      '<div class="heroMissionStep"><b>02</b><p>Find your <strong>C official ranked fixtures</strong> in the scanner.</p></div>' +
+      '<div class="heroMissionStep"><b>03</b><p>Follow <strong>live scores</strong> with C2 shadow context.</p></div>' +
+      '</div>' +
+      '<div class="heroMissionFooter">READY FOR KICKOFF? ★ LET’S GO!</div></section></aside>';
+  }
+  // HERO OFFICE's complete six-member Girl Hero Union comic mural.
+  // All illustration URLs are mirrored from the official reference at demo build time.
+  function heroUnionSection(){
+    const members=[
+      {name:'CAPTAIN PURPLE',member:'Yujin',image:'yujin.png',cls:'purple'},
+      {name:'WONDER GREEN',member:'Gaeul',image:'gaeul.png',cls:'green'},
+      {name:'JEAN YELLOW',member:'Rei',image:'rei.png',cls:'yellow'},
+      {name:'BAT PINK',member:'Wonyoung',image:'wonyoung.png',cls:'pink'},
+      {name:'SUPER BLUE',member:'Liz',image:'liz.png',cls:'blue'},
+      {name:'SPIDER RED',member:'Leeseo',image:'leeseo.png',cls:'red'}
+    ];
+    const cards=members.map(function(hero){
+      return '<article class="heroUnionCard hu-'+hero.cls+'" role="listitem">' +
+        '<span class="heroUnionCardLabel">'+hero.name+'</span>' +
+        '<img src="./media/ive/hero-union/'+hero.image+'" alt="'+hero.member+' as '+hero.name+
+        '" width="720" height="2130" loading="eager" decoding="async"></article>';
+    }).join('');
+    return '<section class="heroUnion" id="hero-union" aria-labelledby="heroUnionTitle">' +
+      '<div class="heroUnionInner">' +
+      '<h2 class="heroUnionTitle" id="heroUnionTitle">GIRL HERO UNION!</h2>' +
+      '<p class="heroUnionMobileHint">THE SIX HEROES. ONE UNION.</p>' +
+      '<div class="heroUnionCards" role="list" tabindex="0" aria-label="Six IVE superhero character cards, scroll horizontally to view all">'+cards+'</div>' +
+      '<div class="heroUnionGlow" aria-label="Glow">GLOW</div>' +
+      '<div class="heroUnionNote"><strong>HERO POWERS?</strong><span>lets Looks Can Kill</span></div>' +
+      '<footer class="heroUnionFooter">' +
+      '<img src="./media/ive/hero-union/ive-logo.svg" alt="IVE official logo" width="110" height="60" loading="lazy">' +
+      '<img src="./media/ive/hero-union/girl-hero-union.svg" alt="GIRL HERO UNION" width="185" height="48" loading="lazy">' +
+      '</footer></div></section>';
+  }
   function shell(content, context, className) {
     const classes = String(className || '');
     if (classes.includes('scheduleBoardRoute')) {
       return scheduleHeader() + '<div class="appFrame ' + esc(classes) + '">' +
-        '<div class="contentFrame"><main class="mainView">' + content + '</main></div></div>';
+        '<div class="contentFrame"><div class="heroOfficeGrid">' + heroOfficeMission() +
+        '<main class="mainView">' + content + '</main></div></div></div>' +
+        heroUnionSection() +
+        '<aside class="iveCorner iveCorner--bottom iveCorner--site" aria-hidden="true">' +
+        '<span class="iveCornerPhoto"><img class="iveCornerArtwork" ' +
+        'src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside>';
     }
     return header() + '<div class="appFrame ' + esc(classes) + '">' +
       '<div class="contentFrame"><main class="mainView">' + content + '</main>' +
@@ -967,8 +1016,7 @@
       '<footer class="scheduleFooter">' + ['',' warm',' pink'].map(function (color) {
         return '<svg class="scheduleSpark' + color + '" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 0c1 12 2 14 12 15-10 1-11 3-12 15C11 18 10 16 0 15c10-1 11-3 12-15Z"></path></svg>';
       }).join('') + '<small>Always more than a game</small></footer>' +
-      '<aside class="iveCorner iveCorner--bottom" aria-hidden="true"><span class="iveCornerPhoto">' +
-      '<img class="iveCornerArtwork" src="./media/ive/wonyoung-liz-bottom-right.webp?v=2" alt="" decoding="async"></span></aside></section>';
+      '</section>';
     // A score can change while a user is typing. Preserve search focus and
     // caret across the occasional data-driven board rebuild.
     const focusedSearch = document.activeElement?.id === 'boardSearch';
