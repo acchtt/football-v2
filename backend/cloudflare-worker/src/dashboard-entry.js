@@ -48,6 +48,7 @@ function timestamp(value) {
 
 function officialTier(row) {
   // Football C state is predictive authority; followLane is workload only.
+  // RESERVE and FOCUS_UNFOLLOWED therefore remain visual FOCUS.
   const boardState = String(row?.cBoardState || "")
     .toUpperCase()
     .replace(/^C-/, "");
