@@ -7,8 +7,8 @@
 <meta name="description" content="ARC XI × IVE — HERO MATCHDAY. A standalone visual concept of the live football board.">
 <title>ARC XI × IVE — HERO MATCHDAY / Design Demo</title>
 <link rel="icon" href="../icons/arc-xi-schedule.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./styles.css?v=3">
-<script src="./app.js?v=3" defer></script>
+<link rel="stylesheet" href="./styles.css?v=4">
+<script src="./app.js?v=4" defer></script>
 </head>
 <body>
 <a class="skip" href="#board">Skip to matchday board</a>
@@ -20,7 +20,7 @@
     </a>
     <nav class="head-nav" aria-label="Main navigation">
       <a href="#board" class="nav-active">MATCHDAY</a>
-      <a href="#guide">THE SYSTEM</a>
+      
     </nav>
     <div class="head-right">
       <div class="time-chip"><span class="time-dot"></span><span>ICT · UTC+7</span></div>
@@ -30,32 +30,23 @@
     </div>
   </div>
   <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden>
-    <a href="#board">MATCHDAY BOARD</a><a href="#guide">ABOUT THIS DEMO</a>
+    <a href="#board">MATCHDAY BOARD</a>
   </nav>
 </header>
 <main id="home">
- <section class="hero" aria-label="HERO MATCHDAY introduction">
+ <section class="hero" aria-label="HERO MATCHDAY design introduction">
   <div class="hero-copy">
-    <div class="hero-eyebrow"><span class="flash">★</span> ARC XI / THE MATCHDAY EDITION <span class="season-label">2026 / EDITION 01</span></div>
-    <h1>FOOTBALL,<br><em>IN HERO MODE.</em></h1>
-    <p>All the fixtures. Every league. One clear view. A matchday scanner with the energy of IVE HERO OFFICE and the focus of a live scoreboard.</p>
-    <div class="hero-ribbon">
-      <span class="demo-pulse"></span>
-      DESIGN PREVIEW <span class="ribbon-split">/</span> SAMPLE FIXTURES
-    </div>
+    <h1>HERO <span>MATCHDAY.</span></h1>
+    <p>A football board with IVE attitude and room for the scores that matter.</p>
+    <span class="preview-label"><span class="preview-dot"></span> DESIGN CONCEPT / SAMPLE FIXTURES</span>
   </div>
-  <div class="hero-poster" aria-label="IVE approved artwork">
-    <div class="poster-graphics" aria-hidden="true"><span class="poster-star star-a">✦</span><span class="poster-star star-b">✦</span><span class="poster-cross">+</span></div>
-    <div class="poster-frame"><div class="poster-number">MATCHDAY<br><b>SUPER!</b></div><div class="poster-stamp">LIVE<br>LOVE<br>FOOTBALL</div></div>
-    <img class="hero-ive-art" src="../media/ive/wonyoung-liz-bottom-right.webp" alt="Approved Wonyoung and Liz IVE artwork" width="580" height="580">
-    <div class="poster-footer">ARC XI <span>×</span> IVE <b>HERO EDITION</b></div>
-  </div>
- </section>
+  <img class="hero-ive-art" src="../media/ive/wonyoung-liz-bottom-right.webp" alt="Approved IVE Wonyoung and Liz artwork" width="580" height="580">
+</section>
 
  <section class="controls" aria-label="Fixture discovery controls">
    <div class="section-line">
-    <div class="section-heading"><span class="section-numeral">01</span><div><h2>CHOOSE YOUR MATCHDAY<span class="pink-period">.</span></h2><p>Browse by ICT date. Match cards stay in kickoff order.</p></div></div>
-    <div class="board-hint"><span class="hint-dot"></span> INTERACTIVE DESIGN DEMO</div>
+     <div class="section-heading"><h2>Choose your matchday</h2><p>All kickoffs shown in ICT · UTC+7</p></div>
+     <div class="board-hint"><span class="hint-dot"></span> SAMPLE DATA</div>
    </div>
    <div class="date-rail" role="group" aria-label="Select matchday">
     <button class="day-arrow" id="previous-day" type="button" aria-label="Previous date">
@@ -82,7 +73,7 @@
 
  <section id="board" class="board-section" aria-labelledby="board-title">
   <div class="scanner-header">
-   <div class="scanner-title"><span class="scanner-star">★</span><h2 id="board-title">MATCHDAY SCANNER</h2><span class="scanner-stripes" aria-hidden="true"></span></div>
+   <div class="scanner-title"><span class="scanner-star" aria-hidden="true">★</span><h2 id="board-title">MATCHDAY BOARD</h2></div>
    <div class="scanner-meta"><span class="scanner-selected" id="selected-date-label">THU 22 OCT</span><span class="scanner-divider"></span><span id="visible-count">0 MATCHES</span></div>
   </div>
   <div class="board-column-head" aria-hidden="true"><span>TIME / ICT</span><span>FIXTURE</span><span>RESULT</span><span>BOARD STATUS</span></div>
@@ -93,17 +84,6 @@
   </div>
  </section>
 
- <section id="guide" class="design-notes" aria-labelledby="guide-title">
-  <div class="note-heading">
-   <div><span class="section-numeral pink-numeral">02</span><h2 id="guide-title">THE HERO SYSTEM</h2></div>
-   <p>LOUD FRAME. QUIET DATA.</p>
-  </div>
-  <div class="note-grid">
-    <div class="note-item"><span class="note-index">A /</span><h3>LOOKS LIKE A POSTER.</h3><p>Comic masthead, sharp black rules, pink and yellow statements—and plenty of room for the real scores.</p></div>
-    <div class="note-item"><span class="note-index">B /</span><h3>READS LIKE A SCOREBOARD.</h3><p>Aligned kickoff times, team names, consistent score center, real ranking-state labels and straightforward filters.</p></div>
-    <div class="note-item"><span class="note-index">C /</span><h3>WORKS ON YOUR PHONE.</h3><p>Full-width mobile fixtures, touch-friendly dates, keyboard access and no illustrations overlapping the board.</p></div>
-  </div>
- </section>
 </main>
 <footer class="site-footer">
  <div class="footer-inner"><div class="footer-brand"><strong>ARC XI <span>×</span> IVE</strong><small>HERO MATCHDAY DESIGN PROTOTYPE</small></div><div class="footer-end">FOR VISUAL REVIEW ONLY <span>★</span> NO PRODUCTION DATA CHANGED</div></div>
