@@ -40,7 +40,9 @@ jobs:
           test -f production/pages/app-v2.js
           test -f production/pages/data/board-feed.json
           mkdir -p production/pages/hero-matchday-demo/fonts
-          cp demo/pages/hero-matchday-demo/{index.html,styles.css,app.js} production/pages/hero-matchday-demo/
+          cp demo/pages/hero-matchday-demo/{index.html,styles.css,app.js,hero-office-identity.css,hero-symbols.svg} production/pages/hero-matchday-demo/
+          test -s production/pages/hero-matchday-demo/hero-office-identity.css
+          test -s production/pages/hero-matchday-demo/hero-symbols.svg
           cmp -s production/pages/index.html <(git -C production show HEAD:pages/index.html)
           cmp -s production/pages/app-v2.js <(git -C production show HEAD:pages/app-v2.js)
           cmp -s production/pages/data/board-feed.json <(git -C production show HEAD:pages/data/board-feed.json)
