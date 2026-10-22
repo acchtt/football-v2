@@ -7,7 +7,8 @@
 <meta name="description" content="ARC XI × IVE — HERO MATCHDAY. A standalone visual concept of the live football board.">
 <title>ARC XI × IVE — HERO MATCHDAY / Design Demo</title>
 <link rel="icon" href="../icons/arc-xi-schedule.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./styles.css?v=5">
+<link rel="stylesheet" href="./styles.css?v=6">
+<link rel="stylesheet" href="./hero-office-identity.css?v=1">
 <script src="./app.js?v=4" defer></script>
 </head>
 <body>
@@ -36,16 +37,18 @@
 <main id="home">
  <section class="hero" aria-label="HERO MATCHDAY design introduction">
   <div class="hero-copy">
-    <h1>HERO <span>MATCHDAY.</span></h1>
-    <p>A football board with IVE attitude and room for the scores that matter.</p>
-    <span class="preview-label"><span class="preview-dot"></span> DESIGN CONCEPT / SAMPLE FIXTURES</span>
+    <div class="hero-kicker"><span class="hero-kicker-index">01</span><span>ARC XI × IVE / HERO OFFICE EDITION</span></div>
+    <h1><span class="hero-title-first">HERO</span> <span class="hero-title-main">MATCHDAY!</span></h1>
+    <p>The matchday scanner, powered by football. Dressed for the HERO OFFICE.</p>
+    <span class="preview-label"><span class="preview-dot"></span> DESIGN PREVIEW · SAMPLE FIXTURES</span>
   </div>
+  <span class="hero-sticker" aria-hidden="true">★ LET'S GO!</span>
   <img class="hero-ive-art" src="../media/ive/wonyoung-liz-bottom-right.webp" alt="Approved IVE Wonyoung and Liz artwork" width="580" height="580">
 </section>
 
  <section class="controls" aria-label="Fixture discovery controls">
    <div class="section-line">
-     <div class="section-heading"><h2>Choose your matchday</h2><p>All kickoffs shown in ICT · UTC+7</p></div>
+     <div class="section-heading"><h2><span class="date-label-star" aria-hidden="true">★</span> SHOW YOUR MATCHDAY</h2><p>Pick a date · ICT / UTC+7</p></div>
      <div class="board-hint"><span class="hint-dot"></span> SAMPLE DATA</div>
    </div>
    <div class="date-rail" role="group" aria-label="Select matchday">
@@ -73,7 +76,7 @@
 
  <section id="board" class="board-section" aria-labelledby="board-title">
   <div class="scanner-header">
-   <div class="scanner-title"><span class="scanner-star" aria-hidden="true">★</span><h2 id="board-title">MATCHDAY BOARD</h2></div>
+   <div class="scanner-title"><span class="scanner-star" aria-hidden="true">★</span><h2 id="board-title">HERO MATCHDAY SCANNER</h2><span class="scanner-swoosh" aria-hidden="true">✦</span></div>
    <div class="scanner-meta"><span class="scanner-selected" id="selected-date-label">THU 22 OCT</span><span class="scanner-divider"></span><span id="visible-count">0 MATCHES</span></div>
   </div>
   <div class="board-column-head" aria-hidden="true"><span>TIME / ICT</span><span>FIXTURE</span><span>RESULT</span><span>BOARD STATUS</span></div>
