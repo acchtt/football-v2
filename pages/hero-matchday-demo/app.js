@@ -71,6 +71,7 @@ function renderLeagueOptions(){
  $('competition-filter').innerHTML='<option value="ALL">All competitions</option>'+leagues.map(l=>'<option value="'+ESC(l)+'">'+ESC(l)+'</option>').join('');
  $('competition-filter').value=state.league;
 }
+function crestText(name){const first=name.split(/\s+/)[0];return first.length<=3?first.toUpperCase():first.slice(0,3).toUpperCase()}
 function card(f){
  const expanded=state.expanded.has(f.id);
  const live=f.state==='LIVE'||f.state==='HT';
@@ -83,7 +84,7 @@ function card(f){
   '<div class="detail-note">Preview interaction only. Football C decision authority remains in the production workflow.</div></div>':'';
  return '<article class="fixture'+(expanded?' expanded':'')+'" data-match="'+ESC(f.id)+'" tabindex="0" role="button" aria-expanded="'+expanded+'" aria-controls="info-'+ESC(f.id)+'" aria-label="'+ESC(f.home+' versus '+f.away+', '+f.lane+', '+f.time+' ICT')+'">'+
  '<div class="time-block"><span class="kickoff-time">'+ESC(f.time)+'</span><span class="match-state'+(live?' live':'')+'">'+ESC(clock)+'</span></div>'+
- '<div class="team-pair"><span class="team-name home-name">'+ESC(f.home)+'</span><span class="versus-mark">VS</span><span class="team-name away-name">'+ESC(f.away)+'</span></div>'+
+ '<div class="team-pair"><span class="team-with-crest home-crest"><span class="team-name home-name">'+ESC(f.home)+'</span><span class="team-crest" aria-hidden="true">'+ESC(crestText(f.home))+'</span></span><span class="versus-mark">VS</span><span class="team-with-crest away-crest"><span class="team-crest" aria-hidden="true">'+ESC(crestText(f.away))+'</span><span class="team-name away-name">'+ESC(f.away)+'</span></span></div>'+
  '<div class="result'+(live?' live':'')+'">'+score+'</div>'+
  '<span class="status '+f.lane.toLowerCase()+'">'+ESC(f.lane)+'</span><span class="detail-chevron" aria-hidden="true">⌄</span>'+details+'</article>';
 }
