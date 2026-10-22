@@ -1,0 +1,94 @@
+name: Publish ARC XI HERO MATCHDAY demo (isolated)
+on:
+  push:
+    branches: [demo/hero-matchday-v1]
+    paths:
+      - "pages/hero-matchday-demo/**"
+      - "scripts/hero-matchday-demo/**"
+      - ".github/workflows/hero-matchday-demo.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  preview:
+    name: Build, test, publish separate design demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    environment:
+      name: github-pages
+      url: https://acchtt.github.io/football-v2/hero-matchday-demo/
+    steps:
+      - name: Checkout current production main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: production
+          persist-credentials: false
+      - name: Checkout isolated demo
+        uses: actions/checkout@v4
+        with:
+          ref: demo/hero-matchday-v1
+          path: demo
+          persist-credentials: false
+      - name: Verify production mirror and add demo-only subfolder
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f production/pages/index.html
+          test -f production/pages/app-v2.js
+          test -f production/pages/data/board-feed.json
+          mkdir -p production/pages/hero-matchday-demo/fonts
+          cp demo/pages/hero-matchday-demo/{index.html,styles.css,app.js} production/pages/hero-matchday-demo/
+          cmp -s production/pages/index.html <(git -C production show HEAD:pages/index.html)
+          cmp -s production/pages/app-v2.js <(git -C production show HEAD:pages/app-v2.js)
+          cmp -s production/pages/data/board-feed.json <(git -C production show HEAD:pages/data/board-feed.json)
+          echo "PASS production homepage, application and board preserved"
+      - name: Fetch Barlow Condensed under its open-source font license
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed
+          curl -fsSL --retry 3 "$root/BarlowCondensed-ExtraBold.ttf" -o production/pages/hero-matchday-demo/fonts/BarlowCondensed-ExtraBold.ttf
+          curl -fsSL --retry 3 "$root/OFL.txt" -o production/pages/hero-matchday-demo/fonts/OFL.txt
+          test "$(stat -c%s production/pages/hero-matchday-demo/fonts/BarlowCondensed-ExtraBold.ttf)" -gt 20000
+      - name: Install headless browser tools
+        run: |
+          npm install --prefix /tmp/hero-matchday-qa --no-fund --no-audit --no-save puppeteer-core@24
+          node --check demo/scripts/hero-matchday-demo/check-preview.cjs
+          node --check production/pages/hero-matchday-demo/app.js
+          which google-chrome || which chromium
+      - name: Test mobile, tablet, desktop controls and capture screenshots
+        run: node demo/scripts/hero-matchday-demo/check-preview.cjs
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-matchday-responsive-screenshots
+          path: preview-proof/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload current main plus isolated demo
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: production/pages
+      - name: Publish GitHub Pages preview
+        uses: actions/deploy-pages@v4
+      - name: Check public preview and production homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if curl -fsSL --retry 2 "https://acchtt.github.io/football-v2/hero-matchday-demo/" -o /tmp/hero-demo.html && grep -q "HERO MATCHDAY" /tmp/hero-demo.html; then break; fi
+            sleep 5
+          done
+          grep -q "HERO MATCHDAY" /tmp/hero-demo.html
+          curl -fsSL "https://acchtt.github.io/football-v2/" -o /tmp/hero-production.html
+          grep -q "ARC XI — Live Football Schedule" /tmp/hero-production.html
+          echo "PASS isolated preview and unchanged production root"
