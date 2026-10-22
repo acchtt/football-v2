@@ -182,3 +182,15 @@ main{max-width:1512px;margin:auto;padding:0 clamp(20px,4vw,62px)}
  .scanner-title h2{font-size:20px}
  .scanner-meta{font-size:9px}
 }
+
+/* Illustrative crest placeholders preserve the production crest slots
+   without fabricating or mislabeling actual club logos. */
+.team-with-crest{display:flex;align-items:center;gap:8px;min-width:0}
+.home-crest{justify-content:flex-end}
+.away-crest{justify-content:flex-start}
+.team-crest{width:26px;height:26px;display:grid;place-items:center;flex:none;border:1px solid #cac5bd;background:#faf7ee;color:#5f5956;font:800 9px/1 "ARC DM",Arial,sans-serif;letter-spacing:-.02em}
+.team-with-crest .team-name{min-width:0}
+@media(max-width:600px){
+ .team-crest{display:none}
+ .home-crest,.away-crest{justify-content:flex-start}
+}
