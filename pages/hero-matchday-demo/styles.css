@@ -194,3 +194,238 @@ main{max-width:1512px;margin:auto;padding:0 clamp(20px,4vw,62px)}
  .team-crest{display:none}
  .home-crest,.away-crest{justify-content:flex-start}
 }
+
+
+/* ------------------------------------------------------------------
+   UI UX PRO MAX / HERO MATCHDAY v2 — board-first, simplified layout.
+   Keep the recognizable IVE accents, remove decorative competition
+   with fixture information. Draft demo only.
+------------------------------------------------------------------- */
+:root{
+  --ink:#141316;--paper:#fdfbf8;--yellow:#ffed29;--pink:#ed2994;
+  --muted:#68626a;--line:#e4e1de;
+  background:var(--paper);
+}
+body{background:var(--paper)}
+main{max-width:1340px;padding:0 clamp(16px,3.3vw,42px)}
+.site-header{height:66px;background:#141316}
+.head-inner{max-width:1340px;padding:0 clamp(16px,3.3vw,42px)}
+.head-nav a{font-weight:700;letter-spacing:.045em;font-size:12px}
+.head-nav .nav-active::after{height:2px;background:var(--pink)}
+.hero{
+  min-height:168px;height:168px;
+  display:block;position:relative;
+  isolation:isolate;overflow:hidden;
+  padding:22px 32px;margin-top:20px;
+  border:1px solid #f4e5ed;
+  background:#fff2f8;
+}
+.hero:before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:radial-gradient(circle at center,rgba(237,41,148,.23) 1px,transparent 1.4px);
+  background-size:27px 27px;
+  mask-image:linear-gradient(90deg,transparent 0%,transparent 63%,#000 100%);
+}
+.hero-copy{position:relative;z-index:2;max-width:70%;align-self:auto}
+.hero h1{
+  font:800 clamp(40px,4.8vw,60px)/.98 "HERO Condensed","Arial Narrow",sans-serif;
+  letter-spacing:.005em;margin:0 0 8px;
+  max-width:max-content;color:var(--ink);
+}
+.hero h1 span{color:#d91583}
+.hero p{
+  max-width:490px;font-size:13px;line-height:1.42;
+  margin:6px 0 12px;color:#35303a;
+}
+.preview-label{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:9px;letter-spacing:.09em;font-weight:800;color:#72636e;
+}
+.preview-dot{height:6px;width:6px;border-radius:50%;background:var(--pink)}
+.hero-ive-art{
+  position:absolute;right:15px;bottom:-18px;z-index:1;
+  height:205px;width:auto;max-width:42%;object-fit:contain;
+  filter:none;pointer-events:none;
+}
+.controls{margin-top:23px}
+.section-line{
+  align-items:baseline;margin-bottom:11px;gap:12px;
+}
+.section-heading{display:flex;gap:15px;align-items:baseline}
+.section-heading h2{
+  font:750 18px/1.2 "ARC DM",Arial,sans-serif;letter-spacing:-.02em;
+  text-transform:none;
+}
+.section-heading p{font-size:12px;margin:0;color:#777078}
+.board-hint{font-weight:700;color:#706b73;letter-spacing:.07em;font-size:10px}
+.hint-dot{height:6px;width:6px;background:var(--pink)}
+.date-rail{
+  height:59px;
+  grid-template-columns:48px minmax(0,1fr) 48px;
+  background:#e8e3e5;border:1px solid #ded8dc;gap:1px;
+}
+.day-arrow{background:white}
+.day-arrow:hover{background:#ffe8f5}
+.date-button{background:#fff;color:#353137;padding:6px 3px;gap:4px}
+.date-button:hover:not(.date-selected){background:#fff3f9;color:var(--ink)}
+.date-button.date-selected{background:var(--yellow);color:var(--ink)}
+.date-button .weekday{font:750 10px/1.1 "ARC DM",sans-serif;letter-spacing:.03em}
+.date-button .daystamp{font:800 16px/1.1 "ARC DM",sans-serif;letter-spacing:-.02em}
+.filter-row{padding:13px 0 16px;gap:14px;align-items:center}
+.filter-group{gap:4px;flex-wrap:wrap}
+.lane-btn{
+  min-height:36px;gap:8px;padding:0 13px;
+  border:1px solid #ddd7dc;border-radius:4px;
+  background:#fff;color:#514a52;
+  font:750 11px/1 "ARC DM",sans-serif;letter-spacing:.015em;
+}
+.lane-btn b{background:#f1eef0;color:#555;min-width:21px;padding:3px 4px;border-radius:2px}
+.lane-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lane-btn.active b{background:var(--yellow);color:var(--ink)}
+.lane-btn:hover:not(.active){border-color:var(--pink);background:#fff8fc}
+.search-box{
+  min-width:238px;height:38px;border-color:#dcd6da;
+  border-radius:4px;padding:0 11px;
+}
+.search-box:focus-within{border-color:#c71977;outline:1px solid #c71977}
+.league-select-wrap select{height:38px;border-radius:4px;border-color:#dcd6da;font-weight:600}
+.board-section{border:1px solid #d9d4d8;border-radius:5px;overflow:hidden;background:#fff}
+.scanner-header{
+  background:#fbf8fa;
+  border-bottom:1px solid #e7e1e7;
+  padding:12px 18px;min-height:58px;gap:12px;
+}
+.scanner-title{gap:8px}
+.scanner-title h2{
+  font:800 22px/1 "HERO Condensed","Arial Narrow",sans-serif;
+  letter-spacing:.015em;white-space:nowrap;
+}
+.scanner-star{
+  color:var(--pink);font-size:17px;
+  -webkit-text-stroke:0;line-height:1;
+}
+.scanner-meta{font:750 10px/1.2 "ARC DM",Arial,sans-serif;color:#6a6069;gap:11px;letter-spacing:.015em}
+.scanner-selected{
+  background:#f5e9ef;color:#513240;
+  font:700 10px/1.2 "ARC DM",Arial,sans-serif;border-radius:3px;padding:7px 9px;
+}
+.scanner-divider{background:#dcd5da;width:1px;height:14px;opacity:1}
+.board-column-head{
+  background:white;border-bottom:1px solid #eeeae9;
+  font:750 9px/1.2 "ARC DM",sans-serif;letter-spacing:.055em;color:#8c858a;
+  padding:11px 18px;
+}
+.league{border-bottom:1px solid #eee8ec}
+.league-heading{
+  min-height:41px;background:#f5f4f2;color:#353039;
+  border-top:1px solid #eeeae7;
+  padding:8px 18px;
+}
+.league:first-child .league-heading{border-top:0}
+.league-heading:hover{background:#f0edf0}
+.league-flag{background:#eee4e9;border-radius:3px;color:#5c4c57;width:26px;height:25px;font-size:10px}
+.league-heading strong{font:800 11px/1.1 "ARC DM",sans-serif;letter-spacing:.025em}
+.league-count{color:#8a828a;font-weight:650;font-size:10px}
+.league-collapse{color:#66616a;font-size:17px}
+.fixture{
+  min-height:58px;padding:0 18px;
+  border-bottom:1px solid #f0edee;
+  transition:background .14s ease;
+}
+.fixture:hover,.fixture:focus-visible{background:#fffafc}
+.fixture.expanded{background:#fffafc}
+.kickoff-time{font-size:13px;font-weight:800}
+.match-state{font-size:10px;color:#88818a;font-weight:600}
+.match-state.live{color:#c31d77}
+.team-name{font-size:13px;font-weight:700}
+.versus-mark{font:750 10px/1 "ARC DM",sans-serif;color:#aaa0a8}
+.team-crest{border-radius:5px;border-color:#e4dfe0;color:#786d76;background:#f7f4f5;font-size:9px}
+.result{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.result.live{background:var(--yellow);padding:6px 6px;border-radius:3px}
+.status{font-size:9px;padding:7px 8px;min-width:78px;border:0;border-radius:3px}
+.status.follow{background:#fff2b2;color:#564509}
+.status.reserve{background:#fbe6f0;color:#a02b67}
+.status.stop{background:#f0edef;color:#746e74}
+.match-detail{border-top-color:#e8dbe2}
+.detail-chevron{color:#8f8790}
+.board-foot{background:#faf8f7;padding:10px 18px;border-top:1px solid #eee8ea}
+.board-foot p{color:#776f75;font-size:10px}
+.foot-asterisk{color:var(--pink)}
+.board-foot button{font-size:10px;font-weight:750}
+.site-footer{background:#161416}
+.footer-inner{max-width:1340px;padding:22px clamp(16px,3.3vw,42px)}
+.footer-brand strong{font-size:14px}
+.footer-brand small,.footer-end{font-size:9px}
+@media(max-width:820px){
+  .hero{margin-top:14px;height:152px;min-height:152px;padding:18px 22px}
+  .hero h1{font-size:clamp(38px,6.4vw,54px)}
+  .hero-ive-art{height:185px;max-width:43%;right:3px;bottom:-20px}
+  .hero p{max-width:350px}
+  .controls{margin-top:19px}
+  .section-line{margin-bottom:10px}
+  .filter-row{flex-direction:row;align-items:center;flex-wrap:wrap}
+  .filter-tools{width:auto;flex:1;justify-content:flex-end}
+}
+@media(max-width:600px){
+  .site-header{height:58px}
+  .head-inner{padding:0 15px}
+  .mobile-menu:not([hidden]){top:58px}
+  main{padding:0 12px}
+  .hero{
+    margin-top:12px;min-height:142px;height:142px;
+    padding:16px 14px;
+  }
+  .hero-copy{max-width:72%}
+  .hero h1{font-size:clamp(34px,9vw,44px);line-height:.93;margin-bottom:9px}
+  .hero h1 span{display:block}
+  .hero p{font-size:11px;line-height:1.25;max-width:245px;margin:0 0 7px}
+  .preview-label{font-size:8px;letter-spacing:0}
+  .hero-ive-art{height:144px;max-width:35%;bottom:-9px;right:-5px}
+  .controls{margin-top:16px}
+  .section-heading{display:block}
+  .section-heading h2{font-size:16px;font-weight:800}
+  .section-heading p{font-size:11px;margin:4px 0 0}
+  .date-rail{height:56px;grid-template-columns:42px minmax(0,1fr) 42px}
+  .date-days .date-button:nth-child(-n+2),.date-days .date-button:nth-last-child(-n+2){display:none}
+  .date-button .daystamp{font-size:18px}
+  .date-button .weekday{font-size:10px}
+  .filter-row{display:flex;flex-direction:column;align-items:stretch;padding:11px 0 12px;gap:8px}
+  .filter-group{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .lane-btn{min-height:36px;font-size:9px;padding:0 3px;gap:4px;justify-content:center}
+  .filter-tools{display:flex;flex-direction:row;flex-wrap:wrap;width:100%;gap:6px}
+  .search-box{min-width:0;flex:1 1 160px;width:auto;height:37px}
+  .league-select-wrap{width:120px;flex:1 1 118px}
+  .league-select-wrap select{height:37px;font-size:11px;max-width:none}
+  .board-section{border-radius:4px}
+  .scanner-header{padding:10px 11px;min-height:49px}
+  .scanner-title{gap:5px}
+  .scanner-title h2{font-size:19px}
+  .scanner-star{font-size:15px}
+  .scanner-meta{font-size:10px}
+  .scanner-meta .scanner-selected{display:none}
+  .board-column-head{display:none}
+  .league-heading{padding:8px 11px;min-height:37px}
+  .fixture{
+    padding:8px 11px;min-height:72px;
+    grid-template-columns:53px minmax(0,1fr) 61px;
+    grid-template-areas:"time teams lane" "time score lane";
+    column-gap:7px;row-gap:3px;
+  }
+  .team-pair{grid-template-columns:1fr;gap:3px}
+  .team-name{font-size:12px;line-height:1.2}
+  .versus-mark,.team-crest{display:none}
+  .team-with-crest{gap:0}
+  .home-crest,.away-crest{justify-content:flex-start}
+  .result{font-size:17px}
+  .status{font-size:8px;min-width:0;width:100%;padding:6px 1px}
+  .match-detail{grid-area:3/1/4/-1}
+  .board-foot{padding:9px 11px}
+  .footer-inner{padding:18px 14px}
+}
+@media(max-width:370px){
+  .hero h1{font-size:32px}
+  .hero p{font-size:10px}
+  .hero-ive-art{height:129px}
+  .scanner-title h2{font-size:18px}
+  .scanner-meta{font-size:9px}
+}
