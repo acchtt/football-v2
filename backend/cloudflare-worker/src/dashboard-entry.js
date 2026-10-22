@@ -49,6 +49,7 @@ function timestamp(value) {
 function officialTier(row) {
   const lane = String(row?.followLane || "").toUpperCase();
   if (lane === "FOLLOW") return "FOCUS";
+  if (lane === "FOCUS_UNFOLLOWED") return "FOCUS";
   if (lane === "RESERVE") return "WATCHLIST";
   if (lane === "STOP") return "PASS";
   const tier = String(row?.tier || "").toUpperCase();
