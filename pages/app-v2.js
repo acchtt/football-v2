@@ -619,9 +619,9 @@
     const direct = String(row && (row.followLane || row.cFollowLane) || '').toUpperCase();
     if (['FOLLOW','RESERVE','FOCUS_UNFOLLOWED','STOP'].includes(direct)) return direct;
     const source = [row && row.coverageNotes, row && row.frozenPreSummary].filter(Boolean).join(' ');
-    const match = source.match(/\[FOLLOW:\s*(YES|FOLLOW|RESERVE|STOP)\]/i) ||
-      source.match(/\bofficial lane\s*=\s*(FOLLOW|RESERVE|STOP)\b/i) ||
-      source.match(/"follow_lane"\s*:\s*"(FOLLOW|RESERVE|STOP)"/i);
+    const match = source.match(/\[FOLLOW:\s*(YES|FOLLOW|RESERVE|FOCUS_UNFOLLOWED|STOP)\]/i) ||
+      source.match(/\bofficial lane\s*=\s*(FOLLOW|RESERVE|FOCUS_UNFOLLOWED|STOP)\b/i) ||
+      source.match(/"follow_lane"\s*:\s*"(FOLLOW|RESERVE|FOCUS_UNFOLLOWED|STOP)"/i);
     if (!match) return '';
     const lane = match[1].toUpperCase();
     return lane === 'YES' ? 'FOLLOW' : lane;
