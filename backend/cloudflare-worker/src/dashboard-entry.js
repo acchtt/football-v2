@@ -183,6 +183,9 @@ async function dashboardData(env) {
       projectionUrl: String(env.BOARD_FEED_URL || DEFAULT_FEED_URL),
       rankedPublished: ranked.length,
       latestRankedBoardId,
+      focusUnfollowedDisplayed: schedule.filter(
+        (row) => row.followLane === "FOCUS_UNFOLLOWED"
+      ).length,
       stopDisplayed: schedule.filter((row) => row.followLane === "STOP").length,
       scheduleByDate: Object.fromEntries(
         [...new Set(schedule.map((row) => row.slateDate).filter(Boolean))]
