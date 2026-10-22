@@ -1,0 +1,272 @@
+/*
+  ARC XI × IVE / HERO MATCHDAY — visual identity layer
+  POP HERO grammar over a calm operational scoreboard.
+  An independent SVG pattern and licensed display font are used;
+  this does not copy the original site or embed its Noka font.
+*/
+:root {
+  --office-hot-pink:#F108A6;
+  --office-sun:#FFF137;
+  --office-ink:#141113;
+  --office-cream:#FFFCF6;
+  --office-pale:#FFF3F9;
+}
+body{background:var(--office-cream)}
+.site-header{
+  background:var(--office-ink);
+  border-bottom:3px solid var(--office-hot-pink);
+}
+.brand-x{color:var(--office-hot-pink)}
+.ive-type{letter-spacing:-.03em}
+.head-nav .nav-active::after{height:3px;background:var(--office-sun)}
+/* The original's pink office motifs become one low-noise banner layer. */
+.hero{
+  min-height:196px;height:196px;
+  border:2px solid var(--office-ink);
+  overflow:hidden;
+  margin-top:16px;
+  padding:25px 28px;
+  background:var(--office-cream) url("./hero-symbols.svg") center top / 480px auto repeat;
+  isolation:isolate;
+}
+.hero::before{
+  content:"";
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  opacity:1;
+  background:linear-gradient(90deg,
+    rgba(255,252,246,.95) 0%,
+    rgba(255,252,246,.88) 42%,
+    rgba(255,252,246,.33) 71%,
+    rgba(255,252,246,.05) 100%);
+  mask-image:none;
+}
+.hero::after{
+  content:"";position:absolute;right:-40px;bottom:30px;
+  width:48%;height:22px;background:var(--office-hot-pink);
+  transform:rotate(-12deg);z-index:0;opacity:.95;pointer-events:none;
+}
+.hero-copy{position:relative;z-index:2;max-width:76%}
+.hero-kicker{
+  display:flex;align-items:center;gap:9px;max-width:max-content;
+  font-size:10px;font-weight:900;letter-spacing:.06em;
+  color:var(--office-ink);
+  margin-bottom:10px;
+}
+.hero-kicker-index{
+  font:800 14px/1 "HERO Condensed",sans-serif;
+  color:var(--office-ink);background:var(--office-sun);
+  border:2px solid var(--office-ink);
+  display:grid;place-items:center;
+  width:28px;height:24px;transform:rotate(-4deg);
+}
+.hero h1{
+  display:block;
+  font:800 clamp(43px,5vw,68px)/.88 "HERO Condensed","Arial Narrow",sans-serif;
+  letter-spacing:.005em;
+  margin:0 0 14px;
+  max-width:max-content;
+  transform:none;
+  white-space:nowrap;
+}
+.hero h1 .hero-title-first{
+  color:var(--office-ink);display:inline-block;
+  font-style:italic;
+  transform:skewX(-5deg);
+}
+.hero h1 .hero-title-main{
+  color:var(--office-hot-pink);display:inline-block;
+  font-style:italic;
+  background:none;
+  padding:0;
+  white-space:nowrap;
+  -webkit-text-stroke:1.5px var(--office-ink);
+  paint-order:stroke fill;
+  text-shadow:3px 4px 0 var(--office-ink);
+  transform:skewX(-5deg);
+}
+.hero p{
+  position:relative;z-index:2;margin:0 0 12px;
+  font-size:13px;line-height:1.4;
+  color:#2C242A;max-width:420px;
+}
+.preview-label{
+  position:relative;z-index:2;
+  background:#FFF7FC;color:#55334B;
+  border:1px solid rgba(241,8,166,.35);
+  padding:5px 9px 5px 7px;
+  letter-spacing:.045em;font-size:9px;
+}
+.preview-dot{background:var(--office-hot-pink)}
+.hero-sticker{
+  position:absolute;
+  right:21%;top:25px;
+  transform:rotate(7deg);
+  display:inline-block;z-index:3;
+  border:2px solid var(--office-ink);
+  background:var(--office-sun);color:var(--office-ink);
+  box-shadow:3px 3px 0 var(--office-ink);
+  font:italic 800 15px/1.1 "HERO Condensed",sans-serif;
+  letter-spacing:.01em;padding:8px 9px;
+  pointer-events:none;
+}
+.hero-ive-art{
+  z-index:1;right:13px;bottom:-15px;
+  height:215px;max-width:40%;
+  filter:none;transform:none;pointer-events:none;
+}
+/* One narrow paper ticket gives the office's sharp comic language
+   without a large secondary panel or an obstructive hero section. */
+.section-line{margin-bottom:12px;align-items:center}
+.section-heading{display:flex;align-items:center;gap:13px}
+.section-heading h2{
+  position:relative;display:inline-flex;align-items:center;gap:9px;
+  margin:0;white-space:nowrap;
+  font:italic 800 20px/1.1 "HERO Condensed",sans-serif;
+  letter-spacing:.015em;
+  color:var(--office-sun);background:var(--office-ink);
+  padding:9px 18px 9px 12px;
+  transform:rotate(-1.5deg);
+  box-shadow:3px 3px 0 var(--office-hot-pink);
+  text-transform:uppercase;
+}
+.date-label-star{color:var(--office-hot-pink);font-size:15px}
+.section-heading p{margin:0 0 0 2px;color:#63555F;font-size:12px}
+.board-hint{color:#715F69}
+.date-rail{
+  border:2px solid var(--office-ink);
+  background:var(--office-ink);
+  height:64px;gap:2px;
+  box-shadow:0 3px 0 rgba(241,8,166,.75);
+}
+.day-arrow{background:#FFFCF7;color:var(--office-ink)}
+.day-arrow:hover{background:#FFDEEF}
+.date-button{background:#FFFCF7;color:#3C3339}
+.date-button.date-selected{
+  background:var(--office-sun);color:var(--office-ink);
+  position:relative;
+}
+.date-button.date-selected::after{
+  content:"";position:absolute;inset:auto 8px 0;height:4px;
+  background:var(--office-hot-pink);
+}
+.date-button .daystamp{font-family:"HERO Condensed",sans-serif;font-size:22px}
+.date-button .weekday{font-size:10px;font-weight:850;letter-spacing:.065em}
+.lane-btn.active{background:var(--office-ink)}
+.lane-btn.active b{background:var(--office-sun)}
+.lane-btn:hover:not(.active){border-color:var(--office-hot-pink)}
+/* Comic scanner title; scoreboard body deliberately keeps clean type,
+   stable alignment, simple white row backgrounds and readable rank labels. */
+.board-section{
+  border:2px solid var(--office-ink);
+  border-radius:0;
+  overflow:visible;
+  box-shadow:0 4px 0 rgba(20,17,19,.1);
+}
+.scanner-header{
+  background:var(--office-ink);
+  border-bottom:3px solid var(--office-hot-pink);
+  min-height:59px;
+  color:var(--office-sun);
+  padding:12px 18px;
+}
+.scanner-star{
+  font-size:23px;
+  color:var(--office-hot-pink);
+  -webkit-text-stroke:1px var(--office-sun);
+}
+.scanner-title h2{
+  font:italic 800 25px/1 "HERO Condensed",sans-serif;
+  letter-spacing:.018em;
+  color:var(--office-sun);
+}
+.scanner-swoosh{font-size:14px;color:var(--office-hot-pink);transform:rotate(-12deg);margin:0 0 11px 4px}
+.scanner-meta{color:#FEF8FA}
+.scanner-selected{
+  background:var(--office-sun);
+  color:var(--office-ink);
+  border:1px solid var(--office-ink);
+  font-weight:850;
+}
+.scanner-divider{background:#9E8794}
+.board-column-head{background:#FFFCF9}
+.league-heading{
+  background:#F9F6F2;color:var(--office-ink);
+  border-top-color:#E8E1DC;
+}
+.league-heading:hover{background:#F5EEF2}
+.league-flag{
+  background:#FFDBEC;color:#8A175A;
+  border:1px solid #F4A8CC;
+  transform:rotate(-3deg);
+}
+.league-heading strong{font-weight:850;letter-spacing:.035em}
+.league-collapse{color:var(--office-hot-pink)}
+.fixture{background:#FFF}
+.fixture:hover,.fixture.expanded{background:#FFF8FC}
+.status.follow{background:#FFF3B7;color:#58420B}
+.status.reserve{background:#FDE3F0;color:#94215F}
+.status.stop{background:#F1EFF0;color:#706970}
+.result.live{background:var(--office-sun)}
+/* The graphic signature repeats once at the very end, never within rows. */
+.site-footer{
+  border-top:4px solid var(--office-hot-pink);
+  background:var(--office-ink);
+}
+.footer-brand strong span,.footer-end span{color:var(--office-hot-pink)}
+@media(max-width:1000px){
+ .hero h1{font-size:clamp(40px,5vw,57px)}
+ .hero-sticker{right:24%;font-size:13px}
+ .hero-ive-art{max-width:39%}
+ .section-heading h2{font-size:18px}
+}
+@media(max-width:820px){
+ .hero{height:179px;min-height:179px;padding:22px 19px}
+ .hero h1{font-size:clamp(40px,6vw,54px)}
+ .hero-ive-art{height:195px}
+ .hero-sticker{right:16%;top:18px;font-size:12px}
+ .section-heading{gap:10px}
+ .section-heading p{font-size:11px}
+}
+@media(max-width:600px){
+ .hero{
+  height:158px;min-height:158px;
+  padding:15px 12px;
+  border-width:2px;
+  background-size:330px auto;
+ }
+ .hero::before{background:linear-gradient(90deg,#FFFCF6 0%,rgba(255,252,246,.95) 49%,rgba(255,252,246,.25) 100%)}
+ .hero::after{height:12px;bottom:20px}
+ .hero-copy{max-width:76%}
+ .hero-kicker{font-size:8px;gap:6px;margin-bottom:8px;letter-spacing:0}
+ .hero-kicker-index{width:20px;height:20px;font-size:11px;border-width:1.5px}
+ .hero h1{font-size:clamp(34px,9.4vw,44px);line-height:.88;margin:0 0 10px;white-space:normal}
+ .hero h1 .hero-title-first{display:block;transform:skewX(-5deg)}
+ .hero h1 .hero-title-main{display:block;font-size:1.05em;-webkit-text-stroke:1px var(--office-ink);text-shadow:2px 3px 0 var(--office-ink);max-width:max-content}
+ .hero p{font-size:10px;line-height:1.25;max-width:220px;margin:0}
+ .hero-ive-art{height:158px;max-width:38%;bottom:-13px;right:-7px}
+ .hero-sticker{right:4px;top:11px;font-size:10px;padding:5px 6px;box-shadow:2px 2px 0 var(--office-ink)}
+ .section-line{margin-bottom:13px}
+ .section-heading{display:flex;align-items:center;gap:9px}
+ .section-heading h2{font-size:16px;padding:8px 10px;gap:5px;white-space:nowrap}
+ .section-heading p{font-size:10px;max-width:95px;line-height:1.22}
+ .date-label-star{font-size:12px}
+ .date-rail{height:59px}
+ .date-button .daystamp{font-size:20px}
+ .scanner-header{min-height:50px;padding:10px 11px}
+ .scanner-title h2{font-size:20px}
+ .scanner-star{font-size:16px;-webkit-text-stroke:0}
+ .scanner-swoosh{display:none}
+ .scanner-meta{font-size:9px}
+ .board-section{box-shadow:none}
+}
+@media(max-width:370px){
+ .hero h1{font-size:32px}
+ .hero-ive-art{height:142px}
+ .hero-sticker{display:none}
+ .section-heading h2{font-size:15px;padding:8px 7px}
+ .scanner-title h2{font-size:18px}
+ .scanner-meta{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero h1 .hero-title-main{transition:none}
+}
