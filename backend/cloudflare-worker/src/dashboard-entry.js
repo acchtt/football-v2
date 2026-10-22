@@ -47,10 +47,17 @@ function timestamp(value) {
 }
 
 function officialTier(row) {
+  // Football C state is predictive authority; followLane is workload only.
+  const boardState = String(row?.cBoardState || "")
+    .toUpperCase()
+    .replace(/^C-/, "");
+  if (boardState === "FOCUS") return "FOCUS";
+  if (boardState === "WATCH") return "WATCHLIST";
+  if (boardState === "PASS") return "PASS";
+
+  // Compatibility for older projections that did not expose cBoardState.
   const lane = String(row?.followLane || "").toUpperCase();
-  if (lane === "FOLLOW") return "FOCUS";
-  if (lane === "FOCUS_UNFOLLOWED") return "FOCUS";
-  if (lane === "RESERVE") return "WATCHLIST";
+  if (["FOLLOW", "RESERVE", "FOCUS_UNFOLLOWED"].includes(lane)) return "FOCUS";
   if (lane === "STOP") return "PASS";
   const tier = String(row?.tier || "").toUpperCase();
   return ["FOCUS", "WATCHLIST", "PASS"].includes(tier) ? tier : "";
