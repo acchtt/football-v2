@@ -429,3 +429,6 @@ main{max-width:1340px;padding:0 clamp(16px,3.3vw,42px)}
   .scanner-title h2{font-size:18px}
   .scanner-meta{font-size:9px}
 }
+
+/* The mobile masthead already has a persistent sample-data notice below. */
+@media(max-width:600px){.hero .preview-label{display:none}}
