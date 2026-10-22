@@ -26,7 +26,7 @@ body{background:var(--office-cream)}
   overflow:hidden;
   margin-top:16px;
   padding:25px 28px;
-  background:var(--office-cream) url("./hero-symbols.svg") center top / 480px auto repeat;
+  background:var(--office-cream) url("./hero-symbols.svg") center top / 360px auto repeat;
   isolation:isolate;
 }
 .hero::before{
