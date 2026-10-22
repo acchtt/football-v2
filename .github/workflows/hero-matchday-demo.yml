@@ -19,9 +19,6 @@ jobs:
     name: Build, test, publish separate design demo
     runs-on: ubuntu-latest
     timeout-minutes: 18
-    environment:
-      name: github-pages
-      url: https://acchtt.github.io/football-v2/hero-matchday-demo/
     steps:
       - name: Checkout current production main
         uses: actions/checkout@v4
