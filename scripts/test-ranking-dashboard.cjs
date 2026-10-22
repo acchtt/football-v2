@@ -36,9 +36,14 @@ const feed={
       followLane:'RESERVE',tier:'FOCUS',cBoardState:'C-FOCUS',cRank:2,cSupportedLine:2.5,grade:'B'
     },
     {
+      id:'cov-unfollowed',sourceCoverageId:'cov-unfollowed',boardId:'RUN-A',slateDate,
+      match:'Unfollowed Home – Unfollowed Away',competition:'Test Competition',kickoff,
+      followLane:'FOCUS_UNFOLLOWED',tier:'PASS',cBoardState:'C-FOCUS',cRank:3,cSupportedLine:2.5,grade:'A'
+    },
+    {
       id:'cov-stop',sourceCoverageId:'cov-stop',boardId:'RUN-A',slateDate,
       match:'Stop Home – Stop Away',competition:'Test Competition',kickoff,
-      followLane:'STOP',tier:'WATCHLIST',cBoardState:'C-WATCH',cRank:3,cSupportedLine:2.5,grade:'B'
+      followLane:'STOP',tier:'FOCUS',cBoardState:'C-WATCH',cRank:4,cSupportedLine:2.5,grade:'B'
     },
     {id:'bad',match:'Missing kickoff',tier:'FOCUS'}
   ],
@@ -59,12 +64,14 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.equal(body.sync.sourceStore,'GOOGLE_SHEETS');
   assert.equal(body.sync.projectionSchema,'football-v2-public-board-feed-v1');
   assert.equal(body.sync.projectionPolicy,'PUBLIC_SAFE_GOOGLE_SHEETS_V1');
-  assert.equal(body.schedule.length,3,'Invalid projection rows must fail closed');
+  assert.equal(body.schedule.length,4,'Invalid projection rows must fail closed');
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').tier,'FOCUS');
-  assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'WATCHLIST');
-  assert.equal(body.schedule.find(x=>x.id==='cov-stop').tier,'PASS');
+  assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'FOCUS');
+  assert.equal(body.schedule.find(x=>x.id==='cov-unfollowed').tier,'FOCUS');
+  assert.equal(body.schedule.find(x=>x.id==='cov-stop').tier,'WATCHLIST');
+  assert.equal(body.sync.focusUnfollowedDisplayed,1);
   assert.equal(body.sync.stopDisplayed,1);
-  assert.equal(body.sync.rankedPublished,3);
+  assert.equal(body.sync.rankedPublished,4);
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').cSupportedLine,3.5);
   assert(!('c2Rank' in body.schedule[0]),'Retired C2 data must not be republished');
   assert.equal(calls.length,1,'Dashboard must use one public projection read');
@@ -83,5 +90,5 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
     /public-safe Sheets policy/
   );
 
-  console.log('PASS Google Sheets projection -> public dashboard: C lanes preserved, C2 retired, private stores excluded');
+  console.log('PASS Google Sheets projection -> public dashboard: C state authoritative, workload lanes preserved, C2 retired');
 })().catch(error=>{console.error(error);process.exitCode=1;});
