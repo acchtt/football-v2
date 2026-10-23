@@ -60,7 +60,9 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
 
 (async()=>{
   const body=await context.workerTest.dashboardData({});
+  const cached=await context.workerTest.dashboardData({});
   assert.equal(body.backendMode,'google-sheets-public-projection');
+  assert.equal(cached.backendMode,'google-sheets-public-projection');
   assert.equal(body.sync.sourceStore,'GOOGLE_SHEETS');
   assert.equal(body.sync.projectionSchema,'football-v2-public-board-feed-v1');
   assert.equal(body.sync.projectionPolicy,'PUBLIC_SAFE_GOOGLE_SHEETS_V1');
@@ -74,7 +76,7 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.equal(body.sync.rankedPublished,4);
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').cSupportedLine,3.5);
   assert(!('c2Rank' in body.schedule[0]),'Retired C2 data must not be republished');
-  assert.equal(calls.length,1,'Dashboard must use one public projection read');
+  assert.equal(calls.length,1,'Fresh projection cache must collapse repeated dashboard reads to one source fetch');
   assert(calls[0].includes('/acchtt/football-v2/main/pages/data/board-feed.json'),'Dashboard must read the public-safe projection');
 
   assert.throws(

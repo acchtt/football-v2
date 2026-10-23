@@ -26,7 +26,7 @@ After the first Worker exists, open Worker → Settings → Variables and Secret
 
 - `BSD_API_TOKEN`
 
-`AIRTABLE_TOKEN` is no longer required for `/api/dashboard-data`. The dashboard reads the public-safe Google Sheets projection configured by `BOARD_FEED_URL`. Legacy manual-score code may still require the old token until that write path is retired.
+`AIRTABLE_TOKEN` is no longer required for the active dashboard. `/api/dashboard-data` reads the public-safe Google Sheets projection configured by `BOARD_FEED_URL`. Public `/api/manual-score` writes are fail-closed; manual corrections belong in the private Google Sheets `Manual Scores` tab and can be projected outward without exposing the workbook.
 
 The non-secret values are already in `wrangler.jsonc`:
 
