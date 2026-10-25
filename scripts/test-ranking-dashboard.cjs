@@ -69,7 +69,8 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'WATCHLIST');
   assert.equal(body.schedule.find(x=>x.id==='cov-unfollowed').tier,'QUALIFIED');
   assert.equal(body.schedule.find(x=>x.id==='cov-stop').tier,'PASS');
-  assert.equal(body.sync.qualifiedDisplayed,1);\n  assert.equal(body.sync.focusUnfollowedDisplayed,0);
+  assert.equal(body.sync.qualifiedDisplayed,1);
+  assert.equal(body.sync.focusUnfollowedDisplayed,0);
   assert.equal(body.sync.stopDisplayed,1);
   assert.equal(body.sync.rankedPublished,4);
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').cSupportedLine,3.5);
