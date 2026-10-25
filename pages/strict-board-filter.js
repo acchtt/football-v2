@@ -124,7 +124,25 @@
     };
   }
 
+  function dedupeBoardRows(rows){
+    const seenIds=new Set(),seenFixtures=new Set();
+    return (rows||[]).filter(row=>{
+      const id=String(row?.sourceCoverageId||row?.id||'').trim();
+      const fixture=[
+        String(row?.slateDate||'').trim(),
+        String(rowKickoff(row)||'').trim().toLowerCase(),
+        clean(row?.match||''),
+        clean(row?.competition||'')
+      ].join('|');
+      if((id&&seenIds.has(id))||(fixture&&seenFixtures.has(fixture)))return false;
+      if(id)seenIds.add(id);
+      if(fixture)seenFixtures.add(fixture);
+      return true;
+    });
+  }
+
   function mergeBoardRows(source,rows){
+    rows=dedupeBoardRows(rows);
     const matched=source.filter(event=>matchEvent(event,rows));
     const missing=rows
       .filter(row=>!matched.some(event=>matchEvent(event,[row])))
