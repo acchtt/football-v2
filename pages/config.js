@@ -311,7 +311,7 @@
 
     const boardRows = (dashboard?.schedule || []).filter(row => {
       const tier = String(row?.tier || '').toUpperCase();
-      return row?.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'PASS');
+      return row?.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'QUALIFIED' || tier === 'PASS');
     });
 
     const filtered = data.results.filter(event => boardRows.some(row => {
