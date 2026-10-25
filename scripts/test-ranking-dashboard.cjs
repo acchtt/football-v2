@@ -66,10 +66,10 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
   assert.equal(body.sync.projectionPolicy,'PUBLIC_SAFE_GOOGLE_SHEETS_V1');
   assert.equal(body.schedule.length,4,'Invalid projection rows must fail closed');
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').tier,'FOCUS');
-  assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'FOCUS');
-  assert.equal(body.schedule.find(x=>x.id==='cov-unfollowed').tier,'FOCUS');
-  assert.equal(body.schedule.find(x=>x.id==='cov-stop').tier,'WATCHLIST');
-  assert.equal(body.sync.focusUnfollowedDisplayed,1);
+  assert.equal(body.schedule.find(x=>x.id==='cov-reserve').tier,'WATCHLIST');
+  assert.equal(body.schedule.find(x=>x.id==='cov-unfollowed').tier,'QUALIFIED');
+  assert.equal(body.schedule.find(x=>x.id==='cov-stop').tier,'PASS');
+  assert.equal(body.sync.qualifiedDisplayed,1);\n  assert.equal(body.sync.focusUnfollowedDisplayed,0);
   assert.equal(body.sync.stopDisplayed,1);
   assert.equal(body.sync.rankedPublished,4);
   assert.equal(body.schedule.find(x=>x.id==='cov-follow').cSupportedLine,3.5);
@@ -90,5 +90,5 @@ vm.runInContext(source+'\nglobalThis.workerTest={dashboardData,officialTier,vali
     /public-safe Sheets policy/
   );
 
-  console.log('PASS Google Sheets projection -> public dashboard: C state authoritative, workload lanes preserved, C2 retired');
+  console.log('PASS Google Sheets projection -> public dashboard: qualification/priority semantics preserved, workload lanes retained, C2 retired');
 })().catch(error=>{console.error(error);process.exitCode=1;});
