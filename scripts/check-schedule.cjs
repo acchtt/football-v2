@@ -34,8 +34,8 @@ assert(row.includes('2–1') && row.includes('data-manual-score'));
 assert(row.indexOf('scheduleRowTools') > row.indexOf('</div></div>'), 'manual action must be a separate row control');
 assert(!row.includes('NO FEED') && !row.includes('SOCCERWAY'));
 row=t.boardMatchBlock(upcoming,3);
-assert(row.includes('FOLLOW') && row.includes('#1'));
-assert(t.boardMatchBlock(make('legacy','Legacy Upcoming vs Legacy Away'),4).includes('PRE'));
+assert(row.includes('FOCUS') && row.includes('#1') && !row.includes('>FOCUS_UNFOLLOWED</span>'));
+assert(t.boardMatchBlock(make('legacy','Legacy Upcoming vs Legacy Away'),4).includes('FOCUS'));
 assert.equal(t.formatTime(fixedKickoff),'18:00');
 const older = make('old','Unknown Town vs Unknown City',{
   kickoff:new Date(Date.now()-4*3600000).toISOString(),
@@ -92,7 +92,7 @@ const index=fs.readFileSync('pages/index.html','utf8');
 assert(index.includes('icons/arc-xi-schedule.svg?v=2'));
 assert(index.includes('<div id="app"></div>') && !index.includes('<main id="app">'),
   'Rendered main landmarks must not be nested');
-assert(index.includes('app-v2.js?v=72') && index.includes('schedule-v2.css?v=27'));
+assert(index.includes('app-v2.js?v=73') && index.includes('schedule-v2.css?v=27'));
 assert(source.includes("event.key !== 'Tab'"),'Manual score modal must trap keyboard focus');
 assert(source.includes("if (!state.board) throw error"),'Initial dashboard failures must surface errors');
 assert(!index.includes('rel="manifest"') && !index.includes('pwa-v2.js') && index.includes('pwa-off.js'));
