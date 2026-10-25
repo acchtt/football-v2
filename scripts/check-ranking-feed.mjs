@@ -23,7 +23,7 @@ const active=
   data.sync?.projectionSchema===FEED_SCHEMA &&
   data.sync?.projectionPolicy===PROJECTION_POLICY;
 
-const invalidTier=data.schedule.filter(row=>!['FOCUS','WATCHLIST','PASS'].includes(String(row.tier||'')));
+const invalidTier=data.schedule.filter(row=>!['FOCUS','WATCHLIST','QUALIFIED','PASS'].includes(String(row.tier||'')));
 const c2Leak=data.schedule.filter(row=>
   Object.prototype.hasOwnProperty.call(row,'c2Rank') ||
   Object.prototype.hasOwnProperty.call(row,'c2BoardState') ||
@@ -39,7 +39,7 @@ console.log('RANKING_FEED '+JSON.stringify({
   scheduleCount:data.schedule.length,
   picksCount:data.picks.length,
   rankedPublished:data.sync?.rankedPublished,
-  stopDisplayed:data.sync?.stopDisplayed,
+  qualifiedDisplayed:data.sync?.qualifiedDisplayed,\n  stopDisplayed:data.sync?.stopDisplayed,
   invalidTierCount:invalidTier.length,
   retiredC2LeakCount:c2Leak.length
 }));
