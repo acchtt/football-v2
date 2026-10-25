@@ -464,10 +464,44 @@
       (meta ? '<span>' + esc(meta) + '</span>' : '') + '</div>' +
       (actions || '') + '</div>';
   }
+  function semanticTier(row) {
+    const explicit = String(row && (row.priorityState || row.tier) || '').toUpperCase();
+    if (['FOCUS','WATCHLIST','QUALIFIED','PASS'].includes(explicit)) return explicit;
+    const lane = String(row && (row.followLane || row.cFollowLane) || '').toUpperCase();
+    if (lane === 'FOLLOW') return 'FOCUS';
+    if (lane === 'RESERVE') return 'WATCHLIST';
+    if (lane === 'FOCUS_UNFOLLOWED') return 'QUALIFIED';
+    if (lane === 'STOP') return 'PASS';
+    const state = String(row && row.cBoardState || '').toUpperCase().replace(/^C-/, '');
+    if (state === 'FOCUS') return 'QUALIFIED';
+    if (state === 'WATCH') return 'REVIEW_ONLY';
+    if (state === 'PASS') return 'PASS';
+    return '';
+  }
+  function boardFixtureKey(row) {
+    const kickoff = String(row && (row.kickoff || row.displayKickoff) || '').trim().toLowerCase();
+    const match = String(row && row.match || '').trim().toLowerCase().replace(/\s+/g,' ');
+    const competition = String(row && row.competition || '').trim().toLowerCase().replace(/\s+/g,' ');
+    const date = String(row && row.slateDate || '').trim();
+    return date && kickoff && match ? [date,kickoff,match,competition].join('|') : '';
+  }
+  function dedupeBoardRows(rows) {
+    const seenIds = new Set();
+    const seenFixtures = new Set();
+    return (Array.isArray(rows) ? rows : []).filter(function (row) {
+      const id = String(row && (row.sourceCoverageId || row.id) || '').trim();
+      const fixture = boardFixtureKey(row);
+      if (id && seenIds.has(id)) return false;
+      if (fixture && seenFixtures.has(fixture)) return false;
+      if (id) seenIds.add(id);
+      if (fixture) seenFixtures.add(fixture);
+      return true;
+    });
+  }
   function boardDateCount(date) {
-    return (state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
-      const tier = String(row.tier || '').toUpperCase();
-      return row.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'PASS');
+    return dedupeBoardRows(state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
+      const tier = semanticTier(row);
+      return row.slateDate === date && (tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'QUALIFIED' || tier === 'PASS');
     }).length;
   }
   function dateStrip() {
@@ -646,7 +680,7 @@
     const id = event && eventId(event);
     const unsupported = !id && !fallback;
     const status = event ? statusKey(event) : fallback ? soccerwayStatusKey(fallback) : boardStatus(row);
-    const tier = String(row.tier || 'WATCHLIST').toUpperCase();
+    const tier = semanticTier(row) || 'QUALIFIED';
     const lane = boardLane(row);
     const rank = boardRank(row);
     const teams = event ? {
@@ -683,7 +717,7 @@
     }
     const statusName = unverified || (finished && !sourceConfirmed) ? 'UNVERIFIED' :
       finished ? 'FT' : stopped ? ({postponed:'PP',cancelled:'CANC',abandoned:'ABD',suspended:'SUSP'}[status]) :
-      live ? (event && statusLabel(event) === 'HT' ? 'HT' : 'LIVE') : hasManualScore ? 'CUSTOM' : (lane || 'PRE');
+      live ? (event && statusLabel(event) === 'HT' ? 'HT' : 'LIVE') : hasManualScore ? 'CUSTOM' : (tier || 'PRE');
     const statusClass = unverified ? 'unverified' : finished ? 'finished' :
       stopped ? 'stopped' : live ? 'live' : hasManualScore ? 'manual' : 'upcoming';
     const manualKey = encodeURIComponent(String(row.match || '') + '||' + String(row.kickoff || row.displayKickoff || ''));
@@ -764,7 +798,7 @@
   }
 
   function boardRowsForDate() {
-    return (state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
+    return dedupeBoardRows(state.board && Array.isArray(state.board.schedule) ? state.board.schedule : []).filter(function (row) {
       return row.slateDate === state.date;
     });
   }
@@ -801,7 +835,7 @@
     const rows = Array.isArray(boardRows) ? boardRows : [];
     const choose = function (status, tier) {
       return rows.find(function (row) {
-        return boardStatus(row) === status && String(row.tier || '').toUpperCase() === tier;
+        return boardStatus(row) === status && semanticTier(row) === tier;
       });
     };
     return choose('live','FOCUS') || choose('live','WATCHLIST') ||
@@ -906,8 +940,8 @@
     state.route = 'board';
     const sourceWarning = state.error || state.boardWarning;
     const boardRows = boardRowsForDate().filter(function (row) {
-      const tier = String(row.tier || '').toUpperCase();
-      return tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'PASS';
+      const tier = semanticTier(row);
+      return tier === 'FOCUS' || tier === 'WATCHLIST' || tier === 'QUALIFIED' || tier === 'PASS';
     }).sort(function (a, b) {
       const left = Date.parse(boardKickoff(a));
       const right = Date.parse(boardKickoff(b));
