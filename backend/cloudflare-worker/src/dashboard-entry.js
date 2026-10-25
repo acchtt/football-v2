@@ -47,21 +47,28 @@ function timestamp(value) {
 }
 
 function officialTier(row) {
-  // Football C state is predictive authority; followLane is workload only.
-  // RESERVE and FOCUS_UNFOLLOWED therefore remain visual FOCUS.
+  // Presentation priority is separate from the legacy C-FOCUS qualification state.
+  const priority = String(row?.priorityState || "").toUpperCase();
+  if (["FOCUS", "WATCHLIST", "QUALIFIED", "PASS"].includes(priority)) return priority;
+
+  // Compatibility for feeds published before priorityState existed.
+  const lane = String(row?.followLane || "").toUpperCase();
+  if (lane === "FOLLOW") return "FOCUS";
+  if (lane === "RESERVE") return "WATCHLIST";
+  if (lane === "FOCUS_UNFOLLOWED") return "QUALIFIED";
+  if (lane === "STOP") return "PASS";
+
+  const tier = String(row?.tier || "").toUpperCase();
+  if (["FOCUS", "WATCHLIST", "QUALIFIED", "PASS"].includes(tier)) return tier;
+
+  // Final legacy fallback only: a funded C-FOCUS row is qualified, not priority FOCUS.
   const boardState = String(row?.cBoardState || "")
     .toUpperCase()
     .replace(/^C-/, "");
-  if (boardState === "FOCUS") return "FOCUS";
-  if (boardState === "WATCH") return "WATCHLIST";
+  if (boardState === "FOCUS") return "QUALIFIED";
+  if (boardState === "WATCH") return "REVIEW_ONLY";
   if (boardState === "PASS") return "PASS";
-
-  // Compatibility for older projections that did not expose cBoardState.
-  const lane = String(row?.followLane || "").toUpperCase();
-  if (["FOLLOW", "RESERVE", "FOCUS_UNFOLLOWED"].includes(lane)) return "FOCUS";
-  if (lane === "STOP") return "PASS";
-  const tier = String(row?.tier || "").toUpperCase();
-  return ["FOCUS", "WATCHLIST", "PASS"].includes(tier) ? tier : "";
+  return "";
 }
 
 function safeScheduleRow(row) {
@@ -84,6 +91,8 @@ function safeScheduleRow(row) {
     sourceCoverageId: String(row.sourceCoverageId || row.id || ""),
     boardId: String(row.boardId || ""),
     followLane: String(row.followLane || "").toUpperCase(),
+    qualificationState: String(row.qualificationState || (tier === "PASS" ? "NOT_QUALIFIED" : "QUALIFIED")),
+    priorityState: tier,
     cBoardState: String(row.cBoardState || ""),
     cRank: Number.isInteger(rank) && rank > 0 ? rank : null,
     cSupportedLine: Number.isFinite(line) ? line : null,
@@ -162,12 +171,42 @@ async function loadProjection(env) {
   return validateFeed(await response.json());
 }
 
+function scheduleIdentity(row) {
+  const id = String(row?.sourceCoverageId || row?.id || "").trim();
+  if (id) return "id:" + id;
+  return [
+    String(row?.slateDate || "").trim(),
+    String(row?.kickoff || "").trim().toLowerCase(),
+    String(row?.match || "").trim().toLowerCase().replace(/\s+/g, " "),
+    String(row?.competition || "").trim().toLowerCase().replace(/\s+/g, " "),
+  ].join("|");
+}
+
+function dedupeSchedule(rows) {
+  const seenIds = new Set();
+  const seenFixtures = new Set();
+  const output = [];
+  for (const row of rows) {
+    const id = String(row?.sourceCoverageId || row?.id || "").trim();
+    const fixture = [
+      String(row?.slateDate || "").trim(),
+      String(row?.kickoff || "").trim().toLowerCase(),
+      String(row?.match || "").trim().toLowerCase().replace(/\s+/g, " "),
+      String(row?.competition || "").trim().toLowerCase().replace(/\s+/g, " "),
+    ].join("|");
+    if ((id && seenIds.has(id)) || (fixture && seenFixtures.has(fixture))) continue;
+    if (id) seenIds.add(id);
+    if (fixture) seenFixtures.add(fixture);
+    output.push(row);
+  }
+  return output;
+}
+
 async function dashboardData(env) {
   const feed = await loadProjection(env);
-  const schedule = feed.schedule
-    .map(safeScheduleRow)
-    .filter(Boolean)
-    .sort((a, b) => timestamp(a.kickoff) - timestamp(b.kickoff));
+  const schedule = dedupeSchedule(
+    feed.schedule.map(safeScheduleRow).filter(Boolean)
+  ).sort((a, b) => timestamp(a.kickoff) - timestamp(b.kickoff));
   const picks = feed.picks
     .map(safePickRow)
     .filter(Boolean)
@@ -191,9 +230,10 @@ async function dashboardData(env) {
       projectionUrl: String(env.BOARD_FEED_URL || DEFAULT_FEED_URL),
       rankedPublished: ranked.length,
       latestRankedBoardId,
-      focusUnfollowedDisplayed: schedule.filter(
-        (row) => row.followLane === "FOCUS_UNFOLLOWED"
+      qualifiedDisplayed: schedule.filter(
+        (row) => row.priorityState === "QUALIFIED"
       ).length,
+      focusUnfollowedDisplayed: 0,
       stopDisplayed: schedule.filter((row) => row.followLane === "STOP").length,
       scheduleByDate: Object.fromEntries(
         [...new Set(schedule.map((row) => row.slateDate).filter(Boolean))]
