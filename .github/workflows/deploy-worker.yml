@@ -14,6 +14,7 @@ on:
       - "lib/manual-scores.ts"
       - "scripts/test-no-airtable-runtime.cjs"
       - "scripts/test-ranking-dashboard.cjs"
+      - "scripts/check-ranking-feed.mjs"
       - ".github/workflows/deploy-worker.yml"
   workflow_dispatch:
 
