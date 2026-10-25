@@ -39,7 +39,8 @@ console.log('RANKING_FEED '+JSON.stringify({
   scheduleCount:data.schedule.length,
   picksCount:data.picks.length,
   rankedPublished:data.sync?.rankedPublished,
-  qualifiedDisplayed:data.sync?.qualifiedDisplayed,\n  stopDisplayed:data.sync?.stopDisplayed,
+  qualifiedDisplayed:data.sync?.qualifiedDisplayed,
+  stopDisplayed:data.sync?.stopDisplayed,
   invalidTierCount:invalidTier.length,
   retiredC2LeakCount:c2Leak.length
 }));
