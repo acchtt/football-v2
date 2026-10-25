@@ -171,17 +171,6 @@ async function loadProjection(env) {
   return validateFeed(await response.json());
 }
 
-function scheduleIdentity(row) {
-  const id = String(row?.sourceCoverageId || row?.id || "").trim();
-  if (id) return "id:" + id;
-  return [
-    String(row?.slateDate || "").trim(),
-    String(row?.kickoff || "").trim().toLowerCase(),
-    String(row?.match || "").trim().toLowerCase().replace(/\s+/g, " "),
-    String(row?.competition || "").trim().toLowerCase().replace(/\s+/g, " "),
-  ].join("|");
-}
-
 function dedupeSchedule(rows) {
   const seenIds = new Set();
   const seenFixtures = new Set();
